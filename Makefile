@@ -48,8 +48,8 @@ fmt: backend-fmt frontend-fmt ## Format all code in place
 fmt-check: backend-fmt-check frontend-fmt-check ## Verify formatting without changing files
 build: frontend-build backend-embed backend-build ## Build the single binary: vite build -> embed -> go build (ADR-0008)
 
-dev-backend: ## Run the API server with live config from backend/.env (if present)
-	cd $(BACKEND) && set -a && { [ -f .env ] && source .env || true; } && set +a && go run ./cmd/server
+dev-backend: ## Run the API server; settings come only from the environment (ADR-0011)
+	cd $(BACKEND) && go run ./cmd/server
 
 dev-frontend: ## Run the Vite dev server (proxies /api to :8080)
 	cd $(FRONTEND) && npm run dev
@@ -60,8 +60,8 @@ run: ## Run the built single binary (UI + API on :8080); build first with `make 
 image: ## Build the production container image (middy:local) with the toolchain from .tool-versions
 	docker build --build-arg VERSION=$(VERSION) --build-arg GO_VERSION=$(GO_VERSION) --build-arg NODE_VERSION=$(NODE_VERSION) -t middy:local .
 
-up: ## Build and run the production-like stack with docker compose (http://localhost:8080; LLM settings from the shell or backend/.env)
-	VERSION=$(VERSION) GO_VERSION=$(GO_VERSION) NODE_VERSION=$(NODE_VERSION) docker compose $(if $(wildcard backend/.env),--env-file backend/.env) up --build
+up: ## Build and run the production-like stack with docker compose (http://localhost:8080; settings from the environment)
+	VERSION=$(VERSION) GO_VERSION=$(GO_VERSION) NODE_VERSION=$(NODE_VERSION) docker compose up --build
 
 down: ## Stop the compose stack
 	docker compose down
