@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AudioEngine } from '@/features/player/usePlayer';
 import type { Timeline } from '@/shared/api/client';
+import { MemoryProjectStore } from '@/shared/lib/storage/projects';
 import { App } from './App';
 
 const analysed: Timeline = {
@@ -160,6 +161,39 @@ describe('App (scenario S1)', () => {
     expect(within(result).getAllByRole('option')).toHaveLength(2);
     expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: '開いています' })).toBeInTheDocument();
+  });
+
+  it('saves the loaded timeline and reopens it from the project list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(
+          url.endsWith('/health')
+            ? json(200, { status: 'ok', version: 'dev' })
+            : url.endsWith('/patterns')
+              ? json(200, { accompaniments: [], drums: [] })
+              : json(200, { timeline: analysed }),
+        ),
+      ),
+    );
+    const store = new MemoryProjectStore();
+    const user = userEvent.setup();
+    render(<App createEngine={fakeEngine} projectStore={store} />);
+
+    expect(screen.getByRole('button', { name: '保存' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: '進行から' }));
+    await user.click(screen.getByRole('button', { name: '生成' }));
+    await screen.findByRole('region', { name: '結果' });
+
+    await user.type(screen.getByLabelText('プロジェクト名'), '練習 1');
+    await user.click(screen.getByRole('button', { name: '保存' }));
+    const list = await screen.findByRole('list', { name: 'プロジェクト一覧' });
+    const saved = await store.list();
+    expect(saved).toHaveLength(1);
+    expect(saved[0]?.source).toMatchObject({ kind: 'progression' });
+
+    await user.click(within(list).getByRole('button', { name: '開く' }));
+    expect(screen.getByText('プロジェクト: 練習 1')).toBeInTheDocument();
   });
 
   it('reports an unreachable backend', async () => {

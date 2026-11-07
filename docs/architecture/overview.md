@@ -72,6 +72,7 @@ src/test       Vitest セットアップ
 - 会話は `features/chat`: `useIdeas` が履歴（ユーザー発言と assistant の `reply`）を保持して `POST /api/v1/ideas` を呼び、`ChatPanel` がメッセージと候補カードを表示する。候補を開くと `App` が `Timeline` を差し替え、再生・表示・解説は S1 と同じ部品に載る。
 - 入力は `features/progression-input`: `ProgressionForm` がテキスト（`I - V - vi - IV`）をトークン化し、`usePatterns` が取得したカタログから伴奏・ドラムを選ばせて API リクエストを組み立てる。ローマ数字の妥当性はバックエンドが判定する。
 - `src/app/App.tsx` が S1 / S2 の結線: 入力方法（イメージから / 進行から）を切り替え、どちらから来た `Timeline` も同じ状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
+- 保存は `features/projects`: `useProjects` が `shared/lib/storage/projects` の `ProjectStore`（ブラウザに IndexedDB があればそれ、なければメモリ）を使い、`ProjectsPanel` が現在のタイムラインとその出どころ（進行の入力、またはイメージと候補名）を名前つきで保存・一覧・削除する。サーバーには何も保存しない。
 - 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
 - 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示し、`timeline.rhythm` があれば `RhythmNotes` が伴奏・ドラムの説明と打点の分析を出す。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。
 - 描画はまず SVG。ピアノロールの性能問題が出たら Canvas を検討する。
@@ -80,7 +81,7 @@ src/test       Vitest セットアップ
 ## PWA
 
 - `vite-plugin-pwa` で manifest と Service Worker を生成。アプリシェルのみプリキャッシュし、`/api/*` はキャッシュしない。
-- オフラインの価値は「保存済みプロジェクトの再生」。これは M3 のローカル永続化（IndexedDB）で実現する。
+- オフラインの価値は「保存済みプロジェクトの再生」。保存は IndexedDB（`features/projects`）にあり、再生はブラウザ内で完結する。オフライン時の挙動の仕上げは BL-025。
 
 ## 配備形態（ADR-0008）
 
