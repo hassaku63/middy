@@ -49,6 +49,7 @@
 | --- | --- | --- | --- |
 | `go build` / `vite build` | ビルド不能 | `make build` | `make check`, CI |
 | コンテナイメージのビルドとスモーク（health の SHA、`/` の HTML、`sw.js` の `no-cache`、`HEALTHCHECK` healthy） | Dockerfile の腐敗、配信の退行 | `make image` | CI `image` |
+| E2E（Playwright, S1 シナリオ・API エラー・SPA フォールバック・Service Worker） | モックでは見えない通しの退行 | `make e2e`（サーバー起動が前提） | `e2e` ワークフロー（手動・週次） |
 
 ## 依存（削減）
 
@@ -74,6 +75,6 @@
 | --- | --- | --- |
 | `docs-sync` 自己点検 | 差分で言及が変わる文書の修正 | PR 前（`docs/dev/docs-hygiene.md`） |
 | 自己レビュー（`/code-review` 等） | 人間のレビュー負荷の低減 | PR 前 |
-| 実ブラウザで 1 回通す | モックでは見えない失敗 | UI スライスの PR 前（`docs/dev/testing.md`） |
+| `make e2e` を 1 回通す | モックでは見えない失敗 | UI スライスの PR 前（`docs/dev/testing.md`） |
 | WIP 上限 3 | レビュー処理能力の保護 | 常時（`AGENTS.md`） |
 | ハーネスの見直し | 効かない検査の削除、CI 時間（予算 10 分）の確認 | 四半期 |
