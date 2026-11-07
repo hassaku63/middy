@@ -94,6 +94,34 @@ export async function createTimelineFromProgression(
   return res.timeline;
 }
 
+// --- POST /ideas -------------------------------------------------------------
+
+export type ChatRole = 'user' | 'assistant';
+export type ChatMessage = { role: ChatRole; content: string };
+export type IdeasRequest = { messages: ChatMessage[] };
+export type IdeaCandidate = {
+  title: string;
+  key: Key;
+  tempoBpm: number;
+  progression: string[];
+  beatsPerChord: number;
+  reason: string;
+  timeline: Timeline;
+};
+export type IdeasResponse = { reply: string; mood: string[]; candidates: IdeaCandidate[] };
+
+/** One conversational turn of scenario S2; the server keeps no state. */
+export async function imagine(
+  messages: ChatMessage[],
+  fetchImpl: typeof fetch = defaultFetch,
+): Promise<IdeasResponse> {
+  return requestJson<IdeasResponse>('/api/v1/ideas', {
+    fetchImpl,
+    method: 'POST',
+    body: { messages } satisfies IdeasRequest,
+  });
+}
+
 // --- POST /export/midi -------------------------------------------------------
 
 /** Returns the timeline as a Standard MIDI File blob (audio/midi). */

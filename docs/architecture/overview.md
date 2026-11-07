@@ -25,7 +25,7 @@
 
 ## データフロー（M2 時点の想定）
 
-1. ユーザーがイメージ文を入力 → `POST /api/v1/ideas`（BL-013）
+1. ユーザーがイメージ文を入力 → `POST /api/v1/ideas`
 2. `ideas.Service.Imagine` が `llm.Client.Complete` を構造化出力（`intent.Schema`）つきで呼ぶ
 3. `intent.Parse` が復号と検証を行う。不正なら、その答えと検証エラーを添えて **1 回だけ** 再試行し、それでも不正なら `ErrInvalidOutput`
 4. 候補ごとに `Candidate.ToProgression` → `music.FromProgression` → `music.Analyze` で分析済み `Timeline` を作る

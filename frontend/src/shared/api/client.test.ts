@@ -3,7 +3,9 @@ import {
   createTimelineFromProgression,
   exportMidi,
   fetchHealth,
+  imagine,
   type ApiError,
+  type IdeasResponse,
   type Timeline,
 } from './client';
 
@@ -132,5 +134,54 @@ describe('exportMidi', () => {
     expect(url).toBe('/api/v1/export/midi');
     expect((init.headers as Record<string, string>)['Accept']).toBe('audio/midi');
     expect(JSON.parse(init.body as string)).toEqual({ timeline });
+  });
+});
+
+describe('imagine', () => {
+  it('posts the conversation and returns the reply with candidates', async () => {
+    const response: IdeasResponse = {
+      reply: '静かな雨。',
+      mood: ['静か'],
+      candidates: [
+        {
+          title: '窓辺の雨',
+          key: { tonic: 9, mode: 'minor' },
+          tempoBpm: 72,
+          progression: ['i', 'VI', 'III', 'VII'],
+          beatsPerChord: 4,
+          reason: '短調で。',
+          timeline: {
+            ppq: 480,
+            tempoBpm: 72,
+            timeSignature: { numerator: 4, denominator: 4 },
+            key: { tonic: 9, mode: 'minor' },
+            tracks: [],
+            harmony: [],
+          },
+        },
+      ],
+    };
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, response));
+
+    const got = await imagine([{ role: 'user', content: '雨の日曜' }], fetchMock);
+
+    expect(got).toEqual(response);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/ideas');
+    expect(JSON.parse(init.body as string)).toEqual({
+      messages: [{ role: 'user', content: '雨の日曜' }],
+    });
+  });
+
+  it('maps 502 envelopes to ApiError', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(502, { error: { code: 'llm_unavailable', message: 'down' } }),
+      );
+    await expect(imagine([{ role: 'user', content: 'x' }], fetchMock)).rejects.toMatchObject({
+      status: 502,
+      code: 'llm_unavailable',
+    } satisfies Partial<ApiError>);
   });
 });
