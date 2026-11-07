@@ -14,6 +14,7 @@
 | [0008](0008-local-verification-and-containers.md) | 本番相当の配信形態を「単一 Go バイナリ」に決め、コンテナで検証可能にする | Accepted |
 | [0009](0009-generated-api-types.md) | TypeScript の API 型を OpenAPI から生成する | Accepted |
 | [0010](0010-ux-decisions-follow-product-intent.md) | UI の判断は、プロダクトの意思を根拠に共通の原則と手順で行う | Accepted |
+| [0011](0011-settings-only-from-launch-environment.md) | ローカル実行の設定と秘密情報は、起動時の環境変数だけで渡す | Accepted |
 
 ## いつ ADR を書くか
 
