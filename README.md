@@ -54,7 +54,7 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 
 イメージはマルチステージ（Node でフロント → Go でバイナリ → distroless、非 root）で、`HEALTHCHECK` はバイナリ自身の `-healthcheck` フラグが担います。
 
-ブラウザで http://localhost:5173 を開き、「イメージから（AI）」で曲のイメージを言葉で送ると、調・テンポ・進行の候補が返ります（既定の `LLM_PROVIDER=fake` では気分語で変わる見本。実 LLM は `backend/.env` で設定）。「進行から」では調・モード・ローマ数字の進行・テンポを入力して「生成」します。候補を開く／生成すると、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。名前をつけて「保存」すると、プロジェクトとしてブラウザ（IndexedDB）に残り、次に開いたときも一覧から開けます。
+ブラウザで http://localhost:5173 を開き、曲のイメージを言葉で送ると、調・テンポ・進行の候補が返ります（既定の `LLM_PROVIDER=fake` では気分語で変わる見本。実 LLM は `backend/.env` で設定）。候補を開くと、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。名前をつけて「保存」すると、プロジェクトとしてブラウザ（IndexedDB）に残り、次に開いたときも一覧から開けます。
 
 実際の LLM を使うときは `backend/.env.example` を `backend/.env` にコピーして `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を設定します（`make dev-backend` と `make up` の両方が読み、シェルで渡した値が優先されます）。
 
