@@ -30,6 +30,7 @@
 - `ChordQuality` — 三和音 4 種（maj, min, dim, aug）と七の和音 4 種（maj7, min7, dom7, m7b5）。JSON は識別子文字列（`"dom7"`）
 - `Chord{Root, Quality}` — `PitchClasses()`, `Voicing(octave)`（密集・基本形）, `String()`（`"G7"`）
 - `RomanNumeral(degree, quality)` — `I`, `ii`, `vii°`, `V7`, `iiø7`, `IVmaj7` など。大文字 = 長/増、小文字 = 短/減
+- `ParseRomanNumeral(s)` — 上記の表記（と `dim`, `aug`, `+`, `m7b5`）を度数と七の和音の有無に戻す。`RomanNumeral` の出力は必ず往復する
 
 **未対応（backlog）**: 転回形、分数コード、テンション、借用和音、セカンダリドミナント。
 
@@ -68,5 +69,5 @@ Timeline
 ## 設計上の判断
 
 - **質はスケールから導出する。** `Key.Diatonic` は三度堆積の音程から質を判定するため、モードを追加してもコードの表が不要。
-- **ローマ数字は表示専用の文字列。** 解析の入力としては `degree + quality` を使い、文字列をパースしない（M2 で LLM からローマ数字文字列を受けるときは `intent` パッケージ側でパーサを持つ）。
+- **ローマ数字の文字列は境界でだけ扱う。** 内部の分析は `degree + quality` で行い、文字列は入力（API、将来は LLM の出力）を `ParseRomanNumeral` で度数と七の和音の有無に変換するときにだけ現れる。コードの質は常に調から導出され、文字列の大文字小文字や `°` は結果に影響しない。
 - **自然短音階のみ。** 和声的短音階の V（長三和音）、借用和音、セカンダリドミナントは未対応で、`Analyze` は非ダイアトニックなコードを拒否する。扱うときは Ideas から昇格させ、ADR で判断する。

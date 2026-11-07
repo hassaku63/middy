@@ -1,0 +1,97 @@
+package httpapi
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+	"testing"
+
+	"github.com/hassaku63/middy/backend/internal/music"
+)
+
+func postJSON(t *testing.T, url, body string) *http.Response {
+	t.Helper()
+	resp, err := http.Post(url, "application/json", strings.NewReader(body)) //nolint:gosec // test-local URL
+	if err != nil {
+		t.Fatalf("POST %s: %v", url, err)
+	}
+	t.Cleanup(func() { _ = resp.Body.Close() })
+	return resp
+}
+
+func TestFromProgressionHappyPath(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"},
+		"tempoBpm": 90,
+		"progression": [{"numeral": "I"}, {"numeral": "V", "beats": 2}, {"numeral": "vi", "beats": 2}, {"numeral": "IV"}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", resp.StatusCode)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	tl := body.Timeline
+	if err := tl.Validate(); err != nil {
+		t.Fatalf("returned timeline invalid: %v", err)
+	}
+	if tl.TempoBPM != 90 || tl.Key != (music.Key{Tonic: music.C, Mode: music.Major}) {
+		t.Fatalf("unexpected header %+v", tl)
+	}
+	var numerals, cadences []string
+	for _, h := range tl.Harmony {
+		numerals = append(numerals, h.RomanNumeral)
+		if h.Analysis == nil {
+			t.Fatalf("harmony %s has no analysis", h.RomanNumeral)
+		}
+		cadences = append(cadences, string(h.Analysis.Cadence))
+	}
+	if got := strings.Join(numerals, " "); got != "I V vi IV" {
+		t.Errorf("numerals = %q", got)
+	}
+	if got := strings.Join(cadences, ","); got != ",half,deceptive," {
+		t.Errorf("cadences = %q", got)
+	}
+	// Default beats (4) + 2 + 2 + 4 = 12 beats.
+	if got := tl.LengthTicks(); got != 12*music.DefaultPPQ {
+		t.Errorf("LengthTicks = %d, want %d", got, 12*music.DefaultPPQ)
+	}
+}
+
+func TestFromProgressionErrors(t *testing.T) {
+	srv := newTestServer(t)
+	tests := []struct {
+		name     string
+		body     string
+		wantCode string
+		wantMsg  string
+	}{
+		{"malformed json", `{"key":`, "invalid_json", "invalid JSON body"},
+		{"unknown field", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I"}],"tempo":1}`, "invalid_json", "unknown field"},
+		{"unknown mode", `{"key":{"tonic":0,"mode":"lydian"},"tempoBpm":90,"progression":[{"numeral":"I"}]}`, "invalid_json", "lydian"},
+		{"empty progression", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[]}`, "invalid_request", "at least one chord"},
+		{"bad numerals reported together", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I"},{"numeral":"VIII"},{"numeral":"X"}]}`, "invalid_request", "progression[1]"},
+		{"zero beats", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I","beats":0}]}`, "invalid_request", "beats must be >= 1"},
+		{"zero tempo", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":0,"progression":[{"numeral":"I"}]}`, "invalid_request", "tempoBpm"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", tt.body)
+			if resp.StatusCode != http.StatusBadRequest {
+				t.Fatalf("status = %d, want 400", resp.StatusCode)
+			}
+			var body errorResponse
+			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+			if body.Error.Code != tt.wantCode || !strings.Contains(body.Error.Message, tt.wantMsg) {
+				t.Fatalf("error = %+v, want code %q containing %q", body.Error, tt.wantCode, tt.wantMsg)
+			}
+			if tt.name == "bad numerals reported together" && !strings.Contains(body.Error.Message, "progression[2]") {
+				t.Fatalf("both bad labels should be reported: %q", body.Error.Message)
+			}
+		})
+	}
+}
