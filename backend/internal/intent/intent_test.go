@@ -2,6 +2,7 @@ package intent
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -105,10 +106,17 @@ func TestSchemaIsValidJSONAndMirrorsLimits(t *testing.T) {
 	if err := json.Unmarshal(Schema, &schema); err != nil {
 		t.Fatalf("schema is not JSON: %v", err)
 	}
-	props := schema["properties"].(map[string]any)
-	cands := props["candidates"].(map[string]any)
-	if cands["maxItems"].(float64) != MaxCandidates || cands["minItems"].(float64) != MinCandidates {
-		t.Errorf("candidate limits drifted: %v", cands)
+	// Structured outputs cannot express most limits, so the descriptions
+	// carry them; they must state the same numbers Validate enforces.
+	for _, want := range []string{
+		fmt.Sprintf("%d 個まで", MaxMoodTags),
+		fmt.Sprintf("%d〜%d 個", MinCandidates, MaxCandidates),
+		fmt.Sprintf("%d〜%d", MinTempoBPM, MaxTempoBPM),
+		fmt.Sprintf("%d 個までのコード", MaxChords),
+	} {
+		if !strings.Contains(string(Schema), want) {
+			t.Errorf("schema description lost the limit %q", want)
+		}
 	}
 	if schema["additionalProperties"] != false {
 		t.Error("schema must forbid additional properties so the model cannot smuggle fields")
