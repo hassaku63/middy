@@ -13,7 +13,7 @@
 1. **`docs/product/backlog.md` を開き、「Now」の中で最も上にある `Ready` な項目を 1 つ選ぶ。** 自分で新しい機能を思いついても、backlog にない限り着手しない。思いついたものは backlog の「Later」か「Ideas」に 1 行で追記して終わり。
 2. 着手前に受け入れ条件を読み、曖昧なら **実装せずに質問する**（または最も保守的な解釈を選び、PR に明記する）。
 3. **テストを先に書く**（または同じコミットで書く）。ドメインロジックはテーブル駆動テスト、HTTP は `httptest`、UI は Testing Library。
-4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に従う。
+4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に、画面や操作の判断は `docs/design/ux-principles.md` の手順に従う。
 5. **`make check` を通す。** 通らないものは完成ではない。
 6. 影響するドキュメントを更新する: API 変更 → `docs/api/openapi.yaml`、設計判断 → `docs/architecture/adr/`、backlog のステータス。PR を出す前に `docs-sync` の自己点検（`docs/dev/docs-hygiene.md`）を行う。
 7. PR を開く前に自己レビューを行い（Claude Code では `/code-review`）、要約を PR の「レビューの見どころ」に書く。Conventional Commits でコミットし、PR テンプレートを埋める。1 PR = 1 backlog 項目 = 1 縦スライス。
