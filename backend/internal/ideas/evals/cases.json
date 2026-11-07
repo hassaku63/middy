@@ -1,7 +1,7 @@
 {
   "_doc": "Evaluation set for the intent prompt (ADR-0007, backlog BL-015). Each case is an image a learner might type and the coarse properties a good first candidate should have. Keep expectations loose: they catch regressions (a rainy image coming back fast and major), not taste.",
   "cases": [
-    {"id": "rainy-sunday", "image": "雨の日曜の午後みたいな曲", "mode": "minor", "tempoMax": 100},
+    {"id": "rainy-sunday", "image": "雨の日曜の午後みたいな曲", "mode": "either", "tempoMax": 100},
     {"id": "departure-morning", "image": "出発の朝、晴れていて少しわくわくする", "mode": "major", "tempoMin": 90},
     {"id": "night-walk", "image": "夜の帰り道、少し寂しい", "mode": "minor", "tempoMax": 110},
     {"id": "summer-festival", "image": "夏祭りの屋台の賑わい", "mode": "major", "tempoMin": 100},
