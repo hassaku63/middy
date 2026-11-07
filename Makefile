@@ -12,7 +12,7 @@ FRONTEND := frontend
 EMBED_DIR := $(BACKEND)/internal/web/dist
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
-.PHONY: help setup check test lint fmt fmt-check build docs-check dev-backend dev-frontend run \
+.PHONY: help setup check test lint fmt fmt-check build docs-check dev-backend dev-frontend run image up down \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-embed \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
@@ -40,6 +40,15 @@ dev-frontend: ## Run the Vite dev server (proxies /api to :8080)
 
 run: ## Run the built single binary (UI + API on :8080); build first with `make build`
 	$(BACKEND)/bin/server
+
+image: ## Build the production container image (middy:local)
+	docker build --build-arg VERSION=$(VERSION) -t middy:local .
+
+up: ## Build and run the production-like stack with docker compose (http://localhost:8080)
+	VERSION=$(VERSION) docker compose up --build
+
+down: ## Stop the compose stack
+	docker compose down
 
 # --- backend -------------------------------------------------------------
 
