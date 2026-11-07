@@ -1,0 +1,142 @@
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat__log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat__turn p {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: inline-block;
+  max-width: 80%;
+  line-height: 1.6;
+}
+
+.chat__turn--user {
+  text-align: right;
+}
+
+.chat__turn--user p {
+  background: #1d4ed8;
+  color: #f9fafb;
+}
+
+.chat__turn--assistant p {
+  background: #1f2937;
+}
+
+.chat__mood {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  padding: 0;
+  margin: 6px 0 0;
+}
+
+.chat__mood li {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #374151;
+}
+
+.chat__candidates {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.candidate {
+  border: 1px solid #374151;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.candidate.is-open {
+  border-color: #f59e0b;
+}
+
+.candidate__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.candidate__spec {
+  display: flex;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.candidate__progression {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1rem;
+}
+
+.candidate__reason {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.candidate p {
+  margin: 0;
+  padding: 0;
+  background: none;
+  display: block;
+  max-width: none;
+}
+
+.chat__form {
+  display: flex;
+  gap: 8px;
+}
+
+.chat__form input {
+  flex: 1;
+  font: inherit;
+  padding: 8px 10px;
+}
+
+.chat__hint {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.chat__suggestion {
+  margin: 0 4px;
+  font-size: 0.85rem;
+}
+
+.chat__error {
+  margin: 0;
+  color: #f87171;
+}
+
+@media (prefers-color-scheme: light) {
+  .chat__turn--assistant p {
+    background: #e5e7eb;
+  }
+  .chat__mood li {
+    background: #d1d5db;
+  }
+  .candidate {
+    border-color: #d1d5db;
+  }
+}
