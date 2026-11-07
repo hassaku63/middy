@@ -20,6 +20,12 @@ middy のドキュメント索引。**新しいドキュメントを追加した
 | [architecture/adr/](architecture/adr/README.md) | Architecture Decision Records |
 | [api/openapi.yaml](api/openapi.yaml) | HTTP API 契約（OpenAPI 3.1） |
 
+## 設計（画面と体験をどう決めるか）
+
+| ファイル | 内容 |
+| --- | --- |
+| [design/ux-principles.md](design/ux-principles.md) | UI/UX の層（意思・概念・流れ・画面の約束）、意思の書き方、引き算の原則、新しい画面や操作を決める手順 |
+
 ## 開発（どう進めるか）
 
 | ファイル | 内容 |

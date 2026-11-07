@@ -13,6 +13,7 @@
 | [0007](0007-decay-prevention.md) | 開発サイクルの劣化を、矯正・検知・削減の三層で防ぐ | Accepted |
 | [0008](0008-local-verification-and-containers.md) | 本番相当の配信形態を「単一 Go バイナリ」に決め、コンテナで検証可能にする | Accepted |
 | [0009](0009-generated-api-types.md) | TypeScript の API 型を OpenAPI から生成する | Accepted |
+| [0010](0010-ux-decisions-follow-product-intent.md) | UI の判断は、プロダクトの意思を根拠に共通の原則と手順で行う | Accepted |
 
 ## いつ ADR を書くか
 
