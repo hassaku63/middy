@@ -60,8 +60,8 @@ run: ## Run the built single binary (UI + API on :8080); build first with `make 
 image: ## Build the production container image (middy:local) with the toolchain from .tool-versions
 	docker build --build-arg VERSION=$(VERSION) --build-arg GO_VERSION=$(GO_VERSION) --build-arg NODE_VERSION=$(NODE_VERSION) -t middy:local .
 
-up: ## Build and run the production-like stack with docker compose (http://localhost:8080)
-	VERSION=$(VERSION) GO_VERSION=$(GO_VERSION) NODE_VERSION=$(NODE_VERSION) docker compose up --build
+up: ## Build and run the production-like stack with docker compose (http://localhost:8080; LLM settings from the shell or backend/.env)
+	VERSION=$(VERSION) GO_VERSION=$(GO_VERSION) NODE_VERSION=$(NODE_VERSION) docker compose $(if $(wildcard backend/.env),--env-file backend/.env) up --build
 
 down: ## Stop the compose stack
 	docker compose down

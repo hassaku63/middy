@@ -1,8 +1,13 @@
 # Production-like local verification (ADR-0008): one container serving the
 # UI and the API on http://localhost:8080, built from this checkout.
 #
-#   docker compose up --build
-#   LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... docker compose up --build
+#   make up                                     # reads backend/.env if present
+#   LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # shell wins over the file
+#
+# The LLM settings reach the container only through `environment` below,
+# interpolated from the shell or from the file given to --env-file (make up
+# passes backend/.env). An `env_file` entry would be overridden by these
+# lines, and would also let PORT move the listener away from the mapped 8080.
 #
 # The development loop stays native (`make dev-backend`, `make dev-frontend`).
 services:
@@ -20,7 +25,4 @@ services:
       LLM_PROVIDER: ${LLM_PROVIDER:-fake}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
-    env_file:
-      - path: backend/.env
-        required: false
     restart: unless-stopped
