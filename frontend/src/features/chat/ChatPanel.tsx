@@ -8,8 +8,8 @@ export type ChatPanelProps = {
   ideas: Ideas;
   /** Called when the user opens a candidate in the player/timeline/panel. */
   onOpenCandidate: (candidate: IdeaCandidate) => void;
-  /** Title of the candidate currently open, to mark it. */
-  openTitle?: string | null;
+  /** The example currently open, to mark its card (compared by identity). */
+  openExample?: IdeaCandidate | null;
   /** Catalogue for showing pattern names on cards. */
   patterns?: PatternsResponse | undefined;
 };
@@ -17,7 +17,12 @@ export type ChatPanelProps = {
 const SUGGESTIONS = ['雨の日曜の午後', '出発の朝、晴れ', '夜の帰り道、少し寂しい'];
 
 /** Conversation view for scenario S2: messages, candidate cards, input. */
-export function ChatPanel({ ideas, onOpenCandidate, openTitle = null, patterns }: ChatPanelProps) {
+export function ChatPanel({
+  ideas,
+  onOpenCandidate,
+  openExample = null,
+  patterns,
+}: ChatPanelProps) {
   const [text, setText] = useState('');
 
   // Only the latest exchange stays open; earlier ones fold away so refining
@@ -48,7 +53,7 @@ export function ChatPanel({ ideas, onOpenCandidate, openTitle = null, patterns }
             <li key={c.title}>
               <CandidateCard
                 candidate={c}
-                open={openTitle === c.title}
+                open={openExample === c}
                 onOpen={() => onOpenCandidate(c)}
                 patterns={patterns}
               />
