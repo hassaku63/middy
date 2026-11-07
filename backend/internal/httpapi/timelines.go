@@ -1,0 +1,104 @@
+package httpapi
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/hassaku63/middy/backend/internal/music"
+)
+
+// maxRequestBody bounds JSON request bodies. Progressions are tiny; this
+// is a safety limit, not a product limit.
+const maxRequestBody = 64 << 10
+
+// defaultBeatsPerChord is used when a progression step omits "beats".
+const defaultBeatsPerChord = 4
+
+// Request/response shapes for POST /api/v1/timelines/from-progression.
+// They are the contract in docs/api/openapi.yaml; change both together.
+type fromProgressionRequest struct {
+	Key         music.Key          `json:"key"`
+	TempoBPM    float64            `json:"tempoBpm"`
+	Progression []progressionLabel `json:"progression"`
+}
+
+type progressionLabel struct {
+	Numeral string `json:"numeral"`
+	Beats   *int   `json:"beats,omitempty"`
+}
+
+type timelineResponse struct {
+	Timeline music.Timeline `json:"timeline"`
+}
+
+// handleFromProgression renders a roman-numeral progression in a key and
+// returns the analysed timeline. It is the whole M1 pipeline in one call:
+// parse -> FromProgression -> Analyze.
+func handleFromProgression(w http.ResponseWriter, r *http.Request) {
+	var req fromProgressionRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		return
+	}
+
+	prog, err := toProgression(req.Progression)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+	tl, err := music.FromProgression(req.Key, prog, req.TempoBPM)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+	tl, err = music.Analyze(tl)
+	if err != nil {
+		// FromProgression only emits diatonic chords, so this is a bug, not user error.
+		writeError(w, http.StatusInternalServerError, "internal_error", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, timelineResponse{Timeline: tl})
+}
+
+// toProgression converts request labels into domain steps, reporting
+// every bad label at once.
+func toProgression(labels []progressionLabel) (music.Progression, error) {
+	if len(labels) == 0 {
+		return nil, errors.New("progression must contain at least one chord")
+	}
+	var errs []error
+	prog := make(music.Progression, 0, len(labels))
+	for i, l := range labels {
+		degree, seventh, err := music.ParseRomanNumeral(l.Numeral)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
+			continue
+		}
+		beats := defaultBeatsPerChord
+		if l.Beats != nil {
+			beats = *l.Beats
+		}
+		prog = append(prog, music.Step{Degree: degree, Seventh: seventh, Beats: beats})
+	}
+	if err := errors.Join(errs...); err != nil {
+		return nil, err
+	}
+	return prog, nil
+}
+
+// decodeJSON reads a bounded JSON body and rejects unknown fields so that
+// typos in field names surface as 400s instead of silently defaulting.
+func decodeJSON(r *http.Request, v any) error {
+	dec := json.NewDecoder(io.LimitReader(r.Body, maxRequestBody))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(v); err != nil {
+		return fmt.Errorf("invalid JSON body: %w", err)
+	}
+	if dec.More() {
+		return errors.New("invalid JSON body: trailing data")
+	}
+	return nil
+}

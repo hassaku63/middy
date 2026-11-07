@@ -15,7 +15,7 @@
 3. **テストを先に書く**（または同じコミットで書く）。ドメインロジックはテーブル駆動テスト、HTTP は `httptest`、UI は Testing Library。
 4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に従う。
 5. **`make check` を通す。** 通らないものは完成ではない。
-6. 影響するドキュメントを更新する: API 変更 → `docs/api/openapi.yaml`、設計判断 → `docs/architecture/adr/`、backlog のステータス。
+6. 影響するドキュメントを更新する: API 変更 → `docs/api/openapi.yaml`、設計判断 → `docs/architecture/adr/`、backlog のステータス。PR を出す前に `docs-sync` の自己点検（`docs/dev/docs-hygiene.md`）を行う。
 7. Conventional Commits でコミットし、PR テンプレートを埋める。1 PR = 1 backlog 項目 = 1 縦スライス。
 8. 完了したら backlog の項目を `Done` にし、次の項目へ。
 
@@ -41,6 +41,7 @@
 | `backend/internal/config` | 環境変数 | 新しい設定は `Load` とテストに追加 |
 | `backend/internal/httpapi` | HTTP ハンドラ・ミドルウェア | 薄く保つ。decode → ユースケース → encode |
 | `backend/internal/music` | 音楽理論ドメイン | 標準ライブラリのみ、I/O なし、純粋関数 |
+| `backend/internal/music/smf` | Timeline → SMF エンコーダ | `music` にのみ依存。バイト列の期待値テストを壊す変更は意図を PR に書く |
 | `backend/internal/llm` | LLM 境界。`Client` interface と `fake` | プロバイダ依存はサブパッケージに閉じる |
 | `frontend/src/app` | アプリシェル・ルーティング | |
 | `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ |
@@ -70,7 +71,15 @@ cd frontend && npx vitest run src/app                             # 単体で回
 - PR 本文は `.github/pull_request_template.md` に従い、**スコープ外にしたこと** を必ず書く。
 - コミットメッセージ・コード・コメントにモデル名や生成ツールの宣伝を書かない。
 
-## 7. 迷ったら
+## 7. ドキュメントの鮮度（ADR-0006）
+
+- 文書は **現在の状態だけ** を書く。経緯は git log と ADR にだけ残す。
+- 事実は 1 箇所にだけ書き、他は参照する。数値・日付・「予定」リストをコピーしない。将来のことは backlog の BL-ID で指す。
+- `make docs-check` が、リンク切れ・存在しないパス・索引漏れ・存在しない BL-ID を落とす。Go のテストがルートと `docs/api/openapi.yaml` の一致を落とす。
+- backlog の Done 表は現在と直前のマイルストーン分だけ残す。古い ID への参照が落ちたら、その文書を書き直す合図。
+- 手順の詳細は `docs/dev/docs-hygiene.md`。
+
+## 8. 迷ったら
 
 1. `docs/product/vision.md` の「コアシナリオ」に近い方を選ぶ。
 2. 決定論的に解ける方を選ぶ（LLM に頼らない）。

@@ -6,14 +6,17 @@ info:
     middy のバックエンド API。この文書が契約の正典であり（ADR-0004）、
     `backend/internal/httpapi` と `frontend/src/shared/api` はこれに追従する。
 
-    現時点で実装されているのは `/health` のみ。`components.schemas` には
-    ドメインモデル（`backend/internal/music`）の JSON 表現を先に定義してあり、
-    M1 のエンドポイント（backlog BL-003, BL-008）はこれを参照して追加する。
+    `components.schemas` のドメインモデル部分は `backend/internal/music` の
+    JSON 表現と 1:1 で対応する。
 servers:
   - url: /api/v1
 tags:
   - name: system
     description: 稼働確認
+  - name: timelines
+    description: タイムラインの生成と分析
+  - name: export
+    description: 書き出し
 paths:
   /health:
     get:
@@ -30,6 +33,76 @@ paths:
               example:
                 status: ok
                 version: dev
+  /timelines/from-progression:
+    post:
+      tags: [timelines]
+      operationId: createTimelineFromProgression
+      summary: ローマ数字の進行を調で解決し、分析済みのタイムラインを返す
+      description: |
+        進行をブロックコード 1 トラックとして展開し（`music.FromProgression`）、
+        各コードに和声機能・終止・解説を付けて（`music.Analyze`）返す。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FromProgressionRequest'
+            example:
+              key: { tonic: 0, mode: major }
+              tempoBpm: 90
+              progression:
+                - { numeral: I }
+                - { numeral: V, beats: 2 }
+                - { numeral: vi, beats: 2 }
+                - { numeral: IV }
+      responses:
+        '200':
+          description: 生成・分析済みのタイムライン
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineResponse'
+        '400':
+          description: |
+            `invalid_json`（本文が JSON として読めない、未知のフィールド、未知の mode）
+            または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm <= 0）。
+            不正なローマ数字は全件まとめて message に列挙される
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /export/midi:
+    post:
+      tags: [export]
+      operationId: exportMidi
+      summary: タイムラインを Standard MIDI File（format 0）として返す
+      description: |
+        `analysis` など再生に関係しないフィールドは無視される。
+        トラックのチャンネルとプログラムは保持され、トラック名は保持されない。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [timeline]
+              properties:
+                timeline:
+                  $ref: '#/components/schemas/Timeline'
+      responses:
+        '200':
+          description: SMF のバイト列。`Content-Disposition: attachment; filename="middy.mid"`
+          content:
+            audio/midi:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: "`invalid_json` または `invalid_request`（`Timeline.Validate` の失敗）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Health:
@@ -57,6 +130,45 @@ components:
             message:
               type: string
               description: 人間向けの説明。UI にそのまま出してよい
+
+    FromProgressionRequest:
+      type: object
+      required: [key, tempoBpm, progression]
+      additionalProperties: false
+      properties:
+        key:
+          $ref: '#/components/schemas/Key'
+        tempoBpm:
+          type: number
+          exclusiveMinimum: 0
+        progression:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ProgressionLabel'
+    ProgressionLabel:
+      type: object
+      required: [numeral]
+      additionalProperties: false
+      properties:
+        numeral:
+          type: string
+          description: |
+            ローマ数字のコード名。度数（I..VII、大文字小文字は問わない）と、
+            任意の七の和音指定（7, maj7, ø7, m7b5）。°, +, dim, aug は受理するが無視され、
+            コードの質は調から決まる
+          examples: [I, ii, V7, IVmaj7, 'vii°']
+        beats:
+          type: integer
+          minimum: 1
+          default: 4
+          description: 四分音符単位の長さ。省略時 4
+    TimelineResponse:
+      type: object
+      required: [timeline]
+      properties:
+        timeline:
+          $ref: '#/components/schemas/Timeline'
 
     # --- ドメインモデル（backend/internal/music と 1:1） --------------------
     PitchClass:
@@ -154,6 +266,29 @@ components:
         romanNumeral:
           type: string
           examples: [I, ii, V7, 'vii°']
+        analysis:
+          $ref: '#/components/schemas/HarmonyAnalysis'
+          description: 解説データ。分析前のタイムラインでは省略される
+    HarmonyAnalysis:
+      description: 和声機能・ケーデンス・短い日本語の解説。決定論的に生成される
+      type: object
+      required: [degree, function, explanation]
+      properties:
+        degree:
+          type: integer
+          minimum: 1
+          maximum: 7
+        function:
+          type: string
+          enum: [T, S, D]
+          description: トニック / サブドミナント / ドミナント
+        cadence:
+          type: string
+          enum: [authentic, plagal, half, deceptive]
+          description: 直前のコードからこのコードへの進行が作る終止。該当なしのときは省略
+        explanation:
+          type: string
+          description: UI にそのまま表示できる 1〜2 文の日本語
     Timeline:
       description: 再生・描画・解説・書き出しのすべてが消費する中心データ
       type: object

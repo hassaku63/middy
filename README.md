@@ -4,7 +4,7 @@
 
 「雨の日曜の午後みたいな曲」といった **イメージを AI が解釈** し、それに合う **コード進行とリズムのパターンを提案** します。チャットで相談しながら候補を絞り、生成された **タイムラインをその場で再生** できます。さらに、そのトラックの **コード進行やリズムの成り立ちを視覚的な支援つきで解説** します。
 
-> **ステータス: 開発前の足場（M0）。** 動く機能はまだありません。何をどの順で作るかは [`docs/product/roadmap.md`](docs/product/roadmap.md) を参照してください。
+> 何をどの順で作るかは [`docs/product/roadmap.md`](docs/product/roadmap.md)、進捗は [`docs/product/backlog.md`](docs/product/backlog.md) を参照してください。
 
 ## 何が特別か
 
@@ -28,12 +28,12 @@
 
 ```bash
 make setup          # 依存のインストール
-make check          # フォーマット・lint・テスト・ビルドを全部
+make check          # フォーマット・lint・テスト・ビルド・ドキュメント検査を全部
 make dev-backend    # :8080 で API（LLM は fake）
 make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ```
 
-ブラウザで http://localhost:5173 を開くと、バックエンドのヘルスチェック結果が表示されます。
+ブラウザで http://localhost:5173 を開き、調・モード・ローマ数字の進行・テンポを入力して「生成」を押すと、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。
 
 実際の LLM を使うときは `backend/.env.example` を `backend/.env` にコピーして `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を設定します（Anthropic アダプタ自体は未実装。[backlog](docs/product/backlog.md) 参照）。
 
@@ -44,6 +44,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ├── AGENTS.md              # AI エージェント向けの正典（Claude / Codex / Copilot 共通）
 ├── CLAUDE.md              # Claude Code 固有の補足（AGENTS.md を取り込む）
 ├── Makefile               # make check = 唯一のゲート
+├── scripts/               # ドキュメント検査などの補助スクリプト
 ├── backend/               # Go API + 音楽理論エンジン
 │   ├── cmd/server/        # エントリポイント
 │   └── internal/
@@ -54,7 +55,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ├── frontend/              # React PWA
 │   └── src/
 │       ├── app/           # アプリシェル
-│       ├── features/      # 機能ごとの縦スライス（今後）
+│       ├── features/      # 機能ごとの縦スライス（progression-input, player, timeline, explanation, export）
 │       └── shared/        # API クライアント等の共有コード
 └── docs/
     ├── product/           # ビジョン・ロードマップ・バックログ
@@ -70,6 +71,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 - [ロードマップ](docs/product/roadmap.md) / [バックログ](docs/product/backlog.md)
 - [アーキテクチャ概要](docs/architecture/overview.md) / [ドメインモデル](docs/architecture/domain-model.md)
 - [開発ワークフロー（AI 自律開発のハーネス）](docs/dev/workflow.md)
+- [ドキュメント鮮度の維持](docs/dev/docs-hygiene.md)
 
 ## ライセンス
 
