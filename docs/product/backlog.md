@@ -11,26 +11,26 @@
 
 ステータス: `Ready` / `In progress` / `Blocked(依存)` / `Done`
 
-## Now（M2 — Imagine）
+## Now
 
-M3（Groove & Ship）を Later から順に進める。実 API での疎通確認（`make eval`）は鍵の登録後に行う。
+M3（Groove & Ship）まで完了。次に Now へ入れる項目（M4+）はリポジトリ所有者が `Later` / `Ideas` と `roadmap.md` から決める（`docs/dev/workflow.md` の「人間の役割」）。実 API での評価（`make eval`）は鍵の登録後に行う。
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
 
 ## Next
 
-M2 が終わったら M3（Later）から Now へ。
+（なし）
 
+## Later（発動条件つき）
 
-## Later（M3 — Groove & Ship）
+条件を満たしたら Now へ移す。
 
 | ID | スライス | 要点 |
 | --- | --- | --- |
 | BL-050 | `knip` による未使用 export / ファイル / 依存の検出（ADR-0007）。発動条件: 最初の feature 削除 |
 | BL-051 | `music` のミューテーションテスト（`gremlins`）、四半期実行（ADR-0007）。発動条件: `music` が 3k 行 |
 | BL-053 | プロンプト監査の四半期実行（`claude-api` の `prompt-audit`）。発動条件: BL-011 以降 |
-| BL-054 | 月次 gardening の拡張: backlog の老化（Next に 90 日以上）と flaky の集計（ADR-0007） |
 
 ## Ideas（未評価。実装しない）
 
@@ -41,21 +41,13 @@ M2 が終わったら M3（Later）から Now へ。
 - 耳トレーニングモード（進行を聴いてローマ数字を当てる）
 - 楽譜表示（VexFlow 等）
 - 多言語 UI
+- 解説文を LLM に言い換えさせる（事実はエンジンの分析に限る。ADR-0003 の範囲内）
 
 ## Done
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
-| BL-000 | M0 足場（モノレポ、ドメイン基礎型、LLM 境界、ハーネス、ドキュメント） | 2026-11-07 |
-| BL-001 | 進行テンプレート → Timeline 生成（`music.Progression`, `music.FromProgression`） | 2026-11-07 |
-| BL-002 | 和声機能とケーデンス分析（`music.Analyze`, `music.Function`, `music.Cadence`） | 2026-11-07 |
-| BL-003 | API `POST /api/v1/timelines/from-progression`（`music.ParseRomanNumeral` 含む） | 2026-11-07 |
-| BL-004 | ブラウザ再生（`features/player`: TimelinePlayer, WebAudioSynth, usePlayer, PlayerControls） | 2026-11-07 |
-| BL-005 | タイムライン表示（`features/timeline`: コードレーン + ピアノロール + 再生位置） | 2026-11-07 |
-| BL-006 | 解説パネル（`features/explanation`: 再生追従とクリック固定） | 2026-11-07 |
-| BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
-| BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
-| BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-054 | 月次 gardening の拡張（backlog の老化、再実行で通った CI の集計） | 2026-11-07 |
 | BL-026 | OpenAPI → TypeScript 型生成（`openapi-typescript`、`npm run gen:api`、鮮度検査、ADR-0009） | 2026-11-07 |
 | BL-052 | バンドルサイズ予算（`scripts/check-bundle-size.sh`）と 1,000 ノート描画の予算テスト | 2026-11-07 |
 | BL-025 | PWA 仕上げ（更新は prompt モードでバナーから、オフライン表示、インストール導線、オフライン E2E） | 2026-11-07 |
@@ -71,13 +63,3 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-013 | API `POST /api/v1/ideas`（502 `llm_unavailable` / `llm_invalid_output`、TS クライアント `imagine`） | 2026-11-07 |
 | BL-012 | 意図解釈ユースケース（`internal/ideas`、1 回再試行、fake の見本 Intent） | 2026-11-07 |
 | BL-010 | MusicalIntent スキーマ（`internal/intent`: 型・検証・JSON Schema・Parse） | 2026-11-07 |
-| BL-043 | 通しの E2E（Playwright、`make e2e`、`e2e` ワークフロー） | 2026-11-07 |
-| BL-042 | ツールチェーンの固定（`.tool-versions` を CI・Docker・`make doctor` が読む） | 2026-11-07 |
-| BL-035 | テスト所要時間の可視化と予算（`make test-report`、CI の各ジョブで出力） | 2026-11-07 |
-| BL-034 | 言語またぎの正準フィクスチャ（`internal/fixtures` → `frontend/src/shared/api/fixtures`、`make fixtures`） | 2026-11-07 |
-| BL-033 | 依存の衛生（`go mod tidy -diff`、本番 npm 依存の audit、週次 `govulncheck`、Dependabot の方針） | 2026-11-07 |
-| BL-032 | サイズ・複雑度・PR の予算、ハーネス一覧、レビュー導線（自己レビュー、WIP 上限、リスク区分） | 2026-11-07 |
-| BL-031 | アーキテクチャ境界の lint（Go `depguard`、TS の feature 間 import / コンポーネント副作用 / スナップショット禁止） | 2026-11-07 |
-| BL-041 | Dockerfile と compose（マルチステージ、distroless 非 root、`-healthcheck`、CI の image ジョブ） | 2026-11-07 |
-| BL-040 | 単一バイナリ配信（`internal/web` の embed、SPA フォールバック、キャッシュ方針、`make build` / `make run`） | 2026-11-07 |
-| BL-030 | ドキュメント鮮度ハーネス（`make docs-check`、ルート↔OpenAPI 整合性テスト、`docs-sync` 自己点検、月次 gardening） | 2026-11-07 |

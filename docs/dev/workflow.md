@@ -59,7 +59,7 @@ make check
 - Conventional Commits。1 コミットは 1 つの意図。
 - PR は `.github/pull_request_template.md` を埋める。**「スコープ外」欄が空の PR は疑わしい**（本当に何も思いつかなかったか、黙って実装したか）。
 - PR は小さく。目安は 400 行差分以内（生成物・lock ファイル除く）。超えるなら分割し、backlog に分割後の項目を書く。
-- 1 ブランチ = 1 項目。ブランチ名は `feat/BL-001-progression-timeline` のように backlog ID を含める。
+- 1 ブランチ = 1 項目。ブランチ名は `feat/BL-NNN-short-name` のように backlog ID を含める。
 
 ## 完了の定義（Definition of Done）
 

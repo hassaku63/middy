@@ -45,7 +45,7 @@
 ```
 <type>(<scope>): <subject in English, imperative>
 
-<body: 日本語可。なぜ・何を。backlog ID を refs BL-001 の形で>
+<body: 日本語可。なぜ・何を。backlog ID を refs BL-NNN の形で>
 ```
 
 type: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `build`。scope: `music`, `httpapi`, `llm`, `config`, `frontend`, `docs`, `ci`。
