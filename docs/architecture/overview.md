@@ -43,6 +43,7 @@ internal/<usecase>  アプリケーションサービス。LLM と music を組�
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
 internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）
 internal/llm        ポート（interface）。adapters: fake（実装済み）, anthropic（BL-011）
+internal/web        ビルド済みフロント（frontend/dist）の embed。未同梱なら Dist() が false
 internal/config     環境変数
 ```
 
@@ -76,6 +77,13 @@ src/test       Vitest セットアップ
 
 - `vite-plugin-pwa` で manifest と Service Worker を生成。アプリシェルのみプリキャッシュし、`/api/*` はキャッシュしない。
 - オフラインの価値は「保存済みプロジェクトの再生」。これは M3 のローカル永続化（IndexedDB）で実現する。
+
+## 配備形態（ADR-0008）
+
+- **単一の Go バイナリ** が API と UI を同一オリジンで配信する。`make build` が `vite build` → `backend/internal/web/dist` へコピー → `go build`（`-ldflags` でバージョン埋め込み）の順に行う。
+- `httpapi` の静的ハンドラ: `/api` 配下以外で、ファイルがあればそれを、なければ `index.html`（SPA フォールバック）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。未知の `/api/*` は JSON の 404。
+- フロント未同梱のバイナリでも API は動き、UI は 503 `frontend_not_built` を返す。開発時は `make dev-frontend`（Vite のプロキシ）を使う。
+- コンテナ化と compose は BL-041。
 
 ## 横断的関心事
 

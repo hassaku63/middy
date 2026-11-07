@@ -9,9 +9,11 @@ SHELL := /bin/bash
 
 BACKEND  := backend
 FRONTEND := frontend
+EMBED_DIR := $(BACKEND)/internal/web/dist
+VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
-.PHONY: help setup check test lint fmt fmt-check build docs-check dev-backend dev-frontend \
-        backend-test backend-lint backend-fmt backend-fmt-check backend-build \
+.PHONY: help setup check test lint fmt fmt-check build docs-check dev-backend dev-frontend run \
+        backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-embed \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
 
@@ -28,13 +30,16 @@ test: backend-test frontend-test ## Run all tests
 lint: backend-lint frontend-lint ## Run all linters
 fmt: backend-fmt frontend-fmt ## Format all code in place
 fmt-check: backend-fmt-check frontend-fmt-check ## Verify formatting without changing files
-build: backend-build frontend-build ## Build both apps
+build: frontend-build backend-embed backend-build ## Build the single binary: vite build -> embed -> go build (ADR-0008)
 
 dev-backend: ## Run the API server with live config from backend/.env (if present)
 	cd $(BACKEND) && set -a && { [ -f .env ] && source .env || true; } && set +a && go run ./cmd/server
 
 dev-frontend: ## Run the Vite dev server (proxies /api to :8080)
 	cd $(FRONTEND) && npm run dev
+
+run: ## Run the built single binary (UI + API on :8080); build first with `make build`
+	$(BACKEND)/bin/server
 
 # --- backend -------------------------------------------------------------
 
@@ -50,8 +55,14 @@ backend-fmt: ## gofmt in place
 backend-fmt-check: ## Fail if any Go file is not gofmt-ed
 	@cd $(BACKEND) && out=$$(gofmt -l .); if [ -n "$$out" ]; then echo "gofmt needed:"; echo "$$out"; exit 1; fi
 
-backend-build: ## Compile the server binary to backend/bin/server
-	cd $(BACKEND) && go build -o bin/server ./cmd/server
+backend-embed: ## Copy frontend/dist into the Go embed directory
+	rm -rf $(EMBED_DIR)
+	mkdir -p $(EMBED_DIR)
+	cp -R $(FRONTEND)/dist/. $(EMBED_DIR)/
+	touch $(EMBED_DIR)/.gitkeep
+
+backend-build: ## Compile the server binary to backend/bin/server (embeds whatever is in the embed directory)
+	cd $(BACKEND) && go build -ldflags "-X github.com/hassaku63/middy/backend/internal/httpapi.Version=$(VERSION)" -o bin/server ./cmd/server
 
 # --- frontend ------------------------------------------------------------
 
@@ -78,5 +89,6 @@ frontend-build: ## vite production build (includes PWA assets)
 docs-check: ## Verify links, paths, index and backlog ids in Markdown (scripts/check-docs.sh)
 	bash scripts/check-docs.sh
 
-clean: ## Remove build outputs (backend/bin, frontend/dist, dev-dist, coverage)
+clean: ## Remove build outputs (backend/bin, embedded frontend, frontend/dist, dev-dist, coverage)
 	rm -rf backend/bin frontend/dist frontend/dev-dist frontend/coverage
+	rm -rf backend/internal/web/dist && mkdir -p backend/internal/web/dist && touch backend/internal/web/dist/.gitkeep
