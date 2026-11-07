@@ -17,6 +17,7 @@ excludes=(
   ':!**/package-lock.json' ':!**/go.sum' ':!**/*.png' ':!**/*.svg' ':!**/*.mid'
   ':!backend/internal/web/dist/**'
   ':!frontend/src/shared/api/fixtures/**'
+  ':!**/*.gen.ts'
 )
 
 total=$(git diff --numstat "$base...$head" -- . "${excludes[@]}" \

@@ -5,8 +5,10 @@
 #   1. Every relative Markdown link resolves to an existing file.
 #   2. Every repository path mentioned in backticks exists.
 #   3. Every file under docs/ is listed in docs/README.md (ADRs via their index).
-#   4. Every backlog ID (BL-NNN) mentioned anywhere exists in the backlog.
+#   4. Every backlog ID (BL-NNN) mentioned anywhere exists in the backlog,
+#      except in ADRs, which are historical records (ADR-0006).
 #   5. Agent instruction files stay within their line budget (ADR-0007).
+#   6. No merge conflict markers are left in any Markdown file.
 #
 # No dependencies beyond bash, grep, sed, find. Must stay portable (macOS/Linux).
 set -uo pipefail
@@ -78,6 +80,7 @@ backlog=docs/product/backlog.md
 known=$(grep -oE '^\| BL-[0-9]{3} ' "$backlog" | grep -oE 'BL-[0-9]{3}' | sort -u)
 while IFS= read -r file; do
   [ "$file" = "./$backlog" ] && continue
+  case "$file" in ./docs/architecture/adr/*) continue ;; esac
   grep -oE 'BL-[0-9]{3}' "$file" 2>/dev/null | sort -u | while IFS= read -r id; do
     printf '%s\n' "$known" | grep -qx "$id" || problem "$file: unknown backlog id -> $id"
   done
@@ -91,6 +94,13 @@ for f in AGENTS.md CLAUDE.md; do
     problem "$f: $lines lines exceeds the $budget-line budget; move detail into docs/ and link it"
   fi
 done
+
+# --- 6. no leftover merge conflict markers ------------------------------------
+while IFS= read -r file; do
+  if grep -nE '^(<<<<<<< |>>>>>>> |=======$)' "$file" >/dev/null 2>&1; then
+    problem "$file: merge conflict markers left in the file"
+  fi
+done < <(md_files)
 
 if [ -s "$problems" ]; then
   echo "docs-check: FAILED ($(wc -l < "$problems" | tr -d ' ') problems)" >&2

@@ -12,6 +12,7 @@
 | [0006](0006-documentation-freshness.md) | ドキュメントは現在の状態だけを書き、機械的検査と定期点検で鮮度を保つ | Accepted |
 | [0007](0007-decay-prevention.md) | 開発サイクルの劣化を、矯正・検知・削減の三層で防ぐ | Accepted |
 | [0008](0008-local-verification-and-containers.md) | 本番相当の配信形態を「単一 Go バイナリ」に決め、コンテナで検証可能にする | Accepted |
+| [0009](0009-generated-api-types.md) | TypeScript の API 型を OpenAPI から生成する | Accepted |
 
 ## いつ ADR を書くか
 

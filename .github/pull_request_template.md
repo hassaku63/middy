@@ -1,6 +1,6 @@
 ## 概要
 
-<!-- 何を・なぜ。関連する backlog ID / Issue / ADR を書く（例: closes #12, refs BL-003） -->
+<!-- 何を・なぜ。関連する backlog ID / Issue / ADR を書く（例: closes #12, refs BL-NNN） -->
 
 ## リスク区分
 
