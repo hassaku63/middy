@@ -91,8 +91,20 @@ func (t Timeline) LengthTicks() Tick {
 }
 
 // Validate checks structural invariants. It is called at the API boundary
-// so that every other function may assume a valid timeline.
+// so that every other function may assume a valid timeline. All problems
+// are reported together.
 func (t Timeline) Validate() error {
+	errs := t.validateHeader()
+	for ti, tr := range t.Tracks {
+		errs = append(errs, tr.validate(fmt.Sprintf("tracks[%d]", ti))...)
+	}
+	for hi, h := range t.Harmony {
+		errs = append(errs, h.validate(fmt.Sprintf("harmony[%d]", hi))...)
+	}
+	return errors.Join(errs...)
+}
+
+func (t Timeline) validateHeader() []error {
 	var errs []error
 	if t.PPQ <= 0 {
 		errs = append(errs, fmt.Errorf("ppq must be positive, got %d", t.PPQ))
@@ -103,37 +115,49 @@ func (t Timeline) Validate() error {
 	if t.TimeSignature.Numerator <= 0 || !isPowerOfTwo(t.TimeSignature.Denominator) {
 		errs = append(errs, fmt.Errorf("invalid time signature %d/%d", t.TimeSignature.Numerator, t.TimeSignature.Denominator))
 	}
-	for ti, tr := range t.Tracks {
-		if tr.Channel < 0 || tr.Channel > 15 {
-			errs = append(errs, fmt.Errorf("tracks[%d]: channel must be 0..15, got %d", ti, tr.Channel))
-		}
-		if tr.Program < 0 || tr.Program > 127 {
-			errs = append(errs, fmt.Errorf("tracks[%d]: program must be 0..127, got %d", ti, tr.Program))
-		}
-		for ni, n := range tr.Notes {
-			if !n.Pitch.Valid() {
-				errs = append(errs, fmt.Errorf("tracks[%d].notes[%d]: pitch out of range: %d", ti, ni, n.Pitch))
-			}
-			if n.Velocity < 1 || n.Velocity > 127 {
-				errs = append(errs, fmt.Errorf("tracks[%d].notes[%d]: velocity must be 1..127, got %d", ti, ni, n.Velocity))
-			}
-			if n.Start < 0 {
-				errs = append(errs, fmt.Errorf("tracks[%d].notes[%d]: start must be >= 0, got %d", ti, ni, n.Start))
-			}
-			if n.Duration <= 0 {
-				errs = append(errs, fmt.Errorf("tracks[%d].notes[%d]: duration must be > 0, got %d", ti, ni, n.Duration))
-			}
-		}
+	return errs
+}
+
+func (tr Track) validate(where string) []error {
+	var errs []error
+	if tr.Channel < 0 || tr.Channel > 15 {
+		errs = append(errs, fmt.Errorf("%s: channel must be 0..15, got %d", where, tr.Channel))
 	}
-	for hi, h := range t.Harmony {
-		if h.Start < 0 || h.Duration <= 0 {
-			errs = append(errs, fmt.Errorf("harmony[%d]: invalid span start=%d duration=%d", hi, h.Start, h.Duration))
-		}
-		if _, err := h.Chord.Quality.info(); err != nil {
-			errs = append(errs, fmt.Errorf("harmony[%d]: %w", hi, err))
-		}
+	if tr.Program < 0 || tr.Program > 127 {
+		errs = append(errs, fmt.Errorf("%s: program must be 0..127, got %d", where, tr.Program))
 	}
-	return errors.Join(errs...)
+	for ni, n := range tr.Notes {
+		errs = append(errs, n.validate(fmt.Sprintf("%s.notes[%d]", where, ni))...)
+	}
+	return errs
+}
+
+func (n NoteEvent) validate(where string) []error {
+	var errs []error
+	if !n.Pitch.Valid() {
+		errs = append(errs, fmt.Errorf("%s: pitch out of range: %d", where, n.Pitch))
+	}
+	if n.Velocity < 1 || n.Velocity > 127 {
+		errs = append(errs, fmt.Errorf("%s: velocity must be 1..127, got %d", where, n.Velocity))
+	}
+	if n.Start < 0 {
+		errs = append(errs, fmt.Errorf("%s: start must be >= 0, got %d", where, n.Start))
+	}
+	if n.Duration <= 0 {
+		errs = append(errs, fmt.Errorf("%s: duration must be > 0, got %d", where, n.Duration))
+	}
+	return errs
+}
+
+func (h HarmonyEvent) validate(where string) []error {
+	var errs []error
+	if h.Start < 0 || h.Duration <= 0 {
+		errs = append(errs, fmt.Errorf("%s: invalid span start=%d duration=%d", where, h.Start, h.Duration))
+	}
+	if _, err := h.Chord.Quality.info(); err != nil {
+		errs = append(errs, fmt.Errorf("%s: %w", where, err))
+	}
+	return errs
 }
 
 func isPowerOfTwo(n int) bool {

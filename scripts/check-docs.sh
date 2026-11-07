@@ -6,6 +6,7 @@
 #   2. Every repository path mentioned in backticks exists.
 #   3. Every file under docs/ is listed in docs/README.md (ADRs via their index).
 #   4. Every backlog ID (BL-NNN) mentioned anywhere exists in the backlog.
+#   5. Agent instruction files stay within their line budget (ADR-0007).
 #
 # No dependencies beyond bash, grep, sed, find. Must stay portable (macOS/Linux).
 set -uo pipefail
@@ -81,6 +82,15 @@ while IFS= read -r file; do
     printf '%s\n' "$known" | grep -qx "$id" || problem "$file: unknown backlog id -> $id"
   done
 done < <(md_files; find .github -type f -name '*.md' -o -name '*.yml' | sort)
+
+# --- 5. instruction files stay short ---------------------------------------
+budget=150
+for f in AGENTS.md CLAUDE.md; do
+  lines=$(wc -l < "$f" | tr -d ' ')
+  if [ "$lines" -gt "$budget" ]; then
+    problem "$f: $lines lines exceeds the $budget-line budget; move detail into docs/ and link it"
+  fi
+done
 
 if [ -s "$problems" ]; then
   echo "docs-check: FAILED ($(wc -l < "$problems" | tr -d ' ') problems)" >&2

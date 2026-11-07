@@ -112,7 +112,15 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
+      // Size and complexity budgets (ADR-0007). Generous; a hit means "split".
+      'max-lines': ['error', { max: 400, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
+      complexity: ['error', 15],
     },
+  },
+  {
+    files: ['**/*.test.{ts,tsx}', 'src/test/**'],
+    rules: { 'max-lines-per-function': 'off' },
   },
   {
     files: ['**/*.test.{ts,tsx}', 'src/test/**'],
