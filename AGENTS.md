@@ -1,0 +1,78 @@
+# AGENTS.md — AI エージェント向け開発ガイド
+
+このファイルは middy で作業するすべての AI コーディングエージェント（Claude Code, OpenAI Codex, GitHub Copilot など）と人間の共通の正典です。ツール固有の補足は `CLAUDE.md` と `.github/copilot-instructions.md` にありますが、ルールの本体はここだけに書きます。
+
+## 1. このプロダクトは何か
+
+作曲スキルと音楽理論の学習を助ける PWA。ユーザーのイメージ（言葉）を AI が音楽パラメータに解釈し、決定論的な音楽理論エンジンがコード進行・リズムのタイムラインを生成する。ユーザーはそれを再生し、成り立ちを視覚的な解説で理解する。詳細は `docs/product/vision.md`。
+
+**最重要の設計原則（ADR-0003）**: LLM は「解釈と対話」を担当し、音符は書かない。音符・コード・分析はすべて `backend/internal/music` の純粋関数が作る。この境界を崩す変更は ADR なしに行わない。
+
+## 2. 作業の進め方（開発ループ）
+
+1. **`docs/product/backlog.md` を開き、「Now」の中で最も上にある `Ready` な項目を 1 つ選ぶ。** 自分で新しい機能を思いついても、backlog にない限り着手しない。思いついたものは backlog の「Later」か「Ideas」に 1 行で追記して終わり。
+2. 着手前に受け入れ条件を読み、曖昧なら **実装せずに質問する**（または最も保守的な解釈を選び、PR に明記する）。
+3. **テストを先に書く**（または同じコミットで書く）。ドメインロジックはテーブル駆動テスト、HTTP は `httptest`、UI は Testing Library。
+4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に従う。
+5. **`make check` を通す。** 通らないものは完成ではない。
+6. 影響するドキュメントを更新する: API 変更 → `docs/api/openapi.yaml`、設計判断 → `docs/architecture/adr/`、backlog のステータス。
+7. Conventional Commits でコミットし、PR テンプレートを埋める。1 PR = 1 backlog 項目 = 1 縦スライス。
+8. 完了したら backlog の項目を `Done` にし、次の項目へ。
+
+ワークフローの詳細と「完了の定義」は `docs/dev/workflow.md`。
+
+## 3. ガードレール（やってはいけないこと）
+
+- **スコープを広げない。** 「あったほうがいい」機能・リファクタ・依存追加は、今の backlog 項目に必要でなければやらない。backlog に書いて次に回す。
+- **テストを消す・スキップする・lint を無効化して通す** ことで緑にしない。根本原因を直す。
+- **依存を追加しない**（Go module / npm package）。本当に必要なら ADR を 1 枚書き、PR で理由を述べる。候補は `docs/architecture/adr/0002-tech-stack.md` の「将来の候補」を優先。
+- **API の形を黙って変えない。** `docs/api/openapi.yaml` と `frontend/src/shared/api` と Go ハンドラは常に一致させる。
+- **秘密情報を扱わない。** `.env` を読まない・コミットしない。API キーはコードに書かない。
+- **`main` に直接 push しない。** `git push --force` をしない。
+- **巨大な PR を作らない。** 目安は生成物を除き 400 行差分以内。超えそうなら項目を分割して backlog を更新する。
+- **ファイル全体の書き換えより、差分編集を優先する。** 既存のスタイルに合わせる。
+- 振る舞いが音楽理論的に正しいか自信がないときは、`docs/architecture/domain-model.md` の定義と既存テストを根拠にし、推測で「それらしい」出力を作らない。
+
+## 4. 技術スタックと配置
+
+| 場所 | 役割 | 守ること |
+| --- | --- | --- |
+| `backend/cmd/server` | エントリポイント。配線だけ | ロジックを書かない |
+| `backend/internal/config` | 環境変数 | 新しい設定は `Load` とテストに追加 |
+| `backend/internal/httpapi` | HTTP ハンドラ・ミドルウェア | 薄く保つ。decode → ユースケース → encode |
+| `backend/internal/music` | 音楽理論ドメイン | 標準ライブラリのみ、I/O なし、純粋関数 |
+| `backend/internal/llm` | LLM 境界。`Client` interface と `fake` | プロバイダ依存はサブパッケージに閉じる |
+| `frontend/src/app` | アプリシェル・ルーティング | |
+| `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ |
+| `frontend/src/shared` | API クライアント、共通 UI、ユーティリティ | |
+| `docs/api/openapi.yaml` | API 契約 | ハンドラ変更と同じ PR で更新 |
+
+- Go: 標準 `net/http`（Go 1.22+ のメソッド付きパターン）、`log/slog`、`errors.Join`。フレームワークは使わない。
+- TypeScript: `strict` + `noUncheckedIndexedAccess`。`any` 禁止。型 import は `import type`。
+- スタイル: gofmt / goimports、Prettier（singleQuote, printWidth 100）。
+
+## 5. コマンド
+
+```bash
+make check            # すべてのゲート（これが通れば CI も通る）
+make test             # テストのみ
+make lint             # lint のみ
+make fmt              # 自動整形
+make dev-backend      # API サーバー（:8080, LLM は fake）
+make dev-frontend     # Vite dev server（:5173）
+cd backend && go test ./internal/music/ -run TestDiatonic -v   # 単体で回す例
+cd frontend && npx vitest run src/app                             # 単体で回す例
+```
+
+## 6. コミットと PR
+
+- Conventional Commits: `feat(music): add harmonic function analysis`, `fix(httpapi): ...`, `docs:`, `test:`, `chore:`, `refactor:`。スコープは `music` / `httpapi` / `llm` / `config` / `frontend` / `docs` / `ci`。
+- PR 本文は `.github/pull_request_template.md` に従い、**スコープ外にしたこと** を必ず書く。
+- コミットメッセージ・コード・コメントにモデル名や生成ツールの宣伝を書かない。
+
+## 7. 迷ったら
+
+1. `docs/product/vision.md` の「コアシナリオ」に近い方を選ぶ。
+2. 決定論的に解ける方を選ぶ（LLM に頼らない）。
+3. 小さい方を選ぶ。
+4. それでも決まらなければ、実装せずに質問する。

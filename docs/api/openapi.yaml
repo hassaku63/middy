@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: middy API
+  version: 0.1.0
+  description: |
+    middy のバックエンド API。この文書が契約の正典であり（ADR-0004）、
+    `backend/internal/httpapi` と `frontend/src/shared/api` はこれに追従する。
+
+    現時点で実装されているのは `/health` のみ。`components.schemas` には
+    ドメインモデル（`backend/internal/music`）の JSON 表現を先に定義してあり、
+    M1 のエンドポイント（backlog BL-003, BL-008）はこれを参照して追加する。
+servers:
+  - url: /api/v1
+tags:
+  - name: system
+    description: 稼働確認
+paths:
+  /health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: サーバーの稼働状態を返す
+      responses:
+        '200':
+          description: 稼働中
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                version: dev
+components:
+  schemas:
+    Health:
+      type: object
+      required: [status, version]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+          description: ビルド時に埋め込まれるバージョン。開発時は "dev"
+    Error:
+      description: すべてのエラー応答が使う共通エンベロープ
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: snake_case の安定した識別子（例 invalid_request）
+            message:
+              type: string
+              description: 人間向けの説明。UI にそのまま出してよい
+
+    # --- ドメインモデル（backend/internal/music と 1:1） --------------------
+    PitchClass:
+      type: integer
+      minimum: 0
+      maximum: 11
+      description: 0 = C … 11 = B
+    Pitch:
+      type: integer
+      minimum: 0
+      maximum: 127
+      description: MIDI ノート番号。60 = C4
+    Mode:
+      type: string
+      enum: [major, minor]
+    Key:
+      type: object
+      required: [tonic, mode]
+      properties:
+        tonic:
+          $ref: '#/components/schemas/PitchClass'
+        mode:
+          $ref: '#/components/schemas/Mode'
+    ChordQuality:
+      type: string
+      enum: [maj, min, dim, aug, maj7, min7, dom7, m7b5]
+    Chord:
+      type: object
+      required: [root, quality]
+      properties:
+        root:
+          $ref: '#/components/schemas/PitchClass'
+        quality:
+          $ref: '#/components/schemas/ChordQuality'
+    TimeSignature:
+      type: object
+      required: [numerator, denominator]
+      properties:
+        numerator:
+          type: integer
+          minimum: 1
+        denominator:
+          type: integer
+          description: 2 のべき乗
+    NoteEvent:
+      type: object
+      required: [pitch, velocity, start, duration]
+      properties:
+        pitch:
+          $ref: '#/components/schemas/Pitch'
+        velocity:
+          type: integer
+          minimum: 1
+          maximum: 127
+        start:
+          type: integer
+          minimum: 0
+          description: tick
+        duration:
+          type: integer
+          minimum: 1
+          description: tick
+    Track:
+      type: object
+      required: [name, channel, program, notes]
+      properties:
+        name:
+          type: string
+        channel:
+          type: integer
+          minimum: 0
+          maximum: 15
+          description: 0 始まり。9 は GM パーカッション
+        program:
+          type: integer
+          minimum: 0
+          maximum: 127
+          description: GM プログラム番号（0 始まり）
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoteEvent'
+    HarmonyEvent:
+      type: object
+      required: [start, duration, chord, romanNumeral]
+      properties:
+        start:
+          type: integer
+          minimum: 0
+        duration:
+          type: integer
+          minimum: 1
+        chord:
+          $ref: '#/components/schemas/Chord'
+        romanNumeral:
+          type: string
+          examples: [I, ii, V7, 'vii°']
+    Timeline:
+      description: 再生・描画・解説・書き出しのすべてが消費する中心データ
+      type: object
+      required: [ppq, tempoBpm, timeSignature, key, tracks, harmony]
+      properties:
+        ppq:
+          type: integer
+          minimum: 1
+          description: 四分音符あたりの tick 数（既定 480）
+        tempoBpm:
+          type: number
+          exclusiveMinimum: 0
+        timeSignature:
+          $ref: '#/components/schemas/TimeSignature'
+        key:
+          $ref: '#/components/schemas/Key'
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
+        harmony:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarmonyEvent'
