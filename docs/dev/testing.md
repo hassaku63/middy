@@ -36,6 +36,10 @@
 - Testing Library。`findByRole` で非同期を待つ。
 - `fetch` は `vi.stubGlobal` で差し替え、`afterEach` で `vi.unstubAllGlobals()`。
 
+### 通しの確認（手動）
+
+`make dev-backend` と `make dev-frontend` を起動し、ブラウザで S1 シナリオ（生成 → 再生 → ハイライト → 解説の固定）を通す。単体テストは `fetch` や `AudioContext` をモックするため、ブラウザ固有の失敗（例: `fetch` を束縛せずに呼ぶと "Illegal invocation"）は実ブラウザでしか見つからない。UI に触れる PR では最低 1 回は実機で通す。
+
 ## 実行
 
 ```bash
