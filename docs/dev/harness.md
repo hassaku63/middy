@@ -64,7 +64,7 @@
 | `govulncheck` + `npm audit`（全依存） | 新たに公開された脆弱性 | （CI のみ） | 週次 `security audit` |
 | Dependabot（週次、minor/patch と major を別グループ） | 依存の陳腐化 | — | GitHub |
 
-**Dependabot の方針**: minor/patch のグループは CI が緑ならマージしてよい（人間でもエージェントでも）。major は人間が判断し、規約や書き方が変わるなら ADR を書く。`typescript` と `@types/node` の major は除外（理由は `.github/dependabot.yml`）。CI が落ちた更新は閉じて原因を backlog に書く。
+**Dependabot の方針**: CI が `main` に追従した状態で緑なら、major を含めてマージしてよい（人間でもエージェントでも）。古いブランチは先に `main` へ追従させて CI を回し直す。major で規約や書き方が変わる（設定ファイルの形式変更など）なら、マージと同じ PR かその直後に ADR か文書を更新する。`typescript` と `@types/node` の major は除外（理由は `.github/dependabot.yml`）。CI が落ちた更新は閉じて原因を backlog に書く。
 
 ## ツールチェーン（ADR-0008）
 
