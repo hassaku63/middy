@@ -6,7 +6,49 @@ linters:
     - misspell
     - revive
     - gocritic
+    - depguard
   settings:
+    # Architecture boundaries (ADR-0007). Rules, not conventions.
+    depguard:
+      rules:
+        music-is-pure:
+          # The theory engine depends on nothing but the standard library and
+          # itself, and never performs I/O.
+          list-mode: strict
+          files:
+            - "**/internal/music/**/*.go"
+          allow:
+            - $gostd
+            - github.com/hassaku63/middy/backend/internal/music
+          deny:
+            - pkg: os
+              desc: internal/music must not touch the OS
+            - pkg: net
+              desc: internal/music must not do networking
+            - pkg: io/fs
+              desc: internal/music must not read files
+        httpapi-uses-ports-only:
+          # Handlers see llm.Client, never a concrete adapter; wiring is main's job.
+          list-mode: lax
+          files:
+            - "**/internal/httpapi/**/*.go"
+            - "!**/*_test.go"
+          deny:
+            - pkg: github.com/hassaku63/middy/backend/internal/llm/fake
+              desc: inject llm.Client through Deps instead of importing an adapter
+            - pkg: github.com/hassaku63/middy/backend/internal/llm/anthropic
+              desc: inject llm.Client through Deps instead of importing an adapter
+        no-http-outside-boundaries:
+          # Only the HTTP layer, the entrypoint and LLM adapters speak HTTP.
+          list-mode: lax
+          files:
+            - "**/internal/**/*.go"
+            - "!**/internal/httpapi/**"
+            - "!**/internal/llm/**"
+            - "!**/*_test.go"
+          deny:
+            - pkg: net/http
+              desc: HTTP belongs to internal/httpapi, cmd/server and LLM adapters
     revive:
       rules:
         - name: exported

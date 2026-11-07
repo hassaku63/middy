@@ -39,13 +39,13 @@
 | --- | --- | --- |
 | `backend/cmd/server` | エントリポイント。配線だけ | ロジックを書かない |
 | `backend/internal/config` | 環境変数 | 新しい設定は `Load` とテストに追加 |
-| `backend/internal/httpapi` | HTTP ハンドラ・ミドルウェア | 薄く保つ。decode → ユースケース → encode |
-| `backend/internal/music` | 音楽理論ドメイン | 標準ライブラリのみ、I/O なし、純粋関数 |
+| `backend/internal/httpapi` | HTTP ハンドラ・ミドルウェア | 薄く保つ。decode → ユースケース → encode。LLM アダプタを直接 import しない（`depguard` で強制） |
+| `backend/internal/music` | 音楽理論ドメイン | 標準ライブラリのみ、I/O なし、純粋関数（`depguard` で強制） |
 | `backend/internal/music/smf` | Timeline → SMF エンコーダ | `music` にのみ依存。バイト列の期待値テストを壊す変更は意図を PR に書く |
 | `backend/internal/llm` | LLM 境界。`Client` interface と `fake` | プロバイダ依存はサブパッケージに閉じる |
 | `backend/internal/web` | ビルド済みフロントの embed | `dist/` の中身はコミットしない（`make build` が生成） |
 | `frontend/src/app` | アプリシェル・ルーティング | |
-| `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ |
+| `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ（ESLint で強制）。`*.tsx` は API 呼び出しや `fetch` / `AudioContext` 等の副作用を持たず、hook に置く（ESLint で強制） |
 | `frontend/src/shared` | API クライアント、共通 UI、ユーティリティ | |
 | `docs/api/openapi.yaml` | API 契約 | ハンドラ変更と同じ PR で更新 |
 

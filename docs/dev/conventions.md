@@ -26,7 +26,8 @@
 - `import type` を使う（ESLint が強制）。
 - コンポーネントは関数コンポーネント + 名前付きエクスポート。1 ファイル 1 コンポーネントを基本に、小さな private コンポーネントは同居可。
 - 状態は最も近い場所に置く。feature をまたぐ状態は `src/app` の context に昇格させ、3 つを超えたら ADR。
-- 副作用（fetch, AudioContext）は hook に閉じ込め、コンポーネントは表示に集中する。hook は引数で依存（`fetchImpl` など）を受け取れるようにしてテスト可能にする。
+- 副作用（fetch, AudioContext, ストレージ, タイマー）は hook かサービス（`.ts`）に閉じ込め、コンポーネント（`.tsx`）は表示に集中する。ESLint が `*.tsx` での `@/shared/api` の値 import と上記グローバルを禁止する（型 import は可）。hook は引数で依存（`fetchImpl`, `saveFile` など）を受け取れるようにしてテスト可能にする。
+- feature 内の参照は `./`、共有は `@/shared`。`../` で隣の feature に届く書き方と `@/features/<他>` は ESLint が禁止する。
 - API 呼び出しは `src/shared/api` 経由のみ。コンポーネントから直接 `fetch` しない。
 - アクセシビリティ: インタラクティブ要素は `button`/`role` を正しく。テストは `getByRole` で取れることを前提にする。
 - CSS: プレーン CSS。グローバルは `src/app/global.css` のみ。feature 固有は CSS Modules（`*.module.css`）。
