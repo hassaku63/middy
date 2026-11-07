@@ -1,4 +1,4 @@
-# End-to-end scenarios against the production image (ADR-0008, BL-043).
+# End-to-end scenarios against the production image (ADR-0008).
 # Manual to start with; promote to pull_request once the suite proves stable.
 name: e2e
 
