@@ -69,3 +69,18 @@ main {
   font-size: 0.8rem;
   color: #6b7280;
 }
+
+.app__source {
+  display: flex;
+  gap: 8px;
+}
+
+.app__source button[aria-pressed='true'] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.app__open-title {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
