@@ -8,6 +8,8 @@ import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/pl
 import { ProgressionForm } from '@/features/progression-input/ProgressionForm';
 import { usePatterns } from '@/features/progression-input/usePatterns';
 import { ProjectsPanel } from '@/features/projects/ProjectsPanel';
+import { PwaBanner } from '@/features/pwa/PwaBanner';
+import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import { TimelineView } from '@/features/timeline/TimelineView';
 import type { FromProgressionRequest, IdeaCandidate } from '@/shared/api/client';
@@ -48,6 +50,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const patterns = usePatterns();
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
+  const pwa = usePwa();
   const { timeline } = generation;
 
   const generate = async (req: FromProgressionRequest) => {
@@ -85,6 +88,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         <h1>middy</h1>
         <p>イメージや進行から曲の骨組みを作って、鳴らして、成り立ちを見る。</p>
       </header>
+      <PwaBanner pwa={pwa} />
 
       <nav className="app__source" aria-label="入力方法">
         <button type="button" onClick={() => setSource('ideas')} aria-pressed={source === 'ideas'}>
