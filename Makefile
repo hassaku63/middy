@@ -12,7 +12,7 @@ FRONTEND := frontend
 EMBED_DIR := $(BACKEND)/internal/web/dist
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
-.PHONY: help setup check test lint fmt fmt-check build docs-check deps-check dev-backend dev-frontend run image up down \
+.PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures dev-backend dev-frontend run image up down \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-embed \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
@@ -97,6 +97,9 @@ frontend-build: ## vite production build (includes PWA assets)
 
 docs-check: ## Verify links, paths, index and backlog ids in Markdown (scripts/check-docs.sh)
 	bash scripts/check-docs.sh
+
+fixtures: ## Regenerate the cross-language fixtures the frontend tests check against (then commit them)
+	cd $(BACKEND) && go run ./cmd/fixtures -out ../$(FRONTEND)/src/shared/api/fixtures
 
 deps-check: ## go.mod tidy check + npm audit of production deps (needs network; CI `deps` job runs this)
 	cd $(BACKEND) && go mod tidy -diff

@@ -20,6 +20,10 @@
 - `llm/fake` に台本を与え、入力 → 出力の end-to-end を検証する。
 - 不正な LLM 出力（スキーマ違反、理論的に不成立）に対して **落ちずにエラーまたは補正** することをテストする。
 
+### 言語またぎ（`backend/internal/fixtures` ↔ `frontend/src/shared/api/fixtures`）
+
+- バックエンドの表記（コード記号、ローマ数字）や分析結果をフロントが写している箇所は、Go が生成した JSON フィクスチャに対してテストする。フィクスチャは `make fixtures` で再生成してコミットし、古くなると Go のテストが落ちる。
+
 ### `backend/internal/httpapi`
 
 - `httptest.NewServer(NewHandler(deps))` で実際に HTTP を通す。
