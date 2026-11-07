@@ -3,9 +3,9 @@
 | 用語 | 意味 | コード上の対応 |
 | --- | --- | --- |
 | イメージ (Image) | ユーザーが言葉で表す曲の印象。「雨の日曜」「出発の朝」など | LLM への入力。`MusicalIntent` の元 |
-| 音楽的意図 (MusicalIntent) | イメージを LLM が解釈した構造化パラメータ。調・モード・テンポ・雰囲気タグ・進行テンプレート候補 | （M2 で `internal/intent` に導入予定） |
+| 音楽的意図 (MusicalIntent) | イメージを LLM が解釈した構造化パラメータ。調・モード・テンポ・雰囲気タグ・進行テンプレート候補 | 未実装。BL-010 |
 | 進行 (Progression) | 調に依存しないコード進行テンプレート。度数と拍数の列 | `music.Progression`, `music.FromProgression` |
-| パターン (Pattern) | 再利用可能なコード進行テンプレート、またはリズムテンプレート | （M1/M3 で `internal/music/pattern` に導入予定） |
+| パターン (Pattern) | 再利用可能なコード進行テンプレート、またはリズムテンプレート | 未実装。BL-020 |
 | タイムライン (Timeline) | 再生・表示・書き出しの対象となる中心データ。テンポ、拍子、調、トラック、ハーモニー注釈 | `music.Timeline` |
 | トラック (Track) | 楽器ごとのノート列 | `music.Track` |
 | ノート (NoteEvent) | ピッチ・ベロシティ・開始 tick・長さ | `music.NoteEvent` |
@@ -17,6 +17,6 @@
 | 度数 (Degree) | 音階上の位置。1 始まり | `Key.Degree`, `Key.Diatonic` |
 | ダイアトニックコード | 調の音だけで作られるコード | `Key.Diatonic` |
 | ローマ数字 (Roman numeral) | 度数とコードの質をあらわす記法。I, ii, V7, vii° | `music.RomanNumeral` |
-| 和声機能 (Harmonic function) | T（トニック）/ S（サブドミナント）/ D（ドミナント） | （M1 で導入予定） |
-| 解説 (Explanation) | タイムラインの成り立ちを説明するデータ。ハイライト対象と文章 | （M1 で導入予定） |
+| 和声機能 (Harmonic function) | T（トニック）/ S（サブドミナント）/ D（ドミナント） | 未実装。BL-002 |
+| 解説 (Explanation) | タイムラインの成り立ちを説明するデータ。ハイライト対象と文章 | 未実装。BL-002, BL-006 |
 | スライス (Slice) | 1 PR で完結する、UI〜API〜ドメインを縦に貫く小さな機能単位 | `docs/product/backlog.md` |
