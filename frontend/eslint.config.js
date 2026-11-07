@@ -92,7 +92,7 @@ const testHygieneRules = {
 };
 
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist', 'coverage', 'node_modules'] },
+  { ignores: ['dist', 'dev-dist', 'coverage', 'node_modules', 'src/**/*.gen.ts'] },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {

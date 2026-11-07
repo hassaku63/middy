@@ -60,10 +60,10 @@ describe('ProgressionForm', () => {
         onSubmit={onSubmit}
         patterns={{
           accompaniments: [
-            { id: 'block', name: 'ブロック', description: 'b', program: 0 },
-            { id: 'arpeggio', name: 'アルペジオ', description: 'a', program: 0 },
+            { id: 'block', name: 'ブロック', description: 'b', program: 0, hits: [] },
+            { id: 'arpeggio', name: 'アルペジオ', description: 'a', program: 0, hits: [] },
           ],
-          drums: [{ id: 'eight-beat', name: '8 ビート', description: 'd' }],
+          drums: [{ id: 'eight-beat', name: '8 ビート', description: 'd', hits: [] }],
         }}
       />,
     );

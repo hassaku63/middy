@@ -91,7 +91,8 @@ backend-build: ## Compile the server binary to backend/bin/server (embeds whatev
 
 # --- frontend ------------------------------------------------------------
 
-frontend-typecheck: ## tsc -b
+frontend-typecheck: ## tsc -b, after checking the generated API types are current (ADR-0009)
+	bash scripts/check-api-types.sh
 	cd $(FRONTEND) && npm run typecheck
 
 frontend-test: ## vitest

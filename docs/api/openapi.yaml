@@ -108,7 +108,7 @@ paths:
                   $ref: '#/components/schemas/Timeline'
       responses:
         '200':
-          description: SMF のバイト列。`Content-Disposition: attachment; filename="middy.mid"`
+          description: 'SMF のバイト列。`Content-Disposition: attachment; filename="middy.mid"`'
           content:
             audio/midi:
               schema:

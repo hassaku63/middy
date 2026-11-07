@@ -1,79 +1,43 @@
 /**
  * Thin fetch wrapper for the backend API.
  *
- * Request/response types mirror docs/api/openapi.yaml. When the contract
- * grows beyond a handful of endpoints, replace the hand-written types with
- * generated ones (tracked in the backlog) rather than letting them drift.
+ * Request/response types are generated from docs/api/openapi.yaml into
+ * schema.gen.ts (`npm run gen:api`, ADR-0009); this file only gives them
+ * short names. Never hand-write an API shape here.
  */
 
-export type Health = {
-  status: 'ok';
-  version: string;
-};
+import type { components } from './schema.gen';
 
-// --- domain model (mirrors backend/internal/music) ---------------------------
+type Schemas = components['schemas'];
+
+export type Health = Schemas['Health'];
+
+// --- domain model (backend/internal/music, via the OpenAPI schemas) ---------
 
 /** 0 = C … 11 = B */
-export type PitchClass = number;
+export type PitchClass = Schemas['PitchClass'];
 /** MIDI note number, 60 = C4 */
-export type Pitch = number;
-export type Mode = 'major' | 'minor';
-export type Key = { tonic: PitchClass; mode: Mode };
-export type ChordQuality = 'maj' | 'min' | 'dim' | 'aug' | 'maj7' | 'min7' | 'dom7' | 'm7b5';
-export type Chord = { root: PitchClass; quality: ChordQuality };
-export type TimeSignature = { numerator: number; denominator: number };
-export type NoteEvent = { pitch: Pitch; velocity: number; start: number; duration: number };
-export type Track = { name: string; channel: number; program: number; notes: NoteEvent[] };
-export type HarmonicFunction = 'T' | 'S' | 'D';
-export type Cadence = 'authentic' | 'plagal' | 'half' | 'deceptive';
-export type HarmonyAnalysis = {
-  degree: number;
-  function: HarmonicFunction;
-  cadence?: Cadence;
-  explanation: string;
-};
-export type HarmonyEvent = {
-  start: number;
-  duration: number;
-  chord: Chord;
-  romanNumeral: string;
-  analysis?: HarmonyAnalysis;
-};
-export type RhythmPart = {
-  id: string;
-  name: string;
-  description: string;
-  hits: number;
-  onBeat: number;
-  offBeat: number;
-  finer: number;
-  syncopated: boolean;
-  explanation: string;
-};
-export type Rhythm = { accompaniment?: RhythmPart; drums?: RhythmPart };
-export type Timeline = {
-  ppq: number;
-  tempoBpm: number;
-  timeSignature: TimeSignature;
-  key: Key;
-  tracks: Track[];
-  harmony: HarmonyEvent[];
-  /** present once accompaniment / drum patterns were applied */
-  rhythm?: Rhythm;
-};
+export type Pitch = Schemas['Pitch'];
+export type Mode = Schemas['Mode'];
+export type Key = Schemas['Key'];
+export type ChordQuality = Schemas['ChordQuality'];
+export type Chord = Schemas['Chord'];
+export type TimeSignature = Schemas['TimeSignature'];
+export type NoteEvent = Schemas['NoteEvent'];
+export type Track = Schemas['Track'];
+export type HarmonyAnalysis = Schemas['HarmonyAnalysis'];
+export type HarmonicFunction = HarmonyAnalysis['function'];
+export type Cadence = NonNullable<HarmonyAnalysis['cadence']>;
+export type HarmonyEvent = Schemas['HarmonyEvent'];
+export type RhythmPart = Schemas['RhythmPart'];
+export type Rhythm = Schemas['Rhythm'];
+export type Timeline = Schemas['Timeline'];
 
 // --- POST /timelines/from-progression ---------------------------------------
 
-export type ProgressionLabel = { numeral: string; beats?: number };
-export type FromProgressionRequest = {
-  key: Key;
-  tempoBpm: number;
-  progression: ProgressionLabel[];
-  /** Pattern ids from GET /patterns; omit for block chords / no drums. */
-  accompaniment?: string;
-  drums?: string;
-};
-export type TimelineResponse = { timeline: Timeline };
+export type ProgressionLabel = Schemas['ProgressionLabel'];
+export type FromProgressionRequest = Schemas['FromProgressionRequest'];
+export type TimelineResponse = Schemas['TimelineResponse'];
 
 export class ApiError extends Error {
   constructor(
@@ -113,9 +77,9 @@ export async function createTimelineFromProgression(
 
 // --- GET /patterns -----------------------------------------------------------
 
-export type Accompaniment = { id: string; name: string; description: string; program: number };
-export type DrumPattern = { id: string; name: string; description: string };
-export type PatternsResponse = { accompaniments: Accompaniment[]; drums: DrumPattern[] };
+export type Accompaniment = Schemas['Accompaniment'];
+export type DrumPattern = Schemas['DrumPattern'];
+export type PatternsResponse = Schemas['PatternsResponse'];
 
 export async function fetchPatterns(
   fetchImpl: typeof fetch = defaultFetch,
@@ -125,22 +89,11 @@ export async function fetchPatterns(
 
 // --- POST /ideas -------------------------------------------------------------
 
-export type ChatRole = 'user' | 'assistant';
-export type ChatMessage = { role: ChatRole; content: string };
-export type IdeasRequest = { messages: ChatMessage[] };
-export type IdeaCandidate = {
-  title: string;
-  key: Key;
-  tempoBpm: number;
-  progression: string[];
-  beatsPerChord: number;
-  reason: string;
-  /** pattern ids from GET /patterns; absent for block chords / no drums */
-  accompaniment?: string;
-  drums?: string;
-  timeline: Timeline;
-};
-export type IdeasResponse = { reply: string; mood: string[]; candidates: IdeaCandidate[] };
+export type ChatMessage = Schemas['ChatMessage'];
+export type ChatRole = ChatMessage['role'];
+export type IdeasRequest = Schemas['IdeasRequest'];
+export type IdeaCandidate = Schemas['IdeaCandidate'];
+export type IdeasResponse = Schemas['IdeasResponse'];
 
 /** One conversational turn of scenario S2; the server keeps no state. */
 export async function imagine(
