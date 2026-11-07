@@ -29,7 +29,8 @@ func sampleIntent(req llm.Request) string {
 			"candidates": []map[string]any{
 				{"title": "窓辺の雨", "key": map[string]any{"tonic": 9, "mode": "minor"}, "tempoBpm": 72,
 					"progression": []string{"i", "VI", "III", "VII"}, "beatsPerChord": 4,
-					"reason": "A minor の定番の下行進行で、落ち着いた切なさを出します。"},
+					"reason":        "A minor の定番の下行進行で、落ち着いた切なさを出します。",
+					"accompaniment": "arpeggio", "drums": "ballad"},
 				{"title": "遠い記憶", "key": map[string]any{"tonic": 4, "mode": "minor"}, "tempoBpm": 66,
 					"progression": []string{"i", "iv", "VII", "III", "VI", "iiø7", "V7", "i"}, "beatsPerChord": 2,
 					"reason": "iiø7 → V7 → i の進行で、戻ってくる安心感と緊張を両方入れます。"},
@@ -42,7 +43,8 @@ func sampleIntent(req llm.Request) string {
 			"candidates": []map[string]any{
 				{"title": "朝の光", "key": map[string]any{"tonic": 0, "mode": "major"}, "tempoBpm": 104,
 					"progression": []string{"I", "V", "vi", "IV"}, "beatsPerChord": 4,
-					"reason": "もっとも親しみやすいポップ進行で、明るさと懐かしさを両立します。"},
+					"reason":        "もっとも親しみやすいポップ進行で、明るさと懐かしさを両立します。",
+					"accompaniment": "strum", "drums": "eight-beat"},
 				{"title": "出発の朝", "key": map[string]any{"tonic": 7, "mode": "major"}, "tempoBpm": 120,
 					"progression": []string{"Imaj7", "ii7", "V7", "Imaj7"}, "beatsPerChord": 4,
 					"reason": "ii–V–I で前へ進む推進力を作り、七の和音で少し洗練させます。"},

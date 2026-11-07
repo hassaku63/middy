@@ -32,7 +32,8 @@
 }
 
 .explanation__function,
-.explanation__cadence {
+.explanation__cadence,
+.explanation__badge {
   font-size: 0.8rem;
   padding: 2px 8px;
   border-radius: 999px;
@@ -67,7 +68,8 @@
     color: #374151;
   }
   .explanation__function,
-  .explanation__cadence {
+  .explanation__cadence,
+  .explanation__badge {
     background: #d1d5db;
   }
   .explanation__function.is-T,

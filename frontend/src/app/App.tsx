@@ -75,7 +75,12 @@ export function App({ createEngine = createWebAudioEngine }: AppProps) {
       </nav>
 
       {source === 'ideas' ? (
-        <ChatPanel ideas={ideas} onOpenCandidate={openCandidate} openTitle={openTitle} />
+        <ChatPanel
+          ideas={ideas}
+          onOpenCandidate={openCandidate}
+          openTitle={openTitle}
+          patterns={patterns}
+        />
       ) : (
         <ProgressionForm
           onSubmit={(req) => void generate(req)}

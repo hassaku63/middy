@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
+	"github.com/hassaku63/middy/backend/internal/music/pattern"
 )
 
 // Limits the validator enforces. They are also baked into Schema so the
@@ -47,6 +48,10 @@ type Candidate struct {
 	Progression   []string  `json:"progression"`   // roman numerals, see music.ParseRomanNumeral
 	BeatsPerChord int       `json:"beatsPerChord"` // one of AllowedBeats
 	Reason        string    `json:"reason"`        // why this fits the image, Japanese
+	// Accompaniment and Drums are pattern ids from the catalogue
+	// (internal/music/pattern); empty means block chords / no drums.
+	Accompaniment string `json:"accompaniment,omitempty"`
+	Drums         string `json:"drums,omitempty"`
 }
 
 // Validate reports every problem at once so the caller can feed them back
@@ -83,6 +88,20 @@ func (c Candidate) validate() []error {
 	if strings.TrimSpace(c.Title) == "" {
 		errs = append(errs, errors.New("title is required"))
 	}
+	errs = append(errs, c.validateKeyAndTempo()...)
+	errs = append(errs, c.validateProgression()...)
+	if strings.TrimSpace(c.Reason) == "" {
+		errs = append(errs, errors.New("reason is required"))
+	}
+	if n := len([]rune(c.Reason)); n > MaxReasonRunes {
+		errs = append(errs, fmt.Errorf("reason is too long (%d > %d characters)", n, MaxReasonRunes))
+	}
+	errs = append(errs, c.validatePatterns()...)
+	return errs
+}
+
+func (c Candidate) validateKeyAndTempo() []error {
+	var errs []error
 	if c.Key.Tonic < 0 || c.Key.Tonic > 11 {
 		errs = append(errs, fmt.Errorf("key.tonic must be 0..11, got %d", c.Key.Tonic))
 	}
@@ -92,6 +111,11 @@ func (c Candidate) validate() []error {
 	if c.TempoBPM < MinTempoBPM || c.TempoBPM > MaxTempoBPM {
 		errs = append(errs, fmt.Errorf("tempoBpm must be %d..%d, got %v", MinTempoBPM, MaxTempoBPM, c.TempoBPM))
 	}
+	return errs
+}
+
+func (c Candidate) validateProgression() []error {
+	var errs []error
 	if len(c.Progression) == 0 || len(c.Progression) > MaxChords {
 		errs = append(errs, fmt.Errorf("progression must have 1..%d chords, got %d", MaxChords, len(c.Progression)))
 	}
@@ -103,13 +127,40 @@ func (c Candidate) validate() []error {
 	if !allowedBeats(c.BeatsPerChord) {
 		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v, got %d", AllowedBeats, c.BeatsPerChord))
 	}
-	if strings.TrimSpace(c.Reason) == "" {
-		errs = append(errs, errors.New("reason is required"))
+	return errs
+}
+
+func (c Candidate) validatePatterns() []error {
+	var errs []error
+	if c.Accompaniment != "" {
+		if _, err := pattern.FindAccompaniment(c.Accompaniment); err != nil {
+			errs = append(errs, fmt.Errorf("accompaniment must be one of %v, got %q", AccompanimentIDs(), c.Accompaniment))
+		}
 	}
-	if n := len([]rune(c.Reason)); n > MaxReasonRunes {
-		errs = append(errs, fmt.Errorf("reason is too long (%d > %d characters)", n, MaxReasonRunes))
+	if c.Drums != "" {
+		if _, err := pattern.FindDrums(c.Drums); err != nil {
+			errs = append(errs, fmt.Errorf("drums must be one of %v, got %q", DrumIDs(), c.Drums))
+		}
 	}
 	return errs
+}
+
+// AccompanimentIDs lists the catalogue ids the model may use.
+func AccompanimentIDs() []string {
+	var ids []string
+	for _, a := range pattern.Accompaniments() {
+		ids = append(ids, a.ID)
+	}
+	return ids
+}
+
+// DrumIDs lists the catalogue ids the model may use.
+func DrumIDs() []string {
+	var ids []string
+	for _, d := range pattern.DrumPatterns() {
+		ids = append(ids, d.ID)
+	}
+	return ids
 }
 
 func allowedBeats(b int) bool {

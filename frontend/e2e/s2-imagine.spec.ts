@@ -27,6 +27,10 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('option')).toHaveText([/i.*Am/, /VI.*F/, /III.*C/, /VII.*G/]);
   await expect(result).toContainText('候補: 窓辺の雨');
+  // The fake's sample carries patterns (arpeggio + ballad drums): a drum lane and rhythm notes appear.
+  await expect(result.getByTestId('drum-lane')).toBeVisible();
+  await expect(result.getByRole('heading', { name: 'リズム' })).toBeVisible();
+  await expect(card).toContainText('伴奏: アルペジオ');
   await expect(card.getByRole('button', { name: '開いています' })).toHaveAttribute(
     'aria-pressed',
     'true',

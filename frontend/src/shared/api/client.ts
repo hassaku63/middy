@@ -135,6 +135,9 @@ export type IdeaCandidate = {
   progression: string[];
   beatsPerChord: number;
   reason: string;
+  /** pattern ids from GET /patterns; absent for block chords / no drums */
+  accompaniment?: string;
+  drums?: string;
   timeline: Timeline;
 };
 export type IdeasResponse = { reply: string; mood: string[]; candidates: IdeaCandidate[] };

@@ -70,7 +70,7 @@ Timeline
 ### 音楽的意図（`internal/intent`）
 
 - `intent.Intent{Summary, Mood, Candidates}` — LLM が 1 ターンで返す構造化の答え。`Summary` は返答文、`Mood` はタグ、`Candidates` は 1〜3 個の提案
-- `intent.Candidate{Title, Key, TempoBPM, Progression, BeatsPerChord, Reason}` — エンジンが描画できる具体案。`Progression` はローマ数字の文字列（`ParseRomanNumeral` の語彙）、`BeatsPerChord` は 1 / 2 / 4 / 8
+- `intent.Candidate{Title, Key, TempoBPM, Progression, BeatsPerChord, Reason, Accompaniment?, Drums?}` — エンジンが描画できる具体案。`Progression` はローマ数字の文字列（`ParseRomanNumeral` の語彙）、`BeatsPerChord` は 1 / 2 / 4 / 8、`Accompaniment` / `Drums` はパターンカタログの id（`Schema` の enum とシステムプロンプトの一覧はカタログから生成される）
 - `Validate()` が全問題をまとめて返す（テンポ 40〜220、進行 1〜16 個、ローマ数字の妥当性など）。`Schema` は同じ制約を JSON Schema で LLM に伝える。`Parse(data)` は復号と検証
 - `Candidate.ToProgression()` で `music.Progression` に変換し、`FromProgression` → `Analyze` の既存経路に乗せる
 

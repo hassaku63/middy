@@ -325,6 +325,12 @@ components:
         reason:
           type: string
           description: なぜ合うかの 1〜2 文（日本語）
+        accompaniment:
+          type: string
+          description: 伴奏テンプレートの id（`GET /patterns`）。省略時はブロックコード
+        drums:
+          type: string
+          description: ドラムテンプレートの id。省略時はドラムなし
         timeline:
           $ref: '#/components/schemas/Timeline'
     IdeasResponse:

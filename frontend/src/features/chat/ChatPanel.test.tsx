@@ -75,6 +75,32 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('button', { name: '最初から' })).toBeInTheDocument();
   });
 
+  it('names the candidate patterns from the catalogue, falling back to ids', () => {
+    const ideas = ideasWith({
+      turns: [
+        {
+          role: 'assistant',
+          content: 'x',
+          mood: [],
+          candidates: [{ ...candidate, accompaniment: 'arpeggio', drums: 'mystery' }],
+        },
+      ],
+    });
+    render(
+      <ChatPanel
+        ideas={ideas}
+        onOpenCandidate={vi.fn()}
+        patterns={{
+          accompaniments: [{ id: 'arpeggio', name: 'アルペジオ', description: '', program: 0 }],
+          drums: [],
+        }}
+      />,
+    );
+    const card = screen.getByRole('article', { name: '窓辺の雨' });
+    expect(within(card).getByText('伴奏: アルペジオ')).toBeInTheDocument();
+    expect(within(card).getByText('ドラム: mystery')).toBeInTheDocument();
+  });
+
   it('marks the open candidate and shows busy and error states', () => {
     const ideas = ideasWith({
       turns: [{ role: 'assistant', content: 'x', mood: [], candidates: [candidate] }],
