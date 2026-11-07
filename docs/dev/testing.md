@@ -55,7 +55,6 @@ make test                                   # 全部
 cd backend && go test ./internal/music/ -v  # パッケージ単位
 cd backend && go test -run TestDiatonic ./... # ケース単位
 cd frontend && npx vitest run src/app       # ディレクトリ単位
-cd frontend && npx vitest --coverage        # カバレッジ
 ```
 
 ## 所要時間

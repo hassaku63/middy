@@ -55,6 +55,5 @@ export default defineConfig({
     globals: false,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
-    coverage: { reporter: ['text', 'lcov'], include: ['src/**'] },
   },
 });

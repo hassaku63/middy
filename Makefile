@@ -98,8 +98,8 @@ frontend-typecheck: ## tsc -b, after checking the generated API types are curren
 frontend-test: ## vitest
 	cd $(FRONTEND) && npm test
 
-frontend-lint: frontend-typecheck ## eslint (after typecheck)
-	cd $(FRONTEND) && npm run lint
+frontend-lint: frontend-typecheck ## eslint and knip (unused exports, files, dependencies; ADR-0007), after typecheck
+	cd $(FRONTEND) && npm run lint && npm run knip
 
 frontend-fmt: ## prettier --write
 	cd $(FRONTEND) && npm run format
