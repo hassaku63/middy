@@ -102,18 +102,21 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             {openTitle && <span className="app__open-title">候補: {openTitle}</span>}
             {projectName && <span className="app__open-title">プロジェクト: {projectName}</span>}
           </div>
-          <TimelineView
-            timeline={timeline}
-            positionTick={player.positionTick}
-            selectedHarmony={selectedHarmony}
-            onSelectHarmony={setSelectedHarmony}
-          />
-          <ExplanationPanel
-            timeline={timeline}
-            positionTick={player.positionTick}
-            selectedHarmony={selectedHarmony}
-            onClearSelection={() => setSelectedHarmony(null)}
-          />
+          {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
+          <div className="app__stage">
+            <TimelineView
+              timeline={timeline}
+              positionTick={player.positionTick}
+              selectedHarmony={selectedHarmony}
+              onSelectHarmony={setSelectedHarmony}
+            />
+            <ExplanationPanel
+              timeline={timeline}
+              positionTick={player.positionTick}
+              selectedHarmony={selectedHarmony}
+              onClearSelection={() => setSelectedHarmony(null)}
+            />
+          </div>
         </section>
       )}
 

@@ -1,6 +1,7 @@
 .timeline {
   display: block;
   max-width: 100%;
+  height: auto; /* scaled to fit, keep the drawing's proportions */
   background: #1f2937;
   border-radius: 8px;
 }
