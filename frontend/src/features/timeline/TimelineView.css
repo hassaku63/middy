@@ -1,0 +1,88 @@
+.timeline {
+  display: block;
+  max-width: 100%;
+  background: #1f2937;
+  border-radius: 8px;
+}
+
+.timeline__bar {
+  stroke: #4b5563;
+  stroke-width: 1;
+}
+
+.timeline__chord rect {
+  fill: #374151;
+  stroke: #6b7280;
+  cursor: pointer;
+}
+
+.timeline__chord.is-active rect {
+  fill: #b45309;
+  stroke: #f59e0b;
+}
+
+.timeline__chord.is-selected rect {
+  stroke: #93c5fd;
+  stroke-width: 2;
+}
+
+.timeline__numeral {
+  fill: #f9fafb;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.timeline__symbol {
+  fill: #d1d5db;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.timeline__row {
+  fill: #111827;
+}
+
+.timeline__row.is-black {
+  fill: #0b1220;
+}
+
+.timeline__pitch-label {
+  fill: #9ca3af;
+  font-size: 9px;
+}
+
+.timeline__note {
+  fill: #60a5fa;
+}
+
+.timeline__note.is-sounding {
+  fill: #fbbf24;
+}
+
+.timeline__playhead {
+  stroke: #f87171;
+  stroke-width: 2;
+}
+
+@media (prefers-color-scheme: light) {
+  .timeline {
+    background: #e5e7eb;
+  }
+  .timeline__row {
+    fill: #f9fafb;
+  }
+  .timeline__row.is-black {
+    fill: #e5e7eb;
+  }
+  .timeline__chord rect {
+    fill: #d1d5db;
+    stroke: #9ca3af;
+  }
+  .timeline__numeral {
+    fill: #111827;
+  }
+  .timeline__symbol {
+    fill: #374151;
+  }
+}
