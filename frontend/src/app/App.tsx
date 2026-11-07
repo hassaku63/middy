@@ -7,14 +7,19 @@ import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { ProgressionForm } from '@/features/progression-input/ProgressionForm';
 import { usePatterns } from '@/features/progression-input/usePatterns';
+import { ProjectsPanel } from '@/features/projects/ProjectsPanel';
+import { useProjects } from '@/features/projects/useProjects';
 import { TimelineView } from '@/features/timeline/TimelineView';
 import type { FromProgressionRequest, IdeaCandidate } from '@/shared/api/client';
+import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
 import { useTimelineGeneration } from './useTimelineGeneration';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
   createEngine?: () => AudioEngine;
+  /** Injected in tests; defaults to IndexedDB (memory when unavailable). */
+  projectStore?: Parameters<typeof useProjects>[0];
 };
 
 type Source = 'ideas' | 'progression';
@@ -30,28 +35,48 @@ const BACKEND_LABEL = {
  * an image interpreted by the AI or from a key and progression typed in;
  * then hear it, watch it, read why it works, and take the MIDI home.
  */
-export function App({ createEngine = createWebAudioEngine }: AppProps) {
+export function App({ createEngine = createWebAudioEngine, projectStore }: AppProps) {
   const [source, setSource] = useState<Source>('ideas');
   const [selectedHarmony, setSelectedHarmony] = useState<number | null>(null);
   const [openTitle, setOpenTitle] = useState<string | null>(null);
+  /** Where the loaded timeline came from; what "保存" stores alongside it. */
+  const [origin, setOrigin] = useState<ProjectSource | null>(null);
+  const [projectName, setProjectName] = useState<string | null>(null);
   const backend = useBackendHealth();
   const generation = useTimelineGeneration();
   const ideas = useIdeas();
   const patterns = usePatterns();
   const player = usePlayer(createEngine);
+  const projects = useProjects(projectStore);
   const { timeline } = generation;
 
   const generate = async (req: FromProgressionRequest) => {
     player.stop();
     setOpenTitle(null);
-    if (await generation.generate(req)) setSelectedHarmony(null);
+    setProjectName(null);
+    if (await generation.generate(req)) {
+      setSelectedHarmony(null);
+      setOrigin({ kind: 'progression', request: req });
+    }
   };
 
   const openCandidate = (c: IdeaCandidate) => {
     player.stop();
     generation.open(c.timeline);
     setOpenTitle(c.title);
+    setProjectName(null);
     setSelectedHarmony(null);
+    const image = [...ideas.turns].reverse().find((t) => t.role === 'user')?.content ?? '';
+    setOrigin({ kind: 'idea', image, candidateTitle: c.title });
+  };
+
+  const openProject = (p: Project) => {
+    player.stop();
+    generation.open(p.timeline);
+    setOpenTitle(null);
+    setProjectName(p.name);
+    setSelectedHarmony(null);
+    setOrigin(p.source);
   };
 
   return (
@@ -94,12 +119,19 @@ export function App({ createEngine = createWebAudioEngine }: AppProps) {
         </p>
       )}
 
+      <ProjectsPanel
+        projects={projects}
+        current={timeline && origin ? { timeline, source: origin } : null}
+        onOpen={openProject}
+      />
+
       {timeline && (
         <section className="app__timeline" aria-label="結果">
           <div className="app__toolbar">
             <PlayerControls timeline={timeline} player={player} />
             <DownloadMidiButton timeline={timeline} />
             {openTitle && <span className="app__open-title">候補: {openTitle}</span>}
+            {projectName && <span className="app__open-title">プロジェクト: {projectName}</span>}
           </div>
           <TimelineView
             timeline={timeline}
