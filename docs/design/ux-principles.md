@@ -14,7 +14,7 @@
 
 - 下の層の判断は、上の層を根拠にする。原則（3 章）はすべての層に効く制約で、何を残すかは決めない。
 - 画面の要素は、どの流れの、どの概念の目的のためにあるかを上の層までたどれること。たどれない要素は削る候補にする。
-- 上の 4 層の middy での中身は `docs/product/` に置く（意思と価値の順位は [vision.md](../product/vision.md)）。
+- 上の 4 層の middy での中身は `docs/product/` に置く（意思は [intent.md](../product/intent.md)、価値の順位は [vision.md](../product/vision.md)）。
 
 ## 2. 意思の書き方
 
