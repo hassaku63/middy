@@ -6,14 +6,15 @@ info:
     middy のバックエンド API。この文書が契約の正典であり（ADR-0004）、
     `backend/internal/httpapi` と `frontend/src/shared/api` はこれに追従する。
 
-    現時点で実装されているのは `/health` のみ。`components.schemas` には
-    ドメインモデル（`backend/internal/music`）の JSON 表現を先に定義してあり、
-    M1 のエンドポイント（backlog BL-003, BL-008）はこれを参照して追加する。
+    `components.schemas` のドメインモデル部分は `backend/internal/music` の
+    JSON 表現と 1:1 で対応する。
 servers:
   - url: /api/v1
 tags:
   - name: system
     description: 稼働確認
+  - name: timelines
+    description: タイムラインの生成と分析
 paths:
   /health:
     get:
@@ -30,6 +31,44 @@ paths:
               example:
                 status: ok
                 version: dev
+  /timelines/from-progression:
+    post:
+      tags: [timelines]
+      operationId: createTimelineFromProgression
+      summary: ローマ数字の進行を調で解決し、分析済みのタイムラインを返す
+      description: |
+        進行をブロックコード 1 トラックとして展開し（`music.FromProgression`）、
+        各コードに和声機能・終止・解説を付けて（`music.Analyze`）返す。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FromProgressionRequest'
+            example:
+              key: { tonic: 0, mode: major }
+              tempoBpm: 90
+              progression:
+                - { numeral: I }
+                - { numeral: V, beats: 2 }
+                - { numeral: vi, beats: 2 }
+                - { numeral: IV }
+      responses:
+        '200':
+          description: 生成・分析済みのタイムライン
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineResponse'
+        '400':
+          description: |
+            `invalid_json`（本文が JSON として読めない、未知のフィールド、未知の mode）
+            または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm <= 0）。
+            不正なローマ数字は全件まとめて message に列挙される
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Health:
@@ -57,6 +96,45 @@ components:
             message:
               type: string
               description: 人間向けの説明。UI にそのまま出してよい
+
+    FromProgressionRequest:
+      type: object
+      required: [key, tempoBpm, progression]
+      additionalProperties: false
+      properties:
+        key:
+          $ref: '#/components/schemas/Key'
+        tempoBpm:
+          type: number
+          exclusiveMinimum: 0
+        progression:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ProgressionLabel'
+    ProgressionLabel:
+      type: object
+      required: [numeral]
+      additionalProperties: false
+      properties:
+        numeral:
+          type: string
+          description: |
+            ローマ数字のコード名。度数（I..VII、大文字小文字は問わない）と、
+            任意の七の和音指定（7, maj7, ø7, m7b5）。°, +, dim, aug は受理するが無視され、
+            コードの質は調から決まる
+          examples: [I, ii, V7, IVmaj7, 'vii°']
+        beats:
+          type: integer
+          minimum: 1
+          default: 4
+          description: 四分音符単位の長さ。省略時 4
+    TimelineResponse:
+      type: object
+      required: [timeline]
+      properties:
+        timeline:
+          $ref: '#/components/schemas/Timeline'
 
     # --- ドメインモデル（backend/internal/music と 1:1） --------------------
     PitchClass:

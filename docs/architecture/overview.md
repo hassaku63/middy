@@ -32,14 +32,14 @@
 5. JSON で返す。フロントは候補カードを表示し、選択されたものを `player` が再生、`timeline` が描画、`explanation` が解説
 6. 相談（チャット）は会話履歴を往復させ、同じ流れを繰り返す
 
-M1 では 1〜3 と 6 がなく、ユーザー入力（調・進行）が直接 4 に入る。
+M1 では 1〜3 と 6 がなく、ユーザー入力（調・ローマ数字の進行・テンポ）が `POST /api/v1/timelines/from-progression` から直接 4 に入る。
 
 ## バックエンドの層
 
 ```
 cmd/server          配線のみ（config → deps → http.Server）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
-internal/<usecase>  （M1 で追加）アプリケーションサービス。music と llm を組み合わせる
+internal/<usecase>  アプリケーションサービス。LLM と music を組み合わせる段階（BL-012）で追加する。それまでハンドラが music を直接呼ぶ
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
 internal/llm        ポート（interface）。adapters: fake（実装済み）, anthropic（BL-011）
 internal/config     環境変数

@@ -35,6 +35,7 @@ const APIPrefix = "/api/v1"
 func routes(_ Deps) []route {
 	return []route{
 		{http.MethodGet, APIPrefix + "/health", handleHealth},
+		{http.MethodPost, APIPrefix + "/timelines/from-progression", handleFromProgression},
 	}
 }
 
