@@ -13,7 +13,7 @@
 
 ## Now（M2 — Imagine）
 
-M2 のスライスはすべて Done。実 API での疎通確認（`make eval`）は鍵の登録後に行う。次は M3（Later）から Now へ移す。
+M3（Groove & Ship）を Later から順に進める。実 API での疎通確認（`make eval`）は鍵の登録後に行う。
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
@@ -32,7 +32,6 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-052 | バンドルサイズ予算と 1,000 ノート描画の計測（ADR-0007）。発動条件: BL-025 と同時 |
 | BL-053 | プロンプト監査の四半期実行（`claude-api` の `prompt-audit`）。発動条件: BL-011 以降 |
 | BL-054 | 月次 gardening の拡張: backlog の老化（Next に 90 日以上）と flaky の集計（ADR-0007） |
-| BL-020 | リズムパターン辞書 `music/pattern`: 伴奏（ブロック、アルペジオ、ストローク風）とドラム（GM ch.10） |
 | BL-021 | パターン適用: 進行 + パターン → 複数トラックの Timeline |
 | BL-022 | リズム解説: 拍の重心・シンコペーションの検出と可視化データ |
 | BL-023 | 候補にリズムを含める（LLM の意図にパターン候補を追加） |
@@ -64,6 +63,7 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-020 | リズムパターン辞書（`music/pattern`: 伴奏 5 種・ドラム 3 種、`Apply`） | 2026-11-07 |
 | BL-016 | 短調の大文字 V / V7 を和声的短音階のドミナントとして扱う（`music.StepFromLabel`、解説に一文、プロンプトと Schema の記述） | 2026-11-07 |
 | BL-015 | プロンプト評価セット（`internal/ideas/evals`、`make eval`、判定器は fake でテスト） | 2026-11-07 |
 | BL-011 | Anthropic アダプタ（`internal/llm/anthropic`、公式 SDK、構造化出力、録画応答テスト） | 2026-11-07 |
