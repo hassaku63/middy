@@ -76,3 +76,27 @@
     color: #f9fafb;
   }
 }
+
+.explanation__rhythm {
+  margin-top: 14px;
+  border-top: 1px solid #374151;
+  padding-top: 10px;
+}
+
+.explanation__subtitle {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: #9ca3af;
+}
+
+.explanation__part + .explanation__part {
+  margin-top: 8px;
+}
+
+.explanation__part-title {
+  margin: 0;
+  font-size: 1rem;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}

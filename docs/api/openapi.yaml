@@ -488,3 +488,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/HarmonyEvent'
+        rhythm:
+          $ref: '#/components/schemas/Rhythm'
+          description: パターン適用後に付く解説データ。ブロックコードのみのタイムラインでは省略
+    Rhythm:
+      type: object
+      properties:
+        accompaniment:
+          $ref: '#/components/schemas/RhythmPart'
+        drums:
+          $ref: '#/components/schemas/RhythmPart'
+    RhythmPart:
+      description: 1 小節のパターンを初学者向けに説明したもの。決定論的に生成される
+      type: object
+      required: [id, name, description, hits, onBeat, offBeat, finer, syncopated, explanation]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        hits: { type: integer, description: 1 小節あたりの打点数（ドラムはキックとスネアのみ） }
+        onBeat: { type: integer, description: 拍の頭に乗る打点 }
+        offBeat: { type: integer, description: 8 分の裏に乗る打点 }
+        finer: { type: integer, description: それより細かい位置の打点 }
+        syncopated: { type: boolean, description: 裏拍の割合が 4 分の 1 以上 }
+        explanation: { type: string, description: UI にそのまま出せる日本語 }

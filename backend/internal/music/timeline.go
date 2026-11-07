@@ -60,6 +60,8 @@ type Timeline struct {
 	Key           Key            `json:"key"`
 	Tracks        []Track        `json:"tracks"`
 	Harmony       []HarmonyEvent `json:"harmony"`
+	// Rhythm is present once patterns have been applied (see pattern.Apply).
+	Rhythm *Rhythm `json:"rhythm,omitempty"`
 }
 
 // NewTimeline returns an empty timeline with sensible defaults.

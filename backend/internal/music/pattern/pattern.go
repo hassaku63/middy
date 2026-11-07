@@ -212,8 +212,10 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 
 	out := tl
 	out.Tracks = []music.Track{chordTrack(tl, acc)}
+	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc)}
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
+		out.Rhythm.Drums = describeDrums(*dr)
 	}
 	if err := out.Validate(); err != nil {
 		return music.Timeline{}, fmt.Errorf("pattern: %w", err)

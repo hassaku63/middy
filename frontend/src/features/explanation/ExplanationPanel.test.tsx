@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
@@ -98,5 +98,51 @@ describe('ExplanationPanel', () => {
     };
     render(<ExplanationPanel timeline={plain} positionTick={0} selectedHarmony={null} />);
     expect(screen.getByText('このコードの分析はまだありません。')).toBeInTheDocument();
+  });
+});
+
+describe('RhythmNotes inside the panel', () => {
+  it('describes applied patterns and flags syncopation', () => {
+    const withRhythm: Timeline = {
+      ...timeline,
+      rhythm: {
+        accompaniment: {
+          id: 'strum',
+          name: 'ストローク',
+          description: 'ギターのように刻む。',
+          hits: 5,
+          onBeat: 3,
+          offBeat: 2,
+          finer: 0,
+          syncopated: true,
+          explanation: '1 小節に伴奏が 5 回。',
+        },
+        drums: {
+          id: 'eight-beat',
+          name: '8 ビート',
+          description: 'ポップスの土台。',
+          hits: 4,
+          onBeat: 4,
+          offBeat: 0,
+          finer: 0,
+          syncopated: false,
+          explanation: '1 小節にキックとスネアが 4 回。',
+        },
+      },
+    };
+    render(<ExplanationPanel timeline={withRhythm} positionTick={0} selectedHarmony={null} />);
+    const rhythm = screen.getByRole('heading', { name: 'リズム' }).parentElement!;
+    expect(within(rhythm).getByRole('region', { name: '伴奏: ストローク' })).toHaveTextContent(
+      'シンコペーション',
+    );
+    expect(within(rhythm).getByRole('region', { name: 'ドラム: 8 ビート' })).not.toHaveTextContent(
+      'シンコペーション',
+    );
+    expect(within(rhythm).getByText('1 小節にキックとスネアが 4 回。')).toBeInTheDocument();
+  });
+
+  it('shows nothing about rhythm for a block-chord timeline', () => {
+    render(<ExplanationPanel timeline={timeline} positionTick={0} selectedHarmony={null} />);
+    expect(screen.queryByRole('heading', { name: 'リズム' })).not.toBeInTheDocument();
   });
 });

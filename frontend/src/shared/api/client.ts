@@ -39,6 +39,18 @@ export type HarmonyEvent = {
   romanNumeral: string;
   analysis?: HarmonyAnalysis;
 };
+export type RhythmPart = {
+  id: string;
+  name: string;
+  description: string;
+  hits: number;
+  onBeat: number;
+  offBeat: number;
+  finer: number;
+  syncopated: boolean;
+  explanation: string;
+};
+export type Rhythm = { accompaniment?: RhythmPart; drums?: RhythmPart };
 export type Timeline = {
   ppq: number;
   tempoBpm: number;
@@ -46,6 +58,8 @@ export type Timeline = {
   key: Key;
   tracks: Track[];
   harmony: HarmonyEvent[];
+  /** present once accompaniment / drum patterns were applied */
+  rhythm?: Rhythm;
 };
 
 // --- POST /timelines/from-progression ---------------------------------------
