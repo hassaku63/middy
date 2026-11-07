@@ -94,10 +94,37 @@ export async function createTimelineFromProgression(
   return res.timeline;
 }
 
-type RequestOptions = { fetchImpl: typeof fetch; method?: 'GET' | 'POST'; body?: unknown };
+// --- POST /export/midi -------------------------------------------------------
+
+/** Returns the timeline as a Standard MIDI File blob (audio/midi). */
+export async function exportMidi(
+  timeline: Timeline,
+  fetchImpl: typeof fetch = defaultFetch,
+): Promise<Blob> {
+  const res = await request('/api/v1/export/midi', {
+    fetchImpl,
+    method: 'POST',
+    body: { timeline },
+    accept: 'audio/midi',
+  });
+  return res.blob();
+}
+
+type RequestOptions = {
+  fetchImpl: typeof fetch;
+  method?: 'GET' | 'POST';
+  body?: unknown;
+  accept?: string;
+};
 
 async function requestJson<T>(path: string, opts: RequestOptions): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  const res = await request(path, opts);
+  return (await res.json()) as T;
+}
+
+/** Performs the request and turns non-2xx responses into ApiError. */
+async function request(path: string, opts: RequestOptions): Promise<Response> {
+  const headers: Record<string, string> = { Accept: opts.accept ?? 'application/json' };
   const init: RequestInit = { method: opts.method ?? 'GET', headers };
   if (opts.body !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -118,5 +145,5 @@ async function requestJson<T>(path: string, opts: RequestOptions): Promise<T> {
     }
     throw new ApiError(res.status, code, message);
   }
-  return (await res.json()) as T;
+  return res;
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
+import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { ProgressionForm } from '@/features/progression-input/ProgressionForm';
@@ -73,7 +74,10 @@ export function App({ createEngine = createWebAudioEngine }: AppProps) {
 
       {timeline && (
         <section className="app__timeline" aria-label="結果">
-          <PlayerControls timeline={timeline} player={player} />
+          <div className="app__toolbar">
+            <PlayerControls timeline={timeline} player={player} />
+            <DownloadMidiButton timeline={timeline} />
+          </div>
           <TimelineView
             timeline={timeline}
             positionTick={player.positionTick}
