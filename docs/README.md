@@ -8,6 +8,7 @@ middy のドキュメント索引。**新しいドキュメントを追加した
 | --- | --- |
 | [product/vision.md](product/vision.md) | ビジョン、ペルソナ、コアシナリオと土台となる能力、価値仮説、やらないこと |
 | [product/intent.md](product/intent.md) | プロダクトの意思（「X を Y より優先する」）と、中心の体験と入口。UI の判断の拠り所 |
+| [product/experience.md](product/experience.md) | 体験の設計: 概念、流れ、画面の約束。UI を変える PR はここを根拠にする |
 | [product/roadmap.md](product/roadmap.md) | マイルストーン（M0〜M4）と各マイルストーンの出口条件 |
 | [product/backlog.md](product/backlog.md) | 優先順位付きの機能スライス一覧（Now / Next / Later / Ideas）。AI エージェントはここから着手項目を選ぶ |
 
