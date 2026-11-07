@@ -138,3 +138,13 @@
     border-color: #d1d5db;
   }
 }
+
+.chat__earlier summary {
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.chat__earlier[open] summary {
+  margin-bottom: 10px;
+}
