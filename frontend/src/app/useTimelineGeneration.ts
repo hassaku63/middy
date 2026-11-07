@@ -12,6 +12,8 @@ export type TimelineGeneration = {
   error: string | null;
   /** Resolves to true when a new timeline was produced. */
   generate: (req: FromProgressionRequest) => Promise<boolean>;
+  /** Replaces the current timeline with one obtained elsewhere (e.g. an idea candidate). */
+  open: (timeline: Timeline) => void;
 };
 
 /** Owns the "form -> API -> timeline" call so components stay side-effect free. */
@@ -34,5 +36,10 @@ export function useTimelineGeneration(): TimelineGeneration {
     }
   }, []);
 
-  return { timeline, busy, error, generate };
+  const open = useCallback((tl: Timeline) => {
+    setTimeline(tl);
+    setError(null);
+  }, []);
+
+  return { timeline, busy, error, generate, open };
 }
