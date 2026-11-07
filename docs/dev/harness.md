@@ -12,6 +12,7 @@
 | Vitest + Testing Library | 振る舞いの退行 | `make frontend-test` | `make check`, CI `frontend` |
 | `tsc -b` | 型の矛盾 | `make frontend-typecheck` | `make check`, CI `frontend` |
 | ルート ↔ OpenAPI 整合性テスト | 契約と実装のズレ（ADR-0004） | `cd backend && go test ./internal/httpapi/ -run TestRoutesMatchOpenAPI` | `make check`, CI `backend` |
+| 生成 API 型の鮮度（OpenAPI → `schema.gen.ts`、ADR-0009） | TS の型と契約のズレ、YAML として壊れた契約 | `bash scripts/check-api-types.sh`（直すときは `cd frontend && npm run gen:api`） | `make check`, CI `frontend` |
 | 言語またぎフィクスチャ（Go が生成、TS が照合） | `notation.ts` 等のバックエンドの写しがずれる。JSON の陳腐化は Go テストが検出 | `make fixtures` で再生成、`cd backend && go test ./internal/fixtures/` | `make check`, CI `backend` + `frontend` |
 
 ## テストの健全性（検知）
@@ -41,9 +42,10 @@
 
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
-| リンク・パス・索引・BL-ID | 存在しないものを指す文書 | `make docs-check` | `make check`, CI `docs` |
+| リンク・パス・索引・BL-ID・競合マーカー | 存在しないものを指す文書、マージ時に残った `<<<<<<<` | `make docs-check` | `make check`, CI `docs` |
 | AGENTS.md / CLAUDE.md の行数予算（150） | 読まれない指示書 | `make docs-check` | `make check`, CI `docs` |
-| 鮮度レポート（In progress 放置、120 日未更新、腐りやすい言い回し） | 古い記述の放置 | `bash scripts/docs-staleness.sh` | 月次 `docs gardening` |
+| 鮮度レポート（In progress 放置、Next / Later / Ideas に 90 日以上ある backlog 項目、120 日未更新の文書、腐りやすい言い回し） | 古い記述と、決めないまま溜まる backlog | `bash scripts/docs-staleness.sh` | 月次 `docs gardening` |
+| 再実行で通った CI の一覧（直近 30 日） | flaky なテスト・ジョブの放置 | `bash scripts/flaky-report.sh <owner/repo>`（`gh` が必要） | 月次 `docs gardening` |
 
 ## ビルドと配備（ADR-0008）
 

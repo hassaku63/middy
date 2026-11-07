@@ -3,15 +3,17 @@
 # Heuristics only; an empty report means "nothing stands out".
 #
 #   - backlog items left "In progress"
+#   - backlog items waiting in Next/Later/Ideas for a long time (default 90 days)
 #   - docs not touched for a long time (default 120 days)
 #   - words that usually mark a stale statement ("予定", "現在 NN", "TODO", "まだ");
 #     lines quoting the word itself (「予定」) are rule text, not statements
 #
-# Usage: scripts/docs-staleness.sh [max-age-days]
+# Usage: scripts/docs-staleness.sh [max-doc-age-days] [max-backlog-age-days]
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
 max_age="${1:-120}"
+max_backlog_age="${2:-90}"
 now=$(date +%s)
 
 section() { printf '\n### %s\n\n' "$1"; }
@@ -20,6 +22,23 @@ in_progress=$(grep -E '^\| BL-[0-9]{3} .*\| In progress \|' docs/product/backlog
 if [ -n "$in_progress" ]; then
   section "In progress のまま残っている backlog 項目"
   printf -- '- %s\n' $in_progress
+fi
+
+# Backlog rows that have sat unchanged in a waiting section. git blame gives
+# the last change of each line; awk tracks which "## " section a line is in.
+aging=$(git blame --line-porcelain docs/product/backlog.md 2>/dev/null | awk -v now="$now" -v max="$max_backlog_age" '
+  /^author-time / { t = $2; next }
+  /^\t/ {
+    line = substr($0, 2)
+    if (line ~ /^## /) { section = line; next }
+    if (section ~ /^## (Next|Later|Ideas)/ && line ~ /^\| BL-[0-9]+ /) {
+      age = int((now - t) / 86400)
+      if (age >= max) { split(line, f, "|"); gsub(/^ +| +$/, "", f[2]); printf "- %s（%d 日、%s）\n", f[2], age, section }
+    }
+  }')
+if [ -n "$aging" ]; then
+  section "${max_backlog_age} 日以上動いていない backlog 項目（Now に上げるか、Ideas に落とすか、消す）"
+  printf '%s\n' "$aging"
 fi
 
 old=""

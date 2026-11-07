@@ -56,7 +56,7 @@
 `.github/workflows/docs-gardening.yml` が毎月 1 日に既定ブランチで走る（手動実行も可）。
 
 1. `scripts/check-docs.sh` を実行。
-2. `scripts/docs-staleness.sh` で見直し候補を出す: `In progress` のまま残った backlog 項目、120 日以上更新のない文書、「予定」「現在 NN」「TODO」などの腐りやすい言い回し。
+2. `scripts/docs-staleness.sh` で見直し候補を出す: `In progress` のまま残った backlog 項目、Next / Later / Ideas に 90 日以上ある backlog 項目、120 日以上更新のない文書、「予定」「現在 NN」「TODO」などの腐りやすい言い回し。`scripts/flaky-report.sh` が直近 30 日に再実行で通った CI を足す。
 3. 指摘があれば `docs-gardening` ラベルの Issue を 1 つ作る（既にあれば更新する）。
 
 Issue を受けた人（または AI エージェント）は、1 スライスとして文書を現状に合わせる PR を出す。指摘が誤検知なら、検査スクリプトの方を直す。
