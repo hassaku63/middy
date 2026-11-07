@@ -11,7 +11,7 @@ services:
       context: .
       args:
         VERSION: ${VERSION:-compose}
-        GO_VERSION: ${GO_VERSION:-1.24}
+        GO_VERSION: ${GO_VERSION:-1.25}
         NODE_VERSION: ${NODE_VERSION:-22}
     image: middy:local
     ports:

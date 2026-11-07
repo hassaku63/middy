@@ -8,7 +8,7 @@
 
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
-| Go テスト（race, cover） | 振る舞いの退行 | `make backend-test` | `make check`, CI `backend` |
+| Go テスト（race, cover） | 振る舞いの退行 | `make backend-test`（自動ダウンロードされた toolchain に `covdata` がない環境では `GOTEST_FLAGS=-race` で上書き） | `make check`, CI `backend` |
 | Vitest + Testing Library | 振る舞いの退行 | `make frontend-test` | `make check`, CI `frontend` |
 | `tsc -b` | 型の矛盾 | `make frontend-typecheck` | `make check`, CI `frontend` |
 | ルート ↔ OpenAPI 整合性テスト | 契約と実装のズレ（ADR-0004） | `cd backend && go test ./internal/httpapi/ -run TestRoutesMatchOpenAPI` | `make check`, CI `backend` |

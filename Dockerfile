@@ -6,7 +6,7 @@
 #   docker run --rm -p 8080:8080 middy
 
 ARG NODE_VERSION=22
-ARG GO_VERSION=1.24
+ARG GO_VERSION=1.25
 
 # --- frontend ---------------------------------------------------------------
 FROM node:${NODE_VERSION}-alpine AS frontend
