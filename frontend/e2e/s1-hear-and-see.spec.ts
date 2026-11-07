@@ -9,6 +9,7 @@ import { expect, test } from '@playwright/test';
 test('generate, play, follow, pin, download', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('status')).toHaveText('バックエンド: ok');
+  await page.getByRole('button', { name: '進行から' }).click();
 
   // A minor, i - iv - V7 - i at 120 BPM: two seconds per bar.
   await page.getByLabel('調').selectOption('9');
@@ -55,6 +56,7 @@ test('generate, play, follow, pin, download', async ({ page }) => {
 
 test('invalid roman numerals are reported from the API, not swallowed', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: '進行から' }).click();
   await page.getByLabel('進行（ローマ数字）').fill('I - X');
   await page.getByRole('button', { name: '生成' }).click();
   await expect(page.getByRole('alert')).toContainText('"X" is not a roman numeral');
