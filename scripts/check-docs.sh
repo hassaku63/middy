@@ -7,6 +7,7 @@
 #   3. Every file under docs/ is listed in docs/README.md (ADRs via their index).
 #   4. Every backlog ID (BL-NNN) mentioned anywhere exists in the backlog.
 #   5. Agent instruction files stay within their line budget (ADR-0007).
+#   6. No merge conflict markers are left in any Markdown file.
 #
 # No dependencies beyond bash, grep, sed, find. Must stay portable (macOS/Linux).
 set -uo pipefail
@@ -91,6 +92,13 @@ for f in AGENTS.md CLAUDE.md; do
     problem "$f: $lines lines exceeds the $budget-line budget; move detail into docs/ and link it"
   fi
 done
+
+# --- 6. no leftover merge conflict markers ------------------------------------
+while IFS= read -r file; do
+  if grep -nE '^(<<<<<<< |>>>>>>> |=======$)' "$file" >/dev/null 2>&1; then
+    problem "$file: merge conflict markers left in the file"
+  fi
+done < <(md_files)
 
 if [ -s "$problems" ]; then
   echo "docs-check: FAILED ($(wc -l < "$problems" | tr -d ' ') problems)" >&2
