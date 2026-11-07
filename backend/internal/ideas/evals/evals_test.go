@@ -1,0 +1,104 @@
+package evals
+
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"github.com/hassaku63/middy/backend/internal/ideas"
+	"github.com/hassaku63/middy/backend/internal/llm"
+	"github.com/hassaku63/middy/backend/internal/llm/fake"
+	"github.com/hassaku63/middy/backend/internal/music"
+)
+
+func TestCasesLoadAndAreWellFormed(t *testing.T) {
+	cases, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cases) < 20 {
+		t.Fatalf("want at least 20 cases, got %d", len(cases))
+	}
+	seen := map[string]bool{}
+	for _, c := range cases {
+		if c.ID == "" || c.Image == "" || seen[c.ID] {
+			t.Errorf("bad or duplicate case %+v", c)
+		}
+		seen[c.ID] = true
+		if c.Mode != "major" && c.Mode != "minor" && c.Mode != "either" {
+			t.Errorf("%s: mode %q", c.ID, c.Mode)
+		}
+		if c.TempoMin > 0 && c.TempoMax > 0 && c.TempoMin > c.TempoMax {
+			t.Errorf("%s: tempo band inverted", c.ID)
+		}
+	}
+}
+
+func result() ideas.Result {
+	return ideas.Result{Reply: "ok", Candidates: []ideas.Candidate{{
+		Timeline: music.Timeline{},
+	}}}
+}
+
+func TestJudge(t *testing.T) {
+	mk := func(mode music.Mode, tempo float64) ideas.Result {
+		r := result()
+		r.Candidates[0].Title = "t"
+		r.Candidates[0].Key = music.Key{Tonic: music.C, Mode: mode}
+		r.Candidates[0].TempoBPM = tempo
+		return r
+	}
+	tests := []struct {
+		name string
+		c    Case
+		res  ideas.Result
+		pass bool
+		want string
+	}{
+		{"minor slow ok", Case{Mode: "minor", TempoMax: 100}, mk(music.Minor, 72), true, ""},
+		{"wrong mode", Case{Mode: "minor"}, mk(music.Major, 72), false, "expected minor"},
+		{"too fast", Case{Mode: "either", TempoMax: 90}, mk(music.Minor, 120), false, "above 90"},
+		{"too slow", Case{Mode: "major", TempoMin: 110}, mk(music.Major, 80), false, "below 110"},
+		{"either accepts both", Case{Mode: "either"}, mk(music.Major, 80), true, ""},
+		{"no candidates", Case{Mode: "major"}, ideas.Result{Reply: "x"}, false, "no candidates"},
+		{"empty reply", Case{Mode: "major"}, func() ideas.Result { r := mk(music.Major, 80); r.Reply = " "; return r }(), false, "empty reply"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := Judge(tt.c, tt.res)
+			if v.Pass != tt.pass {
+				t.Fatalf("pass = %v, problems = %v", v.Pass, v.Problems)
+			}
+			if tt.want != "" && !strings.Contains(strings.Join(v.Problems, ";"), tt.want) {
+				t.Fatalf("problems %v should mention %q", v.Problems, tt.want)
+			}
+		})
+	}
+}
+
+// TestRunnerAgainstTheFake exercises the whole runner path with the
+// unscripted fake, so the harness itself cannot rot unnoticed. The fake
+// only knows a few mood words, so most cases are expected to fail; the
+// rainy and sunny ones must pass.
+func TestRunnerAgainstTheFake(t *testing.T) {
+	cases, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	verdicts := Run(context.Background(), ideas.New(fake.New()), cases)
+	byID := map[string]Verdict{}
+	for _, v := range verdicts {
+		byID[v.Case.ID] = v
+	}
+	for _, id := range []string{"rainy-sunday", "night-walk"} {
+		if !byID[id].Pass {
+			t.Errorf("%s should pass with the fake: %v", id, byID[id].Problems)
+		}
+	}
+	report := Report(verdicts)
+	if !strings.Contains(report, "| rainy-sunday |") || !strings.Contains(report, "passed") {
+		t.Fatalf("report malformed:\n%s", report)
+	}
+}
+
+var _ llm.Client = (*fake.Client)(nil)
