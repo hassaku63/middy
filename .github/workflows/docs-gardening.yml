@@ -14,6 +14,7 @@ on:
 permissions:
   contents: read
   issues: write
+  actions: read
 
 jobs:
   garden:
@@ -30,10 +31,13 @@ jobs:
           else
             echo "status=failed" >> "$GITHUB_OUTPUT"
           fi
-      - name: Staleness report
+      - name: Staleness, backlog aging and flaky CI report
         id: stale
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           bash scripts/docs-staleness.sh > staleness.md
+          bash scripts/flaky-report.sh "${{ github.repository }}" 30 >> staleness.md || echo "(flaky report unavailable)" >> staleness.md
           if [ -s staleness.md ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; fi
       - name: Open or update tracking issue
         if: steps.check.outputs.status == 'failed' || steps.stale.outputs.found == 'true'
