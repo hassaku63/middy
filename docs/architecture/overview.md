@@ -41,13 +41,14 @@ cmd/server          配線のみ（config → deps → http.Server）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
 internal/<usecase>  アプリケーションサービス。LLM と music を組み合わせる段階（BL-012）で追加する。それまでハンドラが music を直接呼ぶ
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
+internal/intent     LLM が返す MusicalIntent の型・検証・JSON Schema（music にのみ依存）
 internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）
 internal/llm        ポート（interface）。adapters: fake（実装済み）, anthropic（BL-011）
 internal/web        ビルド済みフロント（frontend/dist）の embed。未同梱なら Dist() が false
 internal/config     環境変数
 ```
 
-依存の向きは上から下へのみ。`music` は何にも依存しない。`llm` は `music` に依存してよい（`MusicalIntent` の検証で理論を使う）が、逆は禁止。
+依存の向きは上から下へのみ。`music` は何にも依存しない。`intent` は `music` に依存する（ローマ数字の検証）。`llm` はどちらにも依存しない（プロバイダ境界のみ）。逆方向は禁止。
 
 ### なぜフレームワークを使わないか
 
