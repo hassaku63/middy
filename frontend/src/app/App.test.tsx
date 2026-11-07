@@ -52,35 +52,73 @@ const fakeEngine = (): AudioEngine => ({
   resume: () => Promise.resolve(),
 });
 
-describe('App (scenario S1)', () => {
-  afterEach(() => vi.unstubAllGlobals());
+const ideasReply = {
+  reply: '静かな雨。',
+  mood: ['静か'],
+  candidates: [
+    {
+      title: '窓辺の雨',
+      key: { tonic: 0, mode: 'major' },
+      tempoBpm: 90,
+      progression: ['I', 'V'],
+      beatsPerChord: 4,
+      reason: 'テスト用。',
+      timeline: analysed,
+    },
+  ],
+};
 
-  it('generates a timeline from the form, shows chords and explanation, and lets the user pin a chord', async () => {
-    const fetchMock = vi.fn((url: string) =>
+function stubBackend() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: string) =>
       Promise.resolve(
         url.endsWith('/health')
           ? json(200, { status: 'ok', version: 'dev' })
           : url.endsWith('/patterns')
             ? json(200, { accompaniments: [], drums: [] })
-            : json(200, { timeline: analysed }),
+            : json(200, ideasReply),
       ),
-    );
-    vi.stubGlobal('fetch', fetchMock);
-    const user = userEvent.setup();
+    ),
+  );
+}
+
+async function openFirstExample(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
+  await user.click(screen.getByRole('button', { name: '送る' }));
+  const card = await screen.findByRole('article', { name: '窓辺の雨' });
+  await user.click(within(card).getByRole('button', { name: 'この候補を開く' }));
+  return { card, result: screen.getByRole('region', { name: '結果' }) };
+}
+
+describe('App (docs/product/experience.md)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('offers the image as the only entry', async () => {
+    stubBackend();
     render(<App createEngine={fakeEngine} />);
 
     expect(await screen.findByRole('status')).toHaveTextContent('バックエンド: ok');
+    expect(screen.getAllByRole('textbox')).toHaveLength(2); // the image, and the project name
+    expect(screen.getByLabelText('イメージ')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '進行から' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: '入力方法' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole('button', { name: '進行から' }));
-    await user.click(screen.getByRole('button', { name: '生成' }));
+  it('opens an example into the player, view and panel, and lets the user pin a chord', async () => {
+    stubBackend();
+    const user = userEvent.setup();
+    render(<App createEngine={fakeEngine} />);
 
-    const result = await screen.findByRole('region', { name: '結果' });
+    const { card, result } = await openFirstExample(user);
     expect(
       within(result)
         .getAllByRole('option')
         .map((o) => o.getAttribute('aria-label')),
     ).toEqual(['I (C)', 'V (G)']);
+    expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: '開いています' })).toBeInTheDocument();
     // Playhead at 0: the explanation follows the first chord.
     expect(within(result).getByRole('heading')).toHaveTextContent('IC');
 
@@ -90,107 +128,27 @@ describe('App (scenario S1)', () => {
 
     await user.click(screen.getByRole('button', { name: /固定を解除/ }));
     expect(within(result).getByRole('heading')).toHaveTextContent('IC');
-
-    const postCall = fetchMock.mock.calls.find(([u]) => u.endsWith('/timelines/from-progression'));
-    expect(postCall).toBeDefined();
   });
 
-  it('shows API validation errors from the envelope', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((url: string) =>
-        Promise.resolve(
-          url.endsWith('/health')
-            ? json(200, { status: 'ok', version: 'dev' })
-            : json(400, {
-                error: {
-                  code: 'invalid_request',
-                  message: 'progression[1]: "X" is not a roman numeral',
-                },
-              }),
-        ),
-      ),
-    );
-    const user = userEvent.setup();
-    render(<App createEngine={fakeEngine} />);
-
-    await user.click(screen.getByRole('button', { name: '進行から' }));
-    await user.click(screen.getByRole('button', { name: '生成' }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('"X" is not a roman numeral');
-    expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
-  });
-
-  it('opens an AI candidate into the player, view and panel (scenario S2)', async () => {
-    const ideasReply = {
-      reply: '静かな雨。',
-      mood: ['静か'],
-      candidates: [
-        {
-          title: '窓辺の雨',
-          key: { tonic: 0, mode: 'major' },
-          tempoBpm: 90,
-          progression: ['I', 'V'],
-          beatsPerChord: 4,
-          reason: 'テスト用。',
-          timeline: analysed,
-        },
-      ],
-    };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((url: string) =>
-        Promise.resolve(
-          url.endsWith('/health')
-            ? json(200, { status: 'ok', version: 'dev' })
-            : url.endsWith('/patterns')
-              ? json(200, { accompaniments: [], drums: [] })
-              : json(200, ideasReply),
-        ),
-      ),
-    );
-    const user = userEvent.setup();
-    render(<App createEngine={fakeEngine} />);
-
-    await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
-    await user.click(screen.getByRole('button', { name: '送る' }));
-    const card = await screen.findByRole('article', { name: '窓辺の雨' });
-    await user.click(within(card).getByRole('button', { name: 'この候補を開く' }));
-
-    const result = screen.getByRole('region', { name: '結果' });
-    expect(within(result).getAllByRole('option')).toHaveLength(2);
-    expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
-    expect(within(card).getByRole('button', { name: '開いています' })).toBeInTheDocument();
-  });
-
-  it('saves the loaded timeline and reopens it from the project list', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((url: string) =>
-        Promise.resolve(
-          url.endsWith('/health')
-            ? json(200, { status: 'ok', version: 'dev' })
-            : url.endsWith('/patterns')
-              ? json(200, { accompaniments: [], drums: [] })
-              : json(200, { timeline: analysed }),
-        ),
-      ),
-    );
+  it('saves the open example and reopens it from the project list', async () => {
+    stubBackend();
     const store = new MemoryProjectStore();
     const user = userEvent.setup();
     render(<App createEngine={fakeEngine} projectStore={store} />);
 
     expect(screen.getByRole('button', { name: '保存' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: '進行から' }));
-    await user.click(screen.getByRole('button', { name: '生成' }));
-    await screen.findByRole('region', { name: '結果' });
+    await openFirstExample(user);
 
     await user.type(screen.getByLabelText('プロジェクト名'), '練習 1');
     await user.click(screen.getByRole('button', { name: '保存' }));
     const list = await screen.findByRole('list', { name: 'プロジェクト一覧' });
     const saved = await store.list();
     expect(saved).toHaveLength(1);
-    expect(saved[0]?.source).toMatchObject({ kind: 'progression' });
+    expect(saved[0]?.source).toMatchObject({
+      kind: 'idea',
+      image: '雨の日曜',
+      candidateTitle: '窓辺の雨',
+    });
 
     await user.click(within(list).getByRole('button', { name: '開く' }));
     expect(screen.getByText('プロジェクト: 練習 1')).toBeInTheDocument();

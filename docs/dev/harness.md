@@ -53,7 +53,7 @@
 | --- | --- | --- | --- |
 | `go build` / `vite build` | ビルド不能 | `make build` | `make check`, CI |
 | コンテナイメージのビルドとスモーク（health の SHA、`/` の HTML、`sw.js` の `no-cache`、`HEALTHCHECK` healthy） | Dockerfile の腐敗、配信の退行 | `make image` | CI `image` |
-| E2E（Playwright, S1 シナリオ・API エラー・SPA フォールバック・Service Worker） | モックでは見えない通しの退行 | `make e2e`（サーバー起動が前提） | `e2e` ワークフロー（手動・週次） |
+| E2E（Playwright, イメージから例を聴く通しのシナリオ・保存・オフライン・SPA フォールバック・Service Worker） | モックでは見えない通しの退行 | `make e2e`（サーバー起動が前提） | `e2e` ワークフロー（手動・週次） |
 
 ## 依存（削減）
 

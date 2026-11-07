@@ -5,17 +5,15 @@ import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
 import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
-import { ProgressionForm } from '@/features/progression-input/ProgressionForm';
-import { usePatterns } from '@/features/progression-input/usePatterns';
+import { usePatterns } from '@/features/chat/usePatterns';
 import { ProjectsPanel } from '@/features/projects/ProjectsPanel';
 import { PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import { TimelineView } from '@/features/timeline/TimelineView';
-import type { FromProgressionRequest, IdeaCandidate } from '@/shared/api/client';
+import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
-import { useTimelineGeneration } from './useTimelineGeneration';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
@@ -24,8 +22,6 @@ type AppProps = {
   projectStore?: Parameters<typeof useProjects>[0];
 };
 
-type Source = 'ideas' | 'progression';
-
 const BACKEND_LABEL = {
   checking: 'バックエンドに接続中…',
   ok: 'バックエンド: ok',
@@ -33,52 +29,42 @@ const BACKEND_LABEL = {
 } as const;
 
 /**
- * Scenarios S1 and S2 (docs/product/vision.md): get a timeline either from
- * an image interpreted by the AI or from a key and progression typed in;
- * then hear it, watch it, read why it works, and take the MIDI home.
+ * The one screen of docs/product/experience.md: describe an image, hear the
+ * examples it becomes, see how they are built, and take one home. The image
+ * is the only entry; saved projects reopen the same timeline.
  */
 export function App({ createEngine = createWebAudioEngine, projectStore }: AppProps) {
-  const [source, setSource] = useState<Source>('ideas');
+  const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [selectedHarmony, setSelectedHarmony] = useState<number | null>(null);
   const [openTitle, setOpenTitle] = useState<string | null>(null);
   /** Where the loaded timeline came from; what "保存" stores alongside it. */
   const [origin, setOrigin] = useState<ProjectSource | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
   const backend = useBackendHealth();
-  const generation = useTimelineGeneration();
   const ideas = useIdeas();
   const patterns = usePatterns();
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
   const pwa = usePwa();
-  const { timeline } = generation;
 
-  const generate = async (req: FromProgressionRequest) => {
+  const show = (tl: Timeline) => {
     player.stop();
-    setOpenTitle(null);
-    setProjectName(null);
-    if (await generation.generate(req)) {
-      setSelectedHarmony(null);
-      setOrigin({ kind: 'progression', request: req });
-    }
+    setTimeline(tl);
+    setSelectedHarmony(null);
   };
 
   const openCandidate = (c: IdeaCandidate) => {
-    player.stop();
-    generation.open(c.timeline);
+    show(c.timeline);
     setOpenTitle(c.title);
     setProjectName(null);
-    setSelectedHarmony(null);
     const image = [...ideas.turns].reverse().find((t) => t.role === 'user')?.content ?? '';
     setOrigin({ kind: 'idea', image, candidateTitle: c.title });
   };
 
   const openProject = (p: Project) => {
-    player.stop();
-    generation.open(p.timeline);
+    show(p.timeline);
     setOpenTitle(null);
     setProjectName(p.name);
-    setSelectedHarmony(null);
     setOrigin(p.source);
   };
 
@@ -90,38 +76,12 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
       </header>
       <PwaBanner pwa={pwa} />
 
-      <nav className="app__source" aria-label="入力方法">
-        <button type="button" onClick={() => setSource('ideas')} aria-pressed={source === 'ideas'}>
-          イメージから（AI）
-        </button>
-        <button
-          type="button"
-          onClick={() => setSource('progression')}
-          aria-pressed={source === 'progression'}
-        >
-          進行から
-        </button>
-      </nav>
-
-      {source === 'ideas' ? (
-        <ChatPanel
-          ideas={ideas}
-          onOpenCandidate={openCandidate}
-          openTitle={openTitle}
-          patterns={patterns}
-        />
-      ) : (
-        <ProgressionForm
-          onSubmit={(req) => void generate(req)}
-          busy={generation.busy}
-          patterns={patterns}
-        />
-      )}
-      {generation.error && (
-        <p role="alert" className="app__error">
-          {generation.error}
-        </p>
-      )}
+      <ChatPanel
+        ideas={ideas}
+        onOpenCandidate={openCandidate}
+        openTitle={openTitle}
+        patterns={patterns}
+      />
 
       <ProjectsPanel
         projects={projects}

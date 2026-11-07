@@ -8,10 +8,8 @@ import { expect, test } from '@playwright/test';
  */
 test('describe an image, get candidates, open one, refine', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'イメージから（AI）' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  // The image is the only entry (docs/product/experience.md).
+  await expect(page.getByRole('button', { name: '進行から' })).toHaveCount(0);
 
   await page.getByLabel('イメージ', { exact: true }).fill('雨の日曜の午後');
   await page.getByRole('button', { name: '送る' }).click();
@@ -36,7 +34,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
     'true',
   );
 
-  // Playback and explanation work on the candidate exactly as in S1.
+  // Playback and explanation work on the example (vision.md S1).
   await page.getByRole('button', { name: '再生' }).click();
   await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
   await page.getByRole('button', { name: '停止' }).click();

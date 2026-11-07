@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openExample } from './helpers';
 
 /**
  * The offline promise of the PWA (BL-025): once the service worker has
@@ -16,10 +17,7 @@ test('a saved project opens offline', async ({ page, context }) => {
     .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
     .toBe(true);
 
-  await page.getByRole('button', { name: '進行から' }).click();
-  await page.getByLabel('進行（ローマ数字）').fill('I - IV - V - I');
-  await page.getByRole('button', { name: '生成' }).click();
-  await expect(page.getByRole('region', { name: '結果' })).toBeVisible();
+  await openExample(page, '晴れた朝', '朝の光'); // C major, I - V - vi - IV
   await page.getByLabel('プロジェクト名').fill('オフライン用');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(page.getByRole('list', { name: 'プロジェクト一覧' })).toContainText('オフライン用');
@@ -33,7 +31,7 @@ test('a saved project opens offline', async ({ page, context }) => {
   const item = page.getByRole('list', { name: 'プロジェクト一覧' }).getByRole('listitem');
   await item.getByRole('button', { name: '開く' }).click();
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result.getByRole('option')).toHaveText([/I.*C/, /IV.*F/, /V.*G/, /I.*C/]);
+  await expect(result.getByRole('option')).toHaveText([/I.*C/, /V.*G/, /vi.*Am/, /IV.*F/]);
   await page.getByRole('button', { name: '再生' }).click();
   await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
   await page.getByRole('button', { name: '停止' }).click();
