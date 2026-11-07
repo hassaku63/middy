@@ -19,6 +19,8 @@
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
 | テスト所要時間レポート（上位 10 件、合計、パッケージ別。予算: backend 60 秒 / frontend 30 秒超で警告） | 気づかないうちに遅くなるスイート、価値に見合わない重いテスト | `make test-report` | CI `backend` / `frontend` の各ステップ |
+| バンドルサイズ予算（gzip: 最大 JS チャンク 120 kB、JS 合計 160 kB、CSS 20 kB） | PWA の初回ダウンロードの肥大 | `bash scripts/check-bundle-size.sh`（`make frontend-build` が実行） | `make check`, CI `frontend` |
+| 1,000 ノート描画の予算テスト（緩い上限 3 秒。実測は `make test-report` に出る） | タイムライン表示の計算量の退行 | `cd frontend && npx vitest run src/features/timeline/TimelineView.perf.test.tsx` | `make check`, CI `frontend` |
 
 ## 構造と規約（矯正）
 

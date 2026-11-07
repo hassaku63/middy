@@ -106,8 +106,9 @@ frontend-fmt: ## prettier --write
 frontend-fmt-check: ## prettier --check
 	cd $(FRONTEND) && npm run format:check
 
-frontend-build: ## vite production build (includes PWA assets)
+frontend-build: ## vite production build (includes PWA assets) + bundle size budget
 	cd $(FRONTEND) && npm run build
+	bash scripts/check-bundle-size.sh
 
 # --- docs ----------------------------------------------------------------
 
