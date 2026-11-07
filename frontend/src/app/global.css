@@ -30,3 +30,35 @@ main {
   margin: 0 auto;
   padding: 24px 16px;
 }
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.app__header h1 {
+  margin: 0 0 4px;
+}
+
+.app__header p {
+  margin: 0;
+  color: #9ca3af;
+}
+
+.app__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.app__error {
+  margin: 0;
+  color: #f87171;
+}
+
+.app__footer {
+  font-size: 0.8rem;
+  color: #6b7280;
+}

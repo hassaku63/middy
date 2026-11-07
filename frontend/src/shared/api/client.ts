@@ -71,13 +71,20 @@ export class ApiError extends Error {
 
 type ErrorEnvelope = { error: { code: string; message: string } };
 
-export async function fetchHealth(fetchImpl: typeof fetch = fetch): Promise<Health> {
+/**
+ * `fetch` must be called with the global as `this`; passing the bare
+ * function around and invoking it as a property throws "Illegal invocation"
+ * in browsers. Wrapping it once keeps every call site safe.
+ */
+const defaultFetch: typeof fetch = (input, init) => globalThis.fetch(input, init);
+
+export async function fetchHealth(fetchImpl: typeof fetch = defaultFetch): Promise<Health> {
   return requestJson<Health>('/api/v1/health', { fetchImpl });
 }
 
 export async function createTimelineFromProgression(
   req: FromProgressionRequest,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: typeof fetch = defaultFetch,
 ): Promise<Timeline> {
   const res = await requestJson<TimelineResponse>('/api/v1/timelines/from-progression', {
     fetchImpl,
