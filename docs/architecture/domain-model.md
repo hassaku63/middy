@@ -40,7 +40,7 @@ Timeline
 ├── PPQ, TempoBPM, TimeSignature, Key
 ├── Tracks[]            楽器レーン
 │   └── Notes[]         NoteEvent{Pitch, Velocity, Start, Duration}
-└── Harmony[]           HarmonyEvent{Start, Duration, Chord, RomanNumeral}
+└── Harmony[]           HarmonyEvent{Start, Duration, Chord, RomanNumeral, Analysis?}
 ```
 
 - `Timeline` は **再生・描画・解説・書き出しのすべてが消費する唯一の成果物**。
@@ -54,12 +54,19 @@ Timeline
 - `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
 - `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordOctave`=4 の基本形, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）
 
+### 分析（解説データ）
+
+- `Function` — `T` / `S` / `D`。度数で決まる: I, III, VI = T、II, IV = S、V, VII = D。長調・自然短音階とも同じ割り当て（短調の v と VII は「弱いドミナント」扱い。和声的短音階の V や借用和音の扱いは未実装）
+- `Cadence` — 直前のコードからの進行の分類: `authentic`（V→I）、`plagal`（IV→I）、`half`（V 以外→V）、`deceptive`（V→vi）。該当なしは空
+- `Analysis{Degree, Function, Cadence, Explanation}` — `HarmonyEvent.Analysis` に付く。`Explanation` は UI にそのまま出せる日本語で、決定論的に組み立てる（LLM は使わない）
+- `Analyze(Timeline) (Timeline, error)` — 入力を変更せず、`Harmony` に `Analysis` を付けた複製を返す。非ダイアトニックなコードがあればエラー
+
 ### 未実装の語彙
 
-解説（和声機能・ケーデンス）、音楽的意図、パターンは backlog（BL-002, BL-010, BL-020）で定義される。この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
+音楽的意図とパターンは backlog（BL-010, BL-020）で定義される。この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
 
 ## 設計上の判断
 
 - **質はスケールから導出する。** `Key.Diatonic` は三度堆積の音程から質を判定するため、モードを追加してもコードの表が不要。
 - **ローマ数字は表示専用の文字列。** 解析の入力としては `degree + quality` を使い、文字列をパースしない（M2 で LLM からローマ数字文字列を受けるときは `intent` パッケージ側でパーサを持つ）。
-- **自然短音階のみ。** 和声的短音階の V（長三和音）は M1 の分析（BL-002）で「借用」として扱うか、進行テンプレート側で `V` を明示指定して解決する。ADR 候補。
+- **自然短音階のみ。** 和声的短音階の V（長三和音）、借用和音、セカンダリドミナントは未対応で、`Analyze` は非ダイアトニックなコードを拒否する。扱うときは Ideas から昇格させ、ADR で判断する。

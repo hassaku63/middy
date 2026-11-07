@@ -154,6 +154,29 @@ components:
         romanNumeral:
           type: string
           examples: [I, ii, V7, 'vii°']
+        analysis:
+          $ref: '#/components/schemas/HarmonyAnalysis'
+          description: 解説データ。分析前のタイムラインでは省略される
+    HarmonyAnalysis:
+      description: 和声機能・ケーデンス・短い日本語の解説。決定論的に生成される
+      type: object
+      required: [degree, function, explanation]
+      properties:
+        degree:
+          type: integer
+          minimum: 1
+          maximum: 7
+        function:
+          type: string
+          enum: [T, S, D]
+          description: トニック / サブドミナント / ドミナント
+        cadence:
+          type: string
+          enum: [authentic, plagal, half, deceptive]
+          description: 直前のコードからこのコードへの進行が作る終止。該当なしのときは省略
+        explanation:
+          type: string
+          description: UI にそのまま表示できる 1〜2 文の日本語
     Timeline:
       description: 再生・描画・解説・書き出しのすべてが消費する中心データ
       type: object
