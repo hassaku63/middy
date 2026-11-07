@@ -41,7 +41,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const [origin, setOrigin] = useState<ProjectSource | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
   const backend = useBackendHealth();
-  const ideas = useIdeas();
   const patterns = usePatterns();
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
@@ -53,13 +52,19 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     setSelectedHarmony(null);
   };
 
-  const openCandidate = (c: IdeaCandidate) => {
+  const openCandidate = (c: IdeaCandidate, image: string) => {
     show(c.timeline);
     setOpenTitle(c.title);
     setProjectName(null);
-    const image = [...ideas.turns].reverse().find((t) => t.role === 'user')?.content ?? '';
     setOrigin({ kind: 'idea', image, candidateTitle: c.title });
   };
+
+  // An answer arrives ready to hear: its first example opens at once (BL-064).
+  const ideas = useIdeas((answer) => {
+    const first = answer.candidates[0];
+    if (first) openCandidate(first, answer.image);
+  });
+  const lastImage = () => [...ideas.turns].reverse().find((t) => t.role === 'user')?.content ?? '';
 
   const openProject = (p: Project) => {
     show(p.timeline);
@@ -78,7 +83,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
 
       <ChatPanel
         ideas={ideas}
-        onOpenCandidate={openCandidate}
+        onOpenCandidate={(c) => openCandidate(c, lastImage())}
         openTitle={openTitle}
         patterns={patterns}
       />

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, imagine, type ChatMessage, type IdeaCandidate } from '@/shared/api/client';
 
 /** A rendered turn of the conversation: what was said and what came back. */
@@ -15,12 +15,21 @@ export type Ideas = {
   reset: () => void;
 };
 
+/** What came back for one image: the text the user sent and the examples. */
+export type Answer = { image: string; candidates: IdeaCandidate[] };
+
 /**
  * Owns the conversation of scenario S2. The server is stateless, so the
  * full history (user texts and assistant replies) goes with every turn.
+ * `onAnswer` runs once per reply, so the caller can open the first example
+ * at once (docs/product/experience.md: an example arrives ready to hear).
  */
-export function useIdeas(): Ideas {
+export function useIdeas(onAnswer?: (answer: Answer) => void): Ideas {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const onAnswerRef = useRef(onAnswer);
+  useEffect(() => {
+    onAnswerRef.current = onAnswer;
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +50,7 @@ export function useIdeas(): Ideas {
           ...prev,
           { role: 'assistant', content: res.reply, mood: res.mood, candidates: res.candidates },
         ]);
+        onAnswerRef.current?.({ image: content, candidates: res.candidates });
       } catch (e) {
         setError(describe(e));
       } finally {

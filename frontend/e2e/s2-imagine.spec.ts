@@ -21,7 +21,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(card).toContainText('A minor');
   await expect(card).toContainText('i - VI - III - VII');
 
-  await card.getByRole('button', { name: 'この候補を開く' }).click();
+  // The first example is open without another click (BL-064): one press of 再生 makes sound.
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('option')).toHaveText([/i.*Am/, /VI.*F/, /III.*C/, /VII.*G/]);
   await expect(result).toContainText('候補: 窓辺の雨');
@@ -43,4 +43,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await page.getByLabel('イメージ', { exact: true }).fill('もっと晴れた感じに');
   await page.getByRole('button', { name: '送る' }).click();
   await expect(page.getByRole('article', { name: '朝の光' })).toBeVisible();
+  // A refined answer opens its first example again.
+  await expect(result).toContainText('候補: 朝の光');
+  await expect(result.getByRole('option')).toHaveText([/I.*C/, /V.*G/, /vi.*Am/, /IV.*F/]);
 });

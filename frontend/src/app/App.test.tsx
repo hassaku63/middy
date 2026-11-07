@@ -83,12 +83,12 @@ function stubBackend() {
   );
 }
 
-async function openFirstExample(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
+/** Sends an image; the first example opens by itself (BL-064). */
+async function sendImage(user: ReturnType<typeof userEvent.setup>, text = '雨の日曜') {
+  await user.type(screen.getByLabelText('イメージ'), text);
   await user.click(screen.getByRole('button', { name: '送る' }));
   const card = await screen.findByRole('article', { name: '窓辺の雨' });
-  await user.click(within(card).getByRole('button', { name: 'この候補を開く' }));
-  return { card, result: screen.getByRole('region', { name: '結果' }) };
+  return { card, result: await screen.findByRole('region', { name: '結果' }) };
 }
 
 describe('App (docs/product/experience.md)', () => {
@@ -106,12 +106,12 @@ describe('App (docs/product/experience.md)', () => {
     expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
   });
 
-  it('opens an example into the player, view and panel, and lets the user pin a chord', async () => {
+  it('opens the first example as soon as it arrives, and lets the user pin a chord', async () => {
     stubBackend();
     const user = userEvent.setup();
     render(<App createEngine={fakeEngine} />);
 
-    const { card, result } = await openFirstExample(user);
+    const { card, result } = await sendImage(user);
     expect(
       within(result)
         .getAllByRole('option')
@@ -137,7 +137,7 @@ describe('App (docs/product/experience.md)', () => {
     render(<App createEngine={fakeEngine} projectStore={store} />);
 
     expect(screen.getByRole('button', { name: '保存' })).toBeDisabled();
-    await openFirstExample(user);
+    await sendImage(user);
 
     await user.type(screen.getByLabelText('プロジェクト名'), '練習 1');
     await user.click(screen.getByRole('button', { name: '保存' }));
