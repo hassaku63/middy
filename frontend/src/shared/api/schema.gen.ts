@@ -97,7 +97,8 @@ export interface paths {
      * @description 会話履歴（最後は user）を LLM に渡して `MusicalIntent` を得て、候補ごとに
      *     進行を調で解決・分析したタイムラインを返す（`ideas.Service.Imagine`）。
      *     サーバーは会話状態を持たない。assistant 側の履歴にはこの応答の `reply` を入れて送り返す。
-     *     LLM が不正な答えを返した場合は検証エラーを添えて 1 回だけ再試行する。
+     *     LLM が不正な答えを返した場合は検証エラーを添えて、安全上の理由で拒否した場合は同じ要求のまま、
+     *     それぞれ 1 回だけ再試行する。
      */
     post: operations['imagine'];
     delete?: never;
@@ -506,6 +507,15 @@ export interface operations {
       };
       /** @description `invalid_json`、または `invalid_request`（空・20 件超・1000 文字超・最後が user でない） */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description `llm_declined`（プロバイダの安全機構が再試行後も拒否した。言い回しを変えれば通ることが多い） */
+      422: {
         headers: {
           [name: string]: unknown;
         };

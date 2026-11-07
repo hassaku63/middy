@@ -13,7 +13,7 @@
 
 ## Now
 
-M3（Groove & Ship）まで完了。次に Now へ入れる項目（M4+）はリポジトリ所有者が `Later` / `Ideas` と `roadmap.md` から決める（`docs/dev/workflow.md` の「人間の役割」）。実 API での評価（`make eval`）は鍵の登録後に行う。
+M3（Groove & Ship）まで完了。次に Now へ入れる項目（M4+）はリポジトリ所有者が `Later` / `Ideas` と `roadmap.md` から決める（`docs/dev/workflow.md` の「人間の役割」）。実 API での評価（`make eval`）は所有者が手元の鍵で実行する。
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
@@ -52,6 +52,7 @@ M3（Groove & Ship）まで完了。次に Now へ入れる項目（M4+）はリ
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-062 | 実 API で見つかった LLM 応答の揺れへの耐性（安全機構の拒否は 1 回だけ再試行し、続けば 422 `llm_declined` で言い換えを促す。`reason` は短い解説として求める。enum の大文字小文字を吸収する） | 2026-11-07 |
 | BL-054 | 月次 gardening の拡張（backlog の老化、再実行で通った CI の集計） | 2026-11-07 |
 | BL-026 | OpenAPI → TypeScript 型生成（`openapi-typescript`、`npm run gen:api`、鮮度検査、ADR-0009） | 2026-11-07 |
 | BL-052 | バンドルサイズ予算（`scripts/check-bundle-size.sh`）と 1,000 ノート描画の予算テスト | 2026-11-07 |

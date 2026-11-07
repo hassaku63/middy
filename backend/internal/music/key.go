@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Mode is a scale type. Only the two most common modes exist today; others
@@ -37,10 +38,12 @@ func (m Mode) MarshalText() ([]byte, error) {
 	return []byte(n), nil
 }
 
-// UnmarshalText implements encoding.TextUnmarshaler.
+// UnmarshalText implements encoding.TextUnmarshaler. Case is ignored
+// because LLM structured output does not guarantee the case of enum
+// values; MarshalText always writes the lowercase name.
 func (m *Mode) UnmarshalText(text []byte) error {
 	for mode, name := range modeNames {
-		if name == string(text) {
+		if strings.EqualFold(name, string(text)) {
 			*m = mode
 			return nil
 		}

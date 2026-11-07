@@ -163,3 +163,21 @@ func TestPatternIdsAreValidated(t *testing.T) {
 		t.Fatal("schema enums must list the catalogue ids")
 	}
 }
+
+func TestParseIgnoresTheCaseOfEnumValues(t *testing.T) {
+	// The structured-outputs docs say enum case is not guaranteed.
+	data := []byte(`{"summary":"s","mood":[],"candidates":[{"title":"t",
+	  "key":{"tonic":9,"mode":"Minor"},"tempoBpm":80,"progression":["i","iv"],
+	  "beatsPerChord":4,"reason":"r","accompaniment":"Arpeggio","drums":"EIGHT-BEAT"}]}`)
+	in, err := Parse(data)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	c := in.Candidates[0]
+	if c.Key.Mode != music.Minor || c.Accompaniment != "arpeggio" || c.Drums != "eight-beat" {
+		t.Fatalf("enum values not normalised: %+v", c)
+	}
+	if c.Progression[0] != "i" {
+		t.Fatalf("roman numerals carry meaning in their case and must stay as written: %v", c.Progression)
+	}
+}

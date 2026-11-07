@@ -29,8 +29,9 @@ const (
 
 // Sentinel errors callers can branch on.
 var (
-	// ErrRefused means the provider's safety layer declined the request.
-	ErrRefused = errors.New("anthropic: request refused by the model")
+	// ErrRefused is llm.ErrRefused, kept here so adapter callers need not
+	// import both packages.
+	ErrRefused = llm.ErrRefused
 	// ErrTruncated means the answer hit MaxTokens; for structured output the
 	// JSON is then unusable, so it is an error rather than a partial result.
 	ErrTruncated = errors.New("anthropic: answer truncated at max tokens")
@@ -102,7 +103,7 @@ func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, e
 	}
 	switch msg.StopReason {
 	case sdk.StopReasonRefusal:
-		return llm.Response{}, fmt.Errorf("%w (%s)", ErrRefused, msg.StopDetails.Category)
+		return llm.Response{}, fmt.Errorf("anthropic: %w (%s)", ErrRefused, msg.StopDetails.Category)
 	case sdk.StopReasonMaxTokens:
 		return llm.Response{}, ErrTruncated
 	}

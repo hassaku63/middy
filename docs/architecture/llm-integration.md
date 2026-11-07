@@ -29,7 +29,9 @@ type Client interface {
 - モデル: 既定 `claude-opus-5-5`（`ANTHROPIC_MODEL` で上書き）。意図解釈は短い出力なので、コストが問題になったら評価セット（BL-015）で `claude-sonnet-5-5` を比較してから切り替える。
 - 構造化出力: `llm.Request.OutputSchema` を `output_config.format`（`json_schema`）として送る。`tool_choice` の強制は使わない。API は JSON Schema のサブセットだけを受け付け、それ以外のキーワードはリクエスト時に 400 になる（fake では検出できない）。`intent.Schema` は `TestSchemaUsesOnlySupportedKeywords` で守る。
 - 思考: パラメータは省略（モデル既定の adaptive）。`output_config.effort` は `low`（`Config.Effort` で変更可）。
-- 拒否・打ち切り: `stop_reason` が `refusal` なら `ErrRefused`、`max_tokens` なら `ErrTruncated`（構造化出力の途中切れは使えないためエラー扱い）。サーバー側 fallback は未導入。音楽の相談で拒否が観測されたら検討する。
+- 拒否・打ち切り: `stop_reason` が `refusal` なら `llm.ErrRefused`（アダプタが包んで返す）、`max_tokens` なら `ErrTruncated`（構造化出力の途中切れは使えないためエラー扱い）。
+- 拒否への対応: 安全分類器は確率的に判定し、無害な音楽の相談でも誤検出がある（評価セットで `reasoning_extraction` を 1 件観測）。`ideas.Service` は拒否されたら同じ要求で 1 回だけ再試行し、2 回とも拒否なら `ErrDeclined` を返す。HTTP では 422 `llm_declined` になり、UI は言い回しを変えるよう促す。公式ドキュメントは、出力の項目でモデルの推論や思考過程を求めるとこの拒否が起きやすいとしているので、`reason` は「短い解説」として求める。サーバー側 fallback（別モデルへの切り替え）は SDK の beta API が必要なので導入していない。再試行しても拒否が残るようなら検討する。
+- enum の大文字小文字: 構造化出力は enum の値の大文字小文字を保証しない。`music.Mode` は大文字小文字を区別せずに読み、`intent.Parse` はパターン id を小文字にそろえる。ローマ数字は大文字小文字に意味があるので触らない。
 - タイムアウト: 30 秒（`Config.Timeout`）。SDK の既定リトライ（2 回）は 429 / 5xx / 接続エラーに効く。
 - プロンプトキャッシュ: システムプロンプトを 1 ブロックで送り、`cache_control: ephemeral` を付ける。可変部分（会話）は後ろ。
 - エラー: `*anthropic.Error` はステータスとリクエスト ID を含めて包み直す。`ideas.Service` はすべて `ErrLLMUnavailable` として扱い、HTTP は 502 にする。

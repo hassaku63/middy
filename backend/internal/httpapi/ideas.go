@@ -14,7 +14,7 @@ type ideasRequest struct {
 
 // handleIdeas runs one conversational turn of scenario S2 and returns the
 // reply with rendered candidates. Provider trouble is a 502, not a 500:
-// the server is fine, the upstream is not.
+// the server is fine, the upstream is not. A safety refusal is a 422.
 func handleIdeas(svc *ideas.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ideasRequest
@@ -30,6 +30,9 @@ func handleIdeas(svc *ideas.Service) http.HandlerFunc {
 			writeError(w, http.StatusBadGateway, "llm_unavailable", "the language model could not be reached; try again")
 		case errors.Is(err, ideas.ErrInvalidOutput):
 			writeError(w, http.StatusBadGateway, "llm_invalid_output", "the language model gave an unusable answer twice; try rephrasing")
+		case errors.Is(err, ideas.ErrDeclined):
+			// Not an upstream fault: the request was understood and refused.
+			writeError(w, http.StatusUnprocessableEntity, "llm_declined", "the language model declined this request twice; try rephrasing")
 		default:
 			// Conversation validation errors come back as plain errors.
 			writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
