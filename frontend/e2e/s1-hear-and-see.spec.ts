@@ -30,7 +30,7 @@ test('generate, play, follow, pin, download', async ({ page }) => {
     /V7.*E7/, // uppercase V in minor is the harmonic-minor dominant
     /i.*Am/,
   ]);
-  await expect(result.getByRole('heading')).toContainText('i');
+  await expect(result.getByRole('heading', { level: 2 })).toContainText('i');
 
   // Play: after ~2.3 s the playhead is in bar 2 and the panel follows the chord.
   await page.getByRole('button', { name: '再生' }).click();
@@ -45,7 +45,7 @@ test('generate, play, follow, pin, download', async ({ page }) => {
 
   // Pin a chord by clicking it; the panel stops following playback.
   await result.getByRole('option', { name: 'V7 (E7)' }).click();
-  await expect(result.getByRole('heading')).toContainText('V7');
+  await expect(result.getByRole('heading', { level: 2 })).toContainText('V7');
   await expect(result.locator('.explanation__text')).toContainText('和声的短音階');
   await expect(result.locator('.explanation__cadence')).toHaveText('半終止');
   await page.getByRole('button', { name: /固定を解除/ }).click();
