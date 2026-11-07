@@ -15,6 +15,7 @@ import (
 	"github.com/hassaku63/middy/backend/internal/httpapi"
 	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
+	"github.com/hassaku63/middy/backend/internal/web"
 )
 
 func main() {
@@ -38,9 +39,16 @@ func run() error {
 		return err
 	}
 
+	deps := httpapi.Deps{LLM: llmClient, Logger: logger}
+	if dist, ok := web.Dist(); ok {
+		deps.Static = dist
+	} else {
+		logger.Warn("frontend not embedded; UI routes answer 503 (run `make build`)")
+	}
+
 	srv := &http.Server{
 		Addr:              cfg.Addr(),
-		Handler:           httpapi.NewHandler(httpapi.Deps{LLM: llmClient, Logger: logger}),
+		Handler:           httpapi.NewHandler(deps),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -49,7 +57,7 @@ func run() error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		logger.Info("listening", "addr", srv.Addr, "llm_provider", cfg.LLMProvider)
+		logger.Info("listening", "addr", srv.Addr, "llm_provider", cfg.LLMProvider, "frontend_embedded", deps.Static != nil)
 		errCh <- srv.ListenAndServe()
 	}()
 

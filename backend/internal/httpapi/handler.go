@@ -6,6 +6,7 @@
 package httpapi
 
 import (
+	"io/fs"
 	"log/slog"
 	"net/http"
 
@@ -17,6 +18,9 @@ import (
 type Deps struct {
 	LLM    llm.Client
 	Logger *slog.Logger
+	// Static is the built frontend (see internal/web). nil means "not built":
+	// the API still works and the UI answers 503.
+	Static fs.FS
 }
 
 // route is one registered endpoint. Keeping routes as data lets a test
@@ -49,6 +53,8 @@ func NewHandler(d Deps) http.Handler {
 	for _, r := range routes(d) {
 		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
 	}
+	// Everything that is not an API route is the frontend (ADR-0008).
+	mux.Handle("/", staticHandler(d.Static))
 	return requestLogger(d.Logger, mux)
 }
 

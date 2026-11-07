@@ -33,6 +33,15 @@ make dev-backend    # :8080 で API（LLM は fake）
 make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ```
 
+本番相当で動かす（単一バイナリ、ADR-0008）:
+
+```bash
+make build          # vite build → バイナリに同梱 → go build
+make run            # :8080 で UI と API を同一オリジンから配信
+```
+
+フロントを同梱せずに `go build` したバイナリは API だけが動き、`/` は 503 を返します。
+
 ブラウザで http://localhost:5173 を開き、調・モード・ローマ数字の進行・テンポを入力して「生成」を押すと、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。
 
 実際の LLM を使うときは `backend/.env.example` を `backend/.env` にコピーして `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を設定します（Anthropic アダプタ自体は未実装。[backlog](docs/product/backlog.md) 参照）。
@@ -49,9 +58,10 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 │   ├── cmd/server/        # エントリポイント
 │   └── internal/
 │       ├── config/        # 環境変数の読み込み
-│       ├── httpapi/       # HTTP ハンドラ（薄い）
+│       ├── httpapi/       # HTTP ハンドラ（薄い）と静的配信
 │       ├── llm/           # LLM 境界（interface + fake）
-│       └── music/         # 音楽理論ドメイン（純粋・無依存）
+│       ├── music/         # 音楽理論ドメイン（純粋・無依存）
+│       └── web/           # ビルド済みフロントの embed
 ├── frontend/              # React PWA
 │   └── src/
 │       ├── app/           # アプリシェル
