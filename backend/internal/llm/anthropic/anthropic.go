@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -23,7 +24,7 @@ import (
 const (
 	DefaultModel     = "claude-opus-5-5"
 	DefaultTimeout   = 30 * time.Second
-	DefaultMaxTokens = 4096
+	DefaultMaxTokens = 16000
 )
 
 // Sentinel errors callers can branch on.
@@ -105,6 +106,15 @@ func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, e
 	case sdk.StopReasonMaxTokens:
 		return llm.Response{}, ErrTruncated
 	}
+	// Token accounting per call: the prerequisite for judging cost and for
+	// seeing whether the cached system prompt is actually read from cache.
+	slog.InfoContext(ctx, "llm usage",
+		"model", c.model,
+		"input_tokens", msg.Usage.InputTokens,
+		"output_tokens", msg.Usage.OutputTokens,
+		"cache_read_input_tokens", msg.Usage.CacheReadInputTokens,
+		"cache_creation_input_tokens", msg.Usage.CacheCreationInputTokens,
+	)
 	var text strings.Builder
 	for _, block := range msg.Content {
 		if tb, ok := block.AsAny().(sdk.TextBlock); ok {
