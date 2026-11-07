@@ -36,6 +36,7 @@ func routes(_ Deps) []route {
 	return []route{
 		{http.MethodGet, APIPrefix + "/health", handleHealth},
 		{http.MethodPost, APIPrefix + "/timelines/from-progression", handleFromProgression},
+		{http.MethodPost, APIPrefix + "/export/midi", handleExportMIDI},
 	}
 }
 

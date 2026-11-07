@@ -10,6 +10,7 @@
 | トラック (Track) | 楽器ごとのノート列 | `music.Track` |
 | ノート (NoteEvent) | ピッチ・ベロシティ・開始 tick・長さ | `music.NoteEvent` |
 | ハーモニー注釈 (HarmonyEvent) | ある区間を支配するコードとローマ数字。解説レイヤーの素材 | `music.HarmonyEvent` |
+| SMF (Standard MIDI File) | DAW が読める MIDI ファイル形式。middy は format 0 を書き出す | `smf.Write` |
 | tick | 時間の最小単位。`DefaultPPQ`=480 tick が四分音符 | `music.Tick` |
 | ピッチクラス (PitchClass) | オクターブを無視した音名。C=0 … B=11 | `music.PitchClass` |
 | ピッチ (Pitch) | MIDI ノート番号 0..127。C4=60 | `music.Pitch` |
