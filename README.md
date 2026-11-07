@@ -24,9 +24,10 @@
 
 ## クイックスタート
 
-前提: Go 1.24+, Node.js 22+, [golangci-lint](https://golangci-lint.run/) v2。
+前提: Go、Node.js、[golangci-lint](https://golangci-lint.run/)。版は `.tool-versions` が唯一の情報源で、CI もそれを読みます（asdf / mise なら `asdf install` / `mise install`）。
 
 ```bash
+make doctor         # 手元の版が .tool-versions と合っているか
 make setup          # 依存のインストール
 make check          # フォーマット・lint・テスト・ビルド・ドキュメント検査を全部
 make dev-backend    # :8080 で API（LLM は fake）
@@ -62,6 +63,7 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 .
 ├── AGENTS.md              # AI エージェント向けの正典（Claude / Codex / Copilot 共通）
 ├── CLAUDE.md              # Claude Code 固有の補足（AGENTS.md を取り込む）
+├── .tool-versions         # Go / Node / golangci-lint の版（CI・make doctor・Docker が読む）
 ├── Makefile               # make check = 唯一のゲート
 ├── Dockerfile / compose.yaml  # 本番相当のイメージとローカル検証（ADR-0008）
 ├── scripts/               # ドキュメント検査などの補助スクリプト

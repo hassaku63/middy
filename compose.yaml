@@ -11,6 +11,8 @@ services:
       context: .
       args:
         VERSION: ${VERSION:-compose}
+        GO_VERSION: ${GO_VERSION:-1.24}
+        NODE_VERSION: ${NODE_VERSION:-22}
     image: middy:local
     ports:
       - "${PORT:-8080}:8080"
