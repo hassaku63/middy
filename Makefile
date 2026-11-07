@@ -10,6 +10,9 @@ SHELL := /bin/bash
 BACKEND  := backend
 FRONTEND := frontend
 EMBED_DIR := $(BACKEND)/internal/web/dist
+# Override when the local toolchain lacks the coverage tools (e.g. an auto-downloaded
+# toolchain module): make check GOTEST_FLAGS=-race
+GOTEST_FLAGS ?= -race -cover
 GO_VERSION   := $(shell awk '$$1 == "golang" { print $$2 }' .tool-versions)
 NODE_VERSION := $(shell awk '$$1 == "nodejs" { print $$2 }' .tool-versions)
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
@@ -62,8 +65,8 @@ down: ## Stop the compose stack
 
 # --- backend -------------------------------------------------------------
 
-backend-test: ## Go tests with race detector and coverage
-	cd $(BACKEND) && go test -race -cover ./...
+backend-test: ## Go tests with race detector and coverage (GOTEST_FLAGS)
+	cd $(BACKEND) && go test $(GOTEST_FLAGS) ./...
 
 backend-lint: ## go vet + golangci-lint
 	cd $(BACKEND) && go vet ./... && golangci-lint run ./...

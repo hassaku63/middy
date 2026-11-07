@@ -23,19 +23,18 @@ type Client interface {
 - `fake.Client` は台本どおりに返す。台本がなく構造化出力を求められたときは、入力の気分語から決定論的な見本 Intent を返す（開発と E2E 用）。**ユースケースのテストはすべて fake で書き、CI はネットワークなしで通す。**
 - 実アダプタは `internal/llm/anthropic`（BL-011）。プロバイダ固有の型はそこから外に出さない。
 
-## Anthropic アダプタ実装メモ（BL-011 向け）
+## Anthropic アダプタ（`internal/llm/anthropic`）
 
-実装時は Claude Code の `claude-api` スキル（`/claude-api`）を参照し、以下を守る。
-
-- SDK: `github.com/anthropics/anthropic-sdk-go/v2`。生 HTTP は書かない。
+- SDK: `github.com/anthropics/anthropic-sdk-go/v2`（Go 1.25 以上を要求するため、`.tool-versions` も 1.25）。生 HTTP は書かない。
 - モデル: 既定 `claude-opus-5-5`（`ANTHROPIC_MODEL` で上書き）。意図解釈は短い出力なので、コストが問題になったら評価セット（BL-015）で `claude-sonnet-5-5` を比較してから切り替える。
-- 構造化出力: `output_config.format` に JSON Schema を渡す。`tool_choice` の強制は現行モデルで不可。
-- 思考: パラメータは省略（既定の adaptive）。`output_config.effort` は `low`〜`medium` から始める。
-- 拒否: `stop_reason == "refusal"` を必ず確認し、サーバー側 `fallbacks: "default"` を有効化する。
-- タイムアウト: `option.WithRequestTimeout` で 30 秒程度。ユーザー向けには「考え中」の UI を出す。
-- プロンプトキャッシュ: システムプロンプトは固定文字列にし、可変部分（ユーザー文）は後ろに置く。
-- エラー: `errors.As` で `*anthropic.Error` を取り、429/5xx はリトライ対象、4xx は即時エラーとして API の `error.code` に対応づける。
-- テスト: HTTP レベルで録画したレスポンスを `httptest.Server` から返す。実 API を叩くテストは `//go:build integration` タグで分離し、CI では実行しない。
+- 構造化出力: `llm.Request.OutputSchema` を `output_config.format`（`json_schema`）として送る。`tool_choice` の強制は使わない。
+- 思考: パラメータは省略（モデル既定の adaptive）。`output_config.effort` は `low`（`Config.Effort` で変更可）。
+- 拒否・打ち切り: `stop_reason` が `refusal` なら `ErrRefused`、`max_tokens` なら `ErrTruncated`（構造化出力の途中切れは使えないためエラー扱い）。サーバー側 fallback は未導入。音楽の相談で拒否が観測されたら検討する。
+- タイムアウト: 30 秒（`Config.Timeout`）。SDK の既定リトライ（2 回）は 429 / 5xx / 接続エラーに効く。
+- プロンプトキャッシュ: システムプロンプトを 1 ブロックで送り、`cache_control: ephemeral` を付ける。可変部分（会話）は後ろ。
+- エラー: `*anthropic.Error` はステータスとリクエスト ID を含めて包み直す。`ideas.Service` はすべて `ErrLLMUnavailable` として扱い、HTTP は 502 にする。
+- テスト: `httptest.Server` が録画相当の Messages API 応答を返し、送信した本文（system のキャッシュ指定、messages の役割、`output_config`）を検証する。実 API を叩くテストは置かない（評価セット BL-015 が手動実行で担う）。
+- 配線: `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY`（`backend/.env` または環境変数）。鍵がなければ起動時に設定エラー。
 
 ## プロンプト設計の原則
 

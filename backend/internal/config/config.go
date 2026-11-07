@@ -12,7 +12,7 @@ import (
 // Supported LLM providers.
 const (
 	LLMProviderFake = "fake"
-	// LLMProviderAnthropic is reserved for the real adapter (not implemented yet).
+	// LLMProviderAnthropic uses internal/llm/anthropic (requires ANTHROPIC_API_KEY).
 	LLMProviderAnthropic = "anthropic"
 )
 

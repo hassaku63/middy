@@ -16,6 +16,7 @@ import (
 	"github.com/hassaku63/middy/backend/internal/config"
 	"github.com/hassaku63/middy/backend/internal/httpapi"
 	"github.com/hassaku63/middy/backend/internal/llm"
+	"github.com/hassaku63/middy/backend/internal/llm/anthropic"
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
 	"github.com/hassaku63/middy/backend/internal/web"
 )
@@ -111,12 +112,12 @@ func run() error {
 }
 
 // newLLMClient selects the LLM provider from configuration.
-// The real Anthropic-backed client is intentionally not wired yet; see
-// docs/architecture/llm-integration.md and the backlog.
 func newLLMClient(cfg config.Config) (llm.Client, error) {
 	switch cfg.LLMProvider {
 	case config.LLMProviderFake:
 		return fake.New(), nil
+	case config.LLMProviderAnthropic:
+		return anthropic.New(anthropic.Config{APIKey: cfg.AnthropicAPIKey, Model: cfg.AnthropicModel})
 	default:
 		return nil, errors.New("unsupported LLM_PROVIDER: " + cfg.LLMProvider)
 	}
