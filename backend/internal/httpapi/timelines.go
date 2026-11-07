@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/hassaku63/middy/backend/internal/music"
+	"github.com/hassaku63/middy/backend/internal/music/pattern"
 )
 
 // maxRequestBody bounds JSON request bodies. Progressions are tiny; this
@@ -23,6 +24,10 @@ type fromProgressionRequest struct {
 	Key         music.Key          `json:"key"`
 	TempoBPM    float64            `json:"tempoBpm"`
 	Progression []progressionLabel `json:"progression"`
+	// Accompaniment and Drums are pattern ids (GET /patterns). Empty means
+	// block chords and no drums, exactly what FromProgression produces.
+	Accompaniment string `json:"accompaniment,omitempty"`
+	Drums         string `json:"drums,omitempty"`
 }
 
 type progressionLabel struct {
@@ -54,6 +59,11 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
+	tl, err = applyPatterns(tl, req.Accompaniment, req.Drums)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
 	tl, err = music.Analyze(tl)
 	if err != nil {
 		// FromProgression only emits diatonic chords, so this is a bug, not user error.
@@ -61,6 +71,43 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, timelineResponse{Timeline: tl})
+}
+
+// applyPatterns layers the requested templates on a block-chord timeline.
+// No ids means the timeline is returned unchanged.
+func applyPatterns(tl music.Timeline, accID, drumsID string) (music.Timeline, error) {
+	if accID == "" && drumsID == "" {
+		return tl, nil
+	}
+	if accID == "" {
+		accID = "block"
+	}
+	acc, err := pattern.FindAccompaniment(accID)
+	if err != nil {
+		return music.Timeline{}, err
+	}
+	var drums *pattern.Drums
+	if drumsID != "" {
+		d, err := pattern.FindDrums(drumsID)
+		if err != nil {
+			return music.Timeline{}, err
+		}
+		drums = &d
+	}
+	return pattern.Apply(tl, acc, drums)
+}
+
+// patternsResponse is the catalogue for GET /patterns.
+type patternsResponse struct {
+	Accompaniments []pattern.Accompaniment `json:"accompaniments"`
+	Drums          []pattern.Drums         `json:"drums"`
+}
+
+func handlePatterns(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, patternsResponse{
+		Accompaniments: pattern.Accompaniments(),
+		Drums:          pattern.DrumPatterns(),
+	})
 }
 
 // toProgression converts request labels into domain steps, reporting

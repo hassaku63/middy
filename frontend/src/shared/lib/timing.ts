@@ -30,6 +30,8 @@ export function formatPosition(tick: number, ppq: number, sig: TimeSignature): s
 export type ScheduledNote = {
   pitch: number;
   velocity: number;
+  /** MIDI channel of the source track; 9 is GM percussion. */
+  channel: number;
   /** seconds from the start of the timeline */
   startSec: number;
   durationSec: number;
@@ -43,6 +45,7 @@ export function scheduleNotes(tl: Timeline): ScheduledNote[] {
       out.push({
         pitch: n.pitch,
         velocity: n.velocity,
+        channel: track.channel,
         startSec: ticksToSeconds(n.start, tl.ppq, tl.tempoBpm),
         durationSec: ticksToSeconds(n.duration, tl.ppq, tl.tempoBpm),
       });

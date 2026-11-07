@@ -67,10 +67,10 @@ src/test       Vitest セットアップ
 ```
 
 - 状態管理ライブラリは **まだ入れない**。`useState`/`useReducer` + context で始め、feature をまたぐ状態（現在のタイムライン、再生位置）が 3 つを超えたら ADR を書いて検討する。
-- 再生は `features/player`: `TimelinePlayer`（先読みスケジューラ、Web Audio 非依存でテスト可能）が `Synth` と `Clock` を注入され、`WebAudioSynth` が音を出す。`AudioContext` は最初の再生操作で作る。
-- 表示は `features/timeline`: `TimelineView` がコードレーン（`listbox`/`option`、クリックで選択）とピアノロールを SVG で描き、`positionTick` に応じて鳴っているコード・ノートをハイライトする。1 小節 = `BAR_WIDTH` px。
+- 再生は `features/player`: `TimelinePlayer`（先読みスケジューラ、Web Audio 非依存でテスト可能）が `Synth` と `Clock` を注入され、`WebAudioSynth` が音を出す（ch.9 はキック・スネア・ハイハットの簡易打楽器音）。`AudioContext` は最初の再生操作で作る。
+- 表示は `features/timeline`: `TimelineView` がコードレーン（`listbox`/`option`、クリックで選択）とピアノロール、ch.9 のノートだけを集めたドラムレーンを SVG で描き、`positionTick` に応じて鳴っているコード・ノート・打楽器をハイライトする。1 小節 = `BAR_WIDTH` px。
 - 会話は `features/chat`: `useIdeas` が履歴（ユーザー発言と assistant の `reply`）を保持して `POST /api/v1/ideas` を呼び、`ChatPanel` がメッセージと候補カードを表示する。候補を開くと `App` が `Timeline` を差し替え、再生・表示・解説は S1 と同じ部品に載る。
-- 入力は `features/progression-input`: `ProgressionForm` がテキスト（`I - V - vi - IV`）をトークン化し、API リクエストを組み立てる。ローマ数字の妥当性はバックエンドが判定する。
+- 入力は `features/progression-input`: `ProgressionForm` がテキスト（`I - V - vi - IV`）をトークン化し、`usePatterns` が取得したカタログから伴奏・ドラムを選ばせて API リクエストを組み立てる。ローマ数字の妥当性はバックエンドが判定する。
 - `src/app/App.tsx` が S1 / S2 の結線: 入力方法（イメージから / 進行から）を切り替え、どちらから来た `Timeline` も同じ状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
 - 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
 - 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示する。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。

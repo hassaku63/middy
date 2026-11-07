@@ -6,6 +6,7 @@ import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { ProgressionForm } from '@/features/progression-input/ProgressionForm';
+import { usePatterns } from '@/features/progression-input/usePatterns';
 import { TimelineView } from '@/features/timeline/TimelineView';
 import type { FromProgressionRequest, IdeaCandidate } from '@/shared/api/client';
 import { useBackendHealth } from './useBackendHealth';
@@ -36,6 +37,7 @@ export function App({ createEngine = createWebAudioEngine }: AppProps) {
   const backend = useBackendHealth();
   const generation = useTimelineGeneration();
   const ideas = useIdeas();
+  const patterns = usePatterns();
   const player = usePlayer(createEngine);
   const { timeline } = generation;
 
@@ -75,7 +77,11 @@ export function App({ createEngine = createWebAudioEngine }: AppProps) {
       {source === 'ideas' ? (
         <ChatPanel ideas={ideas} onOpenCandidate={openCandidate} openTitle={openTitle} />
       ) : (
-        <ProgressionForm onSubmit={(req) => void generate(req)} busy={generation.busy} />
+        <ProgressionForm
+          onSubmit={(req) => void generate(req)}
+          busy={generation.busy}
+          patterns={patterns}
+        />
       )}
       {generation.error && (
         <p role="alert" className="app__error">

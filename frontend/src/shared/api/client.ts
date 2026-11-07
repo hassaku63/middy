@@ -55,6 +55,9 @@ export type FromProgressionRequest = {
   key: Key;
   tempoBpm: number;
   progression: ProgressionLabel[];
+  /** Pattern ids from GET /patterns; omit for block chords / no drums. */
+  accompaniment?: string;
+  drums?: string;
 };
 export type TimelineResponse = { timeline: Timeline };
 
@@ -92,6 +95,18 @@ export async function createTimelineFromProgression(
     body: req,
   });
   return res.timeline;
+}
+
+// --- GET /patterns -----------------------------------------------------------
+
+export type Accompaniment = { id: string; name: string; description: string; program: number };
+export type DrumPattern = { id: string; name: string; description: string };
+export type PatternsResponse = { accompaniments: Accompaniment[]; drums: DrumPattern[] };
+
+export async function fetchPatterns(
+  fetchImpl: typeof fetch = defaultFetch,
+): Promise<PatternsResponse> {
+  return requestJson<PatternsResponse>('/api/v1/patterns', { fetchImpl });
 }
 
 // --- POST /ideas -------------------------------------------------------------

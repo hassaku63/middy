@@ -63,8 +63,8 @@ describe('scheduleNotes', () => {
 
   it('flattens tracks and orders by start time in seconds', () => {
     expect(scheduleNotes(tl)).toEqual([
-      { pitch: 60, velocity: 80, startSec: 0, durationSec: 2 },
-      { pitch: 64, velocity: 80, startSec: 1, durationSec: 0.5 },
+      { pitch: 60, velocity: 80, channel: 1, startSec: 0, durationSec: 2 },
+      { pitch: 64, velocity: 80, channel: 0, startSec: 1, durationSec: 0.5 },
     ]);
   });
 

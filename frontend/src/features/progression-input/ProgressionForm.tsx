@@ -1,23 +1,34 @@
 import { useState, type FormEvent } from 'react';
-import type { FromProgressionRequest, Mode } from '@/shared/api/client';
+import type { FromProgressionRequest, Mode, PatternsResponse } from '@/shared/api/client';
 import { pitchClassName } from '@/shared/lib/notation';
+import { PatternSelects } from './PatternSelects';
 import { parseProgressionText } from './parseProgressionText';
 import './ProgressionForm.css';
 
 export type ProgressionFormProps = {
   onSubmit: (request: FromProgressionRequest) => void;
   busy?: boolean;
+  /** Catalogue for the accompaniment / drums selects (see usePatterns). */
+  patterns?: PatternsResponse;
 };
 
 const DEFAULTS = { tonic: 0, mode: 'major' as Mode, text: 'I - V - vi - IV', beats: 4, tempo: 90 };
 
 /** Key, mode, roman-numeral progression and tempo. Emits an API request. */
-export function ProgressionForm({ onSubmit, busy = false }: ProgressionFormProps) {
+const NO_PATTERNS: PatternsResponse = { accompaniments: [], drums: [] };
+
+export function ProgressionForm({
+  onSubmit,
+  busy = false,
+  patterns = NO_PATTERNS,
+}: ProgressionFormProps) {
   const [tonic, setTonic] = useState(DEFAULTS.tonic);
   const [mode, setMode] = useState<Mode>(DEFAULTS.mode);
   const [text, setText] = useState(DEFAULTS.text);
   const [beats, setBeats] = useState(DEFAULTS.beats);
   const [tempo, setTempo] = useState(DEFAULTS.tempo);
+  const [accompaniment, setAccompaniment] = useState('');
+  const [drums, setDrums] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const submit = (e: FormEvent) => {
@@ -28,7 +39,13 @@ export function ProgressionForm({ onSubmit, busy = false }: ProgressionFormProps
       return;
     }
     setError(null);
-    onSubmit({ key: { tonic, mode }, tempoBpm: tempo, progression });
+    onSubmit({
+      key: { tonic, mode },
+      tempoBpm: tempo,
+      progression,
+      ...(accompaniment ? { accompaniment } : {}),
+      ...(drums ? { drums } : {}),
+    });
   };
 
   return (
@@ -80,6 +97,13 @@ export function ProgressionForm({ onSubmit, busy = false }: ProgressionFormProps
           onChange={(e) => setTempo(Number(e.target.value))}
         />
       </label>
+      <PatternSelects
+        patterns={patterns}
+        accompaniment={accompaniment}
+        drums={drums}
+        onAccompaniment={setAccompaniment}
+        onDrums={setDrums}
+      />
       <button type="submit" disabled={busy}>
         {busy ? '生成中…' : '生成'}
       </button>

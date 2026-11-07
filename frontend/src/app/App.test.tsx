@@ -59,7 +59,9 @@ describe('App (scenario S1)', () => {
       Promise.resolve(
         url.endsWith('/health')
           ? json(200, { status: 'ok', version: 'dev' })
-          : json(200, { timeline: analysed }),
+          : url.endsWith('/patterns')
+            ? json(200, { accompaniments: [], drums: [] })
+            : json(200, { timeline: analysed }),
       ),
     );
     vi.stubGlobal('fetch', fetchMock);
@@ -140,7 +142,9 @@ describe('App (scenario S1)', () => {
         Promise.resolve(
           url.endsWith('/health')
             ? json(200, { status: 'ok', version: 'dev' })
-            : json(200, ideasReply),
+            : url.endsWith('/patterns')
+              ? json(200, { accompaniments: [], drums: [] })
+              : json(200, ideasReply),
         ),
       ),
     );
