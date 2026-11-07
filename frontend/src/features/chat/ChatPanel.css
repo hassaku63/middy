@@ -13,7 +13,7 @@
   gap: 10px;
 }
 
-.chat__turn p {
+.chat__turn > p {
   margin: 0;
   padding: 10px 14px;
   border-radius: 12px;
@@ -26,12 +26,12 @@
   text-align: right;
 }
 
-.chat__turn--user p {
+.chat__turn--user > p {
   background: #1d4ed8;
   color: #f9fafb;
 }
 
-.chat__turn--assistant p {
+.chat__turn--assistant > p {
   background: #1f2937;
 }
 
@@ -94,12 +94,10 @@
   line-height: 1.6;
 }
 
+/* Speech-bubble styles apply to a turn's own text only (`.chat__turn > p`),
+   so card paragraphs keep their layout, e.g. the spec row stays a flex row. */
 .candidate p {
   margin: 0;
-  padding: 0;
-  background: none;
-  display: block;
-  max-width: none;
 }
 
 .chat__form {
@@ -130,7 +128,7 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .chat__turn--assistant p {
+  .chat__turn--assistant > p {
     background: #e5e7eb;
   }
   .chat__mood li {
