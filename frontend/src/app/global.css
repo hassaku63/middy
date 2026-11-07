@@ -53,6 +53,18 @@ main {
   overflow-x: auto;
 }
 
+.app__stage {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .app__stage {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: start;
+  }
+}
+
 .app__toolbar {
   display: flex;
   gap: 16px;
