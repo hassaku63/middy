@@ -54,3 +54,19 @@ test.describe('at phone width', () => {
     );
   });
 });
+
+test.describe('in the light theme', () => {
+  test.use({ colorScheme: 'light' });
+
+  test('an example card keeps its spec items apart and unshaded (BL-069)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('イメージ', { exact: true }).fill('雨の日曜の午後');
+    await page.getByRole('button', { name: '送る' }).click();
+    const spec = page
+      .getByRole('article', { name: '窓辺の雨' })
+      .locator('.candidate__spec')
+      .first();
+    await expect(spec).toHaveCSS('display', 'flex');
+    await expect(spec).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  });
+});
