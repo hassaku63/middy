@@ -17,6 +17,8 @@ tags:
     description: タイムラインの生成と分析
   - name: export
     description: 書き出し
+  - name: ideas
+    description: イメージからの候補提案（S2）
 paths:
   /health:
     get:
@@ -103,6 +105,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /ideas:
+    post:
+      tags: [ideas]
+      operationId: imagine
+      summary: イメージの会話 1 ターン分を解釈し、再生可能な候補を返す
+      description: |
+        会話履歴（最後は user）を LLM に渡して `MusicalIntent` を得て、候補ごとに
+        進行を調で解決・分析したタイムラインを返す（`ideas.Service.Imagine`）。
+        サーバーは会話状態を持たない。assistant 側の履歴にはこの応答の `reply` を入れて送り返す。
+        LLM が不正な答えを返した場合は検証エラーを添えて 1 回だけ再試行する。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdeasRequest'
+            example:
+              messages:
+                - { role: user, content: 雨の日曜の午後みたいな曲 }
+      responses:
+        '200':
+          description: 返答と候補
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdeasResponse'
+        '400':
+          description: "`invalid_json`、または `invalid_request`（空・20 件超・1000 文字超・最後が user でない）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: "`llm_unavailable`（プロバイダに到達できない）または `llm_invalid_output`（再試行後も使えない答え）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Health:
@@ -169,6 +209,72 @@ components:
       properties:
         timeline:
           $ref: '#/components/schemas/Timeline'
+
+    ChatMessage:
+      type: object
+      required: [role, content]
+      additionalProperties: false
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+          maxLength: 1000
+    IdeasRequest:
+      type: object
+      required: [messages]
+      additionalProperties: false
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+    IdeaCandidate:
+      description: LLM の提案（`intent.Candidate`）と、それを描画・分析したタイムライン
+      type: object
+      required: [title, key, tempoBpm, progression, beatsPerChord, reason, timeline]
+      properties:
+        title:
+          type: string
+        key:
+          $ref: '#/components/schemas/Key'
+        tempoBpm:
+          type: number
+          minimum: 40
+          maximum: 220
+        progression:
+          type: array
+          items:
+            type: string
+          description: ローマ数字（`ProgressionLabel.numeral` と同じ語彙）
+        beatsPerChord:
+          type: integer
+          enum: [1, 2, 4, 8]
+        reason:
+          type: string
+          description: なぜ合うかの 1〜2 文（日本語）
+        timeline:
+          $ref: '#/components/schemas/Timeline'
+    IdeasResponse:
+      type: object
+      required: [reply, mood, candidates]
+      properties:
+        reply:
+          type: string
+          description: 返答文。次のターンでは assistant の content としてそのまま送り返す
+        mood:
+          type: array
+          items:
+            type: string
+        candidates:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/IdeaCandidate'
 
     # --- ドメインモデル（backend/internal/music と 1:1） --------------------
     PitchClass:

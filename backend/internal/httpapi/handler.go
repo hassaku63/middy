@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/hassaku63/middy/backend/internal/ideas"
 	"github.com/hassaku63/middy/backend/internal/llm"
 )
 
@@ -36,11 +37,12 @@ type route struct {
 const APIPrefix = "/api/v1"
 
 // routes returns every endpoint the server exposes.
-func routes(_ Deps) []route {
+func routes(d Deps) []route {
 	return []route{
 		{http.MethodGet, APIPrefix + "/health", handleHealth},
 		{http.MethodPost, APIPrefix + "/timelines/from-progression", handleFromProgression},
 		{http.MethodPost, APIPrefix + "/export/midi", handleExportMIDI},
+		{http.MethodPost, APIPrefix + "/ideas", handleIdeas(ideas.New(d.LLM))},
 	}
 }
 
