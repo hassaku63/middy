@@ -67,6 +67,7 @@ src/test       Vitest セットアップ
 - 表示は `features/timeline`: `TimelineView` がコードレーン（`listbox`/`option`、クリックで選択）とピアノロールを SVG で描き、`positionTick` に応じて鳴っているコード・ノートをハイライトする。1 小節 = `BAR_WIDTH` px。
 - 入力は `features/progression-input`: `ProgressionForm` がテキスト（`I - V - vi - IV`）をトークン化し、API リクエストを組み立てる。ローマ数字の妥当性はバックエンドが判定する。
 - `src/app/App.tsx` が S1 シナリオの結線: フォーム → API → `Timeline` を状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
+- 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
 - 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示する。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。
 - 描画はまず SVG。ピアノロールの性能問題が出たら Canvas を検討する。
 - スタイルはプレーン CSS（CSS Modules 可）。UI ライブラリは導入しない。

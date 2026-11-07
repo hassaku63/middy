@@ -33,7 +33,7 @@ make dev-backend    # :8080 で API（LLM は fake）
 make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ```
 
-ブラウザで http://localhost:5173 を開き、調・モード・ローマ数字の進行・テンポを入力して「生成」を押すと、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。
+ブラウザで http://localhost:5173 を開き、調・モード・ローマ数字の進行・テンポを入力して「生成」を押すと、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。
 
 実際の LLM を使うときは `backend/.env.example` を `backend/.env` にコピーして `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を設定します（Anthropic アダプタ自体は未実装。[backlog](docs/product/backlog.md) 参照）。
 
@@ -55,7 +55,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ├── frontend/              # React PWA
 │   └── src/
 │       ├── app/           # アプリシェル
-│       ├── features/      # 機能ごとの縦スライス（progression-input, player, timeline, explanation）
+│       ├── features/      # 機能ごとの縦スライス（progression-input, player, timeline, explanation, export）
 │       └── shared/        # API クライアント等の共有コード
 └── docs/
     ├── product/           # ビジョン・ロードマップ・バックログ

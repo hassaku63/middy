@@ -13,9 +13,10 @@
 
 ## Now（M1 — Hear & See）
 
+M1 のスライスはすべて Done。次に Now へ入れる項目（M2 の BL-010〜）はリポジトリ所有者が決める（`docs/dev/workflow.md` の「人間の役割」）。
+
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-009 | **ダウンロード UI** 再生中のタイムラインを .mid で保存するボタン | ファイル名に調と進行が入る | S | BL-007, BL-008 | Ready |
 
 ## Next（M2 — Imagine）
 
@@ -63,4 +64,5 @@
 | BL-006 | 解説パネル（`features/explanation`: 再生追従とクリック固定） | 2026-11-07 |
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
+| BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
 | BL-030 | ドキュメント鮮度ハーネス（`make docs-check`、ルート↔OpenAPI 整合性テスト、`docs-sync` 自己点検、月次 gardening） | 2026-11-07 |
