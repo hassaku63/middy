@@ -31,7 +31,8 @@ type AppProps = {
 export function App({ createEngine = createWebAudioEngine, projectStore }: AppProps) {
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [selectedHarmony, setSelectedHarmony] = useState<number | null>(null);
-  const [openTitle, setOpenTitle] = useState<string | null>(null);
+  /** The open example itself: titles can repeat across answers (BL-070). */
+  const [openExample, setOpenExample] = useState<IdeaCandidate | null>(null);
   /** Where the loaded timeline came from; what "保存" stores alongside it. */
   const [origin, setOrigin] = useState<ProjectSource | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
 
   const openCandidate = (c: IdeaCandidate, image: string) => {
     show(c.timeline);
-    setOpenTitle(c.title);
+    setOpenExample(c);
     setProjectName(null);
     setOrigin({ kind: 'idea', image, candidateTitle: c.title });
   };
@@ -64,7 +65,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
 
   const openProject = (p: Project) => {
     show(p.timeline);
-    setOpenTitle(null);
+    setOpenExample(null);
     setProjectName(p.name);
     setOrigin(p.source);
   };
@@ -86,7 +87,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
       <ChatPanel
         ideas={ideas}
         onOpenCandidate={(c) => openCandidate(c, lastImage())}
-        openTitle={openTitle}
+        openExample={openExample}
         patterns={patterns}
       />
 
@@ -98,7 +99,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             {origin && (
               <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />
             )}
-            {openTitle && <span className="app__open-title">候補: {openTitle}</span>}
+            {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
             {projectName && <span className="app__open-title">プロジェクト: {projectName}</span>}
           </div>
           {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}

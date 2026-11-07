@@ -57,7 +57,7 @@ describe('ChatPanel', () => {
       ],
     });
     const user = userEvent.setup();
-    render(<ChatPanel ideas={ideas} onOpenCandidate={onOpen} openTitle={null} />);
+    render(<ChatPanel ideas={ideas} onOpenCandidate={onOpen} openExample={null} />);
 
     const log = screen.getByRole('list', { name: '会話' });
     expect(within(log).getByText('雨の日曜')).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe('ChatPanel', () => {
       busy: true,
       error: 'AI に接続できませんでした。',
     });
-    render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} openTitle="窓辺の雨" />);
+    render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} openExample={candidate} />);
     expect(screen.getByRole('button', { name: '開いています' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -143,5 +143,24 @@ describe('ChatPanel', () => {
     render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} />);
     expect(screen.queryByText(/これまでのやり取り/)).not.toBeInTheDocument();
     expect(screen.getByText('考え中…')).toBeInTheDocument();
+  });
+
+  it('marks only the open example when titles repeat across answers (BL-070)', async () => {
+    const again: IdeaCandidate = { ...candidate };
+    const ideas = ideasWith({
+      turns: [
+        { role: 'user', content: '雨' },
+        { role: 'assistant', content: 'x', mood: [], candidates: [candidate] },
+        { role: 'user', content: 'やっぱり夜' },
+        { role: 'assistant', content: 'y', mood: [], candidates: [again] },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} openExample={again} />);
+    await user.click(screen.getByText('これまでのやり取り（1）'));
+    expect(screen.getAllByRole('button', { name: '開いています' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'この候補を開く' })).toHaveLength(1);
+    const latest = screen.getByRole('list', { name: '会話' });
+    expect(within(latest).getByRole('button', { name: '開いています' })).toBeInTheDocument();
   });
 });
