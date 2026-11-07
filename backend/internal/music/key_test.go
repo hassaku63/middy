@@ -59,6 +59,9 @@ func TestKeyJSON(t *testing.T) {
 	if err := json.Unmarshal(b, &back); err != nil || back != k {
 		t.Fatalf("round trip = %+v, %v", back, err)
 	}
+	if err := json.Unmarshal([]byte(`{"tonic":9,"mode":"Minor"}`), &back); err != nil || back != k {
+		t.Fatalf("mode must be read case-insensitively: %+v, %v", back, err)
+	}
 	if err := json.Unmarshal([]byte(`{"tonic":0,"mode":"lydian"}`), &back); err == nil {
 		t.Fatal("unknown mode must fail to unmarshal")
 	}

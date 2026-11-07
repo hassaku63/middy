@@ -65,6 +65,8 @@ function describe(e: unknown): string {
         return 'AI に接続できませんでした。少し待ってからもう一度送ってください。';
       case 'llm_invalid_output':
         return 'AI の答えをうまく読めませんでした。言い方を変えてもう一度送ってください。';
+      case 'llm_declined':
+        return 'AI がこの言い方には答えられませんでした。情景や気分を別の言葉で伝えてみてください。';
       default:
         return e.message;
     }

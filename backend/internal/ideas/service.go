@@ -23,6 +23,10 @@ var (
 	// ErrInvalidOutput means the model did not produce a usable intent even
 	// after one retry with the validation errors attached.
 	ErrInvalidOutput = errors.New("ideas: llm returned invalid intent")
+	// ErrDeclined means the provider's safety layer refused the request
+	// twice. Musical images are harmless, so this is almost always a false
+	// positive the user can get past by rephrasing.
+	ErrDeclined = errors.New("ideas: llm declined the request")
 )
 
 // Limits on what we send to the model.
@@ -79,25 +83,40 @@ func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, erro
 
 	in, err := s.ask(ctx, req)
 	if err != nil {
-		var invalid invalidOutputError
-		if !errors.As(err, &invalid) {
-			return Result{}, err
-		}
-		// One retry: show the model its own answer and what was wrong with it.
-		retry := req
-		retry.Messages = append(append([]llm.Message{}, req.Messages...),
+		in, err = s.retry(ctx, req, err)
+	}
+	if err != nil {
+		return Result{}, err
+	}
+	return render(in)
+}
+
+// retry gives the model exactly one more chance after a failure it may get
+// past: an unusable answer, which is shown back with the validation errors,
+// or a safety refusal, which is resent unchanged because classifiers are
+// probabilistic. Any other failure, and any second failure, is final.
+func (s *Service) retry(ctx context.Context, req llm.Request, first error) (intent.Intent, error) {
+	var invalid invalidOutputError
+	switch {
+	case errors.As(first, &invalid):
+		req.Messages = append(append([]llm.Message{}, req.Messages...),
 			llm.Message{Role: llm.RoleAssistant, Content: invalid.raw},
 			llm.Message{Role: llm.RoleUser, Content: retryInstruction + invalid.reason},
 		)
-		in, err = s.ask(ctx, retry)
-		if err != nil {
-			if errors.As(err, &invalid) {
-				return Result{}, fmt.Errorf("%w: %s", ErrInvalidOutput, invalid.reason)
-			}
-			return Result{}, err
-		}
+	case errors.Is(first, llm.ErrRefused):
+	default:
+		return intent.Intent{}, first
 	}
-	return render(in)
+	in, err := s.ask(ctx, req)
+	switch {
+	case err == nil:
+		return in, nil
+	case errors.As(err, &invalid):
+		return intent.Intent{}, fmt.Errorf("%w: %s", ErrInvalidOutput, invalid.reason)
+	case errors.Is(err, llm.ErrRefused):
+		return intent.Intent{}, fmt.Errorf("%w: %v", ErrDeclined, err)
+	}
+	return intent.Intent{}, err
 }
 
 // invalidOutputError carries the raw answer and the validation message so
@@ -111,6 +130,9 @@ func (e invalidOutputError) Error() string { return "invalid intent: " + e.reaso
 
 func (s *Service) ask(ctx context.Context, req llm.Request) (intent.Intent, error) {
 	resp, err := s.llm.Complete(ctx, req)
+	if errors.Is(err, llm.ErrRefused) {
+		return intent.Intent{}, fmt.Errorf("ideas: %w", err)
+	}
 	if err != nil {
 		return intent.Intent{}, fmt.Errorf("%w: %v", ErrLLMUnavailable, err)
 	}

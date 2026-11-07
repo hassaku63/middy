@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -70,6 +71,7 @@ func TestIdeasErrors(t *testing.T) {
 		{"ends with assistant", fake.New(), `{"messages":[{"role":"user","content":"a"},{"role":"assistant","content":"b"}]}`, 400, "invalid_request"},
 		{"provider down", exhausted(), `{"messages":[{"role":"user","content":"x"}]}`, 502, "llm_unavailable"},
 		{"unusable twice", fake.New(llm.Response{Text: "nope"}, llm.Response{Text: "still nope"}), `{"messages":[{"role":"user","content":"x"}]}`, 502, "llm_invalid_output"},
+		{"declined twice", refusing{}, `{"messages":[{"role":"user","content":"x"}]}`, 422, "llm_declined"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -95,4 +97,11 @@ func exhausted() llm.Client {
 	c := fake.New(llm.Response{Text: "used"})
 	_, _ = c.Complete(nil, llm.Request{}) //nolint:staticcheck // nil ctx is fine for the fake
 	return c
+}
+
+// refusing is an llm.Client whose safety layer declines every request.
+type refusing struct{}
+
+func (refusing) Complete(context.Context, llm.Request) (llm.Response, error) {
+	return llm.Response{}, llm.ErrRefused
 }

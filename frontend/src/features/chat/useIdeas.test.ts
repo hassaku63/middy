@@ -57,6 +57,17 @@ describe('useIdeas', () => {
     expect(result.current.error).toBeNull();
   });
 
+  it('asks the user to rephrase when the model declines', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(json(422, { error: { code: 'llm_declined', message: 'x' } })),
+    );
+    const { result } = renderHook(() => useIdeas());
+    await act(() => result.current.send('深夜に一人で勉強している集中した時間'));
+    await waitFor(() => expect(result.current.error).toMatch(/別の言葉で/));
+    expect(result.current.turns).toHaveLength(1);
+  });
+
   it('ignores blank input', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

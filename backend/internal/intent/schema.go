@@ -54,7 +54,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "description": "%d 個までのコード。ダイアトニックなローマ数字のみ: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
           },
           "beatsPerChord": { "type": "integer", "enum": [1, 2, 4, 8], "description": "1 コードの長さ（四分音符単位）" },
-          "reason": { "type": "string", "description": "なぜこの調・テンポ・進行がイメージに合うかの 1〜2 文（日本語）" },
+          "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で" },
           "accompaniment": { "type": "string", "enum": [%s], "description": "伴奏の型。省略するとブロックコード" },
           "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。省略するとドラムなし" }
         }
@@ -77,6 +77,12 @@ func Parse(data []byte) (Intent, error) {
 	var in Intent
 	if err := json.Unmarshal(data, &in); err != nil {
 		return Intent{}, fmt.Errorf("intent: not valid JSON: %w", err)
+	}
+	// Structured output does not guarantee the case of enum values, and
+	// catalogue ids are lowercase.
+	for i := range in.Candidates {
+		in.Candidates[i].Accompaniment = strings.ToLower(in.Candidates[i].Accompaniment)
+		in.Candidates[i].Drums = strings.ToLower(in.Candidates[i].Drums)
 	}
 	if err := in.Validate(); err != nil {
 		return Intent{}, fmt.Errorf("intent: invalid: %w", err)

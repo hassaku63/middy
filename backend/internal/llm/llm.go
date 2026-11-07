@@ -4,14 +4,21 @@
 // structured musical parameters and talks with the user. It never emits raw
 // MIDI notes. Everything deterministic lives in internal/music.
 //
-// Only the interface and a fake live here. The Anthropic adapter is a
-// separate backlog item and will be added under internal/llm/anthropic.
+// The interface, provider-neutral errors and a fake live here; provider
+// adapters live in subpackages (internal/llm/anthropic).
 package llm
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 )
+
+// ErrRefused means the provider's safety layer declined the request.
+// Adapters wrap it so callers can tell a refusal from an outage without
+// importing the adapter. Safety classifiers are probabilistic, so a
+// refusal of a harmless request may not repeat.
+var ErrRefused = errors.New("llm: request declined by the provider's safety layer")
 
 // Role identifies the author of a chat message.
 type Role string
