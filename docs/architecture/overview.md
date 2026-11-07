@@ -41,7 +41,7 @@ cmd/server          配線のみ（config → deps → http.Server）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
 internal/<usecase>  （M1 で追加）アプリケーションサービス。music と llm を組み合わせる
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
-internal/llm        ポート（interface）。adapters: fake, anthropic（予定）
+internal/llm        ポート（interface）。adapters: fake（実装済み）, anthropic（BL-011）
 internal/config     環境変数
 ```
 

@@ -48,5 +48,5 @@ cd frontend && npx vitest --coverage        # カバレッジ
 
 ## カバレッジの目安
 
-- `internal/music`: 90% 以上を維持（現在 93%）。下がる PR は理由を書く。
+- `internal/music`: 90% 以上を維持する（実測値は `make backend-test` の出力で見る。この文書に数値を書かない）。下がる PR は理由を書く。
 - その他: 数値目標なし。重要な分岐が網羅されているかをレビューで見る。

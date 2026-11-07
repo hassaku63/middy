@@ -1,0 +1,65 @@
+# Monthly documentation gardening (docs/dev/docs-hygiene.md).
+#
+# Runs the deterministic docs checks against the default branch plus a
+# staleness report, and opens (or updates) a single tracking issue when
+# there is something to look at. No LLM involved; an AI audit can be run
+# on demand with the `docs-sync` procedure in docs/dev/docs-hygiene.md.
+name: docs gardening
+
+on:
+  schedule:
+    - cron: '17 1 1 * *' # 01:17 UTC on the 1st of every month
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  garden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # staleness report needs commit dates
+      - name: Deterministic checks
+        id: check
+        run: |
+          if bash scripts/check-docs.sh 2> check.log; then
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Staleness report
+        id: stale
+        run: |
+          bash scripts/docs-staleness.sh > staleness.md
+          if [ -s staleness.md ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Open or update tracking issue
+        if: steps.check.outputs.status == 'failed' || steps.stale.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "自動生成: docs gardening ($(date -u +%Y-%m-%d))。詳細は docs/dev/docs-hygiene.md。"
+            echo
+            if [ "${{ steps.check.outputs.status }}" = "failed" ]; then
+              echo "## 決定論的チェックの失敗"
+              echo
+              echo '```'
+              cat check.log
+              echo '```'
+              echo
+            fi
+            echo "## 見直し候補"
+            echo
+            cat staleness.md
+          } > body.md
+          title="docs gardening: $(date -u +%Y-%m)"
+          existing=$(gh issue list --label docs-gardening --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file body.md
+          else
+            gh label create docs-gardening --description "monthly documentation review" --color 0E8A16 2>/dev/null || true
+            gh issue create --title "$title" --label docs-gardening --body-file body.md
+          fi

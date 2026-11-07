@@ -4,7 +4,7 @@
 
 「雨の日曜の午後みたいな曲」といった **イメージを AI が解釈** し、それに合う **コード進行とリズムのパターンを提案** します。チャットで相談しながら候補を絞り、生成された **タイムラインをその場で再生** できます。さらに、そのトラックの **コード進行やリズムの成り立ちを視覚的な支援つきで解説** します。
 
-> **ステータス: 開発前の足場（M0）。** 動く機能はまだありません。何をどの順で作るかは [`docs/product/roadmap.md`](docs/product/roadmap.md) を参照してください。
+> 何をどの順で作るかは [`docs/product/roadmap.md`](docs/product/roadmap.md)、進捗は [`docs/product/backlog.md`](docs/product/backlog.md) を参照してください。
 
 ## 何が特別か
 
@@ -28,7 +28,7 @@
 
 ```bash
 make setup          # 依存のインストール
-make check          # フォーマット・lint・テスト・ビルドを全部
+make check          # フォーマット・lint・テスト・ビルド・ドキュメント検査を全部
 make dev-backend    # :8080 で API（LLM は fake）
 make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ```
@@ -44,6 +44,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ├── AGENTS.md              # AI エージェント向けの正典（Claude / Codex / Copilot 共通）
 ├── CLAUDE.md              # Claude Code 固有の補足（AGENTS.md を取り込む）
 ├── Makefile               # make check = 唯一のゲート
+├── scripts/               # ドキュメント検査などの補助スクリプト
 ├── backend/               # Go API + 音楽理論エンジン
 │   ├── cmd/server/        # エントリポイント
 │   └── internal/
@@ -70,6 +71,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 - [ロードマップ](docs/product/roadmap.md) / [バックログ](docs/product/backlog.md)
 - [アーキテクチャ概要](docs/architecture/overview.md) / [ドメインモデル](docs/architecture/domain-model.md)
 - [開発ワークフロー（AI 自律開発のハーネス）](docs/dev/workflow.md)
+- [ドキュメント鮮度の維持](docs/dev/docs-hygiene.md)
 
 ## ライセンス
 

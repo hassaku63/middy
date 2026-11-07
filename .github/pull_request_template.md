@@ -13,6 +13,7 @@
 - [ ] API の形を変えた場合 `docs/api/openapi.yaml` を更新した
 - [ ] 設計判断をした場合 ADR を追加した（`docs/architecture/adr/`）
 - [ ] `docs/product/backlog.md` のステータスを更新した
+- [ ] `docs-sync` の自己点検（`docs/dev/docs-hygiene.md`）を行い、言及が変わる文書を直した
 
 ## スコープ外（やらなかったこと・次に回したこと）
 

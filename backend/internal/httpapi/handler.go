@@ -19,13 +19,34 @@ type Deps struct {
 	Logger *slog.Logger
 }
 
+// route is one registered endpoint. Keeping routes as data lets a test
+// compare them against docs/api/openapi.yaml (ADR-0004).
+type route struct {
+	Method  string
+	Path    string // full path including the /api/v1 prefix
+	Handler http.HandlerFunc
+}
+
+// APIPrefix is the base path of every versioned endpoint; it matches the
+// `servers[0].url` of the OpenAPI document.
+const APIPrefix = "/api/v1"
+
+// routes returns every endpoint the server exposes.
+func routes(_ Deps) []route {
+	return []route{
+		{http.MethodGet, APIPrefix + "/health", handleHealth},
+	}
+}
+
 // NewHandler builds the root http.Handler with all routes registered.
 func NewHandler(d Deps) http.Handler {
 	if d.Logger == nil {
 		d.Logger = slog.Default()
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/v1/health", handleHealth)
+	for _, r := range routes(d) {
+		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
+	}
 	return requestLogger(d.Logger, mux)
 }
 
