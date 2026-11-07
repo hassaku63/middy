@@ -15,8 +15,7 @@
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-004 | **ブラウザ再生** `features/player`: Timeline を Web Audio でピアノ風シンセ再生。再生/停止、現在 tick の購読 | 4 小節が正しいテンポで鳴る。再生位置が tick 単位で取得できる。AudioContext はユーザー操作後に生成。ロジックは hook/クラスに分離してテスト | M | — | Ready |
-| BL-005 | **タイムライン表示** `features/timeline`: コードレーン（ローマ数字 + コード名）とピアノロール（SVG）。再生中のコードとノートをハイライト | 1 小節 = 一定幅、再生位置の縦線が動く、ハイライトが HarmonyEvent と一致する。スナップショット以外のテスト | M | BL-004 | Blocked(BL-004) |
+| BL-005 | **タイムライン表示** `features/timeline`: コードレーン（ローマ数字 + コード名）とピアノロール（SVG）。再生中のコードとノートをハイライト | 1 小節 = 一定幅、再生位置の縦線が動く、ハイライトが HarmonyEvent と一致する。スナップショット以外のテスト | M | BL-004 | Ready |
 | BL-006 | **解説パネル** `features/explanation`: 選択中/再生中のコードの機能とケーデンス説明を表示 | BL-002 の出力をそのまま表示できる。再生中は自動で追従、クリックで固定 | S | BL-003, BL-005 | Blocked(BL-005) |
 | BL-007 | **入力 UI と結線** 調・モード・ローマ数字進行・テンポを入力して BL-003 を呼び、再生・表示・解説がつながる | 「C major, I-V-vi-IV, 90 BPM」で S1 シナリオが通しで動く | S | BL-003〜006 | Blocked |
 | BL-008 | **SMF エクスポート** `music/smf` で Timeline → Standard MIDI File (format 0)。`GET /api/v1/timelines/{id}/midi` ではなく、まずはフロントから POST した Timeline を SMF にして返す `POST /api/v1/export/midi` | 生成した .mid が外部ツール（例: `mido` や DAW）で読める。バイト列のゴールデンテスト | M | BL-001 | Ready |
@@ -63,4 +62,5 @@
 | BL-001 | 進行テンプレート → Timeline 生成（`music.Progression`, `music.FromProgression`） | 2026-11-07 |
 | BL-002 | 和声機能とケーデンス分析（`music.Analyze`, `music.Function`, `music.Cadence`） | 2026-11-07 |
 | BL-003 | API `POST /api/v1/timelines/from-progression`（`music.ParseRomanNumeral` 含む） | 2026-11-07 |
+| BL-004 | ブラウザ再生（`features/player`: TimelinePlayer, WebAudioSynth, usePlayer, PlayerControls） | 2026-11-07 |
 | BL-030 | ドキュメント鮮度ハーネス（`make docs-check`、ルート↔OpenAPI 整合性テスト、`docs-sync` 自己点検、月次 gardening） | 2026-11-07 |

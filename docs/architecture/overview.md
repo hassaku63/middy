@@ -62,6 +62,7 @@ src/test       Vitest セットアップ
 ```
 
 - 状態管理ライブラリは **まだ入れない**。`useState`/`useReducer` + context で始め、feature をまたぐ状態（現在のタイムライン、再生位置）が 3 つを超えたら ADR を書いて検討する。
+- 再生は `features/player`: `TimelinePlayer`（先読みスケジューラ、Web Audio 非依存でテスト可能）が `Synth` と `Clock` を注入され、`WebAudioSynth` が音を出す。`AudioContext` は最初の再生操作で作る。
 - 描画はまず SVG。ピアノロールの性能問題が出たら Canvas を検討する。
 - スタイルはプレーン CSS（CSS Modules 可）。UI ライブラリは導入しない。
 
