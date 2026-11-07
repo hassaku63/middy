@@ -74,9 +74,17 @@ Timeline
 - `Validate()` が全問題をまとめて返す（テンポ 40〜220、進行 1〜16 個、ローマ数字の妥当性など）。`Schema` は同じ制約を JSON Schema で LLM に伝える。`Parse(data)` は復号と検証
 - `Candidate.ToProgression()` で `music.Progression` に変換し、`FromProgression` → `Analyze` の既存経路に乗せる
 
+### パターン（`internal/music/pattern`）
+
+- `pattern.Accompaniment{ID, Name, Description, Program, Hits}` — 1 小節（4/4、`DefaultPPQ`）の伴奏テンプレート。`Hit{Start, Duration, Voice, Velocity}` の `Voice` はコードの密集ボイシングに対する相対指定（`chord` / `bass` / `root` / `third` / `fifth` / `top` / `octave`）
+- `pattern.Drums{ID, Name, Description, Hits}` — 1 小節のドラムテンプレート。`DrumHit.Note` は GM ドラムマップ（36 キック、38 スネア、42 クローズドハイハット…）
+- カタログ: 伴奏 `block` / `pulse` / `ballad` / `arpeggio` / `strum`、ドラム `eight-beat` / `ballad` / `bossa`。`Accompaniments()` / `DrumPatterns()` / `FindAccompaniment(id)` / `FindDrums(id)`
+- `pattern.Apply(tl, acc, drums)` — `Harmony` を元にトラックを作り直す。コードごとに小節単位でテンプレートを繰り返し、小節より短いコードは先頭部分だけ鳴らす。ドラムは ch.9 にタイムライン長ぶん繰り返す。入力は変更しない。4/4 以外はエラー
+- 説明文（`Description`）は解説レイヤーと LLM がそのまま使う前提で、日本語で「何が起きるか」を書く
+
 ### 未実装の語彙
 
-パターンは backlog（BL-020）で定義される。この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
+この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
 
 ## 設計上の判断
 
