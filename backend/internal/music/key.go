@@ -1,0 +1,93 @@
+package music
+
+import (
+	"fmt"
+)
+
+// Mode is a scale type. Only the two most common modes exist today; others
+// (dorian, mixolydian, ...) are a backlog item and slot in here.
+type Mode int
+
+// Supported modes.
+const (
+	Major Mode = iota
+	Minor      // natural minor (aeolian)
+)
+
+var modeNames = map[Mode]string{Major: "major", Minor: "minor"}
+var modeIntervals = map[Mode][7]int{
+	Major: {0, 2, 4, 5, 7, 9, 11},
+	Minor: {0, 2, 3, 5, 7, 8, 10},
+}
+
+// String returns the lowercase mode name used in JSON and display.
+func (m Mode) String() string {
+	if n, ok := modeNames[m]; ok {
+		return n
+	}
+	return fmt.Sprintf("Mode(%d)", int(m))
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (m Mode) MarshalText() ([]byte, error) {
+	n, ok := modeNames[m]
+	if !ok {
+		return nil, fmt.Errorf("music: unknown mode %d", int(m))
+	}
+	return []byte(n), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (m *Mode) UnmarshalText(text []byte) error {
+	for mode, name := range modeNames {
+		if name == string(text) {
+			*m = mode
+			return nil
+		}
+	}
+	return fmt.Errorf("music: unknown mode %q", string(text))
+}
+
+// Intervals returns the semitone offsets of the seven scale degrees.
+func (m Mode) Intervals() [7]int {
+	return modeIntervals[m]
+}
+
+// Key is a tonic plus a mode, e.g. C major or A minor.
+type Key struct {
+	Tonic PitchClass `json:"tonic"`
+	Mode  Mode       `json:"mode"`
+}
+
+// String renders the key as "C major" / "A minor".
+func (k Key) String() string {
+	return fmt.Sprintf("%s %s", k.Tonic, k.Mode)
+}
+
+// Scale returns the seven pitch classes of the key, tonic first.
+func (k Key) Scale() [7]PitchClass {
+	var out [7]PitchClass
+	for i, iv := range k.Mode.Intervals() {
+		out[i] = k.Tonic.Add(iv)
+	}
+	return out
+}
+
+// Degree returns the pitch class of a 1-based scale degree.
+func (k Key) Degree(degree int) (PitchClass, error) {
+	if degree < 1 || degree > 7 {
+		return 0, fmt.Errorf("music: scale degree must be 1..7, got %d", degree)
+	}
+	return k.Scale()[degree-1], nil
+}
+
+// Contains reports whether the pitch class is diatonic to the key.
+func (k Key) Contains(pc PitchClass) bool {
+	pc = pc.Normalize()
+	for _, s := range k.Scale() {
+		if s == pc {
+			return true
+		}
+	}
+	return false
+}

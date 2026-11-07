@@ -1,0 +1,213 @@
+package music
+
+import (
+	"fmt"
+)
+
+// ChordQuality is the interval structure of a chord above its root.
+type ChordQuality int
+
+// Supported chord qualities: four triads and four sevenths. This set covers
+// every diatonic chord in major and natural minor keys.
+const (
+	MajorTriad ChordQuality = iota
+	MinorTriad
+	DiminishedTriad
+	AugmentedTriad
+	Major7
+	Minor7
+	Dominant7
+	HalfDiminished7
+)
+
+type qualityInfo struct {
+	name      string // stable identifier used in JSON
+	symbol    string // suffix in chord symbols, e.g. "m7"
+	intervals []int
+	major     bool // uppercase roman numeral when true
+}
+
+var qualities = map[ChordQuality]qualityInfo{
+	MajorTriad:      {"maj", "", []int{0, 4, 7}, true},
+	MinorTriad:      {"min", "m", []int{0, 3, 7}, false},
+	DiminishedTriad: {"dim", "dim", []int{0, 3, 6}, false},
+	AugmentedTriad:  {"aug", "aug", []int{0, 4, 8}, true},
+	Major7:          {"maj7", "maj7", []int{0, 4, 7, 11}, true},
+	Minor7:          {"min7", "m7", []int{0, 3, 7, 10}, false},
+	Dominant7:       {"dom7", "7", []int{0, 4, 7, 10}, true},
+	HalfDiminished7: {"m7b5", "m7b5", []int{0, 3, 6, 10}, false},
+}
+
+func (q ChordQuality) info() (qualityInfo, error) {
+	i, ok := qualities[q]
+	if !ok {
+		return qualityInfo{}, fmt.Errorf("music: unknown chord quality %d", int(q))
+	}
+	return i, nil
+}
+
+// String returns the stable identifier ("maj", "min7", ...).
+func (q ChordQuality) String() string {
+	i, err := q.info()
+	if err != nil {
+		return fmt.Sprintf("ChordQuality(%d)", int(q))
+	}
+	return i.name
+}
+
+// Symbol returns the chord-symbol suffix ("", "m", "7", ...).
+func (q ChordQuality) Symbol() string {
+	i, _ := q.info()
+	return i.symbol
+}
+
+// Intervals returns semitone offsets from the root, root first.
+func (q ChordQuality) Intervals() []int {
+	i, _ := q.info()
+	out := make([]int, len(i.intervals))
+	copy(out, i.intervals)
+	return out
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (q ChordQuality) MarshalText() ([]byte, error) {
+	i, err := q.info()
+	if err != nil {
+		return nil, err
+	}
+	return []byte(i.name), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (q *ChordQuality) UnmarshalText(text []byte) error {
+	for quality, i := range qualities {
+		if i.name == string(text) {
+			*q = quality
+			return nil
+		}
+	}
+	return fmt.Errorf("music: unknown chord quality %q", string(text))
+}
+
+// Chord is a root pitch class with a quality. Inversions and slash chords
+// are not modelled yet (backlog).
+type Chord struct {
+	Root    PitchClass   `json:"root"`
+	Quality ChordQuality `json:"quality"`
+}
+
+// String renders a chord symbol such as "Am7" or "G7".
+func (c Chord) String() string {
+	return c.Root.String() + c.Quality.Symbol()
+}
+
+// PitchClasses returns the chord tones, root first.
+func (c Chord) PitchClasses() []PitchClass {
+	ivs := c.Quality.Intervals()
+	out := make([]PitchClass, len(ivs))
+	for i, iv := range ivs {
+		out[i] = c.Root.Add(iv)
+	}
+	return out
+}
+
+// Voicing returns a close root-position voicing with the root in the given
+// octave (C4 = octave 4).
+func (c Chord) Voicing(octave int) []Pitch {
+	root := NewPitch(c.Root, octave)
+	ivs := c.Quality.Intervals()
+	out := make([]Pitch, len(ivs))
+	for i, iv := range ivs {
+		out[i] = root.Transpose(iv)
+	}
+	return out
+}
+
+// Diatonic builds the chord stacked in thirds on a 1-based scale degree of
+// the key, as a triad or a seventh chord. The quality is derived from the
+// scale itself, so it is correct for any mode added to Mode later.
+func (k Key) Diatonic(degree int, seventh bool) (Chord, error) {
+	root, err := k.Degree(degree)
+	if err != nil {
+		return Chord{}, err
+	}
+	scale := k.Scale()
+	at := func(offset int) PitchClass { return scale[(degree-1+offset)%7] }
+	third := int(at(2).Add(-int(root)).Normalize())
+	fifth := int(at(4).Add(-int(root)).Normalize())
+
+	var q ChordQuality
+	switch {
+	case third == 4 && fifth == 7:
+		q = MajorTriad
+	case third == 3 && fifth == 7:
+		q = MinorTriad
+	case third == 3 && fifth == 6:
+		q = DiminishedTriad
+	case third == 4 && fifth == 8:
+		q = AugmentedTriad
+	default:
+		return Chord{}, fmt.Errorf("music: no triad quality for intervals %d,%d", third, fifth)
+	}
+	if !seventh {
+		return Chord{Root: root, Quality: q}, nil
+	}
+
+	sev := int(at(6).Add(-int(root)).Normalize())
+	switch {
+	case q == MajorTriad && sev == 11:
+		q = Major7
+	case q == MajorTriad && sev == 10:
+		q = Dominant7
+	case q == MinorTriad && sev == 10:
+		q = Minor7
+	case q == DiminishedTriad && sev == 10:
+		q = HalfDiminished7
+	default:
+		return Chord{}, fmt.Errorf("music: unsupported seventh chord on degree %d of %s", degree, k)
+	}
+	return Chord{Root: root, Quality: q}, nil
+}
+
+var romanBase = [7]string{"I", "II", "III", "IV", "V", "VI", "VII"}
+
+// RomanNumeral renders the conventional roman-numeral label for a chord
+// quality on a 1-based degree: uppercase for major/augmented, lowercase for
+// minor/diminished, with "°", "+", "7", "ø7" decorations.
+func RomanNumeral(degree int, q ChordQuality) (string, error) {
+	if degree < 1 || degree > 7 {
+		return "", fmt.Errorf("music: scale degree must be 1..7, got %d", degree)
+	}
+	i, err := q.info()
+	if err != nil {
+		return "", err
+	}
+	base := romanBase[degree-1]
+	if !i.major {
+		base = toLowerASCII(base)
+	}
+	switch q {
+	case DiminishedTriad:
+		return base + "°", nil
+	case AugmentedTriad:
+		return base + "+", nil
+	case Major7:
+		return base + "maj7", nil
+	case Minor7, Dominant7:
+		return base + "7", nil
+	case HalfDiminished7:
+		return base + "ø7", nil
+	default:
+		return base, nil
+	}
+}
+
+func toLowerASCII(s string) string {
+	b := []byte(s)
+	for i, c := range b {
+		if c >= 'A' && c <= 'Z' {
+			b[i] = c + ('a' - 'A')
+		}
+	}
+	return string(b)
+}
