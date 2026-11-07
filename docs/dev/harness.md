@@ -43,6 +43,17 @@
 | `go build` / `vite build` | ビルド不能 | `make build` | `make check`, CI |
 | コンテナイメージのビルドとスモーク（health の SHA、`/` の HTML、`sw.js` の `no-cache`、`HEALTHCHECK` healthy） | Dockerfile の腐敗、配信の退行 | `make image` | CI `image` |
 
+## 依存（削減）
+
+| 検査 | 防ぐもの | 個別実行 | 場所 |
+| --- | --- | --- | --- |
+| `go mod tidy -diff` | `go.mod` / `go.sum` の不整合、不要な依存 | `make deps-check` | CI `deps` |
+| `npm audit --omit=dev --audit-level=high` | 本番依存の既知脆弱性 | `make deps-check` | CI `deps` |
+| `govulncheck` + `npm audit`（全依存） | 新たに公開された脆弱性 | （CI のみ） | 週次 `security audit` |
+| Dependabot（週次、minor/patch と major を別グループ） | 依存の陳腐化 | — | GitHub |
+
+**Dependabot の方針**: minor/patch のグループは CI が緑ならマージしてよい（人間でもエージェントでも）。major は人間が判断し、規約や書き方が変わるなら ADR を書く。`typescript` と `@types/node` の major は除外（理由は `.github/dependabot.yml`）。CI が落ちた更新は閉じて原因を backlog に書く。
+
 ## 手順（機械化されていない）
 
 | 手順 | 目的 | いつ |

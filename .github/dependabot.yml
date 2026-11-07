@@ -5,15 +5,23 @@ updates:
     schedule:
       interval: weekly
     groups:
-      go-deps:
+      go-minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      go-major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
     groups:
-      npm-deps:
+      npm-minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      npm-major:
+        patterns: ["*"]
+        update-types: ["major"]
     ignore:
       # typescript-eslint pins TypeScript below 6.1; lift this when it supports TS 7.
       - dependency-name: typescript
