@@ -17,6 +17,11 @@ fake LLM を先に使い、S2 シナリオ全体を鍵なしで検証できる�
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
+| BL-012 | 意図解釈ユースケース `internal/ideas`: 会話履歴 → LLM（構造化出力）→ `intent.Parse` → 不正なら検証エラーを添えて 1 回だけ再試行 → 候補ごとに `FromProgression` + `Analyze` | fake LLM の台本で end-to-end テスト。不正出力 → 再試行 → 成功／失敗の両経路。`fake` は台本なし + Schema 指定時に決定論的な見本 Intent を返す（開発と E2E 用） | M | BL-010 | Ready |
+| BL-013 | API `POST /api/v1/ideas`: `{messages}` → `{reply, mood, candidates[{…, timeline}]}`。LLM 障害は 502 `llm_unavailable`、再試行後も不正なら 502 `llm_invalid_output` | OpenAPI 更新、ハンドラテスト | S | BL-012 | Blocked(BL-012) |
+| BL-014 | チャット UI `features/chat`: 入力、メッセージ列、候補カード（見出し・調・テンポ・進行・理由・「この候補を開く」）。候補を開くと既存の再生・表示・解説に載る | fake LLM で S2 が通しで動く。E2E に S2 を追加 | M | BL-013 | Blocked(BL-013) |
+| BL-011 | Anthropic アダプタ `internal/llm/anthropic`: 公式 Go SDK、構造化出力、タイムアウト、エラー分類。`docs/architecture/llm-integration.md` 準拠 | 録画レスポンスを返す `httptest.Server` でテスト。ネットワークなしで CI が通る。`LLM_PROVIDER=anthropic` で配線 | M | — | Ready |
+| BL-015 | プロンプト評価セット: 代表的なイメージ 20 件と期待される特徴（モード・テンポ帯）。手動実行（ビルドタグ）と結果の記録 | 回帰を検出できる | S | BL-011, BL-012 | Blocked |
 
 ## Next
 
