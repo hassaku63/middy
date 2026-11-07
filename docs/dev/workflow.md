@@ -89,7 +89,7 @@ make check
 1. `AGENTS.md` を読む（Claude Code は `CLAUDE.md` 経由で自動）。
 2. `git status` / `git log --oneline -10` で現在地を確認。
 3. `docs/product/backlog.md` の Now を確認し、`In progress` が残っていればそれを引き継ぐ。
-4. `make check` を一度回し、出発点が緑であることを確認する。
+4. `make doctor` で版を確認し、`make check` を一度回して出発点が緑であることを確認する。
 5. 着手。
 
 ## 人間の役割

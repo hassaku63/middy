@@ -17,7 +17,6 @@ M2 の機能スライスに入る前に、劣化防止（ADR-0007）とローカ
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-042 | **ツールチェーンの固定** `.tool-versions`（Go / Node / golangci-lint）を CI と `make doctor` が読み、版の不一致を報告する。.nvmrc 相当も同ファイルから | CI と手元の版が一致。不一致時に `make doctor` が理由を出す | S | — | Ready |
 | BL-043 | **通しの E2E** Playwright で S1 シナリオをコンテナ（BL-041）に対して実行する `make e2e`。CI では手動実行（`workflow_dispatch`）から始める | 生成 → 再生 → ハイライト → 固定 → MIDI ダウンロードが自動で通る | M | BL-041 | Ready |
 
 ### M2 の着手について
@@ -76,6 +75,7 @@ M2（BL-010〜015）は上記の後に Now へ移す。移す順序は Next の�
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-042 | ツールチェーンの固定（`.tool-versions` を CI・Docker・`make doctor` が読む） | 2026-11-07 |
 | BL-035 | テスト所要時間の可視化と予算（`make test-report`、CI の各ジョブで出力） | 2026-11-07 |
 | BL-034 | 言語またぎの正準フィクスチャ（`internal/fixtures` → `frontend/src/shared/api/fixtures`、`make fixtures`） | 2026-11-07 |
 | BL-033 | 依存の衛生（`go mod tidy -diff`、本番 npm 依存の audit、週次 `govulncheck`、Dependabot の方針） | 2026-11-07 |

@@ -10,15 +10,20 @@ SHELL := /bin/bash
 BACKEND  := backend
 FRONTEND := frontend
 EMBED_DIR := $(BACKEND)/internal/web/dist
+GO_VERSION   := $(shell awk '$$1 == "golang" { print $$2 }' .tool-versions)
+NODE_VERSION := $(shell awk '$$1 == "nodejs" { print $$2 }' .tool-versions)
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
-.PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report dev-backend dev-frontend run image up down \
+.PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor dev-backend dev-frontend run image up down \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-embed \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+doctor: ## Compare local Go / Node / golangci-lint with .tool-versions
+	bash scripts/doctor.sh
 
 setup: ## Install all dependencies (Go modules, npm packages)
 	cd $(BACKEND) && go mod download
@@ -43,11 +48,11 @@ dev-frontend: ## Run the Vite dev server (proxies /api to :8080)
 run: ## Run the built single binary (UI + API on :8080); build first with `make build`
 	$(BACKEND)/bin/server
 
-image: ## Build the production container image (middy:local)
-	docker build --build-arg VERSION=$(VERSION) -t middy:local .
+image: ## Build the production container image (middy:local) with the toolchain from .tool-versions
+	docker build --build-arg VERSION=$(VERSION) --build-arg GO_VERSION=$(GO_VERSION) --build-arg NODE_VERSION=$(NODE_VERSION) -t middy:local .
 
 up: ## Build and run the production-like stack with docker compose (http://localhost:8080)
-	VERSION=$(VERSION) docker compose up --build
+	VERSION=$(VERSION) GO_VERSION=$(GO_VERSION) NODE_VERSION=$(NODE_VERSION) docker compose up --build
 
 down: ## Stop the compose stack
 	docker compose down

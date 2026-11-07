@@ -61,6 +61,13 @@
 
 **Dependabot の方針**: minor/patch のグループは CI が緑ならマージしてよい（人間でもエージェントでも）。major は人間が判断し、規約や書き方が変わるなら ADR を書く。`typescript` と `@types/node` の major は除外（理由は `.github/dependabot.yml`）。CI が落ちた更新は閉じて原因を backlog に書く。
 
+## ツールチェーン（ADR-0008）
+
+| 検査 | 防ぐもの | 個別実行 | 場所 |
+| --- | --- | --- | --- |
+| `.tool-versions` を CI の setup-go / setup-node / golangci-lint-action と Docker のビルド引数が読む | CI と手元・コンテナの版ズレ | — | CI、`make image` / `make up` |
+| `make doctor` | 手元の Go / Node / golangci-lint の major.minor ズレ | `make doctor` | セッション開始時（`docs/dev/workflow.md`） |
+
 ## 手順（機械化されていない）
 
 | 手順 | 目的 | いつ |
