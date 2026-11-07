@@ -14,6 +14,12 @@
 | ルート ↔ OpenAPI 整合性テスト | 契約と実装のズレ（ADR-0004） | `cd backend && go test ./internal/httpapi/ -run TestRoutesMatchOpenAPI` | `make check`, CI `backend` |
 | 言語またぎフィクスチャ（Go が生成、TS が照合） | `notation.ts` 等のバックエンドの写しがずれる。JSON の陳腐化は Go テストが検出 | `make fixtures` で再生成、`cd backend && go test ./internal/fixtures/` | `make check`, CI `backend` + `frontend` |
 
+## テストの健全性（検知）
+
+| 検査 | 防ぐもの | 個別実行 | 場所 |
+| --- | --- | --- | --- |
+| テスト所要時間レポート（上位 10 件、合計、パッケージ別。予算: backend 60 秒 / frontend 30 秒超で警告） | 気づかないうちに遅くなるスイート、価値に見合わない重いテスト | `make test-report` | CI `backend` / `frontend` の各ステップ |
+
 ## 構造と規約（矯正）
 
 | 検査 | 防ぐもの | 個別実行 | 場所 |

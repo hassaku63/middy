@@ -54,6 +54,10 @@ cd frontend && npx vitest run src/app       # ディレクトリ単位
 cd frontend && npx vitest --coverage        # カバレッジ
 ```
 
+## 所要時間
+
+`make test-report` が両スイートの遅いテスト上位と合計を出す（CI でも毎回出力）。予算は backend 60 秒、frontend 30 秒で、超えたら警告になる。遅いテストは「価値に見合うか」を問い、分割・高速化・削除のいずれかを backlog に書く。
+
 ## カバレッジの目安
 
 - `internal/music`: 90% 以上を維持する（実測値は `make backend-test` の出力で見る。この文書に数値を書かない）。下がる PR は理由を書く。
