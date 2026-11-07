@@ -17,7 +17,7 @@ GO_VERSION   := $(shell awk '$$1 == "golang" { print $$2 }' .tool-versions)
 NODE_VERSION := $(shell awk '$$1 == "nodejs" { print $$2 }' .tool-versions)
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
-.PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor e2e dev-backend dev-frontend run image up down \
+.PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor e2e eval dev-backend dev-frontend run image up down \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-embed \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
@@ -37,6 +37,9 @@ check: fmt-check lint test build docs-check ## Run every gate (format, lint, tes
 test: backend-test frontend-test ## Run all tests
 test-report: ## Slowest tests, totals and time budgets for both suites (scripts/test-report.sh)
 	bash scripts/test-report.sh
+
+eval: ## Run the prompt evaluation set against the real API (needs ANTHROPIC_API_KEY; prints a Markdown table)
+	cd $(BACKEND) && go test -tags eval -run TestLiveEval -v ./internal/ideas/evals/
 
 e2e: ## Playwright scenarios against a running server (E2E_BASE_URL, default http://localhost:8080; see `make run` / `make up`)
 	cd $(FRONTEND) && npx playwright test
