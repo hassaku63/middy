@@ -7,9 +7,12 @@ import (
 )
 
 // Schema is the JSON Schema handed to the LLM as the required output
-// format. It mirrors Intent and the limits above; Validate remains the
-// authority because schema validation cannot check roman numerals or that
-// the engine can render the result.
+// format (structured outputs). It uses only the subset the Messages API
+// accepts: no maxItems, no minimum/maximum, minItems only 0 or 1, and
+// additionalProperties false on every object (TestSchemaUsesOnlySupportedKeywords
+// enforces this). Limits the subset cannot express are stated in the
+// descriptions; Validate remains the authority and the service retries
+// once with its errors.
 var Schema = json.RawMessage(fmt.Sprintf(`{
   "type": "object",
   "additionalProperties": false,
@@ -21,14 +24,13 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
     },
     "mood": {
       "type": "array",
-      "maxItems": %d,
       "items": { "type": "string" },
-      "description": "雰囲気を表す短い日本語のタグ"
+      "description": "雰囲気を表す短い日本語のタグ。%d 個まで"
     },
     "candidates": {
       "type": "array",
-      "minItems": %d,
-      "maxItems": %d,
+      "minItems": 1,
+      "description": "候補。%d〜%d 個",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -40,17 +42,16 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "additionalProperties": false,
             "required": ["tonic", "mode"],
             "properties": {
-              "tonic": { "type": "integer", "minimum": 0, "maximum": 11, "description": "0=C, 1=C#, ... 11=B" },
+              "tonic": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "description": "0=C, 1=C#, 2=D, 3=D#, 4=E, 5=F, 6=F#, 7=G, 8=G#, 9=A, 10=A#, 11=B" },
               "mode": { "type": "string", "enum": ["major", "minor"] }
             }
           },
-          "tempoBpm": { "type": "number", "minimum": %d, "maximum": %d },
+          "tempoBpm": { "type": "number", "description": "テンポ（BPM）。%d〜%d" },
           "progression": {
             "type": "array",
             "minItems": 1,
-            "maxItems": %d,
             "items": { "type": "string" },
-            "description": "ダイアトニックなローマ数字のみ: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
+            "description": "%d 個までのコード。ダイアトニックなローマ数字のみ: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
           },
           "beatsPerChord": { "type": "integer", "enum": [1, 2, 4, 8], "description": "1 コードの長さ（四分音符単位）" },
           "reason": { "type": "string", "description": "なぜこの調・テンポ・進行がイメージに合うかの 1〜2 文（日本語）" },
