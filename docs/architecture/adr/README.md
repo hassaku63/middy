@@ -10,6 +10,8 @@
 | [0004](0004-api-contract-openapi.md) | API 契約は OpenAPI を唯一の情報源とする | Accepted |
 | [0005](0005-vertical-slices-and-backlog-discipline.md) | 縦スライスとバックログ規律による開発 | Accepted |
 | [0006](0006-documentation-freshness.md) | ドキュメントは現在の状態だけを書き、機械的検査と定期点検で鮮度を保つ | Accepted |
+| [0007](0007-decay-prevention.md) | 開発サイクルの劣化を、矯正・検知・削減の三層で防ぐ | Accepted |
+| [0008](0008-local-verification-and-containers.md) | 本番相当の配信形態を「単一 Go バイナリ」に決め、コンテナで検証可能にする | Accepted |
 
 ## いつ ADR を書くか
 
