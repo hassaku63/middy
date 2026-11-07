@@ -16,6 +16,7 @@ fail_at=600
 excludes=(
   ':!**/package-lock.json' ':!**/go.sum' ':!**/*.png' ':!**/*.svg' ':!**/*.mid'
   ':!backend/internal/web/dist/**'
+  ':!frontend/src/shared/api/fixtures/**'
 )
 
 total=$(git diff --numstat "$base...$head" -- . "${excludes[@]}" \
