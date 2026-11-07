@@ -99,7 +99,7 @@ describe('App (docs/product/experience.md)', () => {
     render(<App createEngine={fakeEngine} />);
 
     expect(await screen.findByRole('status')).toHaveTextContent('バックエンド: ok');
-    expect(screen.getAllByRole('textbox')).toHaveLength(2); // the image, and the project name
+    expect(screen.getAllByRole('textbox')).toHaveLength(1); // the image only
     expect(screen.getByLabelText('イメージ')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '進行から' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '入力方法' })).not.toBeInTheDocument();
@@ -136,12 +136,14 @@ describe('App (docs/product/experience.md)', () => {
     const user = userEvent.setup();
     render(<App createEngine={fakeEngine} projectStore={store} />);
 
-    expect(screen.getByRole('button', { name: '保存' })).toBeDisabled();
+    // Saving belongs to an open example (BL-060).
+    expect(screen.queryByRole('button', { name: '保存' })).not.toBeInTheDocument();
     await sendImage(user);
 
     await user.type(screen.getByLabelText('プロジェクト名'), '練習 1');
     await user.click(screen.getByRole('button', { name: '保存' }));
-    const list = await screen.findByRole('list', { name: 'プロジェクト一覧' });
+    await user.click(await screen.findByText('保存したプロジェクト（1）'));
+    const list = screen.getByRole('list', { name: 'プロジェクト一覧' });
     const saved = await store.list();
     expect(saved).toHaveLength(1);
     expect(saved[0]?.source).toMatchObject({

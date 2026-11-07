@@ -6,7 +6,8 @@ import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { usePatterns } from '@/features/chat/usePatterns';
-import { ProjectsPanel } from '@/features/projects/ProjectsPanel';
+import { ProjectList } from '@/features/projects/ProjectList';
+import { SaveProjectForm } from '@/features/projects/SaveProjectForm';
 import { PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
@@ -77,9 +78,10 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     <main className="app">
       <header className="app__header">
         <h1>middy</h1>
-        <p>イメージや進行から曲の骨組みを作って、鳴らして、成り立ちを見る。</p>
+        <p>曲のイメージから例を鳴らして、その成り立ちを見る。</p>
       </header>
       <PwaBanner pwa={pwa} />
+      <ProjectList projects={projects} onOpen={openProject} />
 
       <ChatPanel
         ideas={ideas}
@@ -88,17 +90,14 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         patterns={patterns}
       />
 
-      <ProjectsPanel
-        projects={projects}
-        current={timeline && origin ? { timeline, source: origin } : null}
-        onOpen={openProject}
-      />
-
       {timeline && (
         <section className="app__timeline" aria-label="結果">
           <div className="app__toolbar">
             <PlayerControls timeline={timeline} player={player} />
             <DownloadMidiButton timeline={timeline} />
+            {origin && (
+              <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />
+            )}
             {openTitle && <span className="app__open-title">候補: {openTitle}</span>}
             {projectName && <span className="app__open-title">プロジェクト: {projectName}</span>}
           </div>

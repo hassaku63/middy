@@ -20,7 +20,7 @@ test('a saved project opens offline', async ({ page, context }) => {
   await openExample(page, '晴れた朝', '朝の光'); // C major, I - V - vi - IV
   await page.getByLabel('プロジェクト名').fill('オフライン用');
   await page.getByRole('button', { name: '保存', exact: true }).click();
-  await expect(page.getByRole('list', { name: 'プロジェクト一覧' })).toContainText('オフライン用');
+  await expect(page.getByText('保存したプロジェクト（1）')).toBeVisible();
 
   await context.setOffline(true);
   await page.reload();
@@ -28,6 +28,7 @@ test('a saved project opens offline', async ({ page, context }) => {
     page.getByText(/オフラインです。保存したプロジェクトは開いて再生できます/),
   ).toBeVisible();
 
+  await page.getByText('保存したプロジェクト（1）').click();
   const item = page.getByRole('list', { name: 'プロジェクト一覧' }).getByRole('listitem');
   await item.getByRole('button', { name: '開く' }).click();
   const result = page.getByRole('region', { name: '結果' });
