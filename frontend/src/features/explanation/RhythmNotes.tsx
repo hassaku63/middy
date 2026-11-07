@@ -14,7 +14,7 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
           <section key={label} aria-label={`${label}: ${part.name}`} className="explanation__part">
             <h4 className="explanation__part-title">
               {label}: {part.name}
-              {part.syncopated && <span className="explanation__cadence">シンコペーション</span>}
+              {part.syncopated && <span className="explanation__badge">シンコペーション</span>}
             </h4>
             <p className="explanation__text">{part.description}</p>
             <p className="explanation__text">{part.explanation}</p>

@@ -39,14 +39,14 @@ test('generate, play, follow, pin, download', async ({ page }) => {
     'aria-label',
     'iv (Dm)',
   );
-  await expect(result.locator('.explanation__text')).toContainText('サブドミナント');
+  await expect(result.locator('.explanation__text').first()).toContainText('サブドミナント');
   await page.getByRole('button', { name: '停止' }).click();
   await expect(page.getByLabel('再生位置')).toHaveText('1.1');
 
   // Pin a chord by clicking it; the panel stops following playback.
   await result.getByRole('option', { name: 'V7 (E7)' }).click();
   await expect(result.getByRole('heading', { level: 2 })).toContainText('V7');
-  await expect(result.locator('.explanation__text')).toContainText('和声的短音階');
+  await expect(result.locator('.explanation__text').first()).toContainText('和声的短音階');
   await expect(result.locator('.explanation__cadence')).toHaveText('半終止');
   await page.getByRole('button', { name: /固定を解除/ }).click();
 
