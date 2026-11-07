@@ -1,5 +1,5 @@
 import type { Synth } from './TimelinePlayer';
-import type { ScheduledNote } from './timing';
+import type { ScheduledNote } from '@/shared/lib/timing';
 
 /** MIDI note number to frequency in Hz (A4 = 69 = 440 Hz). */
 export function midiToHz(pitch: number): number {

@@ -1,6 +1,11 @@
 import type { Timeline } from '@/shared/api/client';
-import { scheduleNotes, secondsToTicks, ticksToSeconds, timelineLengthTicks } from './timing';
-import type { ScheduledNote } from './timing';
+import {
+  scheduleNotes,
+  secondsToTicks,
+  ticksToSeconds,
+  timelineLengthTicks,
+} from '@/shared/lib/timing';
+import type { ScheduledNote } from '@/shared/lib/timing';
 
 /** Something that can sound a note at an absolute audio-clock time. */
 export type Synth = {

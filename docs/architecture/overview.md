@@ -57,12 +57,13 @@ Go 1.22+ の `net/http` はメソッド付きパターンルーティングを�
 src/app        アプリシェル、ルーティング（必要になったら）、グローバル CSS
 src/features   機能ごとの縦スライス。各 feature は
                components/ hooks/ state/ を自己完結させ、他 feature を import しない
-src/shared     api/（fetch クライアントと型）、ui/（汎用コンポーネント）、lib/（純粋ユーティリティ）
+src/shared     api/（fetch クライアントと型）、ui/（汎用コンポーネント）、lib/（純粋ユーティリティ: timing, notation）
 src/test       Vitest セットアップ
 ```
 
 - 状態管理ライブラリは **まだ入れない**。`useState`/`useReducer` + context で始め、feature をまたぐ状態（現在のタイムライン、再生位置）が 3 つを超えたら ADR を書いて検討する。
 - 再生は `features/player`: `TimelinePlayer`（先読みスケジューラ、Web Audio 非依存でテスト可能）が `Synth` と `Clock` を注入され、`WebAudioSynth` が音を出す。`AudioContext` は最初の再生操作で作る。
+- 表示は `features/timeline`: `TimelineView` がコードレーン（`listbox`/`option`、クリックで選択）とピアノロールを SVG で描き、`positionTick` に応じて鳴っているコード・ノートをハイライトする。1 小節 = `BAR_WIDTH` px。
 - 描画はまず SVG。ピアノロールの性能問題が出たら Canvas を検討する。
 - スタイルはプレーン CSS（CSS Modules 可）。UI ライブラリは導入しない。
 

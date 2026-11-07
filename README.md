@@ -55,7 +55,7 @@ make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
 ├── frontend/              # React PWA
 │   └── src/
 │       ├── app/           # アプリシェル
-│       ├── features/      # 機能ごとの縦スライス（player など）
+│       ├── features/      # 機能ごとの縦スライス（player, timeline など）
 │       └── shared/        # API クライアント等の共有コード
 └── docs/
     ├── product/           # ビジョン・ロードマップ・バックログ

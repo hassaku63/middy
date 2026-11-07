@@ -1,5 +1,5 @@
 import type { Timeline } from '@/shared/api/client';
-import { formatPosition } from './timing';
+import { formatPosition } from '@/shared/lib/timing';
 import type { UsePlayer } from './usePlayer';
 
 type Props = {
