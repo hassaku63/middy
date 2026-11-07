@@ -1,13 +1,13 @@
 # Production-like local verification (ADR-0008): one container serving the
 # UI and the API on http://localhost:8080, built from this checkout.
 #
-#   make up                                     # reads backend/.env if present
-#   LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # shell wins over the file
+#   make up                                               # fake LLM
+#   LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up  # real LLM
 #
-# The LLM settings reach the container only through `environment` below,
-# interpolated from the shell or from the file given to --env-file (make up
-# passes backend/.env). An `env_file` entry would be overridden by these
-# lines, and would also let PORT move the listener away from the mapped 8080.
+# Settings reach the container only through `environment` below, from the
+# environment of the command that starts compose (ADR-0011). The repository
+# keeps no settings file (compose would still interpolate a project-root .env;
+# do not create one), so a secrets tool can wrap the command: `<tool> -- make up`.
 #
 # The development loop stays native (`make dev-backend`, `make dev-frontend`).
 services:

@@ -36,7 +36,7 @@ type Client interface {
 - プロンプトキャッシュ: システムプロンプトを 1 ブロックで送り、`cache_control: ephemeral` を付ける。可変部分（会話）は後ろ。
 - エラー: `*anthropic.Error` はステータスとリクエスト ID を含めて包み直す。`ideas.Service` はすべて `ErrLLMUnavailable` として扱い、HTTP は 502 にする。
 - テスト: `httptest.Server` が録画相当の Messages API 応答を返し、送信した本文（system のキャッシュ指定、messages の役割、`output_config`）を検証する。実 API を叩くテストは置かない（評価セット BL-015 が手動実行で担う）。
-- 配線: `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY`（`backend/.env` または環境変数）。鍵がなければ起動時に設定エラー。
+- 配線: `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を、起動時の環境変数で渡す（ADR-0011）。鍵がなければ起動時に設定エラー。実 LLM での起動は人が行い、エージェントは起動済みのサーバーに触る。
 
 ## プロンプト設計の原則
 
