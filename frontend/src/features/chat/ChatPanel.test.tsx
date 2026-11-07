@@ -118,4 +118,30 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('AI に接続できませんでした');
     expect(screen.getByLabelText('イメージ')).toBeDisabled();
   });
+
+  it('keeps the latest exchange open and folds the earlier ones (BL-068)', () => {
+    const ideas = ideasWith({
+      turns: [
+        { role: 'user', content: '雨の日曜の午後' },
+        { role: 'assistant', content: '静かな雨。', mood: [], candidates: [candidate] },
+        { role: 'user', content: 'もう少し明るく' },
+        { role: 'assistant', content: '少し明るく。', mood: [], candidates: [] },
+      ],
+    });
+    render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} />);
+
+    const latest = screen.getByRole('list', { name: '会話' });
+    expect(within(latest).getByText('もう少し明るく')).toBeInTheDocument();
+    expect(within(latest).queryByText('雨の日曜の午後')).not.toBeInTheDocument();
+    expect(screen.getByText('これまでのやり取り（1）')).toBeInTheDocument();
+    const earlier = screen.getByRole('list', { name: 'これまでの会話' });
+    expect(within(earlier).getByText('雨の日曜の午後')).toBeInTheDocument();
+  });
+
+  it('shows no fold for the first exchange', () => {
+    const ideas = ideasWith({ turns: [{ role: 'user', content: '雨' }], busy: true });
+    render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} />);
+    expect(screen.queryByText(/これまでのやり取り/)).not.toBeInTheDocument();
+    expect(screen.getByText('考え中…')).toBeInTheDocument();
+  });
 });

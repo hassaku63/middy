@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
-import type { Ideas } from './useIdeas';
+import type { ChatTurn, Ideas } from './useIdeas';
 import './ChatPanel.css';
 
 export type ChatPanelProps = {
@@ -20,6 +20,44 @@ const SUGGESTIONS = ['雨の日曜の午後', '出発の朝、晴れ', '夜の�
 export function ChatPanel({ ideas, onOpenCandidate, openTitle = null, patterns }: ChatPanelProps) {
   const [text, setText] = useState('');
 
+  // Only the latest exchange stays open; earlier ones fold away so refining
+  // never pushes playback out of sight (BL-068).
+  const lastUser = ideas.turns.map((t) => t.role).lastIndexOf('user');
+  const split = lastUser < 0 ? 0 : lastUser;
+  const earlier = ideas.turns.slice(0, split);
+  const latest = ideas.turns.slice(split);
+  const earlierCount = earlier.filter((t) => t.role === 'user').length;
+
+  const renderTurn = (turn: ChatTurn, i: number) =>
+    turn.role === 'user' ? (
+      <li key={i} className="chat__turn chat__turn--user">
+        <p>{turn.content}</p>
+      </li>
+    ) : (
+      <li key={i} className="chat__turn chat__turn--assistant">
+        <p>{turn.content}</p>
+        {turn.mood.length > 0 && (
+          <ul className="chat__mood" aria-label="雰囲気">
+            {turn.mood.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        )}
+        <ul className="chat__candidates" aria-label="候補">
+          {turn.candidates.map((c) => (
+            <li key={c.title}>
+              <CandidateCard
+                candidate={c}
+                open={openTitle === c.title}
+                onOpen={() => onOpenCandidate(c)}
+                patterns={patterns}
+              />
+            </li>
+          ))}
+        </ul>
+      </li>
+    );
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const t = text;
@@ -29,37 +67,16 @@ export function ChatPanel({ ideas, onOpenCandidate, openTitle = null, patterns }
 
   return (
     <section className="chat" aria-label="イメージから">
+      {earlier.length > 0 && (
+        <details className="chat__earlier">
+          <summary>これまでのやり取り（{earlierCount}）</summary>
+          <ol className="chat__log" aria-label="これまでの会話">
+            {earlier.map(renderTurn)}
+          </ol>
+        </details>
+      )}
       <ol className="chat__log" aria-label="会話">
-        {ideas.turns.map((turn, i) =>
-          turn.role === 'user' ? (
-            <li key={i} className="chat__turn chat__turn--user">
-              <p>{turn.content}</p>
-            </li>
-          ) : (
-            <li key={i} className="chat__turn chat__turn--assistant">
-              <p>{turn.content}</p>
-              {turn.mood.length > 0 && (
-                <ul className="chat__mood" aria-label="雰囲気">
-                  {turn.mood.map((m) => (
-                    <li key={m}>{m}</li>
-                  ))}
-                </ul>
-              )}
-              <ul className="chat__candidates" aria-label="候補">
-                {turn.candidates.map((c) => (
-                  <li key={c.title}>
-                    <CandidateCard
-                      candidate={c}
-                      open={openTitle === c.title}
-                      onOpen={() => onOpenCandidate(c)}
-                      patterns={patterns}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ),
-        )}
+        {latest.map((turn, i) => renderTurn(turn, earlier.length + i))}
         {ideas.busy && (
           <li className="chat__turn chat__turn--assistant" aria-live="polite">
             <p>考え中…</p>
