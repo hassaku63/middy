@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fetchHealth, type ApiError } from './client';
+import {
+  createTimelineFromProgression,
+  exportMidi,
+  fetchHealth,
+  type ApiError,
+  type Timeline,
+} from './client';
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -44,5 +50,87 @@ describe('fetchHealth', () => {
       status: 500,
       code: 'http_error',
     });
+  });
+});
+
+describe('createTimelineFromProgression', () => {
+  const timeline: Timeline = {
+    ppq: 480,
+    tempoBpm: 90,
+    timeSignature: { numerator: 4, denominator: 4 },
+    key: { tonic: 0, mode: 'major' },
+    tracks: [],
+    harmony: [
+      {
+        start: 0,
+        duration: 1920,
+        chord: { root: 0, quality: 'maj' },
+        romanNumeral: 'I',
+        analysis: { degree: 1, function: 'T', explanation: 'I（C）はトニック' },
+      },
+    ],
+  };
+
+  it('posts the request as JSON and unwraps the timeline', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { timeline }));
+
+    const got = await createTimelineFromProgression(
+      { key: { tonic: 0, mode: 'major' }, tempoBpm: 90, progression: [{ numeral: 'I' }] },
+      fetchMock,
+    );
+
+    expect(got).toEqual(timeline);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/timelines/from-progression');
+    expect(init.method).toBe('POST');
+    expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/json');
+    expect(JSON.parse(init.body as string)).toEqual({
+      key: { tonic: 0, mode: 'major' },
+      tempoBpm: 90,
+      progression: [{ numeral: 'I' }],
+    });
+  });
+
+  it('surfaces validation errors from the envelope', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(400, { error: { code: 'invalid_request', message: 'progression[1]: bad' } }),
+      );
+
+    await expect(
+      createTimelineFromProgression(
+        { key: { tonic: 0, mode: 'major' }, tempoBpm: 90, progression: [{ numeral: 'X' }] },
+        fetchMock,
+      ),
+    ).rejects.toMatchObject({ status: 400, code: 'invalid_request' } satisfies Partial<ApiError>);
+  });
+});
+
+describe('exportMidi', () => {
+  it('posts the timeline and returns the binary body', async () => {
+    const bytes = new Uint8Array([0x4d, 0x54, 0x68, 0x64]);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(bytes, { status: 200, headers: { 'Content-Type': 'audio/midi' } }),
+      );
+    const timeline: Timeline = {
+      ppq: 480,
+      tempoBpm: 90,
+      timeSignature: { numerator: 4, denominator: 4 },
+      key: { tonic: 0, mode: 'major' },
+      tracks: [],
+      harmony: [],
+    };
+
+    const blob = await exportMidi(timeline, fetchMock);
+
+    expect(new Uint8Array(await blob.arrayBuffer())).toEqual(bytes);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/export/midi');
+    expect((init.headers as Record<string, string>)['Accept']).toBe('audio/midi');
+    expect(JSON.parse(init.body as string)).toEqual({ timeline });
   });
 });

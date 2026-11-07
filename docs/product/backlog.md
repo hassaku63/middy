@@ -7,22 +7,16 @@
 - Now にない機能は実装しない。思いついたら **Ideas に 1 行追記** して終わり。
 - 項目を分割・追加・並べ替えるときは、この表を編集して PR に含める。並べ替えの理由も一言書く。
 - サイズ: S = 半日以内 / M = 1 日 / L = 2〜3 日。L は着手前に分割を検討する。
+- **Done 表は現在のマイルストーンと直前のマイルストーンの分だけ残す。** それより古い行はマイルストーン完了時に削除する（履歴は git にある）。削除した ID を参照している文書は `make docs-check` が検出するので、その文書を現状に合わせて書き直す。
 
 ステータス: `Ready` / `In progress` / `Blocked(依存)` / `Done`
 
 ## Now（M1 — Hear & See）
 
+M1 のスライスはすべて Done。次に Now へ入れる項目（M2 の BL-010〜）はリポジトリ所有者が決める（`docs/dev/workflow.md` の「人間の役割」）。
+
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-001 | **進行テンプレート → Timeline 生成** `music.Progression`（ローマ数字列 + 各コードの小節数）から、ブロックコード伴奏の `Timeline`（1 トラック、ハーモニー注釈つき）を作る純粋関数 | C major `I-V-vi-IV` で 4 小節・各 1 全音符のタイムラインが生成され、`Harmony` にローマ数字が入る。A minor でも正しい。`Validate()` を通る。テーブル駆動テスト | M | — | Ready |
-| BL-002 | **和声機能とケーデンス分析** `music.Analyze(Timeline)` が各 `HarmonyEvent` に T/S/D と、隣接ペアのケーデンス種別（authentic, plagal, half, deceptive）を付与する | major/minor の全ダイアトニックコードに機能が付く。V→I = authentic、IV→I = plagal、?→V = half、V→vi = deceptive を検出。説明用の短い日本語テキストを返す | M | BL-001 | Blocked(BL-001) |
-| BL-003 | **API: `POST /api/v1/timelines/from-progression`** 調・進行・テンポを受け取り、生成 + 分析済み Timeline を返す | OpenAPI 更新、400 のエラーエンベロープ、ハンドラテスト | S | BL-001, BL-002 | Blocked |
-| BL-004 | **ブラウザ再生** `features/player`: Timeline を Web Audio でピアノ風シンセ再生。再生/停止、現在 tick の購読 | 4 小節が正しいテンポで鳴る。再生位置が tick 単位で取得できる。AudioContext はユーザー操作後に生成。ロジックは hook/クラスに分離してテスト | M | — | Ready |
-| BL-005 | **タイムライン表示** `features/timeline`: コードレーン（ローマ数字 + コード名）とピアノロール（SVG）。再生中のコードとノートをハイライト | 1 小節 = 一定幅、再生位置の縦線が動く、ハイライトが HarmonyEvent と一致する。スナップショット以外のテスト | M | BL-004 | Blocked(BL-004) |
-| BL-006 | **解説パネル** `features/explanation`: 選択中/再生中のコードの機能とケーデンス説明を表示 | BL-002 の出力をそのまま表示できる。再生中は自動で追従、クリックで固定 | S | BL-003, BL-005 | Blocked |
-| BL-007 | **入力 UI と結線** 調・モード・ローマ数字進行・テンポを入力して BL-003 を呼び、再生・表示・解説がつながる | 「C major, I-V-vi-IV, 90 BPM」で S1 シナリオが通しで動く | S | BL-003〜006 | Blocked |
-| BL-008 | **SMF エクスポート** `music/smf` で Timeline → Standard MIDI File (format 0)。`GET /api/v1/timelines/{id}/midi` ではなく、まずはフロントから POST した Timeline を SMF にして返す `POST /api/v1/export/midi` | 生成した .mid が外部ツール（例: `mido` や DAW）で読める。バイト列のゴールデンテスト | M | BL-001 | Blocked(BL-001) |
-| BL-009 | **ダウンロード UI** 再生中のタイムラインを .mid で保存するボタン | ファイル名に調と進行が入る | S | BL-007, BL-008 | Blocked |
 
 ## Next（M2 — Imagine）
 
@@ -62,3 +56,13 @@
 | ID | スライス | 完了日 |
 | --- | --- | --- |
 | BL-000 | M0 足場（モノレポ、ドメイン基礎型、LLM 境界、ハーネス、ドキュメント） | 2026-11-07 |
+| BL-001 | 進行テンプレート → Timeline 生成（`music.Progression`, `music.FromProgression`） | 2026-11-07 |
+| BL-002 | 和声機能とケーデンス分析（`music.Analyze`, `music.Function`, `music.Cadence`） | 2026-11-07 |
+| BL-003 | API `POST /api/v1/timelines/from-progression`（`music.ParseRomanNumeral` 含む） | 2026-11-07 |
+| BL-004 | ブラウザ再生（`features/player`: TimelinePlayer, WebAudioSynth, usePlayer, PlayerControls） | 2026-11-07 |
+| BL-005 | タイムライン表示（`features/timeline`: コードレーン + ピアノロール + 再生位置） | 2026-11-07 |
+| BL-006 | 解説パネル（`features/explanation`: 再生追従とクリック固定） | 2026-11-07 |
+| BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
+| BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
+| BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-030 | ドキュメント鮮度ハーネス（`make docs-check`、ルート↔OpenAPI 整合性テスト、`docs-sync` 自己点検、月次 gardening） | 2026-11-07 |
