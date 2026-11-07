@@ -5,7 +5,8 @@
 #   1. Every relative Markdown link resolves to an existing file.
 #   2. Every repository path mentioned in backticks exists.
 #   3. Every file under docs/ is listed in docs/README.md (ADRs via their index).
-#   4. Every backlog ID (BL-NNN) mentioned anywhere exists in the backlog.
+#   4. Every backlog ID (BL-NNN) mentioned anywhere exists in the backlog,
+#      except in ADRs, which are historical records (ADR-0006).
 #   5. Agent instruction files stay within their line budget (ADR-0007).
 #   6. No merge conflict markers are left in any Markdown file.
 #
@@ -79,6 +80,7 @@ backlog=docs/product/backlog.md
 known=$(grep -oE '^\| BL-[0-9]{3} ' "$backlog" | grep -oE 'BL-[0-9]{3}' | sort -u)
 while IFS= read -r file; do
   [ "$file" = "./$backlog" ] && continue
+  case "$file" in ./docs/architecture/adr/*) continue ;; esac
   grep -oE 'BL-[0-9]{3}' "$file" 2>/dev/null | sort -u | while IFS= read -r id; do
     printf '%s\n' "$known" | grep -qx "$id" || problem "$file: unknown backlog id -> $id"
   done

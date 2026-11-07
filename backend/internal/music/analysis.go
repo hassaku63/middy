@@ -37,7 +37,7 @@ const (
 )
 
 // Analysis is the explanation data attached to a HarmonyEvent. It is the
-// raw material for the explanation panel (backlog BL-006); the prose is
+// raw material for the explanation panel (features/explanation); the prose is
 // deterministic so that the UI can rely on it without an LLM.
 type Analysis struct {
 	Degree      int      `json:"degree"`
