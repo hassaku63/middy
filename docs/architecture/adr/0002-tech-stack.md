@@ -31,4 +31,4 @@
 
 - 理論エンジンはサーバーにあるため、ユーザー操作への即時反映はサーバー往復（ローカルで数 ms〜数十 ms）になる。編集 UI は「Timeline JSON をローカルで操作し、分析だけサーバーに頼む」設計で吸収する。
 - **再検討の条件**: (a) オフラインで生成・分析が必要になった、(b) 編集操作ごとの往復がユーザー体験上許容できない、のどちらかが M3 の検証で判明したら、エンジンの WASM 化（TinyGo）または TS への限定移植を ADR で検討する。
-- 将来の依存候補（必要になったら ADR を書いて追加）: Go — `chi`（ルーティングが複雑化したら）, `anthropic-sdk-go`（BL-011 で追加予定）, `gomidi/midi`（SMF を自前で書かない場合）; TS — `tone`（Web Audio の抽象化が必要なら）, `zod`（API 境界の実行時検証）, `openapi-typescript`（型生成, BL-026）。
+- 将来の依存候補（必要になったら ADR を書いて追加）: Go — `chi`（ルーティングが複雑化したら）, `anthropic-sdk-go`（BL-011 で追加予定）, `gomidi/midi`（SMF を自前で書かない場合）; TS — `tone`（Web Audio の抽象化が必要なら）, `zod`（API 境界の実行時検証）, `openapi-typescript`（型生成, BL-026）。`@playwright/test` は ADR-0008 の E2E のために採用済み。

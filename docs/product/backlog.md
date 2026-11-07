@@ -13,11 +13,10 @@
 
 ## Now（基盤の強化 — ADR-0007 / ADR-0008）
 
-M2 の機能スライスに入る前に、劣化防止（ADR-0007）とローカル検証環境（ADR-0008）を固める。上から順に着手する。
+ADR-0007 / ADR-0008 のスライスはすべて Done。次は M2（Next の BL-010〜015）を上から Now へ移す。
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-043 | **通しの E2E** Playwright で S1 シナリオをコンテナ（BL-041）に対して実行する `make e2e`。CI では手動実行（`workflow_dispatch`）から始める | 生成 → 再生 → ハイライト → 固定 → MIDI ダウンロードが自動で通る | M | BL-041 | Ready |
 
 ### M2 の着手について
 
@@ -75,6 +74,7 @@ M2（BL-010〜015）は上記の後に Now へ移す。移す順序は Next の�
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-043 | 通しの E2E（Playwright、`make e2e`、`e2e` ワークフロー） | 2026-11-07 |
 | BL-042 | ツールチェーンの固定（`.tool-versions` を CI・Docker・`make doctor` が読む） | 2026-11-07 |
 | BL-035 | テスト所要時間の可視化と予算（`make test-report`、CI の各ジョブで出力） | 2026-11-07 |
 | BL-034 | 言語またぎの正準フィクスチャ（`internal/fixtures` → `frontend/src/shared/api/fixtures`、`make fixtures`） | 2026-11-07 |

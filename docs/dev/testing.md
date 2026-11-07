@@ -40,9 +40,13 @@
 - Testing Library。`findByRole` で非同期を待つ。
 - `fetch` は `vi.stubGlobal` で差し替え、`afterEach` で `vi.unstubAllGlobals()`。
 
-### 通しの確認（手動）
+### 通しの E2E（Playwright, `frontend/e2e/`）
 
-`make dev-backend` と `make dev-frontend` を起動し、ブラウザで S1 シナリオ（生成 → 再生 → ハイライト → 解説の固定）を通す。単体テストは `fetch` や `AudioContext` をモックするため、ブラウザ固有の失敗（例: `fetch` を束縛せずに呼ぶと "Illegal invocation"）は実ブラウザでしか見つからない。UI に触れる PR では最低 1 回は実機で通す。
+本番相当のサーバー（`make build && make run`、または `make up`）に対して `make e2e` を走らせる。S1 シナリオ（生成 → 再生 → 追従 → 固定 → MIDI ダウンロード）、API のエラー表示、深いリンクのフォールバックと Service Worker の起動を検証する。単体テストは `fetch` や `AudioContext` をモックするため、ブラウザ固有の失敗（例: `fetch` を束縛せずに呼ぶと "Illegal invocation"）はここでしか見つからない。**UI に触れる PR では `make e2e` を 1 回通す。** CI では `e2e` ワークフロー（手動と週次）がコンテナイメージに対して実行する。安定したら PR ごとの実行に昇格させる。
+
+- 検証はロール・ラベル・属性で行い、CSS クラスは解説パネルの文章など role のない要素に限る。
+- 時間依存（再生位置）は `expect.poll` / `toHaveText` の待機で吸収し、固定の `sleep` を使わない。
+- ブラウザが別の場所にある環境では `E2E_CHROMIUM_PATH` または `PLAYWRIGHT_BROWSERS_PATH` を使う。
 
 ## 実行
 
