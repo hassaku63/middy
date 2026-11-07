@@ -33,9 +33,11 @@ export type RhythmPart = Schemas['RhythmPart'];
 export type Rhythm = Schemas['Rhythm'];
 export type Timeline = Schemas['Timeline'];
 
-// --- Timelines saved from POST /timelines/from-progression (older projects) --
+// --- POST /timelines/from-progression ---------------------------------------
 
+export type ProgressionLabel = Schemas['ProgressionLabel'];
 export type FromProgressionRequest = Schemas['FromProgressionRequest'];
+export type TimelineResponse = Schemas['TimelineResponse'];
 
 export class ApiError extends Error {
   constructor(
@@ -59,6 +61,18 @@ const defaultFetch: typeof fetch = (input, init) => globalThis.fetch(input, init
 
 export async function fetchHealth(fetchImpl: typeof fetch = defaultFetch): Promise<Health> {
   return requestJson<Health>('/api/v1/health', { fetchImpl });
+}
+
+export async function createTimelineFromProgression(
+  req: FromProgressionRequest,
+  fetchImpl: typeof fetch = defaultFetch,
+): Promise<Timeline> {
+  const res = await requestJson<TimelineResponse>('/api/v1/timelines/from-progression', {
+    fetchImpl,
+    method: 'POST',
+    body: req,
+  });
+  return res.timeline;
 }
 
 // --- GET /patterns -----------------------------------------------------------

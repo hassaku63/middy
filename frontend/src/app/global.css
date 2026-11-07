@@ -60,9 +60,24 @@ main {
   flex-wrap: wrap;
 }
 
+.app__error {
+  margin: 0;
+  color: #f87171;
+}
+
 .app__footer {
   font-size: 0.8rem;
   color: #6b7280;
+}
+
+.app__source {
+  display: flex;
+  gap: 8px;
+}
+
+.app__source button[aria-pressed='true'] {
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 .app__open-title {

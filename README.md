@@ -79,7 +79,7 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 ├── frontend/              # React PWA
 │   └── src/
 │       ├── app/           # アプリシェル
-│       ├── features/      # 機能ごとの縦スライス（chat, player, timeline, explanation, export, projects, pwa）
+│       ├── features/      # 機能ごとの縦スライス（chat, progression-input, player, timeline, explanation, export, projects）
 │       └── shared/        # API クライアント等の共有コード
 └── docs/
     ├── product/           # ビジョン・ロードマップ・バックログ
