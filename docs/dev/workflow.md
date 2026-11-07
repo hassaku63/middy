@@ -52,6 +52,8 @@ make check
 | 環境変数 | `backend/.env.example`、`internal/config` のテスト |
 | 完了・分割・追加 | `docs/product/backlog.md` |
 
+更新し終えたら `docs-sync` の自己点検（`docs-hygiene.md`）を行う。差分に出てくる識別子・パス・BL-ID を docs から逆引きし、言及が古くなっていないかを確かめる手順。
+
 ### 6. コミットと PR
 
 - Conventional Commits。1 コミットは 1 つの意図。

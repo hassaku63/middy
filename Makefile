@@ -10,7 +10,7 @@ SHELL := /bin/bash
 BACKEND  := backend
 FRONTEND := frontend
 
-.PHONY: help setup check test lint fmt fmt-check build dev-backend dev-frontend \
+.PHONY: help setup check test lint fmt fmt-check build docs-check dev-backend dev-frontend \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
@@ -22,7 +22,7 @@ setup: ## Install all dependencies (Go modules, npm packages)
 	cd $(BACKEND) && go mod download
 	cd $(FRONTEND) && npm ci
 
-check: fmt-check lint test build ## Run every gate (format, lint, test, build) for both apps
+check: fmt-check lint test build docs-check ## Run every gate (format, lint, test, build, docs) for both apps
 
 test: backend-test frontend-test ## Run all tests
 lint: backend-lint frontend-lint ## Run all linters
@@ -72,6 +72,11 @@ frontend-fmt-check: ## prettier --check
 
 frontend-build: ## vite production build (includes PWA assets)
 	cd $(FRONTEND) && npm run build
+
+# --- docs ----------------------------------------------------------------
+
+docs-check: ## Verify links, paths, index and backlog ids in Markdown (scripts/check-docs.sh)
+	bash scripts/check-docs.sh
 
 clean: ## Remove build outputs (backend/bin, frontend/dist, dev-dist, coverage)
 	rm -rf backend/bin frontend/dist frontend/dev-dist frontend/coverage

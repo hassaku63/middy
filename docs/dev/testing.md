@@ -13,7 +13,7 @@
 
 - テーブル駆動。ケース名に音楽的な意味を書く（`"A minor sevenths"`）。
 - 新しい型を足すときは「JSON ラウンドトリップ」「`Validate` の各失敗ケース」「境界値（degree 0/8、pitch -1/128）」を最低限含める。
-- 将来の SMF エクスポートはゴールデンファイル（`testdata/*.mid`）で検証し、差分は `-update` フラグで更新する。
+- `music/smf` は最小のファイルのバイト列を期待値として固定し、構造は小さな読み戻しパーサで検証する。外部ツール（`mido` 等）での読み戻しは UI スライス同様、手動で 1 回行う。
 
 ### ユースケース（M1 以降）
 
@@ -36,6 +36,10 @@
 - Testing Library。`findByRole` で非同期を待つ。
 - `fetch` は `vi.stubGlobal` で差し替え、`afterEach` で `vi.unstubAllGlobals()`。
 
+### 通しの確認（手動）
+
+`make dev-backend` と `make dev-frontend` を起動し、ブラウザで S1 シナリオ（生成 → 再生 → ハイライト → 解説の固定）を通す。単体テストは `fetch` や `AudioContext` をモックするため、ブラウザ固有の失敗（例: `fetch` を束縛せずに呼ぶと "Illegal invocation"）は実ブラウザでしか見つからない。UI に触れる PR では最低 1 回は実機で通す。
+
 ## 実行
 
 ```bash
@@ -48,5 +52,5 @@ cd frontend && npx vitest --coverage        # カバレッジ
 
 ## カバレッジの目安
 
-- `internal/music`: 90% 以上を維持（現在 93%）。下がる PR は理由を書く。
+- `internal/music`: 90% 以上を維持する（実測値は `make backend-test` の出力で見る。この文書に数値を書かない）。下がる PR は理由を書く。
 - その他: 数値目標なし。重要な分岐が網羅されているかをレビューで見る。
