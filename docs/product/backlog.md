@@ -30,7 +30,6 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-050 | `knip` による未使用 export / ファイル / 依存の検出（ADR-0007）。発動条件: 最初の feature 削除 |
 | BL-051 | `music` のミューテーションテスト（`gremlins`）、四半期実行（ADR-0007）。発動条件: `music` が 3k 行 |
 | BL-053 | プロンプト監査の四半期実行（`claude-api` の `prompt-audit`）。発動条件: BL-011 以降 |
-| BL-054 | 月次 gardening の拡張: backlog の老化（Next に 90 日以上）と flaky の集計（ADR-0007） |
 
 ## Ideas（未評価。実装しない）
 
@@ -56,6 +55,7 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-054 | 月次 gardening の拡張（backlog の老化、再実行で通った CI の集計） | 2026-11-07 |
 | BL-026 | OpenAPI → TypeScript 型生成（`openapi-typescript`、`npm run gen:api`、鮮度検査、ADR-0009） | 2026-11-07 |
 | BL-052 | バンドルサイズ予算（`scripts/check-bundle-size.sh`）と 1,000 ノート描画の予算テスト | 2026-11-07 |
 | BL-025 | PWA 仕上げ（更新は prompt モードでバナーから、オフライン表示、インストール導線、オフライン E2E） | 2026-11-07 |
