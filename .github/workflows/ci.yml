@@ -69,6 +69,8 @@ jobs:
       - name: test timing report
         run: bash ../scripts/test-report.sh frontend
       - run: npm run build
+      - name: bundle size budget
+        run: bash ../scripts/check-bundle-size.sh dist
 
   docs:
     name: docs (links, paths, index)
