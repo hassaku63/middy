@@ -25,12 +25,13 @@
 
 ## データフロー（M2 時点の想定）
 
-1. ユーザーがイメージ文を入力 → `POST /api/v1/ideas`
-2. ユースケースが `llm.Client.Complete` を構造化出力つきで呼び、`MusicalIntent` を得る
-3. `intent.Validate()` で理論的に成立する値だけを通す（不正なローマ数字などは弾く／補正）
-4. `music.FromProgression(...)` で候補ごとに `Timeline` を生成、`music.Analyze` で解説データを付与
+1. ユーザーがイメージ文を入力 → `POST /api/v1/ideas`（BL-013）
+2. `ideas.Service.Imagine` が `llm.Client.Complete` を構造化出力（`intent.Schema`）つきで呼ぶ
+3. `intent.Parse` が復号と検証を行う。不正なら、その答えと検証エラーを添えて **1 回だけ** 再試行し、それでも不正なら `ErrInvalidOutput`
+4. 候補ごとに `Candidate.ToProgression` → `music.FromProgression` → `music.Analyze` で分析済み `Timeline` を作る
 5. JSON で返す。フロントは候補カードを表示し、選択されたものを `player` が再生、`timeline` が描画、`explanation` が解説
-6. 相談（チャット）は会話履歴を往復させ、同じ流れを繰り返す
+6. 相談（チャット）は会話履歴（ユーザー発言と、assistant 側は前回の `summary`）を往復させ、同じ流れを繰り返す。サーバーは状態を持たない
+7. `LLM_PROVIDER=fake` のとき、台本のない fake は入力の気分語（雨・悲・夜…）から決定論的な見本 Intent を返すので、鍵なしで開発・E2E ができる
 
 M1 では 1〜3 と 6 がなく、ユーザー入力（調・ローマ数字の進行・テンポ）が `POST /api/v1/timelines/from-progression` から直接 4 に入る。
 
@@ -39,7 +40,7 @@ M1 では 1〜3 と 6 がなく、ユーザー入力（調・ローマ数字の�
 ```
 cmd/server          配線のみ（config → deps → http.Server）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
-internal/<usecase>  アプリケーションサービス。LLM と music を組み合わせる段階（BL-012）で追加する。それまでハンドラが music を直接呼ぶ
+internal/ideas      アプリケーションサービス（S2）: 会話 → LLM → intent → music。1 回だけ再試行
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
 internal/intent     LLM が返す MusicalIntent の型・検証・JSON Schema（music にのみ依存）
 internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）

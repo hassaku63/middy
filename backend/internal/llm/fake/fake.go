@@ -24,8 +24,10 @@ type Client struct {
 var _ llm.Client = (*Client)(nil)
 
 // New returns a Client that will answer with the given responses in order.
-// With no responses it answers every request with a fixed placeholder text,
-// which is convenient for running the server locally.
+// With no responses it answers every request deterministically: a sample
+// intent when structured output is requested, otherwise a placeholder
+// echo. That keeps local development and end-to-end tests working with
+// no API key.
 func New(responses ...llm.Response) *Client {
 	return &Client{responses: responses}
 }
@@ -39,6 +41,9 @@ func (c *Client) Complete(_ context.Context, req llm.Request) (llm.Response, err
 	c.requests = append(c.requests, req)
 
 	if c.responses == nil {
+		if req.OutputSchema != nil {
+			return llm.Response{Text: sampleIntent(req)}, nil
+		}
 		return llm.Response{Text: "(fake llm) " + lastUserContent(req)}, nil
 	}
 	if len(c.responses) == 0 {
