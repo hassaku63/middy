@@ -27,9 +27,11 @@ var (
 
 // Limits on what we send to the model.
 const (
-	MaxMessages      = 20
-	MaxMessageRunes  = 1000
-	maxOutputTokens  = 2048
+	MaxMessages     = 20
+	MaxMessageRunes = 1000
+	// Thinking counts toward max_tokens and is always on for the target
+	// model, so the ceiling must leave room for it beyond the short JSON.
+	maxOutputTokens  = 16000
 	retryInstruction = "前回の答えは次の理由で使えませんでした。同じ JSON Schema で、問題を直して答え直してください:\n"
 )
 
