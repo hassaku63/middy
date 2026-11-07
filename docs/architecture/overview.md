@@ -69,7 +69,7 @@ src/test       Vitest セットアップ
 - 状態管理ライブラリは **まだ入れない**。`useState`/`useReducer` + context で始め、feature をまたぐ状態（現在のタイムライン、再生位置）が 3 つを超えたら ADR を書いて検討する。
 - 再生は `features/player`: `TimelinePlayer`（先読みスケジューラ、Web Audio 非依存でテスト可能）が `Synth` と `Clock` を注入され、`WebAudioSynth` が音を出す（ch.9 はキック・スネア・ハイハットの簡易打楽器音）。`AudioContext` は最初の再生操作で作る。
 - 表示は `features/timeline`: `TimelineView` がコードレーン（`listbox`/`option`、クリックで選択）とピアノロール、ch.9 のノートだけを集めたドラムレーンを SVG で描き、`positionTick` に応じて鳴っているコード・ノート・打楽器をハイライトする。1 小節 = `BAR_WIDTH` px。
-- 会話は `features/chat`: `useIdeas` が履歴（ユーザー発言と assistant の `reply`）を保持して `POST /api/v1/ideas` を呼び、`ChatPanel` がメッセージと候補カードを表示する。候補を開くと `App` が `Timeline` を差し替え、再生・表示・解説の部品に載る。`usePatterns` が伴奏・ドラムのカタログを取得し、候補カードに名前を出す。
+- 会話は `features/chat`: `useIdeas` が履歴（ユーザー発言と assistant の `reply`）を保持して `POST /api/v1/ideas` を呼び、`ChatPanel` がメッセージと候補カードを表示する。答えが届くと `useIdeas` の `onAnswer` で最初の候補が開き、別の候補を開くと `App` が `Timeline` を差し替え、再生・表示・解説の部品に載る。`usePatterns` が伴奏・ドラムのカタログを取得し、候補カードに名前を出す。
 - `src/app/App.tsx` が画面 1 枚の結線: 候補または保存したプロジェクトから開いた `Timeline` を 1 つの状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
 - 保存は `features/projects`: `useProjects` が `shared/lib/storage/projects` の `ProjectStore`（ブラウザに IndexedDB があればそれ、なければメモリ）を使い、`ProjectsPanel` が現在のタイムラインとその出どころ（進行の入力、またはイメージと候補名）を名前つきで保存・一覧・削除する。サーバーには何も保存しない。
 - 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。

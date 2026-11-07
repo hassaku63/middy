@@ -68,6 +68,33 @@ describe('useIdeas', () => {
     expect(result.current.turns).toHaveLength(1);
   });
 
+  it('reports each answer once, with the image it answers', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(json(200, reply))),
+    );
+    const onAnswer = vi.fn();
+    const { result } = renderHook(() => useIdeas(onAnswer));
+
+    await act(() => result.current.send('雨の日曜'));
+    await act(() => result.current.send('もう少し明るく'));
+    expect(onAnswer.mock.calls).toEqual([
+      [{ image: '雨の日曜', candidates: [] }],
+      [{ image: 'もう少し明るく', candidates: [] }],
+    ]);
+  });
+
+  it('does not report an answer when the request fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(json(502, { error: { code: 'llm_unavailable', message: 'x' } }))),
+    );
+    const onAnswer = vi.fn();
+    const { result } = renderHook(() => useIdeas(onAnswer));
+    await act(() => result.current.send('雨'));
+    expect(onAnswer).not.toHaveBeenCalled();
+  });
+
   it('ignores blank input', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
