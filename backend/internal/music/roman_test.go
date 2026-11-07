@@ -1,6 +1,9 @@
 package music
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseRomanNumeral(t *testing.T) {
 	tests := []struct {
@@ -59,3 +62,87 @@ func TestParseRomanNumeralRoundTripsWithRomanNumeral(t *testing.T) {
 		}
 	}
 }
+
+func TestStepFromLabelHarmonicMinorDominant(t *testing.T) {
+	minor := Key{A, Minor}
+	major := Key{C, Major}
+	tests := []struct {
+		key     Key
+		label   string
+		wantQ   *ChordQuality
+		wantDeg int
+	}{
+		{minor, "V", ptr(MajorTriad), 5},
+		{minor, "V7", ptr(Dominant7), 5},
+		{minor, "v", nil, 5},
+		{minor, "v7", nil, 5},
+		{minor, "IV", nil, 4}, // only the dominant is special
+		{major, "V", nil, 5},  // already major; no override needed
+		{major, "v", nil, 5},  // case is ignored outside minor V
+	}
+	for _, tt := range tests {
+		t.Run(tt.key.String()+" "+tt.label, func(t *testing.T) {
+			step, err := StepFromLabel(tt.key, tt.label, 4)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if step.Degree != tt.wantDeg || step.Beats != 4 {
+				t.Fatalf("step = %+v", step)
+			}
+			if (step.Quality == nil) != (tt.wantQ == nil) || (tt.wantQ != nil && *step.Quality != *tt.wantQ) {
+				t.Fatalf("quality = %v, want %v", step.Quality, tt.wantQ)
+			}
+		})
+	}
+	if _, err := StepFromLabel(minor, "X", 4); err == nil {
+		t.Fatal("bad label must fail")
+	}
+}
+
+func TestHarmonicMinorDominantRendersAndAnalyses(t *testing.T) {
+	key := Key{A, Minor}
+	var prog Progression
+	for _, l := range []string{"i", "iv", "V7", "i"} {
+		s, err := StepFromLabel(key, l, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := FromProgression(key, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := tl.Harmony[2].Chord.String(); got != "E7" {
+		t.Fatalf("V7 in A minor = %q, want E7", got)
+	}
+	if got := tl.Harmony[2].RomanNumeral; got != "V7" {
+		t.Fatalf("numeral = %q, want V7", got)
+	}
+	// G# (the raised leading tone) must actually sound.
+	var hasGs bool
+	for _, n := range tl.Tracks[0].Notes {
+		if n.Pitch.Class() == Gs {
+			hasGs = true
+		}
+	}
+	if !hasGs {
+		t.Fatal("expected the raised leading tone G# in the voicing")
+	}
+	analysed, err := Analyze(tl)
+	if err != nil {
+		t.Fatalf("Analyze must accept the harmonic-minor dominant: %v", err)
+	}
+	a := analysed.Harmony[2].Analysis
+	if a.Function != Dominant || analysed.Harmony[3].Analysis.Cadence != Authentic {
+		t.Fatalf("V7 -> i should be a dominant resolving in an authentic cadence: %+v / %+v", a, analysed.Harmony[3].Analysis)
+	}
+	if !strings.Contains(a.Explanation, "和声的短音階") {
+		t.Fatalf("explanation should mention harmonic minor: %q", a.Explanation)
+	}
+	if strings.Contains(analysed.Harmony[1].Analysis.Explanation, "和声的短音階") {
+		t.Fatal("iv must not get the harmonic-minor note")
+	}
+}
+
+func ptr(q ChordQuality) *ChordQuality { return &q }

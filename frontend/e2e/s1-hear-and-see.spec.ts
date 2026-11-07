@@ -22,7 +22,7 @@ test('generate, play, follow, pin, download', async ({ page }) => {
   await expect(result.getByRole('option')).toHaveText([
     /i.*Am/,
     /iv.*Dm/,
-    /v7.*Em7/, // natural minor: the quality comes from the key, not the label
+    /V7.*E7/, // uppercase V in minor is the harmonic-minor dominant
     /i.*Am/,
   ]);
   await expect(result.getByRole('heading')).toContainText('i');
@@ -39,8 +39,9 @@ test('generate, play, follow, pin, download', async ({ page }) => {
   await expect(page.getByLabel('再生位置')).toHaveText('1.1');
 
   // Pin a chord by clicking it; the panel stops following playback.
-  await result.getByRole('option', { name: 'v7 (Em7)' }).click();
-  await expect(result.getByRole('heading')).toContainText('v7');
+  await result.getByRole('option', { name: 'V7 (E7)' }).click();
+  await expect(result.getByRole('heading')).toContainText('V7');
+  await expect(result.locator('.explanation__text')).toContainText('和声的短音階');
   await expect(result.locator('.explanation__cadence')).toHaveText('半終止');
   await page.getByRole('button', { name: /固定を解除/ }).click();
 
@@ -49,7 +50,7 @@ test('generate, play, follow, pin, download', async ({ page }) => {
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'MIDI を保存' }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe('middy-A-minor-i-iv-v7-i.mid');
+  expect(download.suggestedFilename()).toBe('middy-A-minor-i-iv-V7-i.mid');
   const path = await download.path();
   expect(path).not.toBeNull();
 });

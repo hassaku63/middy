@@ -49,7 +49,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "minItems": 1,
             "maxItems": %d,
             "items": { "type": "string" },
-            "description": "ダイアトニックなローマ数字のみ: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まるため、短調でも V と書けば v になる"
+            "description": "ダイアトニックなローマ数字のみ: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
           },
           "beatsPerChord": { "type": "integer", "enum": [1, 2, 4, 8], "description": "1 コードの長さ（四分音符単位）" },
           "reason": { "type": "string", "description": "なぜこの調・テンポ・進行がイメージに合うかの 1〜2 文（日本語）" }
