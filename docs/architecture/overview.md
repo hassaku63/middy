@@ -32,16 +32,17 @@
 5. JSON で返す。フロントは候補カードを表示し、選択されたものを `player` が再生、`timeline` が描画、`explanation` が解説
 6. 相談（チャット）は会話履歴を往復させ、同じ流れを繰り返す
 
-M1 では 1〜3 と 6 がなく、ユーザー入力（調・進行）が直接 4 に入る。
+M1 では 1〜3 と 6 がなく、ユーザー入力（調・ローマ数字の進行・テンポ）が `POST /api/v1/timelines/from-progression` から直接 4 に入る。
 
 ## バックエンドの層
 
 ```
 cmd/server          配線のみ（config → deps → http.Server）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
-internal/<usecase>  （M1 で追加）アプリケーションサービス。music と llm を組み合わせる
+internal/<usecase>  アプリケーションサービス。LLM と music を組み合わせる段階（BL-012）で追加する。それまでハンドラが music を直接呼ぶ
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
-internal/llm        ポート（interface）。adapters: fake, anthropic（予定）
+internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）
+internal/llm        ポート（interface）。adapters: fake（実装済み）, anthropic（BL-011）
 internal/config     環境変数
 ```
 
@@ -57,11 +58,17 @@ Go 1.22+ の `net/http` はメソッド付きパターンルーティングを�
 src/app        アプリシェル、ルーティング（必要になったら）、グローバル CSS
 src/features   機能ごとの縦スライス。各 feature は
                components/ hooks/ state/ を自己完結させ、他 feature を import しない
-src/shared     api/（fetch クライアントと型）、ui/（汎用コンポーネント）、lib/（純粋ユーティリティ）
+src/shared     api/（fetch クライアントと型）、ui/（汎用コンポーネント）、lib/（純粋ユーティリティ: timing, notation）
 src/test       Vitest セットアップ
 ```
 
 - 状態管理ライブラリは **まだ入れない**。`useState`/`useReducer` + context で始め、feature をまたぐ状態（現在のタイムライン、再生位置）が 3 つを超えたら ADR を書いて検討する。
+- 再生は `features/player`: `TimelinePlayer`（先読みスケジューラ、Web Audio 非依存でテスト可能）が `Synth` と `Clock` を注入され、`WebAudioSynth` が音を出す。`AudioContext` は最初の再生操作で作る。
+- 表示は `features/timeline`: `TimelineView` がコードレーン（`listbox`/`option`、クリックで選択）とピアノロールを SVG で描き、`positionTick` に応じて鳴っているコード・ノートをハイライトする。1 小節 = `BAR_WIDTH` px。
+- 入力は `features/progression-input`: `ProgressionForm` がテキスト（`I - V - vi - IV`）をトークン化し、API リクエストを組み立てる。ローマ数字の妥当性はバックエンドが判定する。
+- `src/app/App.tsx` が S1 シナリオの結線: フォーム → API → `Timeline` を状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
+- 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
+- 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示する。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。
 - 描画はまず SVG。ピアノロールの性能問題が出たら Canvas を検討する。
 - スタイルはプレーン CSS（CSS Modules 可）。UI ライブラリは導入しない。
 
