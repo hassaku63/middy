@@ -72,9 +72,9 @@ main {
   flex-wrap: wrap;
 }
 
-.app__footer {
-  font-size: 0.8rem;
-  color: #6b7280;
+.app__notice {
+  margin: 0;
+  color: #f87171;
 }
 
 .app__open-title {

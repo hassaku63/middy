@@ -23,12 +23,6 @@ type AppProps = {
   projectStore?: Parameters<typeof useProjects>[0];
 };
 
-const BACKEND_LABEL = {
-  checking: 'バックエンドに接続中…',
-  ok: 'バックエンド: ok',
-  down: 'バックエンドに接続できません',
-} as const;
-
 /**
  * The one screen of docs/product/experience.md: describe an image, hear the
  * examples it becomes, see how they are built, and take one home. The image
@@ -41,11 +35,12 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   /** Where the loaded timeline came from; what "保存" stores alongside it. */
   const [origin, setOrigin] = useState<ProjectSource | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
-  const backend = useBackendHealth();
   const patterns = usePatterns();
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
   const pwa = usePwa();
+  // Normal is silent; only an unreachable backend is worth a word (BL-065).
+  const backend = useBackendHealth(pwa.online);
 
   const show = (tl: Timeline) => {
     player.stop();
@@ -81,6 +76,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         <p>曲のイメージから例を鳴らして、その成り立ちを見る。</p>
       </header>
       <PwaBanner pwa={pwa} />
+      {backend === 'down' && pwa.online && (
+        <p role="status" className="app__notice">
+          バックエンドに接続できません。少し待ってから再読み込みしてください。
+        </p>
+      )}
       <ProjectList projects={projects} onOpen={openProject} />
 
       <ChatPanel
@@ -118,10 +118,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
           </div>
         </section>
       )}
-
-      <footer className="app__footer">
-        <span role="status">{BACKEND_LABEL[backend]}</span>
-      </footer>
     </main>
   );
 }

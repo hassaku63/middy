@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AudioEngine } from '@/features/player/usePlayer';
@@ -98,7 +98,9 @@ describe('App (docs/product/experience.md)', () => {
     stubBackend();
     render(<App createEngine={fakeEngine} />);
 
-    expect(await screen.findByRole('status')).toHaveTextContent('バックエンド: ok');
+    // Healthy is silent (BL-065): once the probe has answered, no status line remains.
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/v1/health', expect.anything()));
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
     expect(screen.getAllByRole('textbox')).toHaveLength(1); // the image only
     expect(screen.getByLabelText('イメージ')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '進行から' })).not.toBeInTheDocument();

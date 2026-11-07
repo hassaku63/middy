@@ -9,7 +9,6 @@ import { openExample } from './helpers';
  */
 test('play an example, follow it, pin a chord, download', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('status')).toHaveText('バックエンド: ok');
 
   // 窓辺の雨: A minor, i - VI - III - VII, 72 BPM, arpeggio and ballad drums.
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
