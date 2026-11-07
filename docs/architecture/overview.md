@@ -62,7 +62,7 @@ Go 1.22+ の `net/http` はメソッド付きパターンルーティングを�
 src/app        アプリシェル、ルーティング（必要になったら）、グローバル CSS
 src/features   機能ごとの縦スライス。各 feature は
                components/ hooks/ state/ を自己完結させ、他 feature を import しない
-src/shared     api/（fetch クライアントと型）、ui/（汎用コンポーネント）、lib/（純粋ユーティリティ: timing, notation）
+src/shared     api/（fetch クライアント、OpenAPI から生成した型 schema.gen.ts）、ui/（汎用コンポーネント）、lib/（純粋ユーティリティ: timing, notation, storage, pwa）
 src/test       Vitest セットアップ
 ```
 

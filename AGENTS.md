@@ -27,7 +27,7 @@
 - **スコープを広げない。** 「あったほうがいい」機能・リファクタ・依存追加は、今の backlog 項目に必要でなければやらない。backlog に書いて次に回す。
 - **テストを消す・スキップする・lint を無効化して通す** ことで緑にしない。根本原因を直す。
 - **依存を追加しない**（Go module / npm package）。本当に必要なら ADR を 1 枚書き、PR で理由を述べる。候補は `docs/architecture/adr/0002-tech-stack.md` の「将来の候補」を優先。
-- **API の形を黙って変えない。** `docs/api/openapi.yaml` と `frontend/src/shared/api` と Go ハンドラは常に一致させる。
+- **API の形を黙って変えない。** `docs/api/openapi.yaml` が正典。Go ハンドラは整合性テストが、TS の型は生成物（`npm run gen:api` → `schema.gen.ts`）の鮮度検査が一致を強制する。型を手で書かない。
 - **秘密情報を扱わない。** `.env` を読まない・コミットしない。API キーはコードに書かない。
 - **`main` に直接 push しない。** `git push --force` をしない。
 - **巨大な PR を作らない。** 生成物を除き 400 行差分で警告、600 行で CI が落ちる（`scripts/check-pr-size.sh`）。超えそうなら項目を分割して backlog を更新する。

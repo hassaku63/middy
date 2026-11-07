@@ -91,7 +91,9 @@ describe('ChatPanel', () => {
         ideas={ideas}
         onOpenCandidate={vi.fn()}
         patterns={{
-          accompaniments: [{ id: 'arpeggio', name: 'アルペジオ', description: '', program: 0 }],
+          accompaniments: [
+            { id: 'arpeggio', name: 'アルペジオ', description: '', program: 0, hits: [] },
+          ],
           drums: [],
         }}
       />,
