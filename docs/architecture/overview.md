@@ -83,7 +83,7 @@ src/test       Vitest セットアップ
 - **単一の Go バイナリ** が API と UI を同一オリジンで配信する。`make build` が `vite build` → `backend/internal/web/dist` へコピー → `go build`（`-ldflags` でバージョン埋め込み）の順に行う。
 - `httpapi` の静的ハンドラ: `/api` 配下以外で、ファイルがあればそれを、なければ `index.html`（SPA フォールバック）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。未知の `/api/*` は JSON の 404。
 - フロント未同梱のバイナリでも API は動き、UI は 503 `frontend_not_built` を返す。開発時は `make dev-frontend`（Vite のプロキシ）を使う。
-- コンテナ化と compose は BL-041。
+- **コンテナ**: `Dockerfile` はマルチステージ（`node` でフロント → `golang` でバイナリ → `distroless/static` 非 root）。`HEALTHCHECK` はシェルのない distroless のため、バイナリの `-healthcheck` フラグが自分の `/api/v1/health` を叩く。`compose.yaml` は `app` 1 サービスで、`LLM_PROVIDER` と鍵を環境変数または `backend/.env` から渡す。CI の `image` ジョブが同じ Dockerfile をビルドし、ヘルス・`/`・`sw.js` のヘッダ・`HEALTHCHECK` の healthy をスモークする。
 
 ## 横断的関心事
 

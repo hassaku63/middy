@@ -42,6 +42,16 @@ make run            # :8080 で UI と API を同一オリジンから配信
 
 フロントを同梱せずに `go build` したバイナリは API だけが動き、`/` は 503 を返します。
 
+コンテナで動かす（CI と同じイメージ）:
+
+```bash
+make up             # docker compose up --build → http://localhost:8080
+make down
+LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
+```
+
+イメージはマルチステージ（Node でフロント → Go でバイナリ → distroless、非 root）で、`HEALTHCHECK` はバイナリ自身の `-healthcheck` フラグが担います。
+
 ブラウザで http://localhost:5173 を開き、調・モード・ローマ数字の進行・テンポを入力して「生成」を押すと、タイムラインが表示されます。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。
 
 実際の LLM を使うときは `backend/.env.example` を `backend/.env` にコピーして `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を設定します（Anthropic アダプタ自体は未実装。[backlog](docs/product/backlog.md) 参照）。
@@ -53,6 +63,7 @@ make run            # :8080 で UI と API を同一オリジンから配信
 ├── AGENTS.md              # AI エージェント向けの正典（Claude / Codex / Copilot 共通）
 ├── CLAUDE.md              # Claude Code 固有の補足（AGENTS.md を取り込む）
 ├── Makefile               # make check = 唯一のゲート
+├── Dockerfile / compose.yaml  # 本番相当のイメージとローカル検証（ADR-0008）
 ├── scripts/               # ドキュメント検査などの補助スクリプト
 ├── backend/               # Go API + 音楽理論エンジン
 │   ├── cmd/server/        # エントリポイント

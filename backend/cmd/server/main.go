@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -19,10 +21,44 @@ import (
 )
 
 func main() {
+	healthcheck := flag.Bool("healthcheck", false, "probe a running server on $PORT and exit 0 if healthy (used by the container HEALTHCHECK)")
+	flag.Parse()
+
+	if *healthcheck {
+		if err := runHealthcheck(); err != nil {
+			fmt.Fprintln(os.Stderr, "unhealthy:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(); err != nil {
 		slog.Error("server exited with error", "err", err)
 		os.Exit(1)
 	}
+}
+
+// runHealthcheck exists because the runtime image (distroless) has neither
+// a shell nor curl; the binary probes itself instead.
+func runHealthcheck() error {
+	cfg, err := config.Load(os.Getenv)
+	if err != nil {
+		return err
+	}
+	return probe(fmt.Sprintf("http://127.0.0.1:%d%s/health", cfg.Port, httpapi.APIPrefix), 2*time.Second)
+}
+
+// probe fails unless url answers 200 within timeout.
+func probe(url string, timeout time.Duration) error {
+	client := &http.Client{Timeout: timeout}
+	resp, err := client.Get(url) //nolint:gosec // loopback probe of our own server
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("status %d", resp.StatusCode)
+	}
+	return nil
 }
 
 func run() error {
