@@ -15,8 +15,7 @@
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-008 | **SMF エクスポート** `music/smf` で Timeline → Standard MIDI File (format 0)。`GET /api/v1/timelines/{id}/midi` ではなく、まずはフロントから POST した Timeline を SMF にして返す `POST /api/v1/export/midi` | 生成した .mid が外部ツール（例: `mido` や DAW）で読める。バイト列のゴールデンテスト | M | BL-001 | Ready |
-| BL-009 | **ダウンロード UI** 再生中のタイムラインを .mid で保存するボタン | ファイル名に調と進行が入る | S | BL-007, BL-008 | Blocked |
+| BL-009 | **ダウンロード UI** 再生中のタイムラインを .mid で保存するボタン | ファイル名に調と進行が入る | S | BL-007, BL-008 | Ready |
 
 ## Next（M2 — Imagine）
 
@@ -63,4 +62,5 @@
 | BL-005 | タイムライン表示（`features/timeline`: コードレーン + ピアノロール + 再生位置） | 2026-11-07 |
 | BL-006 | 解説パネル（`features/explanation`: 再生追従とクリック固定） | 2026-11-07 |
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
+| BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-030 | ドキュメント鮮度ハーネス（`make docs-check`、ルート↔OpenAPI 整合性テスト、`docs-sync` 自己点検、月次 gardening） | 2026-11-07 |

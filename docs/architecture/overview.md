@@ -41,6 +41,7 @@ cmd/server          配線のみ（config → deps → http.Server）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
 internal/<usecase>  アプリケーションサービス。LLM と music を組み合わせる段階（BL-012）で追加する。それまでハンドラが music を直接呼ぶ
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
+internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）
 internal/llm        ポート（interface）。adapters: fake（実装済み）, anthropic（BL-011）
 internal/config     環境変数
 ```

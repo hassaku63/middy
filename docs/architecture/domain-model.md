@@ -62,6 +62,10 @@ Timeline
 - `Analysis{Degree, Function, Cadence, Explanation}` — `HarmonyEvent.Analysis` に付く。`Explanation` は UI にそのまま出せる日本語で、決定論的に組み立てる（LLM は使わない）
 - `Analyze(Timeline) (Timeline, error)` — 入力を変更せず、`Harmony` に `Analysis` を付けた複製を返す。非ダイアトニックなコードがあればエラー
 
+### 書き出し
+
+- `smf.Write(Timeline) ([]byte, error)`（`internal/music/smf`）— Standard MIDI File format 0。テンポ・拍子・調号のメタイベント、トラックごとのプログラムチェンジ、ノートのオン／オフを 1 トラックに統合する。同一 tick ではオフ → オンの順（同じ音の連打を正しく切る）。`Analysis` やトラック名は含まれない
+
 ### 未実装の語彙
 
 音楽的意図とパターンは backlog（BL-010, BL-020）で定義される。この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
