@@ -66,9 +66,16 @@ Timeline
 
 - `smf.Write(Timeline) ([]byte, error)`（`internal/music/smf`）— Standard MIDI File format 0。テンポ・拍子・調号のメタイベント、トラックごとのプログラムチェンジ、ノートのオン／オフを 1 トラックに統合する。同一 tick ではオフ → オンの順（同じ音の連打を正しく切る）。`Analysis` やトラック名は含まれない
 
+### 音楽的意図（`internal/intent`）
+
+- `intent.Intent{Summary, Mood, Candidates}` — LLM が 1 ターンで返す構造化の答え。`Summary` は返答文、`Mood` はタグ、`Candidates` は 1〜3 個の提案
+- `intent.Candidate{Title, Key, TempoBPM, Progression, BeatsPerChord, Reason}` — エンジンが描画できる具体案。`Progression` はローマ数字の文字列（`ParseRomanNumeral` の語彙）、`BeatsPerChord` は 1 / 2 / 4 / 8
+- `Validate()` が全問題をまとめて返す（テンポ 40〜220、進行 1〜16 個、ローマ数字の妥当性など）。`Schema` は同じ制約を JSON Schema で LLM に伝える。`Parse(data)` は復号と検証
+- `Candidate.ToProgression()` で `music.Progression` に変換し、`FromProgression` → `Analyze` の既存経路に乗せる
+
 ### 未実装の語彙
 
-音楽的意図とパターンは backlog（BL-010, BL-020）で定義される。この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
+パターンは backlog（BL-020）で定義される。この文書は実装済みの型だけを書き、将来の型は backlog を唯一の情報源とする。
 
 ## 設計上の判断
 

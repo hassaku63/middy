@@ -11,27 +11,17 @@
 
 ステータス: `Ready` / `In progress` / `Blocked(依存)` / `Done`
 
-## Now（基盤の強化 — ADR-0007 / ADR-0008）
+## Now（M2 — Imagine）
 
-ADR-0007 / ADR-0008 のスライスはすべて Done。次は M2（Next の BL-010〜015）を上から Now へ移す。
+fake LLM を先に使い、S2 シナリオ全体を鍵なしで検証できる状態を先に作る（BL-011 は BL-014 の後）。
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
 
-### M2 の着手について
+## Next
 
-M2（BL-010〜015）は上記の後に Now へ移す。移す順序は Next の並びどおり。
+M2 が終わったら M3（Later）から Now へ。
 
-## Next（M2 — Imagine）
-
-| ID | スライス | 受け入れ条件（要約） | サイズ | 依存 |
-| --- | --- | --- | --- | --- |
-| BL-010 | **MusicalIntent スキーマ** `internal/intent`: 調候補、モード、テンポ範囲、雰囲気タグ、進行テンプレート候補（ローマ数字）、理由。JSON Schema を Go で定義し、検証関数を持つ | 不正な値（存在しないローマ数字など）を弾く | S | — |
-| BL-011 | **Anthropic アダプタ** `internal/llm/anthropic`: 公式 Go SDK、構造化出力、`fallbacks`、タイムアウト、エラー分類。`docs/architecture/llm-integration.md` 準拠 | 録画レスポンスでテスト。ネットワークなしで CI が通る | M | — |
-| BL-012 | **意図解釈ユースケース** イメージ文 → `MusicalIntent`（LLM）→ 検証 → 候補 Timeline 2〜3 個（BL-001） | fake LLM の台本で end-to-end テスト | M | BL-010, BL-011 |
-| BL-013 | **API: `POST /api/v1/ideas`** とチャット継続 `POST /api/v1/ideas/{id}/messages`（まずはステートレスに会話履歴を往復） | OpenAPI 更新 | S | BL-012 |
-| BL-014 | **チャット UI** `features/chat`: 入力、候補カード（再生ボタン付き）、相談の継続 | 候補カードから M1 の再生・解説が開く | M | BL-013 |
-| BL-015 | **プロンプト評価セット** 代表的なイメージ 20 件と期待される特徴（モード・テンポ帯）。手動実行スクリプトと結果の記録 | 回帰を検出できる | S | BL-012 |
 
 ## Later（M3 — Groove & Ship）
 
@@ -74,6 +64,7 @@ M2（BL-010〜015）は上記の後に Now へ移す。移す順序は Next の�
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-010 | MusicalIntent スキーマ（`internal/intent`: 型・検証・JSON Schema・Parse） | 2026-11-07 |
 | BL-043 | 通しの E2E（Playwright、`make e2e`、`e2e` ワークフロー） | 2026-11-07 |
 | BL-042 | ツールチェーンの固定（`.tool-versions` を CI・Docker・`make doctor` が読む） | 2026-11-07 |
 | BL-035 | テスト所要時間の可視化と予算（`make test-report`、CI の各ジョブで出力） | 2026-11-07 |
