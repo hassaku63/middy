@@ -13,6 +13,7 @@ import (
 	"github.com/hassaku63/middy/backend/internal/intent"
 	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/music"
+	"github.com/hassaku63/middy/backend/internal/music/pattern"
 )
 
 // Sentinel errors let the HTTP layer map failures to status codes.
@@ -68,7 +69,7 @@ func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, erro
 		return Result{}, err
 	}
 	req := llm.Request{
-		System:       systemPrompt,
+		System:       SystemPrompt(),
 		Messages:     toLLM(messages),
 		OutputSchema: intent.Schema,
 		MaxTokens:    maxOutputTokens,
@@ -134,6 +135,10 @@ func render(in intent.Intent) (Result, error) {
 		if err != nil {
 			return Result{}, fmt.Errorf("ideas: candidates[%d]: %w", i, err)
 		}
+		tl, err = applyPatterns(tl, c)
+		if err != nil {
+			return Result{}, fmt.Errorf("ideas: candidates[%d]: %w", i, err)
+		}
 		tl, err = music.Analyze(tl)
 		if err != nil {
 			return Result{}, fmt.Errorf("ideas: candidates[%d]: %w", i, err)
@@ -141,6 +146,30 @@ func render(in intent.Intent) (Result, error) {
 		out.Candidates = append(out.Candidates, Candidate{Candidate: c, Timeline: tl})
 	}
 	return out, nil
+}
+
+// applyPatterns layers the candidate's patterns, if any, on the block chords.
+func applyPatterns(tl music.Timeline, c intent.Candidate) (music.Timeline, error) {
+	if c.Accompaniment == "" && c.Drums == "" {
+		return tl, nil
+	}
+	accID := c.Accompaniment
+	if accID == "" {
+		accID = "block"
+	}
+	acc, err := pattern.FindAccompaniment(accID)
+	if err != nil {
+		return music.Timeline{}, err
+	}
+	var drums *pattern.Drums
+	if c.Drums != "" {
+		d, err := pattern.FindDrums(c.Drums)
+		if err != nil {
+			return music.Timeline{}, err
+		}
+		drums = &d
+	}
+	return pattern.Apply(tl, acc, drums)
 }
 
 func validateMessages(messages []Message) error {

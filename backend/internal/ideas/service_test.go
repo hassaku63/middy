@@ -158,3 +158,38 @@ func TestResultJSONShape(t *testing.T) {
 		}
 	}
 }
+
+func TestImagineAppliesCandidatePatterns(t *testing.T) {
+	withPatterns := strings.Replace(goodIntent, `"beatsPerChord": 4, "reason": "短調で落ち着いた切なさ。"`,
+		`"beatsPerChord": 4, "reason": "短調で落ち着いた切なさ。", "accompaniment": "arpeggio", "drums": "eight-beat"`, 1)
+	res, err := New(fake.New(llm.Response{Text: withPatterns})).Imagine(context.Background(), []Message{user("雨")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	first := res.Candidates[0]
+	if len(first.Timeline.Tracks) != 2 || first.Timeline.Tracks[1].Channel != 9 {
+		t.Fatalf("patterns not applied: %+v", first.Timeline.Tracks)
+	}
+	if first.Timeline.Rhythm == nil || first.Timeline.Rhythm.Drums == nil {
+		t.Fatal("rhythm explanation missing")
+	}
+	if first.Timeline.Harmony[0].Analysis == nil {
+		t.Fatal("harmony analysis must survive pattern application")
+	}
+	// The second candidate has no patterns and stays block chords.
+	if second := res.Candidates[1]; len(second.Timeline.Tracks) != 1 || second.Timeline.Rhythm != nil {
+		t.Fatalf("unexpected patterns on second candidate: %+v", second.Timeline.Tracks)
+	}
+}
+
+func TestSystemPromptListsTheCatalogue(t *testing.T) {
+	p := SystemPrompt()
+	for _, id := range []string{"block", "arpeggio", "strum", "eight-beat", "bossa"} {
+		if !strings.Contains(p, "- "+id+":") {
+			t.Errorf("prompt should list %s", id)
+		}
+	}
+	if SystemPrompt() != p {
+		t.Error("prompt must be stable across calls (caching)")
+	}
+}

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import type { IdeaCandidate } from '@/shared/api/client';
+import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
 import type { Ideas } from './useIdeas';
 import './ChatPanel.css';
@@ -10,12 +10,14 @@ export type ChatPanelProps = {
   onOpenCandidate: (candidate: IdeaCandidate) => void;
   /** Title of the candidate currently open, to mark it. */
   openTitle?: string | null;
+  /** Catalogue for showing pattern names on cards. */
+  patterns?: PatternsResponse | undefined;
 };
 
 const SUGGESTIONS = ['雨の日曜の午後', '出発の朝、晴れ', '夜の帰り道、少し寂しい'];
 
 /** Conversation view for scenario S2: messages, candidate cards, input. */
-export function ChatPanel({ ideas, onOpenCandidate, openTitle = null }: ChatPanelProps) {
+export function ChatPanel({ ideas, onOpenCandidate, openTitle = null, patterns }: ChatPanelProps) {
   const [text, setText] = useState('');
 
   const submit = (e: FormEvent) => {
@@ -50,6 +52,7 @@ export function ChatPanel({ ideas, onOpenCandidate, openTitle = null }: ChatPane
                       candidate={c}
                       open={openTitle === c.title}
                       onOpen={() => onOpenCandidate(c)}
+                      patterns={patterns}
                     />
                   </li>
                 ))}

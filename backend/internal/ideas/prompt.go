@@ -1,10 +1,42 @@
 package ideas
 
-// systemPrompt is fixed text so that prompt caching stays effective
+import (
+	"fmt"
+	"strings"
+	"sync"
+
+	"github.com/hassaku63/middy/backend/internal/music/pattern"
+)
+
+// SystemPrompt is fixed per process so that prompt caching stays effective
 // (docs/architecture/llm-integration.md). Everything that varies goes into
-// the messages. Changes here must be checked against the evaluation set
-// (backlog BL-015).
-const systemPrompt = `あなたは作曲を学ぶ人のための、音楽理論の家庭教師です。
+// the messages. The pattern list is rendered from the catalogue so it can
+// never drift from what the engine accepts. Changes here must be checked
+// against the evaluation set (backlog BL-015).
+func SystemPrompt() string {
+	promptOnce.Do(func() {
+		var b strings.Builder
+		b.WriteString(promptBody)
+		b.WriteString("\n\n使える伴奏の型（accompaniment）:\n")
+		for _, a := range pattern.Accompaniments() {
+			fmt.Fprintf(&b, "- %s: %s %s\n", a.ID, a.Name, a.Description)
+		}
+		b.WriteString("使えるドラムの型（drums）:\n")
+		for _, d := range pattern.DrumPatterns() {
+			fmt.Fprintf(&b, "- %s: %s %s\n", d.ID, d.Name, d.Description)
+		}
+		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。")
+		prompt = b.String()
+	})
+	return prompt
+}
+
+var (
+	promptOnce sync.Once
+	prompt     string
+)
+
+const promptBody = `あなたは作曲を学ぶ人のための、音楽理論の家庭教師です。
 ユーザーが言葉で伝えるイメージ（情景・気分・用途）を読み取り、それに合う「調・テンポ・コード進行」の候補を 1〜3 個提案します。
 
 守ること:

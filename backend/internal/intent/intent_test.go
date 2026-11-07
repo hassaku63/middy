@@ -134,3 +134,24 @@ func TestParseRoundTrip(t *testing.T) {
 		t.Errorf("empty candidates should be invalid, got %v", err)
 	}
 }
+
+func TestPatternIdsAreValidated(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Accompaniment = "arpeggio"
+	in.Candidates[0].Drums = "eight-beat"
+	if err := in.Validate(); err != nil {
+		t.Fatalf("known ids rejected: %v", err)
+	}
+	in.Candidates[0].Accompaniment = "techno"
+	in.Candidates[1].Drums = "trap"
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), "accompaniment must be one of") || !strings.Contains(err.Error(), "drums must be one of") {
+		t.Fatalf("unknown ids should be reported: %v", err)
+	}
+	if len(AccompanimentIDs()) < 5 || len(DrumIDs()) < 3 {
+		t.Fatalf("catalogue ids: %v %v", AccompanimentIDs(), DrumIDs())
+	}
+	if !strings.Contains(string(Schema), `"arpeggio"`) || !strings.Contains(string(Schema), `"eight-beat"`) {
+		t.Fatal("schema enums must list the catalogue ids")
+	}
+}
