@@ -69,6 +69,7 @@ describe('App (scenario S1)', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('バックエンド: ok');
     expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: '進行から' }));
     await user.click(screen.getByRole('button', { name: '生成' }));
 
     const result = await screen.findByRole('region', { name: '結果' });
@@ -110,10 +111,51 @@ describe('App (scenario S1)', () => {
     const user = userEvent.setup();
     render(<App createEngine={fakeEngine} />);
 
+    await user.click(screen.getByRole('button', { name: '進行から' }));
     await user.click(screen.getByRole('button', { name: '生成' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('"X" is not a roman numeral');
     expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
+  });
+
+  it('opens an AI candidate into the player, view and panel (scenario S2)', async () => {
+    const ideasReply = {
+      reply: '静かな雨。',
+      mood: ['静か'],
+      candidates: [
+        {
+          title: '窓辺の雨',
+          key: { tonic: 0, mode: 'major' },
+          tempoBpm: 90,
+          progression: ['I', 'V'],
+          beatsPerChord: 4,
+          reason: 'テスト用。',
+          timeline: analysed,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        Promise.resolve(
+          url.endsWith('/health')
+            ? json(200, { status: 'ok', version: 'dev' })
+            : json(200, ideasReply),
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<App createEngine={fakeEngine} />);
+
+    await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
+    await user.click(screen.getByRole('button', { name: '送る' }));
+    const card = await screen.findByRole('article', { name: '窓辺の雨' });
+    await user.click(within(card).getByRole('button', { name: 'この候補を開く' }));
+
+    const result = screen.getByRole('region', { name: '結果' });
+    expect(within(result).getAllByRole('option')).toHaveLength(2);
+    expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: '開いています' })).toBeInTheDocument();
   });
 
   it('reports an unreachable backend', async () => {

@@ -17,7 +17,6 @@ fake LLM を先に使い、S2 シナリオ全体を鍵なしで検証できる�
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-014 | チャット UI `features/chat`: 入力、メッセージ列、候補カード（見出し・調・テンポ・進行・理由・「この候補を開く」）。候補を開くと既存の再生・表示・解説に載る | fake LLM で S2 が通しで動く。E2E に S2 を追加 | M | BL-013 | Ready |
 | BL-015 | プロンプト評価セット: 代表的なイメージ 20 件と期待される特徴（モード・テンポ帯）。手動実行（ビルドタグ）と結果の記録 | 回帰を検出できる | S | BL-011, BL-012 | Ready |
 
 ## Next
@@ -67,6 +66,7 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
 | BL-011 | Anthropic アダプタ（`internal/llm/anthropic`、公式 SDK、構造化出力、録画応答テスト） | 2026-11-07 |
+| BL-014 | チャット UI（`features/chat`、入力方法の切り替え、E2E に S2 を追加） | 2026-11-07 |
 | BL-013 | API `POST /api/v1/ideas`（502 `llm_unavailable` / `llm_invalid_output`、TS クライアント `imagine`） | 2026-11-07 |
 | BL-012 | 意図解釈ユースケース（`internal/ideas`、1 回再試行、fake の見本 Intent） | 2026-11-07 |
 | BL-010 | MusicalIntent スキーマ（`internal/intent`: 型・検証・JSON Schema・Parse） | 2026-11-07 |
