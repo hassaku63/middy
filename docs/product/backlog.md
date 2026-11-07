@@ -17,7 +17,6 @@ M2 の機能スライスに入る前に、劣化防止（ADR-0007）とローカ
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-033 | **依存の衛生** CI に `go mod tidy -diff`、`npm audit --omit=dev --audit-level=high`。週次 cron で `govulncheck`。Dependabot 方針（patch/minor は CI 緑で自動マージ、major は人間、規約変更なら ADR）を ハーネス一覧文書（`docs/dev/` 配下、BL-032 で作る） に | 既存で緑。意図的に `go.mod` を汚すと落ちる | S | BL-032 | Ready |
 | BL-034 | **言語またぎの正準フィクスチャ** Go のテストが全コード質の記号・ローマ数字・分析済みタイムラインを JSON に生成し、フロントのテストが `notation` 等を照合する。CI で生成後に差分ゼロを要求 | `chordSymbol` の綴りを片側だけ変えると落ちる | S | — | Ready |
 | BL-035 | **テスト所要時間の可視化と予算** 毎 CI で per-test 上位 10 件と合計を出す（Go は `-json`、Vitest は JSON reporter）。合計予算（単体: 30 秒 / 60 秒）超過で警告 | ローカル `make test-report` と CI の出力に一覧が出る | S | — | Ready |
 | BL-042 | **ツールチェーンの固定** `.tool-versions`（Go / Node / golangci-lint）を CI と `make doctor` が読み、版の不一致を報告する。.nvmrc 相当も同ファイルから | CI と手元の版が一致。不一致時に `make doctor` が理由を出す | S | — | Ready |
@@ -79,6 +78,7 @@ M2（BL-010〜015）は上記の後に Now へ移す。移す順序は Next の�
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-033 | 依存の衛生（`go mod tidy -diff`、本番 npm 依存の audit、週次 `govulncheck`、Dependabot の方針） | 2026-11-07 |
 | BL-032 | サイズ・複雑度・PR の予算、ハーネス一覧、レビュー導線（自己レビュー、WIP 上限、リスク区分） | 2026-11-07 |
 | BL-031 | アーキテクチャ境界の lint（Go `depguard`、TS の feature 間 import / コンポーネント副作用 / スナップショット禁止） | 2026-11-07 |
 | BL-041 | Dockerfile と compose（マルチステージ、distroless 非 root、`-healthcheck`、CI の image ジョブ） | 2026-11-07 |

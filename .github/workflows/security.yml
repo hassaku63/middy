@@ -1,0 +1,40 @@
+# Weekly dependency audit (ADR-0007, "prune"). Fails loudly so GitHub
+# notifies the owner; the fix is a dependency bump, not a code change.
+name: security audit
+
+on:
+  schedule:
+    - cron: '23 2 * * 1' # Mondays 02:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: backend/go.mod
+          cache: false
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      # Production dependencies must be clean; dev tooling is reported only.
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=critical || echo "::warning::dev dependencies have known issues; see output"
