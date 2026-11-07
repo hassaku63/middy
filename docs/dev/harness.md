@@ -12,6 +12,7 @@
 | Vitest + Testing Library | 振る舞いの退行 | `make frontend-test` | `make check`, CI `frontend` |
 | `tsc -b` | 型の矛盾 | `make frontend-typecheck` | `make check`, CI `frontend` |
 | ルート ↔ OpenAPI 整合性テスト | 契約と実装のズレ（ADR-0004） | `cd backend && go test ./internal/httpapi/ -run TestRoutesMatchOpenAPI` | `make check`, CI `backend` |
+| 言語またぎフィクスチャ（Go が生成、TS が照合） | `notation.ts` 等のバックエンドの写しがずれる。JSON の陳腐化は Go テストが検出 | `make fixtures` で再生成、`cd backend && go test ./internal/fixtures/` | `make check`, CI `backend` + `frontend` |
 
 ## 構造と規約（矯正）
 

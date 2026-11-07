@@ -45,6 +45,7 @@
 | `backend/internal/music/smf` | Timeline → SMF エンコーダ | `music` にのみ依存。バイト列の期待値テストを壊す変更は意図を PR に書く |
 | `backend/internal/llm` | LLM 境界。`Client` interface と `fake` | プロバイダ依存はサブパッケージに閉じる |
 | `backend/internal/web` | ビルド済みフロントの embed | `dist/` の中身はコミットしない（`make build` が生成） |
+| `backend/internal/fixtures` | フロント照合用の正準 JSON の生成 | 表記を変えたら `make fixtures` を実行してコミット |
 | `frontend/src/app` | アプリシェル・ルーティング | |
 | `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ（ESLint で強制）。`*.tsx` は API 呼び出しや `fetch` / `AudioContext` 等の副作用を持たず、hook に置く（ESLint で強制） |
 | `frontend/src/shared` | API クライアント、共通 UI、ユーティリティ | |

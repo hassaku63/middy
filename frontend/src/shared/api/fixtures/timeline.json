@@ -1,0 +1,153 @@
+{
+  "ppq": 480,
+  "tempoBpm": 90,
+  "timeSignature": {
+    "numerator": 4,
+    "denominator": 4
+  },
+  "key": {
+    "tonic": 0,
+    "mode": "major"
+  },
+  "tracks": [
+    {
+      "name": "chords",
+      "channel": 0,
+      "program": 0,
+      "notes": [
+        {
+          "pitch": 60,
+          "velocity": 80,
+          "start": 0,
+          "duration": 1920
+        },
+        {
+          "pitch": 64,
+          "velocity": 80,
+          "start": 0,
+          "duration": 1920
+        },
+        {
+          "pitch": 67,
+          "velocity": 80,
+          "start": 0,
+          "duration": 1920
+        },
+        {
+          "pitch": 67,
+          "velocity": 80,
+          "start": 1920,
+          "duration": 1920
+        },
+        {
+          "pitch": 71,
+          "velocity": 80,
+          "start": 1920,
+          "duration": 1920
+        },
+        {
+          "pitch": 74,
+          "velocity": 80,
+          "start": 1920,
+          "duration": 1920
+        },
+        {
+          "pitch": 69,
+          "velocity": 80,
+          "start": 3840,
+          "duration": 1920
+        },
+        {
+          "pitch": 72,
+          "velocity": 80,
+          "start": 3840,
+          "duration": 1920
+        },
+        {
+          "pitch": 76,
+          "velocity": 80,
+          "start": 3840,
+          "duration": 1920
+        },
+        {
+          "pitch": 65,
+          "velocity": 80,
+          "start": 5760,
+          "duration": 1920
+        },
+        {
+          "pitch": 69,
+          "velocity": 80,
+          "start": 5760,
+          "duration": 1920
+        },
+        {
+          "pitch": 72,
+          "velocity": 80,
+          "start": 5760,
+          "duration": 1920
+        }
+      ]
+    }
+  ],
+  "harmony": [
+    {
+      "start": 0,
+      "duration": 1920,
+      "chord": {
+        "root": 0,
+        "quality": "maj"
+      },
+      "romanNumeral": "I",
+      "analysis": {
+        "degree": 1,
+        "function": "T",
+        "explanation": "I（C）はトニック（T）。調の中心で、落ち着いて聞こえる。"
+      }
+    },
+    {
+      "start": 1920,
+      "duration": 1920,
+      "chord": {
+        "root": 7,
+        "quality": "maj"
+      },
+      "romanNumeral": "V",
+      "analysis": {
+        "degree": 5,
+        "function": "D",
+        "cadence": "half",
+        "explanation": "V（G）はドミナント（D）。トニックへ戻ろうとする緊張を作る。 V で止まる半終止。「続きがある」と感じさせる。"
+      }
+    },
+    {
+      "start": 3840,
+      "duration": 1920,
+      "chord": {
+        "root": 9,
+        "quality": "min"
+      },
+      "romanNumeral": "vi",
+      "analysis": {
+        "degree": 6,
+        "function": "T",
+        "cadence": "deceptive",
+        "explanation": "vi（Am）はトニック（T）。調の中心で、落ち着いて聞こえる。 V から I ではなく vi へ進む偽終止。解決を先延ばしにして意外性を出す。"
+      }
+    },
+    {
+      "start": 5760,
+      "duration": 1920,
+      "chord": {
+        "root": 5,
+        "quality": "maj"
+      },
+      "romanNumeral": "IV",
+      "analysis": {
+        "degree": 4,
+        "function": "S",
+        "explanation": "IV（F）はサブドミナント（S）。中心から離れて、動きを作る。"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1092 @@
+{
+  "pitchClasses": [
+    {
+      "pitchClass": 0,
+      "name": "C"
+    },
+    {
+      "pitchClass": 1,
+      "name": "C#"
+    },
+    {
+      "pitchClass": 2,
+      "name": "D"
+    },
+    {
+      "pitchClass": 3,
+      "name": "D#"
+    },
+    {
+      "pitchClass": 4,
+      "name": "E"
+    },
+    {
+      "pitchClass": 5,
+      "name": "F"
+    },
+    {
+      "pitchClass": 6,
+      "name": "F#"
+    },
+    {
+      "pitchClass": 7,
+      "name": "G"
+    },
+    {
+      "pitchClass": 8,
+      "name": "G#"
+    },
+    {
+      "pitchClass": 9,
+      "name": "A"
+    },
+    {
+      "pitchClass": 10,
+      "name": "A#"
+    },
+    {
+      "pitchClass": 11,
+      "name": "B"
+    }
+  ],
+  "chords": [
+    {
+      "chord": {
+        "root": 0,
+        "quality": "maj"
+      },
+      "symbol": "C"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "min"
+      },
+      "symbol": "Cm"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "dim"
+      },
+      "symbol": "Cdim"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "aug"
+      },
+      "symbol": "Caug"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "maj7"
+      },
+      "symbol": "Cmaj7"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "min7"
+      },
+      "symbol": "Cm7"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "dom7"
+      },
+      "symbol": "C7"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "m7b5"
+      },
+      "symbol": "Cm7b5"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "maj"
+      },
+      "symbol": "C#"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "min"
+      },
+      "symbol": "C#m"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "dim"
+      },
+      "symbol": "C#dim"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "aug"
+      },
+      "symbol": "C#aug"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "maj7"
+      },
+      "symbol": "C#maj7"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "min7"
+      },
+      "symbol": "C#m7"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "dom7"
+      },
+      "symbol": "C#7"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "m7b5"
+      },
+      "symbol": "C#m7b5"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "maj"
+      },
+      "symbol": "D"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "min"
+      },
+      "symbol": "Dm"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "dim"
+      },
+      "symbol": "Ddim"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "aug"
+      },
+      "symbol": "Daug"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "maj7"
+      },
+      "symbol": "Dmaj7"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "min7"
+      },
+      "symbol": "Dm7"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "dom7"
+      },
+      "symbol": "D7"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "m7b5"
+      },
+      "symbol": "Dm7b5"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "maj"
+      },
+      "symbol": "D#"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "min"
+      },
+      "symbol": "D#m"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "dim"
+      },
+      "symbol": "D#dim"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "aug"
+      },
+      "symbol": "D#aug"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "maj7"
+      },
+      "symbol": "D#maj7"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "min7"
+      },
+      "symbol": "D#m7"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "dom7"
+      },
+      "symbol": "D#7"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "m7b5"
+      },
+      "symbol": "D#m7b5"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "maj"
+      },
+      "symbol": "E"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "min"
+      },
+      "symbol": "Em"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "dim"
+      },
+      "symbol": "Edim"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "aug"
+      },
+      "symbol": "Eaug"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "maj7"
+      },
+      "symbol": "Emaj7"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "min7"
+      },
+      "symbol": "Em7"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "dom7"
+      },
+      "symbol": "E7"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "m7b5"
+      },
+      "symbol": "Em7b5"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "maj"
+      },
+      "symbol": "F"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "min"
+      },
+      "symbol": "Fm"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "dim"
+      },
+      "symbol": "Fdim"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "aug"
+      },
+      "symbol": "Faug"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "maj7"
+      },
+      "symbol": "Fmaj7"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "min7"
+      },
+      "symbol": "Fm7"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "dom7"
+      },
+      "symbol": "F7"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "m7b5"
+      },
+      "symbol": "Fm7b5"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "maj"
+      },
+      "symbol": "F#"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "min"
+      },
+      "symbol": "F#m"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "dim"
+      },
+      "symbol": "F#dim"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "aug"
+      },
+      "symbol": "F#aug"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "maj7"
+      },
+      "symbol": "F#maj7"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "min7"
+      },
+      "symbol": "F#m7"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "dom7"
+      },
+      "symbol": "F#7"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "m7b5"
+      },
+      "symbol": "F#m7b5"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "maj"
+      },
+      "symbol": "G"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "min"
+      },
+      "symbol": "Gm"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "dim"
+      },
+      "symbol": "Gdim"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "aug"
+      },
+      "symbol": "Gaug"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "maj7"
+      },
+      "symbol": "Gmaj7"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "min7"
+      },
+      "symbol": "Gm7"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "dom7"
+      },
+      "symbol": "G7"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "m7b5"
+      },
+      "symbol": "Gm7b5"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "maj"
+      },
+      "symbol": "G#"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "min"
+      },
+      "symbol": "G#m"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "dim"
+      },
+      "symbol": "G#dim"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "aug"
+      },
+      "symbol": "G#aug"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "maj7"
+      },
+      "symbol": "G#maj7"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "min7"
+      },
+      "symbol": "G#m7"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "dom7"
+      },
+      "symbol": "G#7"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "m7b5"
+      },
+      "symbol": "G#m7b5"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "maj"
+      },
+      "symbol": "A"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "min"
+      },
+      "symbol": "Am"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "dim"
+      },
+      "symbol": "Adim"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "aug"
+      },
+      "symbol": "Aaug"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "maj7"
+      },
+      "symbol": "Amaj7"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "min7"
+      },
+      "symbol": "Am7"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "dom7"
+      },
+      "symbol": "A7"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "m7b5"
+      },
+      "symbol": "Am7b5"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "maj"
+      },
+      "symbol": "A#"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "min"
+      },
+      "symbol": "A#m"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "dim"
+      },
+      "symbol": "A#dim"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "aug"
+      },
+      "symbol": "A#aug"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "maj7"
+      },
+      "symbol": "A#maj7"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "min7"
+      },
+      "symbol": "A#m7"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "dom7"
+      },
+      "symbol": "A#7"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "m7b5"
+      },
+      "symbol": "A#m7b5"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "maj"
+      },
+      "symbol": "B"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "min"
+      },
+      "symbol": "Bm"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "dim"
+      },
+      "symbol": "Bdim"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "aug"
+      },
+      "symbol": "Baug"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "maj7"
+      },
+      "symbol": "Bmaj7"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "min7"
+      },
+      "symbol": "Bm7"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "dom7"
+      },
+      "symbol": "B7"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "m7b5"
+      },
+      "symbol": "Bm7b5"
+    }
+  ],
+  "romanNumerals": [
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 1,
+      "seventh": false,
+      "chord": {
+        "root": 0,
+        "quality": "maj"
+      },
+      "romanNumeral": "I"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 1,
+      "seventh": true,
+      "chord": {
+        "root": 0,
+        "quality": "maj7"
+      },
+      "romanNumeral": "Imaj7"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 2,
+      "seventh": false,
+      "chord": {
+        "root": 2,
+        "quality": "min"
+      },
+      "romanNumeral": "ii"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 2,
+      "seventh": true,
+      "chord": {
+        "root": 2,
+        "quality": "min7"
+      },
+      "romanNumeral": "ii7"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 3,
+      "seventh": false,
+      "chord": {
+        "root": 4,
+        "quality": "min"
+      },
+      "romanNumeral": "iii"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 3,
+      "seventh": true,
+      "chord": {
+        "root": 4,
+        "quality": "min7"
+      },
+      "romanNumeral": "iii7"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 4,
+      "seventh": false,
+      "chord": {
+        "root": 5,
+        "quality": "maj"
+      },
+      "romanNumeral": "IV"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 4,
+      "seventh": true,
+      "chord": {
+        "root": 5,
+        "quality": "maj7"
+      },
+      "romanNumeral": "IVmaj7"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 5,
+      "seventh": false,
+      "chord": {
+        "root": 7,
+        "quality": "maj"
+      },
+      "romanNumeral": "V"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 5,
+      "seventh": true,
+      "chord": {
+        "root": 7,
+        "quality": "dom7"
+      },
+      "romanNumeral": "V7"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 6,
+      "seventh": false,
+      "chord": {
+        "root": 9,
+        "quality": "min"
+      },
+      "romanNumeral": "vi"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 6,
+      "seventh": true,
+      "chord": {
+        "root": 9,
+        "quality": "min7"
+      },
+      "romanNumeral": "vi7"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 7,
+      "seventh": false,
+      "chord": {
+        "root": 11,
+        "quality": "dim"
+      },
+      "romanNumeral": "vii°"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "degree": 7,
+      "seventh": true,
+      "chord": {
+        "root": 11,
+        "quality": "m7b5"
+      },
+      "romanNumeral": "viiø7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 1,
+      "seventh": false,
+      "chord": {
+        "root": 9,
+        "quality": "min"
+      },
+      "romanNumeral": "i"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 1,
+      "seventh": true,
+      "chord": {
+        "root": 9,
+        "quality": "min7"
+      },
+      "romanNumeral": "i7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 2,
+      "seventh": false,
+      "chord": {
+        "root": 11,
+        "quality": "dim"
+      },
+      "romanNumeral": "ii°"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 2,
+      "seventh": true,
+      "chord": {
+        "root": 11,
+        "quality": "m7b5"
+      },
+      "romanNumeral": "iiø7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 3,
+      "seventh": false,
+      "chord": {
+        "root": 0,
+        "quality": "maj"
+      },
+      "romanNumeral": "III"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 3,
+      "seventh": true,
+      "chord": {
+        "root": 0,
+        "quality": "maj7"
+      },
+      "romanNumeral": "IIImaj7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 4,
+      "seventh": false,
+      "chord": {
+        "root": 2,
+        "quality": "min"
+      },
+      "romanNumeral": "iv"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 4,
+      "seventh": true,
+      "chord": {
+        "root": 2,
+        "quality": "min7"
+      },
+      "romanNumeral": "iv7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 5,
+      "seventh": false,
+      "chord": {
+        "root": 4,
+        "quality": "min"
+      },
+      "romanNumeral": "v"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 5,
+      "seventh": true,
+      "chord": {
+        "root": 4,
+        "quality": "min7"
+      },
+      "romanNumeral": "v7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 6,
+      "seventh": false,
+      "chord": {
+        "root": 5,
+        "quality": "maj"
+      },
+      "romanNumeral": "VI"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 6,
+      "seventh": true,
+      "chord": {
+        "root": 5,
+        "quality": "maj7"
+      },
+      "romanNumeral": "VImaj7"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 7,
+      "seventh": false,
+      "chord": {
+        "root": 7,
+        "quality": "maj"
+      },
+      "romanNumeral": "VII"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "degree": 7,
+      "seventh": true,
+      "chord": {
+        "root": 7,
+        "quality": "dom7"
+      },
+      "romanNumeral": "VII7"
+    }
+  ]
+}
