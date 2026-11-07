@@ -52,6 +52,40 @@ describe('ProgressionForm', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('進行を入力してください');
   });
 
+  it('offers patterns when a catalogue is given and sends the chosen ids', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <ProgressionForm
+        onSubmit={onSubmit}
+        patterns={{
+          accompaniments: [
+            { id: 'block', name: 'ブロック', description: 'b', program: 0 },
+            { id: 'arpeggio', name: 'アルペジオ', description: 'a', program: 0 },
+          ],
+          drums: [{ id: 'eight-beat', name: '8 ビート', description: 'd' }],
+        }}
+      />,
+    );
+    await user.selectOptions(screen.getByLabelText('伴奏'), 'arpeggio');
+    await user.selectOptions(screen.getByLabelText('ドラム'), 'eight-beat');
+    await user.click(screen.getByRole('button', { name: '生成' }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ accompaniment: 'arpeggio', drums: 'eight-beat' }),
+    );
+  });
+
+  it('hides the pattern selects without a catalogue and omits the ids', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<ProgressionForm onSubmit={onSubmit} />);
+    expect(screen.queryByLabelText('伴奏')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '生成' }));
+    const req = onSubmit.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(req).not.toHaveProperty('accompaniment');
+    expect(req).not.toHaveProperty('drums');
+  });
+
   it('is disabled while busy', () => {
     render(<ProgressionForm onSubmit={vi.fn()} busy />);
     expect(screen.getByRole('button', { name: '生成中…' })).toBeDisabled();

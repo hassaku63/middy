@@ -17,6 +17,8 @@ tags:
     description: タイムラインの生成と分析
   - name: export
     description: 書き出し
+  - name: patterns
+    description: 伴奏・ドラムのテンプレート
   - name: ideas
     description: イメージからの候補提案（S2）
 paths:
@@ -73,6 +75,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /patterns:
+    get:
+      tags: [patterns]
+      operationId: listPatterns
+      summary: 伴奏とドラムのテンプレート一覧
+      description: id を `POST /timelines/from-progression` の `accompaniment` / `drums` に渡す。
+      responses:
+        '200':
+          description: カタログ（安定した順序）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatternsResponse'
   /export/midi:
     post:
       tags: [export]
@@ -186,6 +201,59 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/ProgressionLabel'
+        accompaniment:
+          type: string
+          description: 伴奏テンプレートの id（`GET /patterns`）。省略時はブロックコード
+        drums:
+          type: string
+          description: ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし
+    PatternsResponse:
+      type: object
+      required: [accompaniments, drums]
+      properties:
+        accompaniments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Accompaniment'
+        drums:
+          type: array
+          items:
+            $ref: '#/components/schemas/DrumPattern'
+    Accompaniment:
+      type: object
+      required: [id, name, description, program, hits]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string, description: 学習者向けの説明（日本語） }
+        program: { type: integer, description: GM プログラム番号 }
+        hits:
+          type: array
+          items:
+            type: object
+            required: [start, duration, voice, velocity]
+            properties:
+              start: { type: integer, description: 小節内の tick }
+              duration: { type: integer }
+              voice: { type: string, enum: [chord, bass, root, third, fifth, top, octave] }
+              velocity: { type: integer, minimum: 1, maximum: 127 }
+    DrumPattern:
+      type: object
+      required: [id, name, description, hits]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        hits:
+          type: array
+          items:
+            type: object
+            required: [start, duration, note, velocity]
+            properties:
+              start: { type: integer }
+              duration: { type: integer }
+              note: { type: integer, description: GM ドラムマップのノート番号 }
+              velocity: { type: integer, minimum: 1, maximum: 127 }
     ProgressionLabel:
       type: object
       required: [numeral]

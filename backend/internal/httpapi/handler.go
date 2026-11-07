@@ -41,6 +41,7 @@ func routes(d Deps) []route {
 	return []route{
 		{http.MethodGet, APIPrefix + "/health", handleHealth},
 		{http.MethodPost, APIPrefix + "/timelines/from-progression", handleFromProgression},
+		{http.MethodGet, APIPrefix + "/patterns", handlePatterns},
 		{http.MethodPost, APIPrefix + "/export/midi", handleExportMIDI},
 		{http.MethodPost, APIPrefix + "/ideas", handleIdeas(ideas.New(d.LLM))},
 	}

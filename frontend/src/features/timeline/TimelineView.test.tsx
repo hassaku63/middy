@@ -86,6 +86,34 @@ describe('TimelineView', () => {
     expect(onSelect).toHaveBeenCalledWith(1);
   });
 
+  it('draws percussion in a drum lane instead of the piano roll', () => {
+    const withDrums: Timeline = {
+      ...timeline,
+      tracks: [
+        ...timeline.tracks,
+        {
+          name: 'drums',
+          channel: 9,
+          program: 0,
+          notes: [
+            { pitch: 36, velocity: 100, start: 0, duration: 240 },
+            { pitch: 38, velocity: 96, start: 480, duration: 240 },
+            { pitch: 42, velocity: 60, start: 0, duration: 120 },
+          ],
+        },
+      ],
+    };
+    const { container } = render(<TimelineView timeline={withDrums} positionTick={0} />);
+    const lane = screen.getByTestId('drum-lane');
+    expect(lane).toBeInTheDocument();
+    expect(lane.querySelectorAll('.timeline__drum-hit')).toHaveLength(3);
+    expect(lane.querySelectorAll('.timeline__drum-hit.is-sounding')).toHaveLength(2); // kick + hat at 0
+    // Drum notes must not appear as pitched notes nor stretch the pitch range.
+    expect(container.querySelectorAll('.timeline__note')).toHaveLength(9);
+    expect(screen.getByText('Kick')).toBeInTheDocument();
+    expect(screen.getByText('Snare')).toBeInTheDocument();
+  });
+
   it('renders an empty timeline as a single empty bar', () => {
     const empty: Timeline = { ...timeline, tracks: [], harmony: [] };
     render(<TimelineView timeline={empty} positionTick={0} />);

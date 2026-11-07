@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -93,5 +94,66 @@ func TestFromProgressionErrors(t *testing.T) {
 				t.Fatalf("both bad labels should be reported: %q", body.Error.Message)
 			}
 		})
+	}
+}
+
+func TestFromProgressionWithPatterns(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
+		"progression": [{"numeral": "I"}, {"numeral": "V"}],
+		"accompaniment": "arpeggio", "drums": "eight-beat"
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, body)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	tl := body.Timeline
+	if len(tl.Tracks) != 2 || tl.Tracks[1].Channel != 9 {
+		t.Fatalf("expected chords + drums, got %+v", tl.Tracks)
+	}
+	if n := len(tl.Tracks[0].Notes); n != 16 { // 8 eighths per bar, 2 bars
+		t.Fatalf("arpeggio notes = %d, want 16", n)
+	}
+	if tl.Harmony[1].Analysis == nil {
+		t.Fatal("patterns must keep the analysis")
+	}
+
+	// Unknown ids are the caller's mistake.
+	bad := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
+		"progression": [{"numeral": "I"}], "drums": "techno"
+	}`)
+	if bad.StatusCode != http.StatusBadRequest {
+		t.Fatalf("unknown pattern status = %d", bad.StatusCode)
+	}
+	var e errorResponse
+	_ = json.NewDecoder(bad.Body).Decode(&e)
+	if e.Error.Code != "invalid_request" || !strings.Contains(e.Error.Message, "techno") {
+		t.Fatalf("error = %+v", e.Error)
+	}
+}
+
+func TestPatternsCatalogue(t *testing.T) {
+	srv := newTestServer(t)
+	resp := get(t, srv.URL+"/api/v1/patterns")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", resp.StatusCode)
+	}
+	var body patternsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Accompaniments) < 5 || len(body.Drums) < 3 || body.Accompaniments[0].ID != "block" {
+		t.Fatalf("unexpected catalogue: %d accompaniments, %d drums", len(body.Accompaniments), len(body.Drums))
+	}
+	for _, a := range body.Accompaniments {
+		if a.Name == "" || a.Description == "" {
+			t.Errorf("%s needs name and description for the UI", a.ID)
+		}
 	}
 }

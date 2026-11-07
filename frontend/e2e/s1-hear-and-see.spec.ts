@@ -16,9 +16,14 @@ test('generate, play, follow, pin, download', async ({ page }) => {
   await page.getByLabel('モード').selectOption('minor');
   await page.getByLabel('進行（ローマ数字）').fill('i - iv - V7 - i');
   await page.getByLabel('テンポ (BPM)').fill('120');
+  await page.getByLabel('伴奏').selectOption('arpeggio');
+  await page.getByLabel('ドラム').selectOption('eight-beat');
   await page.getByRole('button', { name: '生成' }).click();
 
   const result = page.getByRole('region', { name: '結果' });
+  // Patterns are applied server side: the drum lane appears and the roll holds eighth notes.
+  await expect(result.getByTestId('drum-lane')).toBeVisible();
+  await expect(result.locator('.timeline__note')).toHaveCount(4 * 8);
   await expect(result.getByRole('option')).toHaveText([
     /i.*Am/,
     /iv.*Dm/,

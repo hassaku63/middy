@@ -1,7 +1,8 @@
 import type { Timeline } from '@/shared/api/client';
 import { ChordLane } from './ChordLane';
+import { DrumLane } from './DrumLane';
 import { PianoRoll } from './PianoRoll';
-import { computeLayout, harmonyAt } from './layout';
+import { DRUM_CHANNEL, computeLayout, harmonyAt } from './layout';
 import './TimelineView.css';
 
 export type TimelineViewProps = {
@@ -25,7 +26,10 @@ export function TimelineView({
   onSelectHarmony,
 }: TimelineViewProps) {
   const layout = computeLayout(timeline);
-  const notes = timeline.tracks.flatMap((t) => t.notes);
+  const notes = timeline.tracks.filter((t) => t.channel !== DRUM_CHANNEL).flatMap((t) => t.notes);
+  const drumNotes = timeline.tracks
+    .filter((t) => t.channel === DRUM_CHANNEL)
+    .flatMap((t) => t.notes);
 
   return (
     <svg
@@ -54,6 +58,7 @@ export function TimelineView({
         onSelect={onSelectHarmony}
       />
       <PianoRoll notes={notes} layout={layout} positionTick={positionTick} />
+      <DrumLane notes={drumNotes} layout={layout} positionTick={positionTick} />
       <line
         className="timeline__playhead"
         data-testid="playhead"

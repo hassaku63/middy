@@ -86,3 +86,21 @@
     fill: #374151;
   }
 }
+
+.timeline__drum-row {
+  fill: #0f172a;
+}
+
+.timeline__drum-hit {
+  fill: #a78bfa;
+}
+
+.timeline__drum-hit.is-sounding {
+  fill: #fbbf24;
+}
+
+@media (prefers-color-scheme: light) {
+  .timeline__drum-row {
+    fill: #e2e8f0;
+  }
+}

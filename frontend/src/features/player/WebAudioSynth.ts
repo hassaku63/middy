@@ -1,6 +1,9 @@
 import type { Synth } from './TimelinePlayer';
 import type { ScheduledNote } from '@/shared/lib/timing';
 
+/** GM percussion channel (0-based). */
+export const DRUM_CHANNEL = 9;
+
 /** MIDI note number to frequency in Hz (A4 = 69 = 440 Hz). */
 export function midiToHz(pitch: number): number {
   return 440 * 2 ** ((pitch - 69) / 12);
@@ -22,6 +25,10 @@ export class WebAudioSynth implements Synth {
   }
 
   play(note: ScheduledNote & { time: number }): void {
+    if (note.channel === DRUM_CHANNEL) {
+      this.playDrum(note);
+      return;
+    }
     const { time, durationSec } = note;
     const peak = (note.velocity / 127) ** 1.5;
     const end = time + durationSec;
@@ -58,6 +65,68 @@ export class WebAudioSynth implements Synth {
     const voice = { oscs, gain };
     this.active.add(voice);
     oscs[0]?.addEventListener('ended', () => this.active.delete(voice));
+  }
+
+  /**
+   * GM percussion: kick = sine pitch drop, snare = noise burst with a
+   * short tone, everything else = short high-passed noise (hats, bells).
+   */
+  private playDrum(note: ScheduledNote & { time: number }): void {
+    const { time } = note;
+    const level = (note.velocity / 127) ** 1.2;
+    const gain = this.ctx.createGain();
+    gain.connect(this.master);
+
+    if (note.pitch === 35 || note.pitch === 36) {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, time);
+      osc.frequency.exponentialRampToValueAtTime(45, time + 0.12);
+      gain.gain.setValueAtTime(level, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.25);
+      osc.connect(gain);
+      osc.start(time);
+      osc.stop(time + 0.3);
+      return;
+    }
+
+    const isSnare = note.pitch === 38 || note.pitch === 40;
+    const length = isSnare ? 0.18 : 0.06;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noise();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = isSnare ? 'bandpass' : 'highpass';
+    filter.frequency.value = isSnare ? 1800 : 7000;
+    gain.gain.setValueAtTime(level * (isSnare ? 0.8 : 0.35), time);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + length);
+    src.connect(filter).connect(gain);
+    src.start(time);
+    src.stop(time + length + 0.02);
+    if (isSnare) {
+      const tone = this.ctx.createOscillator();
+      const toneGain = this.ctx.createGain();
+      tone.type = 'triangle';
+      tone.frequency.setValueAtTime(190, time);
+      toneGain.gain.setValueAtTime(level * 0.4, time);
+      toneGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
+      tone.connect(toneGain).connect(this.master);
+      tone.start(time);
+      tone.stop(time + 0.12);
+    }
+  }
+
+  private noiseBuffer: AudioBuffer | null = null;
+
+  /** One second of white noise, reused for every hit. */
+  private noise(): AudioBuffer {
+    if (!this.noiseBuffer) {
+      const rate = this.ctx.sampleRate;
+      const buf = this.ctx.createBuffer(1, rate, rate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      this.noiseBuffer = buf;
+    }
+    return this.noiseBuffer;
   }
 
   allOff(): void {
