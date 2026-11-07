@@ -44,6 +44,7 @@
 | `backend/internal/music` | 音楽理論ドメイン | 標準ライブラリのみ、I/O なし、純粋関数（`depguard` で強制） |
 | `backend/internal/music/smf` | Timeline → SMF エンコーダ | `music` にのみ依存。バイト列の期待値テストを壊す変更は意図を PR に書く |
 | `backend/internal/intent` | LLM が返す MusicalIntent の型・検証・Schema | `music` にのみ依存。制約を変えたら `Validate` と `Schema` を同時に |
+| `backend/internal/ideas` | S2 のユースケース（会話 → LLM → intent → music） | プロンプトは `prompt.go` の固定文字列。変更は評価セット（BL-015）で確認 |
 | `backend/internal/llm` | LLM 境界。`Client` interface と `fake` | プロバイダ依存はサブパッケージに閉じる |
 | `backend/internal/web` | ビルド済みフロントの embed | `dist/` の中身はコミットしない（`make build` が生成） |
 | `backend/internal/fixtures` | フロント照合用の正準 JSON の生成 | 表記を変えたら `make fixtures` を実行してコミット |

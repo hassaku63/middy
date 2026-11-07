@@ -2,7 +2,9 @@ package fake
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/hassaku63/middy/backend/internal/llm"
@@ -42,5 +44,30 @@ func TestPlaceholderEchoesLastUserMessage(t *testing.T) {
 	}
 	if got.Text != "(fake llm) rainy sunday" {
 		t.Fatalf("got %q", got.Text)
+	}
+}
+
+func TestUnscriptedStructuredOutputIsDeterministicAndMoodAware(t *testing.T) {
+	c := New()
+	ask := func(text string) string {
+		resp, err := c.Complete(context.Background(), llm.Request{
+			Messages:     []llm.Message{{Role: llm.RoleUser, Content: text}},
+			OutputSchema: []byte(`{}`),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return resp.Text
+	}
+	rainy, rainyAgain, sunny := ask("雨の午後"), ask("雨の午後"), ask("晴れた朝")
+	if rainy != rainyAgain {
+		t.Fatal("samples must be deterministic")
+	}
+	if !strings.Contains(rainy, `"minor"`) || !strings.Contains(sunny, `"major"`) {
+		t.Fatalf("mood keywords should pick the mode: %s / %s", rainy, sunny)
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(rainy), &parsed); err != nil {
+		t.Fatalf("sample is not JSON: %v", err)
 	}
 }
