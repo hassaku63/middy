@@ -16,8 +16,9 @@
 4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に従う。
 5. **`make check` を通す。** 通らないものは完成ではない。
 6. 影響するドキュメントを更新する: API 変更 → `docs/api/openapi.yaml`、設計判断 → `docs/architecture/adr/`、backlog のステータス。PR を出す前に `docs-sync` の自己点検（`docs/dev/docs-hygiene.md`）を行う。
-7. Conventional Commits でコミットし、PR テンプレートを埋める。1 PR = 1 backlog 項目 = 1 縦スライス。
-8. 完了したら backlog の項目を `Done` にし、次の項目へ。
+7. PR を開く前に自己レビューを行い（Claude Code では `/code-review`）、要約を PR の「レビューの見どころ」に書く。Conventional Commits でコミットし、PR テンプレートを埋める。1 PR = 1 backlog 項目 = 1 縦スライス。
+8. **未マージの自分の PR が 3 本になったら止まり、人間にマージか方針の判断を仰ぐ**（レビュー処理能力を超えない）。
+9. 完了したら backlog の項目を `Done` にし、次の項目へ。
 
 ワークフローの詳細と「完了の定義」は `docs/dev/workflow.md`。
 
@@ -29,7 +30,7 @@
 - **API の形を黙って変えない。** `docs/api/openapi.yaml` と `frontend/src/shared/api` と Go ハンドラは常に一致させる。
 - **秘密情報を扱わない。** `.env` を読まない・コミットしない。API キーはコードに書かない。
 - **`main` に直接 push しない。** `git push --force` をしない。
-- **巨大な PR を作らない。** 目安は生成物を除き 400 行差分以内。超えそうなら項目を分割して backlog を更新する。
+- **巨大な PR を作らない。** 生成物を除き 400 行差分で警告、600 行で CI が落ちる（`scripts/check-pr-size.sh`）。超えそうなら項目を分割して backlog を更新する。
 - **ファイル全体の書き換えより、差分編集を優先する。** 既存のスタイルに合わせる。
 - 振る舞いが音楽理論的に正しいか自信がないときは、`docs/architecture/domain-model.md` の定義と既存テストを根拠にし、推測で「それらしい」出力を作らない。
 
@@ -78,7 +79,7 @@ cd frontend && npx vitest run src/app                             # 単体で回
 - 事実は 1 箇所にだけ書き、他は参照する。数値・日付・「予定」リストをコピーしない。将来のことは backlog の BL-ID で指す。
 - `make docs-check` が、リンク切れ・存在しないパス・索引漏れ・存在しない BL-ID を落とす。Go のテストがルートと `docs/api/openapi.yaml` の一致を落とす。
 - backlog の Done 表は現在と直前のマイルストーン分だけ残す。古い ID への参照が落ちたら、その文書を書き直す合図。
-- 手順の詳細は `docs/dev/docs-hygiene.md`。
+- 手順の詳細は `docs/dev/docs-hygiene.md`。ハーネスの全検査は `docs/dev/harness.md`。
 
 ## 8. 迷ったら
 

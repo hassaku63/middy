@@ -123,6 +123,22 @@ func (c Chord) Voicing(octave int) []Pitch {
 	return out
 }
 
+// triadQualities maps (third, fifth) semitone intervals to a quality.
+var triadQualities = map[[2]int]ChordQuality{
+	{4, 7}: MajorTriad,
+	{3, 7}: MinorTriad,
+	{3, 6}: DiminishedTriad,
+	{4, 8}: AugmentedTriad,
+}
+
+// seventhQualities maps (triad quality, seventh interval) to a seventh chord.
+var seventhQualities = map[[2]int]ChordQuality{
+	{int(MajorTriad), 11}:      Major7,
+	{int(MajorTriad), 10}:      Dominant7,
+	{int(MinorTriad), 10}:      Minor7,
+	{int(DiminishedTriad), 10}: HalfDiminished7,
+}
+
 // Diatonic builds the chord stacked in thirds on a 1-based scale degree of
 // the key, as a triad or a seventh chord. The quality is derived from the
 // scale itself, so it is correct for any mode added to Mode later.
@@ -132,41 +148,22 @@ func (k Key) Diatonic(degree int, seventh bool) (Chord, error) {
 		return Chord{}, err
 	}
 	scale := k.Scale()
-	at := func(offset int) PitchClass { return scale[(degree-1+offset)%7] }
-	third := int(at(2).Add(-int(root)).Normalize())
-	fifth := int(at(4).Add(-int(root)).Normalize())
+	interval := func(offset int) int { // semitones from root to the scale step `offset` above it
+		return int(scale[(degree-1+offset)%7].Add(-int(root)).Normalize())
+	}
 
-	var q ChordQuality
-	switch {
-	case third == 4 && fifth == 7:
-		q = MajorTriad
-	case third == 3 && fifth == 7:
-		q = MinorTriad
-	case third == 3 && fifth == 6:
-		q = DiminishedTriad
-	case third == 4 && fifth == 8:
-		q = AugmentedTriad
-	default:
-		return Chord{}, fmt.Errorf("music: no triad quality for intervals %d,%d", third, fifth)
+	q, ok := triadQualities[[2]int{interval(2), interval(4)}]
+	if !ok {
+		return Chord{}, fmt.Errorf("music: no triad quality for intervals %d,%d", interval(2), interval(4))
 	}
 	if !seventh {
 		return Chord{Root: root, Quality: q}, nil
 	}
-
-	sev := int(at(6).Add(-int(root)).Normalize())
-	switch {
-	case q == MajorTriad && sev == 11:
-		q = Major7
-	case q == MajorTriad && sev == 10:
-		q = Dominant7
-	case q == MinorTriad && sev == 10:
-		q = Minor7
-	case q == DiminishedTriad && sev == 10:
-		q = HalfDiminished7
-	default:
+	q7, ok := seventhQualities[[2]int{int(q), interval(6)}]
+	if !ok {
 		return Chord{}, fmt.Errorf("music: unsupported seventh chord on degree %d of %s", degree, k)
 	}
-	return Chord{Root: root, Quality: q}, nil
+	return Chord{Root: root, Quality: q7}, nil
 }
 
 var romanBase = [7]string{"I", "II", "III", "IV", "V", "VI", "VII"}

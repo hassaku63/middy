@@ -108,3 +108,13 @@ jobs:
           [ "$status" = "healthy" ]
           docker logs app
           docker rm -f app
+
+  pr-size:
+    name: pr size budget
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: bash scripts/check-pr-size.sh origin/${{ github.base_ref }}
