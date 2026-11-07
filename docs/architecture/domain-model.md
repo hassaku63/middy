@@ -30,7 +30,7 @@
 - `ChordQuality` — 三和音 4 種（maj, min, dim, aug）と七の和音 4 種（maj7, min7, dom7, m7b5）。JSON は識別子文字列（`"dom7"`）
 - `Chord{Root, Quality}` — `PitchClasses()`, `Voicing(octave)`（密集・基本形）, `String()`（`"G7"`）
 - `RomanNumeral(degree, quality)` — `I`, `ii`, `vii°`, `V7`, `iiø7`, `IVmaj7` など。大文字 = 長/増、小文字 = 短/減
-- `ParseRomanNumeral(s)` — 上記の表記（と `dim`, `aug`, `+`, `m7b5`）を度数と七の和音の有無に戻す。`RomanNumeral` の出力は必ず往復する
+- `ParseRomanNumeral(s)` — 上記の表記（と `dim`, `aug`, `+`, `m7b5`）を度数と七の和音の有無に戻す。`RomanNumeral` の出力は必ず往復する。大文字・小文字の違いは `StepFromLabel` だけが（短調の V で）使う
 
 **未対応（backlog）**: 転回形、分数コード、テンション、借用和音、セカンダリドミナント。
 
@@ -51,7 +51,8 @@ Timeline
 
 ### 進行
 
-- `Step{Degree, Seventh, Beats}` — 度数（1..7）を何拍（四分音符単位）鳴らすか。拍は拍子に依存しない
+- `Step{Degree, Seventh, Beats, Quality?}` — 度数（1..7）を何拍（四分音符単位）鳴らすか。拍は拍子に依存しない。`Quality` は根音を保ったまま質を上書きする（今は短調の V のためだけに使う）
+- `StepFromLabel(key, label, beats)` — ローマ数字の文字列から `Step` を作る唯一の入口（API と intent が使う）。短調の大文字 `V` / `V7` を和声的短音階のドミナントにする規則はここにある
 - `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
 - `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordOctave`=4 の基本形, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）
 
@@ -81,4 +82,4 @@ Timeline
 
 - **質はスケールから導出する。** `Key.Diatonic` は三度堆積の音程から質を判定するため、モードを追加してもコードの表が不要。
 - **ローマ数字の文字列は境界でだけ扱う。** 内部の分析は `degree + quality` で行い、文字列は入力（API、将来は LLM の出力）を `ParseRomanNumeral` で度数と七の和音の有無に変換するときにだけ現れる。コードの質は常に調から導出され、文字列の大文字小文字や `°` は結果に影響しない。
-- **自然短音階のみ。** 和声的短音階の V（長三和音）、借用和音、セカンダリドミナントは未対応で、`Analyze` は非ダイアトニックなコードを拒否する。扱うときは Ideas から昇格させ、ADR で判断する。
+- **自然短音階 + 和声的短音階のドミナント。** 短調で `V` / `V7`（大文字）と書くと `StepFromLabel` が `Step.Quality` を長三和音・属七に上書きし、導音（第 7 音の半音上げ）が鳴る。根音は自然短音階上にあるので `Analyze` はそのまま度数を求め、解説に和声的短音階の一文を足す。小文字 `v` は自然短音階の短三和音。借用和音、セカンダリドミナント、その他の非ダイアトニックなコードは未対応で、`Analyze` は拒否する。

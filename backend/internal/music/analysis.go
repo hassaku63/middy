@@ -68,7 +68,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Degree:      degree,
 			Function:    fn,
 			Cadence:     cad,
-			Explanation: explain(*h, fn, cad),
+			Explanation: explain(tl.Key, *h, fn, cad),
 		}
 		prevDegree = degree
 	}
@@ -118,10 +118,25 @@ var cadenceText = map[Cadence]string{
 	Deceptive: "V から I ではなく vi へ進む偽終止。解決を先延ばしにして意外性を出す。",
 }
 
-func explain(h HarmonyEvent, fn Function, cad Cadence) string {
+const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
+
+func explain(key Key, h HarmonyEvent, fn Function, cad Cadence) string {
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, h.Chord, functionText[fn])
+	if isHarmonicMinorDominant(key, h.Chord) {
+		s += " " + harmonicMinorText
+	}
 	if cad != NoCadence {
 		s += " " + cadenceText[cad]
 	}
 	return s
+}
+
+// isHarmonicMinorDominant reports a major V / V7 in a minor key, which is
+// not diatonic to natural minor and deserves a word in the explanation.
+func isHarmonicMinorDominant(key Key, c Chord) bool {
+	if key.Mode != Minor {
+		return false
+	}
+	dominant, _ := key.Degree(5)
+	return c.Root == dominant && (c.Quality == MajorTriad || c.Quality == Dominant7)
 }

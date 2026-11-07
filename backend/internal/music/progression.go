@@ -12,6 +12,10 @@ type Step struct {
 	Degree  int  `json:"degree"`  // 1..7
 	Seventh bool `json:"seventh"` // stack a seventh on the triad
 	Beats   int  `json:"beats"`   // >= 1
+	// Quality, when set, replaces the diatonic quality while keeping the
+	// diatonic root. Today it exists for one idiom: the harmonic-minor
+	// dominant (a major V / V7 in a minor key). See StepFromLabel.
+	Quality *ChordQuality `json:"quality,omitempty"`
 }
 
 // Progression is an ordered list of steps, e.g. I-V-vi-IV. It is key-agnostic:
@@ -30,6 +34,11 @@ func (p Progression) Validate() error {
 		}
 		if s.Beats < 1 {
 			errs = append(errs, fmt.Errorf("music: steps[%d]: beats must be >= 1, got %d", i, s.Beats))
+		}
+		if s.Quality != nil {
+			if _, err := s.Quality.info(); err != nil {
+				errs = append(errs, fmt.Errorf("music: steps[%d]: %w", i, err))
+			}
 		}
 	}
 	return errors.Join(errs...)
@@ -68,6 +77,9 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 		chord, err := key.Diatonic(s.Degree, s.Seventh)
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
+		}
+		if s.Quality != nil {
+			chord.Quality = *s.Quality
 		}
 		numeral, err := RomanNumeral(s.Degree, chord.Quality)
 		if err != nil {

@@ -64,6 +64,7 @@ M2 が終わったら M3（Later）から Now へ。
 | BL-007 | 入力 UI と結線（`features/progression-input`、App で S1 シナリオが通しで動く） | 2026-11-07 |
 | BL-008 | SMF エクスポート（`music/smf`、`POST /api/v1/export/midi`） | 2026-11-07 |
 | BL-009 | ダウンロード UI（`features/export`、ファイル名に調と進行） | 2026-11-07 |
+| BL-016 | 短調の大文字 V / V7 を和声的短音階のドミナントとして扱う（`music.StepFromLabel`、解説に一文、プロンプトと Schema の記述） | 2026-11-07 |
 | BL-015 | プロンプト評価セット（`internal/ideas/evals`、`make eval`、判定器は fake でテスト） | 2026-11-07 |
 | BL-011 | Anthropic アダプタ（`internal/llm/anthropic`、公式 SDK、構造化出力、録画応答テスト） | 2026-11-07 |
 | BL-014 | チャット UI（`features/chat`、入力方法の切り替え、E2E に S2 を追加） | 2026-11-07 |

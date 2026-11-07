@@ -44,7 +44,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prog, err := toProgression(req.Progression)
+	prog, err := toProgression(req.Key, req.Progression)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
@@ -64,24 +64,25 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 }
 
 // toProgression converts request labels into domain steps, reporting
-// every bad label at once.
-func toProgression(labels []progressionLabel) (music.Progression, error) {
+// every bad label at once. The key decides what an uppercase V means in
+// minor (music.StepFromLabel).
+func toProgression(key music.Key, labels []progressionLabel) (music.Progression, error) {
 	if len(labels) == 0 {
 		return nil, errors.New("progression must contain at least one chord")
 	}
 	var errs []error
 	prog := make(music.Progression, 0, len(labels))
 	for i, l := range labels {
-		degree, seventh, err := music.ParseRomanNumeral(l.Numeral)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
-			continue
-		}
 		beats := defaultBeatsPerChord
 		if l.Beats != nil {
 			beats = *l.Beats
 		}
-		prog = append(prog, music.Step{Degree: degree, Seventh: seventh, Beats: beats})
+		step, err := music.StepFromLabel(key, l.Numeral, beats)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
+			continue
+		}
+		prog = append(prog, step)
 	}
 	if err := errors.Join(errs...); err != nil {
 		return nil, err

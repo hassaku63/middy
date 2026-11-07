@@ -126,11 +126,11 @@ func allowedBeats(b int) bool {
 func (c Candidate) ToProgression() (music.Progression, error) {
 	prog := make(music.Progression, 0, len(c.Progression))
 	for i, label := range c.Progression {
-		degree, seventh, err := music.ParseRomanNumeral(label)
+		step, err := music.StepFromLabel(c.Key, label, c.BeatsPerChord)
 		if err != nil {
 			return nil, fmt.Errorf("intent: progression[%d]: %w", i, err)
 		}
-		prog = append(prog, music.Step{Degree: degree, Seventh: seventh, Beats: c.BeatsPerChord})
+		prog = append(prog, step)
 	}
 	return prog, nil
 }
