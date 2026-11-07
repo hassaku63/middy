@@ -18,13 +18,11 @@ export type Health = Schemas['Health'];
 export type PitchClass = Schemas['PitchClass'];
 /** MIDI note number, 60 = C4 */
 export type Pitch = Schemas['Pitch'];
-export type Mode = Schemas['Mode'];
 export type Key = Schemas['Key'];
 export type ChordQuality = Schemas['ChordQuality'];
 export type Chord = Schemas['Chord'];
 export type TimeSignature = Schemas['TimeSignature'];
 export type NoteEvent = Schemas['NoteEvent'];
-export type Track = Schemas['Track'];
 export type HarmonyAnalysis = Schemas['HarmonyAnalysis'];
 export type HarmonicFunction = HarmonyAnalysis['function'];
 export type Cadence = NonNullable<HarmonyAnalysis['cadence']>;
@@ -63,8 +61,6 @@ export async function fetchHealth(fetchImpl: typeof fetch = defaultFetch): Promi
 
 // --- GET /patterns -----------------------------------------------------------
 
-export type Accompaniment = Schemas['Accompaniment'];
-export type DrumPattern = Schemas['DrumPattern'];
 export type PatternsResponse = Schemas['PatternsResponse'];
 
 export async function fetchPatterns(
@@ -76,7 +72,6 @@ export async function fetchPatterns(
 // --- POST /ideas -------------------------------------------------------------
 
 export type ChatMessage = Schemas['ChatMessage'];
-export type ChatRole = ChatMessage['role'];
 export type IdeasRequest = Schemas['IdeasRequest'];
 export type IdeaCandidate = Schemas['IdeaCandidate'];
 export type IdeasResponse = Schemas['IdeasResponse'];

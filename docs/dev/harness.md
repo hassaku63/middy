@@ -34,6 +34,7 @@
 | ESLint 型つき推奨 + react-hooks | 典型的なバグ | `make frontend-lint` | `make check`, CI `frontend` |
 | ESLint feature 境界 | feature 間 import、`../` での越境 | `make frontend-lint` | `make check`, CI `frontend` |
 | ESLint コンポーネント純粋性 | `*.tsx` での API 呼び出し・`fetch` / `AudioContext` / ストレージ / タイマー | `make frontend-lint` | `make check`, CI `frontend` |
+| knip（未使用の export・ファイル・依存、ADR-0007） | 削除や移動のあとに残った死んだコードと依存 | `make frontend-lint`（`npm run knip`）。設定は `frontend/knip.json` | `make check`, CI `frontend` |
 | ESLint `max-lines` 400 / `max-lines-per-function` 120 / `complexity` 15 | 肥大したファイル・関数（テストの関数長は除外） | `make frontend-lint` | `make check`, CI `frontend` |
 | ESLint スナップショット禁止 | 実装に結合したテスト | `make frontend-lint` | `make check`, CI `frontend` |
 | PR サイズ予算（400 警告 / 600 失敗） | レビュー不能な PR | `bash scripts/check-pr-size.sh main` | CI `pr-size`（PR のみ） |
