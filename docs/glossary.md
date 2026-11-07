@@ -4,6 +4,7 @@
 | --- | --- | --- |
 | イメージ (Image) | ユーザーが言葉で表す曲の印象。「雨の日曜」「出発の朝」など | LLM への入力。`MusicalIntent` の元 |
 | 音楽的意図 (MusicalIntent) | イメージを LLM が解釈した構造化パラメータ。調・モード・テンポ・雰囲気タグ・進行テンプレート候補 | （M2 で `internal/intent` に導入予定） |
+| 進行 (Progression) | 調に依存しないコード進行テンプレート。度数と拍数の列 | `music.Progression`, `music.FromProgression` |
 | パターン (Pattern) | 再利用可能なコード進行テンプレート、またはリズムテンプレート | （M1/M3 で `internal/music/pattern` に導入予定） |
 | タイムライン (Timeline) | 再生・表示・書き出しの対象となる中心データ。テンポ、拍子、調、トラック、ハーモニー注釈 | `music.Timeline` |
 | トラック (Track) | 楽器ごとのノート列 | `music.Track` |

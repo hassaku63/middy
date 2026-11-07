@@ -48,11 +48,16 @@ Timeline
 - `Validate()` は API 境界で必ず呼ぶ。内部の関数は妥当な Timeline を前提にしてよい。
 - `LengthTicks()` は最後のノート／注釈の終端。
 
+### 進行
+
+- `Step{Degree, Seventh, Beats}` — 度数（1..7）を何拍（四分音符単位）鳴らすか。拍は拍子に依存しない
+- `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
+- `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordOctave`=4 の基本形, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）
+
 ### 今後追加される型（M1〜M3）
 
 | 型 | 役割 | 予定 |
 | --- | --- | --- |
-| `Progression` | ローマ数字の列 + 各コードの長さ（拍） | BL-001 |
 | `Analysis` / `Function` (T/S/D) / `Cadence` | 解説の素材 | BL-002 |
 | `MusicalIntent` | LLM が返す構造化パラメータ | BL-010（`internal/intent`） |
 | `Pattern`（伴奏・リズム） | 進行に適用するテンプレート | BL-020 |
