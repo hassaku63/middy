@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
 import { MemoryProjectStore, type Project } from '@/shared/lib/storage/projects';
-import { ProjectsPanel } from './ProjectsPanel';
+import { ProjectList } from './ProjectList';
+import { SaveProjectForm } from './SaveProjectForm';
 import { useProjects } from './useProjects';
 
 const timeline: Timeline = {
@@ -18,15 +19,17 @@ const timeline: Timeline = {
 function Harness({ store, onOpen }: { store: MemoryProjectStore; onOpen: (p: Project) => void }) {
   const projects = useProjects(store);
   return (
-    <ProjectsPanel
-      projects={projects}
-      current={{ timeline, source: { kind: 'idea', image: '雨', candidateTitle: '窓辺の雨' } }}
-      onOpen={onOpen}
-    />
+    <>
+      <SaveProjectForm
+        projects={projects}
+        current={{ timeline, source: { kind: 'idea', image: '雨', candidateTitle: '窓辺の雨' } }}
+      />
+      <ProjectList projects={projects} onOpen={onOpen} />
+    </>
   );
 }
 
-describe('ProjectsPanel + useProjects', () => {
+describe('SaveProjectForm + ProjectList + useProjects', () => {
   it('saves with a typed name, lists, opens and deletes', async () => {
     const store = new MemoryProjectStore();
     const onOpen = vi.fn();
@@ -36,7 +39,9 @@ describe('ProjectsPanel + useProjects', () => {
     await user.type(screen.getByLabelText('プロジェクト名'), '雨の曲');
     await user.click(screen.getByRole('button', { name: '保存' }));
 
-    const list = await screen.findByRole('list', { name: 'プロジェクト一覧' });
+    // The list stays folded until asked for.
+    await user.click(await screen.findByText('保存したプロジェクト（1）'));
+    const list = screen.getByRole('list', { name: 'プロジェクト一覧' });
     const item = within(list).getByRole('listitem');
     expect(item).toHaveTextContent('雨の曲');
     expect(item).toHaveTextContent('A minor · 90 BPM');
@@ -60,12 +65,12 @@ describe('ProjectsPanel + useProjects', () => {
     expect(await screen.findByText('窓辺の雨')).toBeInTheDocument();
   });
 
-  it('disables saving when nothing is loaded', () => {
+  it('shows no list while nothing is saved', () => {
     function Empty() {
       const projects = useProjects(new MemoryProjectStore());
-      return <ProjectsPanel projects={projects} current={null} onOpen={vi.fn()} />;
+      return <ProjectList projects={projects} onOpen={vi.fn()} />;
     }
     render(<Empty />);
-    expect(screen.getByRole('button', { name: '保存' })).toBeDisabled();
+    expect(screen.queryByRole('region', { name: '保存したプロジェクト' })).not.toBeInTheDocument();
   });
 });
