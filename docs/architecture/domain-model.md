@@ -81,6 +81,7 @@ Timeline
 - カタログ: 伴奏 `block` / `pulse` / `ballad` / `arpeggio` / `strum`、ドラム `eight-beat` / `ballad` / `bossa`。`Accompaniments()` / `DrumPatterns()` / `FindAccompaniment(id)` / `FindDrums(id)`
 - `pattern.Apply(tl, acc, drums)` — `Harmony` を元にトラックを作り直す。コードごとに小節単位でテンプレートを繰り返し、小節より短いコードは先頭部分だけ鳴らす。ドラムは ch.9 にタイムライン長ぶん繰り返す。入力は変更しない。4/4 以外はエラー
 - 説明文（`Description`）は解説レイヤーと LLM がそのまま使う前提で、日本語で「何が起きるか」を書く
+- `music.Rhythm{Accompaniment, Drums *RhythmPart}` — `Apply` が `Timeline.Rhythm` に入れる解説データ。`RhythmPart` は 1 小節の打点を拍の頭 / 8 分の裏 / それより細かい位置に分類し（ドラムはキックとスネアのみ）、裏拍が 4 分の 1 以上なら `Syncopated`。`Explanation` は決定論的な日本語
 
 ### 未実装の語彙
 
