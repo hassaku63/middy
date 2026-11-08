@@ -57,11 +57,17 @@ type Result struct {
 	Reply      string      `json:"reply"`
 	Mood       []string    `json:"mood"`
 	Candidates []Candidate `json:"candidates"`
+	// Unconstrained is filled only by a diagnostic Service; it never
+	// reaches the API.
+	Unconstrained string `json:"-"`
 }
 
 // Service turns conversations into candidates.
 type Service struct {
 	llm llm.Client
+	// diagnostics asks the model for intent.DiagnosticSchema's extra
+	// free-text field; the evaluation set turns it on (ADR-0013).
+	diagnostics bool
 }
 
 // New wires the service to an LLM client (real or fake).
@@ -69,15 +75,25 @@ func New(client llm.Client) *Service {
 	return &Service{llm: client}
 }
 
+// NewDiagnostic is New with the evaluation-only "unconstrained" field
+// requested from the model. Not for the HTTP server.
+func NewDiagnostic(client llm.Client) *Service {
+	return &Service{llm: client, diagnostics: true}
+}
+
 // Imagine runs one conversational turn. messages must end with a user turn.
 func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, error) {
 	if err := validateMessages(messages); err != nil {
 		return Result{}, err
 	}
+	schema := intent.Schema
+	if s.diagnostics {
+		schema = intent.DiagnosticSchema
+	}
 	req := llm.Request{
 		System:       SystemPrompt(),
 		Messages:     toLLM(messages),
-		OutputSchema: intent.Schema,
+		OutputSchema: schema,
 		MaxTokens:    maxOutputTokens,
 	}
 
@@ -146,7 +162,7 @@ func (s *Service) ask(ctx context.Context, req llm.Request) (intent.Intent, erro
 // render turns every candidate into an analysed timeline. A candidate the
 // engine cannot render is a bug in intent.Validate, not user error.
 func render(in intent.Intent) (Result, error) {
-	out := Result{Reply: in.Summary, Mood: in.Mood}
+	out := Result{Reply: in.Summary, Mood: in.Mood, Unconstrained: in.Unconstrained}
 	if out.Mood == nil {
 		out.Mood = []string{}
 	}

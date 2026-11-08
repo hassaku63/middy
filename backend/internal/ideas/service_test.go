@@ -208,3 +208,27 @@ func TestImagineSwingsWhenTheCandidateAsks(t *testing.T) {
 		t.Fatal("the prompt must offer the feels")
 	}
 }
+
+func TestDiagnosticServiceAsksForAndKeepsTheUnconstrainedField(t *testing.T) {
+	withNote := strings.Replace(goodIntent, `"summary": "雨の日曜の午後。静かで少し切ない。",`,
+		`"summary": "雨の日曜の午後。静かで少し切ない。", "unconstrained": "本当は Dm9 と Bbmaj7 の浮遊感を使いたい",`, 1)
+	client := fake.New(llm.Response{Text: withNote})
+	res, err := NewDiagnostic(client).Imagine(context.Background(), []Message{user("雨")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(client.Requests()[0].OutputSchema), "unconstrained") {
+		t.Fatal("the diagnostic service must send the diagnostic schema")
+	}
+	if res.Unconstrained != "本当は Dm9 と Bbmaj7 の浮遊感を使いたい" {
+		t.Fatalf("unconstrained not kept: %q", res.Unconstrained)
+	}
+	// The ordinary service never asks.
+	plain := fake.New(llm.Response{Text: goodIntent})
+	if _, err := New(plain).Imagine(context.Background(), []Message{user("雨")}); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(plain.Requests()[0].OutputSchema), "unconstrained") {
+		t.Fatal("the production schema must not ask for the diagnostic field")
+	}
+}

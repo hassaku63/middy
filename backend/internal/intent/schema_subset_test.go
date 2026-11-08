@@ -71,3 +71,29 @@ func checkSubset(path string, node map[string]any) []string {
 	}
 	return problems
 }
+
+func TestDiagnosticSchemaStaysWithinTheSubset(t *testing.T) {
+	var root map[string]any
+	if err := json.Unmarshal(DiagnosticSchema, &root); err != nil {
+		t.Fatal(err)
+	}
+	for _, problem := range checkSubset("$", root) {
+		t.Error(problem)
+	}
+	props := root["properties"].(map[string]any)
+	if _, ok := props["unconstrained"]; !ok {
+		t.Fatal("the diagnostic schema must ask for the unconstrained field")
+	}
+	for _, req := range root["required"].([]any) {
+		if req == "unconstrained" {
+			t.Fatal("unconstrained must stay optional")
+		}
+	}
+	var prod map[string]any
+	if err := json.Unmarshal(Schema, &prod); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := prod["properties"].(map[string]any)["unconstrained"]; ok {
+		t.Fatal("the production schema must not ask for it")
+	}
+}
