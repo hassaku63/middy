@@ -45,7 +45,7 @@ func SystemPrompt() string {
 		b.WriteString("ケルト（アイルランド、スコットランド）の舞曲なら、リールは 4/4 で accompaniment を reel、drums を bodhran に、ジグは 6/8 で jig の型にする。8 ビートやストロークはポップスやフォークロックに聞こえるので、ケルトの例には使わない。ゆったりしたケルトの曲（エア）や民謡風の静かな曲で、主音を持続させたいときは accompaniment を drone にする（どの拍子でも使える）。")
 		b.WriteString("ジャズ（スウィング、ビバップ、ジャズ・バー、ピアノトリオ）なら、4/4 で accompaniment を comp、drums を jazz-ride にし、feel を swing にする。8 ビートとボサノバのドラムはジャズには使わない（ボサノバを頼まれたときは別）。ジャズ・ワルツは 3/4 で drums を jazz-waltz にし、feel を swing にする（3/4 でもスウィングできる）。")
 		b.WriteString("和音の長さは beatsPerChord で一律にできるが、和音ごとに変えたいときは beats に progression と同じ数の長さを書く（例: 4/4 で [8, 4, 2, 2] は、最初の和音を 2 小節保ち、最後の 2 つを 2 拍ずつ替える）。ケルトや民謡では、主和音を長く保つと素朴さが出る。毎小節同じ間隔で替えるとポップスに聞こえやすい。")
-		b.WriteString("押し（pushes）は、和音を拍の頭より 8 分（eighth）か 16 分（sixteenth）早く弾いてつなぐこと。ロック、ポップ、ジャズで、小節の頭で替わる和音を前の小節の 4 拍目の裏から鳴らすと、前のめりの勢いが出る。使うなら progression と同じ数の pushes を書き、押す和音は 1〜2 個に絞り、最初の和音は none にする。バラード、子守唄、素朴なエアのように落ち着いた例には付けない。")
+		b.WriteString("pushes は任意。前のめりの勢いが欲しいロックやポップで、小節の頭の和音を 8 分早く（eighth）弾きたいときだけ、progression と同じ数で書き、押す和音は 1〜2 個にする（最初の和音は none）。")
 		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。ジャズやシャッフルのように跳ねるイメージなら feel を swing にする。")
 		prompt = b.String()
 	})
