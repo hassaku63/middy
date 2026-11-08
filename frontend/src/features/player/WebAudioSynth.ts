@@ -201,8 +201,7 @@ export class WebAudioSynth implements Synth {
   private playDrum(note: ScheduledNote & { time: number }): void {
     const { time } = note;
     const level = (note.velocity / 127) ** 1.2;
-    const gain = this.ctx.createGain();
-    gain.connect(this.master);
+    const gain = this.drumGain(time);
     const voice = drumVoice(note.pitch);
     switch (voice.kind) {
       case 'kick':
@@ -267,15 +266,28 @@ export class WebAudioSynth implements Synth {
     src.stop(time + length + 0.02);
     if (isSnare) {
       const tone = this.ctx.createOscillator();
-      const toneGain = this.ctx.createGain();
+      const toneGain = this.drumGain(time);
       tone.type = 'triangle';
       tone.frequency.setValueAtTime(190, time);
       toneGain.gain.setValueAtTime(level * 0.4, time);
       toneGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
-      tone.connect(toneGain).connect(this.master);
+      tone.connect(toneGain);
       tone.start(time);
       tone.stop(time + 0.12);
     }
+  }
+
+  /** Drum gains, kept so 停止 can silence hits already scheduled ahead. */
+  private drums: { gain: GainNode; time: number }[] = [];
+
+  /** A gain into the master bus for one drum hit, remembered for allOff. */
+  private drumGain(time: number): GainNode {
+    const gain = this.ctx.createGain();
+    gain.connect(this.master);
+    const now = this.ctx.currentTime;
+    this.drums = this.drums.filter((d) => d.time > now - 1); // forget hits long gone
+    this.drums.push({ gain, time });
+    return gain;
   }
 
   private noiseBuffer: AudioBuffer | null = null;
@@ -301,5 +313,10 @@ export class WebAudioSynth implements Synth {
       for (const osc of voice.oscs) osc.stop(now + 0.05);
     }
     this.active.clear();
+    for (const { gain } of this.drums) {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(0, now);
+    }
+    this.drums = [];
   }
 }
