@@ -72,6 +72,7 @@ src/test       Vitest セットアップ
 - 会話は `features/chat`: `useIdeas` が履歴（ユーザー発言と assistant の `reply`）を保持して `POST /api/v1/ideas` を呼び、`ChatPanel` がメッセージと候補カードを表示する。答えが届くと `useIdeas` の `onAnswer` で最初の候補が開き、別の候補を開くと `App` が `Timeline` を差し替え、再生・表示・解説の部品に載る。`usePatterns` が伴奏・ドラムのカタログを取得し、候補カードに名前を出す。
 - `src/app/App.tsx` が画面 1 枚の結線: 候補または保存したプロジェクトから開いた `Timeline` を 1 つの状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
 - キーの変更は `features/key-change`: `shared/lib/rebuildRequest` の `rebuildRequest` が開いているタイムライン（ローマ数字・拍数・押し・テンポ・モード・リズムの id かドラムの格子とノリ）から `POST /api/v1/timelines/from-progression` のリクエストを組み立て、主音だけを替える。LLM は呼ばない。ローマ数字が同じ和音に読み戻せることは `music` のテストが保証する。
+- キーとスタイルの変更は `app/useExampleChanges` がまとめる。変更が返る前に別の例を開いたら、その結果は捨てる（古い例で新しい例を上書きしない）。
 - スタイルの選び直しは `features/regroove`: 型のカタログが各スタイルの拍子ごとのグルーヴ（`pattern.Style.Groove`。その拍子で使える最初の伴奏・ドラム・ノリ）を返し、`regrooveRequest` が和声をそのままにそのグルーヴでリクエストを組み立てる。`grooveChanges` が前後で変わった部分（伴奏・ドラム・ノリ）だけを述べる。LLM は呼ばない。
 - 保存は `features/projects`: `useProjects` が `shared/lib/storage/projects` の `ProjectStore`（ブラウザに IndexedDB があればそれ、なければメモリ）を使い、開いている例があるときだけ結果のツールバーに `SaveProjectForm` が出て、タイムラインとその出どころ（イメージと候補名。以前の版で保存したものは進行の入力）を名前つきで保存する。`ProjectList` は保存したものを折りたたんで一覧し、開く・削除を受け持つ。サーバーには何も保存しない。
 - 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
