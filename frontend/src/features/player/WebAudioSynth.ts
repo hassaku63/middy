@@ -130,12 +130,17 @@ export function envelope(
   time: number,
   durationSec: number,
   peak: number,
-): { held: number; decayEnd: number; release: number } {
+): { held: number; decayEnd: number; release: number; atRelease: number } {
   const release = Math.max(time + durationSec, time + inst.attack);
+  const held = Math.max(peak * inst.sustain, 0.0001);
+  const decayEnd = Math.min(time + inst.attack + inst.decay, release);
   return {
-    held: Math.max(peak * inst.sustain, 0.0001),
-    decayEnd: Math.min(time + inst.attack + inst.decay, release),
+    held,
+    decayEnd,
     release,
+    // A note released at the end of its attack never decayed: it releases
+    // from the peak, not with a step down to the held level (a click).
+    atRelease: decayEnd > time + inst.attack ? held : peak,
   };
 }
 
@@ -147,7 +152,7 @@ export function envelope(
  */
 export class WebAudioSynth implements Synth {
   private readonly master: GainNode;
-  private active = new Set<{ oscs: OscillatorNode[]; gain: GainNode }>();
+  private active = new Set<{ oscs: OscillatorNode[]; gain: GainNode; start: number }>();
 
   constructor(private readonly ctx: AudioContext) {
     this.master = ctx.createGain();
@@ -163,7 +168,7 @@ export class WebAudioSynth implements Synth {
     const { time, durationSec } = note;
     const inst = instrumentVoice(note.program);
     const peak = (note.velocity / 127) ** 1.5;
-    const { held, decayEnd, release } = envelope(inst, time, durationSec, peak);
+    const { held, decayEnd, release, atRelease } = envelope(inst, time, durationSec, peak);
     const end = time + durationSec;
 
     const gain = this.ctx.createGain();
@@ -175,7 +180,7 @@ export class WebAudioSynth implements Synth {
     gain.gain.setValueAtTime(0, time);
     gain.gain.linearRampToValueAtTime(peak, time + inst.attack);
     if (decayEnd > time + inst.attack) gain.gain.exponentialRampToValueAtTime(held, decayEnd);
-    gain.gain.setValueAtTime(held, release);
+    gain.gain.setValueAtTime(atRelease, release);
     gain.gain.exponentialRampToValueAtTime(0.0001, release + 0.15);
 
     const oscs = inst.waves.map(({ type, detune, level }) => {
@@ -192,7 +197,7 @@ export class WebAudioSynth implements Synth {
     });
     filter.connect(gain).connect(this.master);
 
-    const voice = { oscs, gain };
+    const voice = { oscs, gain, start: time };
     this.active.add(voice);
     oscs[0]?.addEventListener('ended', () => this.active.delete(voice));
   }
@@ -308,6 +313,13 @@ export class WebAudioSynth implements Synth {
     const now = this.ctx.currentTime;
     for (const voice of this.active) {
       voice.gain.gain.cancelScheduledValues(now);
+      if (voice.start > now) {
+        // Scheduled ahead and not yet sounding: its gain is still the
+        // node's default 1, so silence it outright instead of ramping.
+        voice.gain.gain.setValueAtTime(0, now);
+        for (const osc of voice.oscs) osc.stop(now);
+        continue;
+      }
       voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
       voice.gain.gain.linearRampToValueAtTime(0, now + 0.03);
       for (const osc of voice.oscs) osc.stop(now + 0.05);
