@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
+	"github.com/hassaku63/middy/backend/internal/intent"
 	"github.com/hassaku63/middy/backend/internal/music"
 )
 
@@ -129,7 +130,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 	first := res.Candidates[0]
 	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
 	v.Progression = withPushes(withBeats(first.Progression, first.Beats), first.Pushes)
-	v.Patterns = patternsOf(first.Accompaniment, first.Drums)
+	v.Patterns = patternsOf(first.Accompaniment, drumsOf(first.Candidate))
 	if first.Style != "" {
 		v.Patterns = strings.TrimSuffix(first.Style+": "+v.Patterns, ": ")
 	}
@@ -176,7 +177,7 @@ func judgeFirst(c Case, first ideas.Candidate) []string {
 		add(fmt.Sprintf("tempo %.0f above %.0f", first.TempoBPM, c.TempoMax))
 	}
 	add(judgeFeel(c.Feel, first.Feel))
-	add(judgeDrums(c.Drums, first.Drums))
+	add(judgeDrums(c.Drums, gridBase(first.Candidate)))
 	if c.Style != "" && c.Style != first.Style {
 		add("expected style " + c.Style + ", got " + first.Style)
 	}
@@ -443,6 +444,27 @@ func withPushes(labels, pushes []string) []string {
 		out[i] = l + marks[pushes[i]]
 	}
 	return out
+}
+
+// drumsOf names the drums for the report: the id, or "grid" with the
+// drums the grid is based on (BL-077).
+func drumsOf(c intent.Candidate) string {
+	switch {
+	case c.DrumGrid == nil:
+		return c.Drums
+	case c.DrumGrid.BasedOn != "":
+		return "grid<" + c.DrumGrid.BasedOn
+	default:
+		return "grid"
+	}
+}
+
+// gridBase is the drums a case judges: the id, or what a grid is based on.
+func gridBase(c intent.Candidate) string {
+	if c.DrumGrid != nil {
+		return c.DrumGrid.BasedOn
+	}
+	return c.Drums
 }
 
 // patternsOf names the patterns a candidate chose: "reel/bodhran",

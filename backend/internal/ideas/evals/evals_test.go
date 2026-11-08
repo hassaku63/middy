@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
+	"github.com/hassaku63/middy/backend/internal/intent"
 	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -367,5 +368,17 @@ func TestReportShowsPushes(t *testing.T) {
 	v := Judge(Case{ID: "c", Mode: "either"}, res)
 	if got := strings.Join(v.Progression, " "); got != "i VI III^16 VII^8" {
 		t.Errorf("progression should mark the pushes: %q", got)
+	}
+}
+
+// TestReportNamesGrids (BL-077): a grid is named in the patterns column
+// with the drums it is based on, and a case's drums are judged by that.
+func TestReportNamesGrids(t *testing.T) {
+	res := result()
+	res.Candidates[0].Accompaniment = "strum"
+	res.Candidates[0].DrumGrid = &intent.GridSpec{Division: 2, Voices: []intent.GridLine{{Voice: "kick", Steps: "x......."}}, BasedOn: "eight-beat"}
+	v := Judge(Case{ID: "c", Mode: "either", Drums: "eight-beat"}, res)
+	if v.Patterns != "strum/grid<eight-beat" || len(v.Problems) > 0 {
+		t.Errorf("patterns %q, problems %v", v.Patterns, v.Problems)
 	}
 }
