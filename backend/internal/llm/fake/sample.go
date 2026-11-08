@@ -74,25 +74,7 @@ func sampleIntent(req llm.Request) string {
 			},
 		}
 	}
-	// A swing word swings the first candidate (BL-076), so the whole chain
-	// can be exercised without a key.
-	for _, kw := range []string{"スウィング", "ジャズ", "跳ね", "swing", "jazz"} {
-		if strings.Contains(text, kw) {
-			in["candidates"].([]map[string]any)[0]["feel"] = "swing"
-			break
-		}
-	}
-	// A "long" word repeats the first candidate's progression four times
-	// (16 chords), so long-timeline layouts can be tried without a key.
-	for _, kw := range []string{"長い", "long"} {
-		if strings.Contains(text, kw) {
-			first := in["candidates"].([]map[string]any)[0]
-			prog := first["progression"].([]string)
-			first["progression"] = append(append(append(append([]string{}, prog...), prog...), prog...), prog...)
-			first["title"] = first["title"].(string) + "（長め）"
-			break
-		}
-	}
+	applyKeywords(text, in)
 	b, _ := json.Marshal(in)
 	return string(b)
 }
@@ -171,4 +153,42 @@ var graduationSample = map[string]any{
 			"progression": []string{"i", "i/#7", "i/7", "i/#6"}, "beatsPerChord": 4,
 			"reason": "Am を保ったまま、ベースだけが A から F# へ半音ずつ下がるライン・クリシェ。動かない和音の下で時間が流れていく切なさを出します。"},
 	},
+}
+
+// applyKeywords varies the first candidate for words that tests and local
+// runs use to reach a feature without a key: swing, a pushed chord, length.
+func applyKeywords(text string, in map[string]any) {
+	// A swing word swings the first candidate (BL-076), so the whole chain
+	// can be exercised without a key.
+	for _, kw := range []string{"スウィング", "ジャズ", "跳ね", "swing", "jazz"} {
+		if strings.Contains(text, kw) {
+			in["candidates"].([]map[string]any)[0]["feel"] = "swing"
+			break
+		}
+	}
+	// A driving word pushes the first candidate's last chord an eighth
+	// (BL-085), so a pushed chord can be heard and read without a key.
+	for _, kw := range []string{"ロック", "勢い", "rock", "drive"} {
+		if strings.Contains(text, kw) {
+			first := in["candidates"].([]map[string]any)[0]
+			pushes := make([]string, len(first["progression"].([]string)))
+			for i := range pushes {
+				pushes[i] = "none"
+			}
+			pushes[len(pushes)-1] = "eighth"
+			first["pushes"] = pushes
+			break
+		}
+	}
+	// A "long" word repeats the first candidate's progression four times
+	// (16 chords), so long-timeline layouts can be tried without a key.
+	for _, kw := range []string{"長い", "long"} {
+		if strings.Contains(text, kw) {
+			first := in["candidates"].([]map[string]any)[0]
+			prog := first["progression"].([]string)
+			first["progression"] = append(append(append(append([]string{}, prog...), prog...), prog...), prog...)
+			first["title"] = first["title"].(string) + "（長め）"
+			break
+		}
+	}
 }

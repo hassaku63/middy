@@ -217,3 +217,22 @@ test('a graduation song walks its bass down with slash chords, kept when the key
     result.getByRole('listbox', { name: 'コード' }).getByRole('option', { name: 'I/7 (D/C#)' }),
   ).toHaveCount(1);
 });
+
+test('a driving image pushes a chord early and explains the push (BL-085)', async ({ page }) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '勢いのあるロック', '朝の光');
+  await result
+    .getByRole('listbox', { name: 'コード' })
+    .getByRole('option', { name: 'IV (F)' })
+    .click();
+  await expect(result.locator('.explanation__text').first()).toContainText(
+    '8 分音符ひとつ早く（4 拍目の裏で）入る（押し）',
+  );
+  // A key change keeps the push.
+  await result.getByLabel('キー').selectOption('2');
+  await result
+    .getByRole('listbox', { name: 'コード' })
+    .getByRole('option', { name: 'IV (G)' })
+    .click();
+  await expect(result.locator('.explanation__text').first()).toContainText('（押し）');
+});

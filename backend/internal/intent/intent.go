@@ -69,8 +69,11 @@ type Candidate struct {
 	// Beats, when set, gives each chord its own length in beats of the
 	// meter (BL-109), one per progression entry; BeatsPerChord is then
 	// only the default the model also states.
-	Beats  []int  `json:"beats,omitempty"`
-	Reason string `json:"reason"` // why this fits the image, Japanese
+	Beats []int `json:"beats,omitempty"`
+	// Pushes, when set, pushes chords early (BL-085), one per progression
+	// entry: "none", "eighth" or "sixteenth".
+	Pushes []string `json:"pushes,omitempty"`
+	Reason string   `json:"reason"` // why this fits the image, Japanese
 	// Accompaniment and Drums are pattern ids from the catalogue
 	// (internal/music/pattern); empty means block chords / no drums.
 	Accompaniment string `json:"accompaniment,omitempty"`
@@ -173,7 +176,40 @@ func (c Candidate) validateProgression() []error {
 	if allowed := AllowedBeats[ts]; !slices.Contains(allowed, c.BeatsPerChord) {
 		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v in %d/%d, got %d%s", allowed, ts.Numerator, ts.Denominator, c.BeatsPerChord, lengthHint(ts, c.BeatsPerChord)))
 	}
-	return append(errs, c.validateBeats(ts)...)
+	errs = append(errs, c.validateBeats(ts)...)
+	return append(errs, c.validatePushes()...)
+}
+
+// PushIDs are the values a candidate's pushes may take.
+var PushIDs = []string{"none", string(music.PushEighth), string(music.PushSixteenth)}
+
+// validatePushes checks the pushes (BL-085): one per chord, known values,
+// and none on the first chord.
+func (c Candidate) validatePushes() []error {
+	if c.Pushes == nil {
+		return nil
+	}
+	if len(c.Pushes) != len(c.Progression) {
+		return []error{fmt.Errorf("pushes has %d entries for %d chords", len(c.Pushes), len(c.Progression))}
+	}
+	var errs []error
+	for i, p := range c.Pushes {
+		switch {
+		case !slices.Contains(PushIDs, p):
+			errs = append(errs, fmt.Errorf("pushes[%d] must be one of %v, got %q", i, PushIDs, p))
+		case i == 0 && p != "none":
+			errs = append(errs, fmt.Errorf("pushes[0]: the first chord has nothing to push into; write none"))
+		}
+	}
+	return errs
+}
+
+// push is chord i's push in the engine's terms.
+func (c Candidate) push(i int) music.Push {
+	if c.Pushes == nil || c.Pushes[i] == "none" {
+		return music.PushNone
+	}
+	return music.Push(c.Pushes[i])
 }
 
 // suggestLabel offers the label one deletion away from a misspelt one
@@ -361,6 +397,7 @@ func (c Candidate) ToProgression() (music.Progression, error) {
 		if err != nil {
 			return nil, fmt.Errorf("intent: progression[%d]: %w", i, err)
 		}
+		step.Push = c.push(i)
 		prog = append(prog, step)
 	}
 	return prog, nil
