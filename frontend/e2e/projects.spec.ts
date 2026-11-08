@@ -7,7 +7,7 @@ import { openExample } from './helpers';
  */
 test('save a project, reload, reopen it, delete it', async ({ page }) => {
   await page.goto('/');
-  await openExample(page, '晴れた朝', '朝の光'); // C major, I - V - vi - IV
+  await openExample(page, '晴れた朝', '朝の光'); // C major, I - V7/vi - vi - IV
 
   await page.getByLabel('プロジェクト名').fill('朝の練習');
   await page.getByRole('button', { name: '保存', exact: true }).click();
@@ -29,7 +29,7 @@ test('save a project, reload, reopen it, delete it', async ({ page }) => {
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
     /I.*C/,
-    /V.*G/,
+    /V7\/vi.*E7/,
     /vi.*Am/,
     /IV.*F/,
   ]);

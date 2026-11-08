@@ -64,8 +64,8 @@ func sampleIntent(req llm.Request) string {
 			"mood":    []string{"明るい", "軽やか"},
 			"candidates": []map[string]any{
 				{"title": "朝の光", "key": map[string]any{"tonic": 0, "mode": "major"}, "tempoBpm": 104,
-					"progression": []string{"I", "V", "vi", "IV"}, "beatsPerChord": 4,
-					"reason":        "もっとも親しみやすいポップ進行で、明るさと懐かしさを両立します。",
+					"progression": []string{"I", "V7/vi", "vi", "IV"}, "beatsPerChord": 4,
+					"reason":        "親しみやすいポップ進行に、vi へ向かうセカンダリードミナント（E7）を挟んで、胸が詰まる一瞬を作ります。",
 					"accompaniment": "strum", "drums": "eight-beat"},
 				{"title": "出発の朝", "key": map[string]any{"tonic": 7, "mode": "major"}, "tempoBpm": 120,
 					"progression": []string{"I", "IV", "iv", "I"}, "beatsPerChord": 4,

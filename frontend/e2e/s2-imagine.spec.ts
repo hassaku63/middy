@@ -53,7 +53,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(result).toContainText('候補: 朝の光');
   await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
     /I.*C/,
-    /V.*G/,
+    /V7\/vi.*E7/,
     /vi.*Am/,
     /IV.*F/,
   ]);
@@ -120,4 +120,16 @@ test('a borrowed iv in a major example is spelled for the key and explained (BL-
   await expect(result.locator('.explanation__text').first()).toContainText(
     '同主短調（G minor）から借りた和音',
   );
+});
+
+test('a secondary dominant names the chord it pulls towards (BL-074)', async ({ page }) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '晴れた朝', '朝の光');
+  await result
+    .getByRole('listbox', { name: 'コード' })
+    .getByRole('option', { name: 'V7/vi (E7)' })
+    .click();
+  const text = result.locator('.explanation__text').first();
+  await expect(text).toContainText('vi（Am）へ向かうセカンダリードミナント');
+  await expect(text).toContainText('次の vi へ解決する');
 });
