@@ -327,7 +327,7 @@ func TestImagineRendersPerChordBeats(t *testing.T) {
 // patterns and asks for them, with swing, on a jazz image.
 func TestPromptSteersJazzToTheRide(t *testing.T) {
 	p := SystemPrompt()
-	for _, want := range []string{"- comp:", "- jazz-ride:", "drums を jazz-ride", "8 ビートとボサノバのドラムはジャズには使わない"} {
+	for _, want := range []string{"- comp:", "- jazz-ride:", "drums を jazz-ride", "8 ビートとボサノバのドラムはジャズには使わない", "- jazz-waltz:", "drums を jazz-waltz"} {
 		if !strings.Contains(p, want) {
 			t.Errorf("prompt lacks %q", want)
 		}

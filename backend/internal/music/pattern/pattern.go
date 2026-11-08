@@ -247,6 +247,14 @@ var drums = []Drums{
 		},
 	},
 	{
+		ID: "jazz-waltz", Meter: &threeFour, Name: "ジャズ・ワルツのライド",
+		Description: "ライドシンバルが 1・2・2 拍の裏・3 拍を刻み、足のハイハットが 2 拍で閉じる。キックは 1 拍をごく弱く支えるだけ。3 拍子のままスウィングさせる、ジャズ・ワルツの土台。",
+		Hits: []DrumHit{
+			{0, eighth, Ride, 72}, {quarter, eighth, Ride, 64}, {quarter + eighth, eighth, Ride, 54}, {2 * quarter, eighth, Ride, 66},
+			{quarter, eighth, PedalHat, 56}, {0, eighth, Kick, 34},
+		},
+	},
+	{
 		ID: "bodhran", Meter: &fourFour, Name: "ボーラン風",
 		Description: "低いタムが 1・3 拍、サイドスティックが 2・4 拍、中くらいのタムが残りの 8 分を軽く刻む。スネアもハイハットも使わず、アイルランドの片面太鼓（ボーラン）のように控えめに転がる。",
 		Hits: []DrumHit{

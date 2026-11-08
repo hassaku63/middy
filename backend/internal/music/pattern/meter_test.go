@@ -34,7 +34,7 @@ func TestCatalogueIsSplitByMeter(t *testing.T) {
 	if got := ids(AccompanimentsFor(music.FourFour)); strings.Contains(got, "waltz") || !strings.Contains(got, "block") {
 		t.Errorf("4/4 accompaniments = %s", got)
 	}
-	if ds := DrumPatternsFor(music.ThreeFour); len(ds) != 1 || ds[0].ID != "waltz" {
+	if ds := DrumPatternsFor(music.ThreeFour); len(ds) != 2 || ds[0].ID != "jazz-waltz" || ds[1].ID != "waltz" {
 		t.Errorf("3/4 drums = %+v", ds)
 	}
 }
