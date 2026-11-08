@@ -108,6 +108,7 @@ describe('OverviewNotes inside the panel', () => {
       overview: {
         whole: 'C major（長調）。明るく安定して聞こえる。',
         flow: '2 個の和音で 2 小節。最後は V7 から I への正格終止で閉じる。',
+        degrees: [],
       },
     };
     const { rerender } = render(

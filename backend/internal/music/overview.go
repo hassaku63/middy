@@ -14,6 +14,22 @@ import (
 type Overview struct {
 	Whole string `json:"whole"`
 	Flow  string `json:"flow"`
+	// Degrees are the seven diatonic triads of the key's mode, in degree
+	// order, for the degree map (BL-099).
+	Degrees []DegreeChord `json:"degrees"`
+}
+
+// DegreeChord is one diatonic triad of the example's mode on the degree
+// map: where it sits, what it is called in this key, and its function.
+type DegreeChord struct {
+	Degree       int      `json:"degree"`
+	RomanNumeral string   `json:"romanNumeral"`
+	Symbol       string   `json:"symbol"`
+	Function     Function `json:"function"`
+	// Used is true when the example plays a chord on this degree as part
+	// of the key: a seventh or minor's harmonic V counts, a borrowed or
+	// applied chord does not.
+	Used bool `json:"used,omitempty"`
 }
 
 var modeCharacter = map[Mode]string{
@@ -35,7 +51,34 @@ func overview(tl Timeline) *Overview {
 	if len(tl.Harmony) == 0 {
 		return nil
 	}
-	return &Overview{Whole: whole(tl), Flow: flow(tl)}
+	return &Overview{Whole: whole(tl), Flow: flow(tl), Degrees: degrees(tl)}
+}
+
+// degrees lays out the key's seven triads and marks the ones the example
+// plays as part of the key.
+func degrees(tl Timeline) []DegreeChord {
+	var used [8]bool
+	for _, h := range tl.Harmony {
+		if a := h.Analysis; a != nil && !a.Borrowed && a.AppliedTo == 0 && a.Degree >= 1 && a.Degree <= 7 {
+			used[a.Degree] = true
+		}
+	}
+	out := make([]DegreeChord, 0, 7)
+	for d := 1; d <= 7; d++ {
+		c, err := tl.Key.Diatonic(d, false)
+		if err != nil {
+			continue // every mode stacks a triad on each degree; unreachable
+		}
+		numeral, err := RomanNumeral(d, c.Quality)
+		if err != nil {
+			continue
+		}
+		out = append(out, DegreeChord{
+			Degree: d, RomanNumeral: numeral, Symbol: tl.Key.ChordSymbol(c),
+			Function: functionByDegree[d], Used: used[d],
+		})
+	}
+	return out
 }
 
 func whole(tl Timeline) string {
