@@ -221,8 +221,8 @@ func (c Candidate) push(i int) music.Push {
 // engine's error names the right spelling, and a deletion would point at
 // another chord.
 func (c Candidate) suggestLabel(label string) string {
-	if _, _, err := music.ParseRomanNumeral(label); err == nil {
-		return ""
+	if _, _, err := music.ParseRomanNumeral(label); err == nil || strings.Contains(label, "/") {
+		return "" // it reads, or it is a slash label whose error already says the fix
 	}
 	r := []rune(label)
 	for i := range r {
@@ -305,14 +305,19 @@ func (c Candidate) validatePatterns() []error {
 	var errs []error
 	// Patterns must be written for the candidate's meter (ADR-0017).
 	ts := c.TimeSignature()
+	// A pattern that is wrong for the meter is reported once, here; the
+	// style check below then leaves it out, so the retry gets one fix.
+	acc, drums := c.Accompaniment, c.styleDrums()
 	if c.Accompaniment != "" {
 		if a, err := pattern.FindAccompaniment(c.Accompaniment); err != nil || !a.Fits(ts) {
 			errs = append(errs, fmt.Errorf("accompaniment must be one of %v in %d/%d, got %q%s", AccompanimentIDsFor(ts), ts.Numerator, ts.Denominator, c.Accompaniment, patternHint(c.Accompaniment, a.Meter)))
+			acc = ""
 		}
 	}
 	if c.Drums != "" {
 		if d, err := pattern.FindDrums(c.Drums); err != nil || !d.Fits(ts) {
 			errs = append(errs, fmt.Errorf("drums must be one of %v in %d/%d, got %q%s", DrumIDsFor(ts), ts.Numerator, ts.Denominator, c.Drums, patternHint(c.Drums, d.Meter)))
+			drums = ""
 		}
 	}
 	errs = append(errs, c.validateGrid(ts)...)
@@ -323,7 +328,7 @@ func (c Candidate) validatePatterns() []error {
 		if st, err := pattern.FindStyle(c.Style); err != nil {
 			errs = append(errs, fmt.Errorf("style must be one of %v, got %q", StyleIDs(), c.Style))
 		} else {
-			for _, m := range st.Misfits(c.Accompaniment, c.styleDrums(), pattern.Feel(c.Feel)) {
+			for _, m := range st.Misfits(acc, drums, pattern.Feel(c.Feel)) {
 				errs = append(errs, errors.New(m))
 			}
 		}

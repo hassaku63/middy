@@ -185,7 +185,7 @@ func TestJudgeModeInAnyLooksAtEveryCandidate(t *testing.T) {
 
 func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 	v := func(id string, prog ...string) Verdict {
-		return Verdict{Case: Case{ID: id}, Pass: true, Key: "A minor", Progression: prog, Labels: prog}
+		return Verdict{Case: Case{ID: id}, Pass: true, Key: "A minor", Progression: prog, Chords: prog, Labels: prog}
 	}
 	verdicts := []Verdict{
 		v("a", "i", "VI", "III", "VII"),
@@ -380,5 +380,18 @@ func TestReportNamesGrids(t *testing.T) {
 	v := Judge(Case{ID: "c", Mode: "either", Drums: "eight-beat"}, res)
 	if v.Patterns != "strum/grid<eight-beat" || len(v.Problems) > 0 {
 		t.Errorf("patterns %q, problems %v", v.Patterns, v.Problems)
+	}
+}
+
+// TestBreadthCountsChordsNotLengths (review): the same chords with other
+// lengths or pushes are the same progression for the breadth metric.
+func TestBreadthCountsChordsNotLengths(t *testing.T) {
+	a, b := result(), result()
+	a.Candidates[0].Progression = []string{"i", "VI", "III", "VII"}
+	b.Candidates[0].Progression = []string{"i", "VI", "III", "VII"}
+	b.Candidates[0].Beats = []int{8, 4, 2, 2}
+	m := measureBreadth([]Verdict{Judge(Case{ID: "a", Mode: "either"}, a), Judge(Case{ID: "b", Mode: "either"}, b)})
+	if len(m.progressions) != 1 {
+		t.Errorf("one progression, counted %d: %v", len(m.progressions), m.progressions)
 	}
 }

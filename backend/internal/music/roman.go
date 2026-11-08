@@ -35,10 +35,19 @@ func StepFromLabel(key Key, label string, beats int) (Step, error) {
 		if err != nil {
 			return Step{}, err
 		}
-		step.Bass = bass
+		if !onRoot(key, step, *bass) { // "I/1" is root position: no slash
+			step.Bass = bass
+		}
 		return step, nil
 	}
 	return chordStep(key, label, beats)
+}
+
+// onRoot reports whether the bass is the chord's own root, which is root
+// position, not a slash chord.
+func onRoot(key Key, step Step, bass Bass) bool {
+	chord, _, _, err := chordOfStep(key, step)
+	return err == nil && chord.Root == bass.pitchClass(key)
 }
 
 // chordStep reads a label without a slash bass.
@@ -193,6 +202,9 @@ func CanonicalLabel(key Key, label string) (string, error) {
 		canonical, err := CanonicalLabel(key, head)
 		if err != nil {
 			return "", err
+		}
+		if step, err := StepFromLabel(key, head, 1); err == nil && onRoot(key, step, *bass) {
+			return canonical, nil
 		}
 		return canonical + bass.suffix(), nil
 	}
