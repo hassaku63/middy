@@ -394,8 +394,7 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
 		out.Rhythm.Drums = describeDrums(*dr, ts)
-		bars := int((tl.LengthTicks() + music.BarTicks(ts, tl.PPQ) - 1) / music.BarTicks(ts, tl.PPQ))
-		out.Rhythm.Drums.Explanation += fillText(kitOf(*dr), bars)
+		out.Rhythm.Drums.Explanation += fillText(*dr, ts, tl.LengthTicks())
 	}
 	if err := out.Validate(); err != nil {
 		return music.Timeline{}, fmt.Errorf("pattern: %w", err)
@@ -486,7 +485,7 @@ func drumTrack(tl music.Timeline, dr Drums) music.Track {
 	k, from := kitOf(dr), fillFrom(tl.TimeSignature)
 	for b, barStart := 0, music.Tick(0); barStart < length; b, barStart = b+1, barStart+bar {
 		hits := dr.Hits
-		if phraseEnd(b) { // the figure up to the fill, then the fill (BL-126)
+		if phraseEnd(b) && fills(dr) { // the figure up to the fill, then the fill (BL-126)
 			hits = nil
 			for _, h := range dr.Hits {
 				if h.Start < from {

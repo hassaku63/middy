@@ -20,11 +20,13 @@ const (
 )
 
 func kitOf(d Drums) kit {
-	var snare, ride, hand bool
+	var snare, kick, ride, hand bool
 	for _, h := range d.Hits {
 		switch h.Note {
-		case Snare, Kick:
+		case Snare:
 			snare = true
+		case Kick:
+			kick = true
 		case Ride:
 			ride = true
 		case LowTom, SideStick:
@@ -32,9 +34,9 @@ func kitOf(d Drums) kit {
 		}
 	}
 	switch {
-	case ride && !snare:
+	case ride && !snare: // the jazz ride keeps a soft kick, but no snare backbeat
 		return kitRide
-	case hand && !snare:
+	case hand && !snare && !kick:
 		return kitHand
 	default:
 		return kitSticks
@@ -81,17 +83,27 @@ func fillHits(k kit, ts music.TimeSignature) []DrumHit {
 // phraseEnd reports whether bar b (0-based) ends a phrase.
 func phraseEnd(b int) bool { return (b+1)%phraseBars == 0 }
 
-// fillText explains the fills, naming the bars that end a phrase.
-func fillText(k kit, bars int) string {
-	if bars < phraseBars {
+// fills reports whether the drums take phrase fills: a grid plays as it
+// was written.
+func fills(d Drums) bool { return d.ID != GridID }
+
+// fillText explains the fills, naming the phrase-end bars whose fill
+// sounds before the timeline ends.
+func fillText(d Drums, ts music.TimeSignature, length music.Tick) string {
+	if !fills(d) {
 		return ""
 	}
+	bar := music.BarTicks(ts, music.DefaultPPQ)
 	var at []string
-	for b := range bars {
+	for b := 0; music.Tick(b)*bar+fillFrom(ts) < length; b++ {
 		if phraseEnd(b) {
 			at = append(at, fmt.Sprint(b+1))
 		}
 	}
+	if len(at) == 0 {
+		return ""
+	}
+	k := kitOf(d)
 	how := "タムを高い方から低い方へ回すフィルを入れ、次のフレーズの頭をクラッシュで示す"
 	switch k {
 	case kitHand:
