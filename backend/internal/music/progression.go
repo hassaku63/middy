@@ -25,6 +25,8 @@ type Step struct {
 	// Borrowed marks a chord taken from the parallel minor (BL-094); the
 	// analysis says so.
 	Borrowed bool `json:"borrowed,omitempty"`
+	// Push strikes the chord an eighth or a sixteenth early (BL-085).
+	Push Push `json:"push,omitempty"`
 	// Applied makes the step the secondary dominant of Degree (V/x, V7/x
 	// with Seventh; BL-074) instead of the chord on it.
 	Applied bool `json:"applied,omitempty"`
@@ -41,25 +43,35 @@ func (p Progression) Validate() error {
 	}
 	var errs []error
 	for i, s := range p {
-		if s.Degree < 1 || s.Degree > 7 {
-			errs = append(errs, fmt.Errorf("music: steps[%d]: degree must be 1..7, got %d", i, s.Degree))
-		}
-		if s.Beats < 1 {
-			errs = append(errs, fmt.Errorf("music: steps[%d]: beats must be >= 1, got %d", i, s.Beats))
-		}
-		if s.Accidental != 0 && s.Accidental != -1 {
-			errs = append(errs, fmt.Errorf("music: steps[%d]: accidental must be 0 or -1, got %d", i, s.Accidental))
-		}
-		if s.Applied && (s.Accidental != 0 || s.Quality != nil || s.Borrowed) {
-			errs = append(errs, fmt.Errorf("music: steps[%d]: an applied chord has no accidental, quality or borrowing of its own", i))
-		}
-		if s.Quality != nil {
-			if _, err := s.Quality.info(); err != nil {
-				errs = append(errs, fmt.Errorf("music: steps[%d]: %w", i, err))
-			}
-		}
+		errs = append(errs, s.problems(i)...)
 	}
 	return errors.Join(errs...)
+}
+
+// problems lists what is wrong with step i.
+func (s Step) problems(i int) []error {
+	var errs []error
+	if s.Degree < 1 || s.Degree > 7 {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: degree must be 1..7, got %d", i, s.Degree))
+	}
+	if s.Beats < 1 {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: beats must be >= 1, got %d", i, s.Beats))
+	}
+	if s.Accidental != 0 && s.Accidental != -1 {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: accidental must be 0 or -1, got %d", i, s.Accidental))
+	}
+	if s.Applied && (s.Accidental != 0 || s.Quality != nil || s.Borrowed) {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: an applied chord has no accidental, quality or borrowing of its own", i))
+	}
+	if err := s.Push.check(i); err != nil {
+		errs = append(errs, err)
+	}
+	if s.Quality != nil {
+		if _, err := s.Quality.info(); err != nil {
+			errs = append(errs, fmt.Errorf("music: steps[%d]: %w", i, err))
+		}
+	}
+	return errs
 }
 
 // Rendering defaults for FromProgression. They are exported so that later
@@ -132,9 +144,11 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 			RomanNumeral: numeral,
 			Symbol:       symbol,
 			Bass:         bass,
+			Push:         s.Push,
 		})
 		cursor += duration
 	}
+	track.Notes = PushNotes(tl.Harmony, track.Notes, tl.PPQ)
 
 	tl.Tracks = []Track{track}
 	return tl, nil

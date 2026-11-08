@@ -412,6 +412,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 			}
 		}
 	}
+	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
 	sortNotes(track.Notes)
 	return track
 }

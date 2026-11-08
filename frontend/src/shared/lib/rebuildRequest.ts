@@ -61,6 +61,7 @@ function sameHarmony(timeline: Timeline, tonic: PitchClass): FromProgressionRequ
     progression: timeline.harmony.map((h) => ({
       numeral: h.romanNumeral,
       beats: Math.round(h.duration / beat),
+      ...(h.push ? { push: h.push } : {}), // a pushed chord stays pushed (BL-085)
     })),
   };
 }

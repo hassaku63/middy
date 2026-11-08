@@ -35,8 +35,9 @@ type fromProgressionRequest struct {
 }
 
 type progressionLabel struct {
-	Numeral string `json:"numeral"`
-	Beats   *int   `json:"beats,omitempty"`
+	Numeral string     `json:"numeral"`
+	Beats   *int       `json:"beats,omitempty"`
+	Push    music.Push `json:"push,omitempty"` // BL-085
 }
 
 type timelineResponse struct {
@@ -119,6 +120,7 @@ func toProgression(key music.Key, labels []progressionLabel, barBeats int) (musi
 			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
 			continue
 		}
+		step.Push = l.Push
 		prog = append(prog, step)
 	}
 	if err := errors.Join(errs...); err != nil {

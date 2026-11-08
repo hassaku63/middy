@@ -105,8 +105,11 @@ type HarmonyEvent struct {
 	Symbol string `json:"symbol,omitempty"`
 	// Bass is the note under the chord when it is a slash chord (ADR-0020);
 	// nil means the chord's root.
-	Bass     *PitchClass `json:"bass,omitempty"`
-	Analysis *Analysis   `json:"analysis,omitempty"`
+	Bass *PitchClass `json:"bass,omitempty"`
+	// Push, when set, strikes the chord before Start (BL-085); Start stays
+	// on the beat the chord belongs to.
+	Push     Push      `json:"push,omitempty"`
+	Analysis *Analysis `json:"analysis,omitempty"`
 }
 
 // Timeline is the central artifact of middy: everything the player, the

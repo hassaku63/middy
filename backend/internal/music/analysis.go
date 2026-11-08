@@ -96,7 +96,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		}
 	}
 	for i := range out.Harmony {
-		out.Harmony[i].Analysis.Explanation += bassText(tl.Key, out.Harmony, i)
+		out.Harmony[i].Analysis.Explanation += bassText(tl.Key, out.Harmony, i) + pushText(out, i)
 	}
 	out.Overview = overview(out)
 	return out, nil
