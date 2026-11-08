@@ -10,7 +10,8 @@ import {
 
 export type Projects = {
   projects: Project[];
-  save: (name: string, timeline: Timeline, source: ProjectSource) => Promise<Project>;
+  /** Resolves to the saved project, or null when the store refused it (see error). */
+  save: (name: string, timeline: Timeline, source: ProjectSource) => Promise<Project | null>;
   remove: (id: string) => Promise<void>;
   error: string | null;
 };
@@ -56,7 +57,12 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
         timeline,
         source,
       };
-      await store.save(project);
+      try {
+        await store.save(project);
+      } catch {
+        setError('保存できませんでした（ブラウザの保存領域を確かめてください）');
+        return null;
+      }
       await refresh();
       return project;
     },
@@ -65,7 +71,12 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
 
   const remove = useCallback(
     async (id: string) => {
-      await store.remove(id);
+      try {
+        await store.remove(id);
+      } catch {
+        setError('削除できませんでした');
+        return;
+      }
       await refresh();
     },
     [store, refresh],

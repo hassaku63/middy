@@ -43,4 +43,12 @@ describe('midiFileName', () => {
   it('omits the progression part when there is no harmony', () => {
     expect(midiFileName(base)).toBe('middy-C-major.mid');
   });
+
+  it('keeps an augmented chord in the name (review)', () => {
+    const aug = {
+      ...base,
+      harmony: [h('I'), h('III+')],
+    };
+    expect(midiFileName(aug)).toBe('middy-C-major-I-IIIaug.mid');
+  });
 });

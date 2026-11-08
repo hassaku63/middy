@@ -96,11 +96,14 @@ export class IndexedDbProjectStore implements ProjectStore {
   ): Promise<T> {
     const db = await this.open();
     try {
+      // Settle on the transaction, not the request: a write can succeed as
+      // a request and still abort at commit (QuotaExceededError).
       return await new Promise<T>((resolve, reject) => {
         const tx = db.transaction(STORE, mode);
         const req = op(tx.objectStore(STORE));
-        req.onsuccess = () => resolve(req.result as T);
-        req.onerror = () => reject(req.error ?? new Error('indexedDB request failed'));
+        tx.oncomplete = () => resolve(req.result as T);
+        tx.onerror = () => reject(tx.error ?? req.error ?? new Error('indexedDB request failed'));
+        tx.onabort = () => reject(tx.error ?? new Error('indexedDB transaction aborted'));
       });
     } finally {
       db.close();
