@@ -28,6 +28,8 @@
     {"id": "rock-anthem", "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major/mixolydian", "tempoMin": 110, "wants": ["bVII", "bVI"]},
     {"id": "jpop-royal-road", "image": "J-pop の王道のサビ。切なくて盛り上がる", "mode": "major", "wants": ["iii", "iii7"]},
     {"id": "bossa-cafe", "image": "リオの午後、ボサノバのギターと小さなカフェ", "mode": "major", "wants": ["Imaj7", "IVmaj7", "ii7"]},
+    {"id": "waltz-ball", "image": "ウィーンの舞踏会で踊るワルツ", "mode": "major", "meter": "3/4"},
+    {"id": "jazz-waltz", "image": "夜のクラブで聴く、ゆったりしたジャズ・ワルツ", "mode": "either", "meter": "3/4", "feel": "swing"},
     {"id": "autumn-leaves", "image": "紅葉が散っていく静かな公園", "mode": "either", "tempoMax": 100}
   ]
 }

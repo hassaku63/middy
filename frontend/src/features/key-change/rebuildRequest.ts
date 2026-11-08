@@ -2,14 +2,15 @@ import type { FromProgressionRequest, PitchClass, Timeline } from '@/shared/api/
 
 /**
  * The request that renders the same example in another key (BL-078): the
- * timeline's own numerals, chord lengths, tempo, mode and patterns, with a
- * new tonic. The engine guarantees the numerals read back as the same
+ * timeline's own numerals, chord lengths, tempo, meter, mode and patterns,
+ * with a new tonic. The engine guarantees the numerals read back as the same
  * chords (music.TestHarmonyLabelsReadBackAsTheSameChords).
  */
 export function rebuildRequest(timeline: Timeline, tonic: PitchClass): FromProgressionRequest {
   const req: FromProgressionRequest = {
     key: { tonic, mode: timeline.key.mode },
     tempoBpm: timeline.tempoBpm,
+    timeSignature: timeline.timeSignature,
     progression: timeline.harmony.map((h) => ({
       numeral: h.romanNumeral,
       beats: Math.round(h.duration / timeline.ppq),

@@ -191,7 +191,7 @@ func render(in intent.Intent) (Result, error) {
 		if err != nil {
 			return Result{}, fmt.Errorf("ideas: candidates[%d]: %w", i, err)
 		}
-		tl, err := music.FromProgression(c.Key, prog, c.TempoBPM)
+		tl, err := music.FromProgressionIn(c.TimeSignature(), c.Key, prog, c.TempoBPM)
 		if err != nil {
 			return Result{}, fmt.Errorf("ideas: candidates[%d]: %w", i, err)
 		}

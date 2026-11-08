@@ -18,19 +18,24 @@ func SystemPrompt() string {
 	promptOnce.Do(func() {
 		var b strings.Builder
 		b.WriteString(promptBody)
-		b.WriteString("\n\n使える伴奏の型（accompaniment）:\n")
-		// The model cannot choose a meter yet (BL-101), so it sees the 4/4 catalogue only.
-		for _, a := range pattern.AccompanimentsFor(music.FourFour) {
-			fmt.Fprintf(&b, "- %s: %s %s\n", a.ID, a.Name, a.Description)
-		}
-		b.WriteString("使えるドラムの型（drums）:\n")
-		for _, d := range pattern.DrumPatternsFor(music.FourFour) {
-			fmt.Fprintf(&b, "- %s: %s %s\n", d.ID, d.Name, d.Description)
+		for _, m := range []struct {
+			name string
+			ts   music.TimeSignature
+		}{{"4/4", music.FourFour}, {"3/4", music.ThreeFour}} {
+			fmt.Fprintf(&b, "\n\n%s で使える伴奏の型（accompaniment）:\n", m.name)
+			for _, a := range pattern.AccompanimentsFor(m.ts) {
+				fmt.Fprintf(&b, "- %s: %s %s\n", a.ID, a.Name, a.Description)
+			}
+			fmt.Fprintf(&b, "%s で使えるドラムの型（drums）:\n", m.name)
+			for _, d := range pattern.DrumPatternsFor(m.ts) {
+				fmt.Fprintf(&b, "- %s: %s %s\n", d.ID, d.Name, d.Description)
+			}
 		}
 		b.WriteString("8 分音符のノリ（feel）:\n")
 		for _, f := range pattern.Feels() {
 			fmt.Fprintf(&b, "- %s: %s %s\n", f.ID, f.Name, f.Description)
 		}
+		b.WriteString("拍子（meter）は 4/4 が既定。ワルツ、メヌエット、ジャズ・ワルツ、3 拍子のバラードのように 3 拍子が典型のイメージでは 3/4 にし、beatsPerChord は 3（1 小節）か 6（2 小節）、伴奏とドラムは 3/4 の型から選ぶ。")
 		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。ジャズやシャッフルのように跳ねるイメージなら feel を swing にする。")
 		prompt = b.String()
 	})

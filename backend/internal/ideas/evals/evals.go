@@ -30,6 +30,9 @@ type Case struct {
 	// Feel, when set, is the feel the first candidate must have ("straight"
 	// also matches an omitted feel).
 	Feel string `json:"feel,omitempty"`
+	// Meter, when set, is the meter the first candidate must have ("4/4"
+	// also matches an omitted meter; ADR-0017).
+	Meter string `json:"meter,omitempty"`
 	// ModeInAny, when set, is a mode (or several joined with "/") that at
 	// least one candidate must use. The first candidate is the plainest by
 	// design, so a case that asks whether a mode is offered at all checks
@@ -66,6 +69,7 @@ type Verdict struct {
 	Title       string
 	Key         string
 	TempoBPM    float64
+	Meter       string
 	Progression []string
 	// Labels of every candidate, for the vocabulary metric.
 	Labels []string
@@ -91,7 +95,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 		return v
 	}
 	first := res.Candidates[0]
-	v.Title, v.Key, v.TempoBPM = first.Title, first.Key.String(), first.TempoBPM
+	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
 	v.Progression = first.Progression
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
@@ -119,6 +123,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	if problem := judgeFeel(c.Feel, first.Feel); problem != "" {
 		v.Problems = append(v.Problems, problem)
+	}
+	if c.Meter != "" && c.Meter != meterOf(first.Meter) {
+		v.Problems = append(v.Problems, "expected meter "+c.Meter+", got "+meterOf(first.Meter))
 	}
 	if strings.TrimSpace(res.Reply) == "" {
 		v.Problems = append(v.Problems, "empty reply")
@@ -153,7 +160,7 @@ func Report(verdicts []Verdict) string {
 		if v.Retry != "" {
 			status += " · retry: " + shorten(oneLine(v.Retry), 120)
 		}
-		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, strings.Join(v.Progression, " "), status)
+		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, meterNote(v.Meter), strings.Join(v.Progression, " "), status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
 	b.WriteString(breadthReport(verdicts))
@@ -303,6 +310,13 @@ func judgeFeel(want, got string) string {
 	return "expected feel " + want + ", got " + got
 }
 
+func meterOf(m string) string {
+	if m == "" {
+		return "4/4"
+	}
+	return m
+}
+
 // judgeModeInAny checks that some candidate uses one of the wanted modes.
 func judgeModeInAny(want string, got []music.Mode) string {
 	if want == "" {
@@ -332,4 +346,12 @@ func judgeMode(want string, got music.Mode) string {
 		}
 	}
 	return "expected " + want + ", got " + got.String()
+}
+
+// meterNote marks a first candidate that is not in 4/4.
+func meterNote(m string) string {
+	if m == "" || m == "4/4" {
+		return ""
+	}
+	return ", " + m
 }

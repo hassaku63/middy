@@ -30,6 +30,8 @@ func sampleIntent(req llm.Request) string {
 	}
 	var in map[string]any
 	switch {
+	case hasAny(text, "ワルツ", "3拍子", "三拍子", "舞踏会", "waltz"):
+		in = waltzSample
 	case modal:
 		in = map[string]any{
 			"summary": "ケルトの舞曲の情景。ドリアンの明るい IV と、ミクソリディアンの導音のない開放感が合います。",
@@ -94,4 +96,31 @@ func sampleIntent(req llm.Request) string {
 	}
 	b, _ := json.Marshal(in)
 	return string(b)
+}
+
+// hasAny reports whether text contains any of the words.
+func hasAny(text string, words ...string) bool {
+	for _, w := range words {
+		if strings.Contains(text, w) {
+			return true
+		}
+	}
+	return false
+}
+
+// waltzSample answers three-beat images in 3/4 (ADR-0017), so the meter can
+// be exercised end to end without a key.
+var waltzSample = map[string]any{
+	"summary": "舞踏会で回るワルツの情景。3 拍子で、1 拍目の重みがくるくると回る感じを作ります。",
+	"mood":    []string{"優雅", "華やか"},
+	"candidates": []map[string]any{
+		{"title": "ウィーンの円舞曲", "key": map[string]any{"tonic": 5, "mode": "major"}, "tempoBpm": 160,
+			"meter": "3/4", "progression": []string{"I", "IV", "V7", "I"}, "beatsPerChord": 3,
+			"reason":        "1 拍目のベースと 2・3 拍目の和音の「ズン・チャッ・チャッ」で、1 小節ごとに回るワルツの揺れを作ります。",
+			"accompaniment": "waltz", "drums": "waltz"},
+		{"title": "揺れる 3 拍子のバラード", "key": map[string]any{"tonic": 2, "mode": "major"}, "tempoBpm": 84,
+			"meter": "3/4", "progression": []string{"I", "vi", "IV", "V7"}, "beatsPerChord": 6,
+			"reason":        "2 小節ずつの和音を 3 拍のアルペジオで流し、ゆったりとした 3 拍子の揺れにします。",
+			"accompaniment": "arpeggio-3"},
+	},
 }
