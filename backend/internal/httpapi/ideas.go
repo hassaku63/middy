@@ -32,7 +32,7 @@ func handleIdeas(svc *ideas.Service) http.HandlerFunc {
 			writeError(w, http.StatusBadGateway, "llm_invalid_output", "the language model gave an unusable answer twice; try rephrasing")
 		case errors.Is(err, ideas.ErrDeclined):
 			// Not an upstream fault: the request was understood and refused.
-			writeError(w, http.StatusUnprocessableEntity, "llm_declined", "the language model declined this request twice; try rephrasing")
+			writeError(w, http.StatusUnprocessableEntity, "llm_declined", "the language model declined this request; try rephrasing")
 		default:
 			// Conversation validation errors come back as plain errors.
 			writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
