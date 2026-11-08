@@ -203,10 +203,10 @@ func TestFeelIsValidatedAndInTheSchema(t *testing.T) {
 
 func TestLabelsThatTheKeyWouldChangeAreRejectedWithTheFix(t *testing.T) {
 	in := valid() // A minor
-	in.Candidates[0].Progression = []string{"i", "IV", "V"}
+	in.Candidates[0].Progression = []string{"i", "II", "V"}
 	err := in.Validate()
-	if err == nil || !strings.Contains(err.Error(), `"IV" would sound as Dm (iv) in A minor; write "iv"`) {
-		t.Fatalf("the dorian IV must be rejected with the engine's spelling, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), `"II" would sound as Bdim (ii°) in A minor; write "ii°"`) {
+		t.Fatalf("a major II must be rejected with the engine's spelling, got %v", err)
 	}
 	in.Candidates[0].Progression = []string{"i", "iv", "V"}
 	if err := in.Validate(); err != nil {

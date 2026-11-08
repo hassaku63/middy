@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Function is the harmonic function of a chord within its key, in the
@@ -110,6 +111,16 @@ type placed struct {
 func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 	out := make([]placed, len(hs))
 	for i, h := range hs {
+		// The same sound can be two chords: C major in C minor is the
+		// borrowed I (a Picardy third) or V/iv, the dominant of iv. The label
+		// says which the author meant.
+		if strings.Contains(h.RomanNumeral, "/") {
+			if target, ok := appliedTargetOf(k, h.Chord); ok {
+				d, _ := degreeOf(k, h.Chord.Root)
+				out[i] = placed{degree: d, applied: target}
+				continue
+			}
+		}
 		if target, ok := locateApplied(k, h.Chord); ok {
 			d, _ := degreeOf(k, h.Chord.Root)
 			out[i] = placed{degree: d, applied: target}
@@ -164,15 +175,43 @@ func locate(k Key, c Chord) (degree int, borrowed bool, ok bool) {
 			return d, false, true
 		}
 	}
-	if k.Mode != Major {
-		return 0, false, false
+	switch k.Mode {
+	case Major:
+		parallel := Key{Tonic: k.Tonic, Mode: Minor}
+		d, ok := degreeOf(parallel, c.Root)
+		if !ok || !borrowable(d, c.Quality) {
+			return 0, false, false
+		}
+		return d, true, true
+	case Minor:
+		if d, ok := minorBorrowedDegree(k, c); ok {
+			return d, true, true
+		}
 	}
-	parallel := Key{Tonic: k.Tonic, Mode: Minor}
-	d, ok := degreeOf(parallel, c.Root)
-	if !ok || !borrowable(d, c.Quality) {
-		return 0, false, false
+	return 0, false, false
+}
+
+// minorBorrowedDegree recognises a minor key's borrowed chords (BL-075):
+// the major I and IV, and the Neapolitan bII, a major triad a semitone above
+// the tonic.
+func minorBorrowedDegree(k Key, c Chord) (int, bool) {
+	if c.Quality != MajorTriad {
+		return 0, false
 	}
-	return d, true, true
+	switch c.Root.Normalize() {
+	case k.Tonic.Normalize():
+		return 1, true
+	case k.Scale()[3]:
+		return 4, true
+	case k.Tonic.Add(1).Normalize():
+		return 2, true
+	}
+	return 0, false
+}
+
+// isNeapolitan reports the minor key's bII.
+func isNeapolitan(k Key, c Chord) bool {
+	return k.Mode == Minor && c.Quality == MajorTriad && c.Root.Normalize() == k.Tonic.Add(1).Normalize()
 }
 
 // borrowable lists what a major key may take from its parallel minor today
@@ -248,7 +287,25 @@ var characteristicText = map[Mode]string{
 
 const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
 
-const borrowedText = "同主短調（%s）から借りた和音。長調の中に短調の陰りを一瞬差す。"
+const (
+	borrowedText      = "同主短調（%s）から借りた和音。長調の中に短調の陰りを一瞬差す。"
+	minorBorrowedText = "同主長調（%s）から借りた和音。短調の中に一瞬明るさを差す。"
+	picardyText       = "曲の終わりに置けば、短調を長三和音で閉じる「ピカルディの 3 度」になる。"
+	neapolitanText    = "ナポリの和音（♭II）。主音の半音上の長三和音で、強い陰りを作り、V へ向かう前によく置かれる。"
+)
+
+// borrowedSentence says where a borrowed chord comes from.
+func borrowedSentence(key Key, h HarmonyEvent) string {
+	switch {
+	case key.Mode == Major:
+		return fmt.Sprintf(borrowedText, Key{Tonic: key.Tonic, Mode: Minor})
+	case isNeapolitan(key, h.Chord):
+		return neapolitanText
+	case h.Chord.Root.Normalize() == key.Tonic.Normalize():
+		return fmt.Sprintf(minorBorrowedText, Key{Tonic: key.Tonic, Mode: Major}) + picardyText
+	}
+	return fmt.Sprintf(minorBorrowedText, Key{Tonic: key.Tonic, Mode: Major})
+}
 
 func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) string {
 	symbol := h.Symbol
@@ -257,7 +314,7 @@ func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) s
 	}
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, functionText[fn])
 	if borrowed {
-		s += " " + fmt.Sprintf(borrowedText, Key{Tonic: key.Tonic, Mode: Minor})
+		s += " " + borrowedSentence(key, h)
 	}
 	if isHarmonicMinorDominant(key, h.Chord) {
 		s += " " + harmonicMinorText

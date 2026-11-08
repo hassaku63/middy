@@ -47,7 +47,7 @@ func StepFromLabel(key Key, label string, beats int) (Step, error) {
 			return step, nil // plainly diatonic
 		}
 	}
-	return outsideStep(key, label, step, seventh, suffix, accidental)
+	return outsideStep(key, label, step, seventh, upper, suffix, accidental)
 }
 
 // outsideStep handles a label that is not plainly the key's own chord: a
@@ -58,14 +58,19 @@ func StepFromLabel(key Key, label string, beats int) (Step, error) {
 // respelled, not changed. Anything else without an accidental is left for
 // CanonicalLabel to report; it needs the diatonic step to say what would
 // have sounded.
-func outsideStep(key Key, label string, step Step, seventh bool, suffix string, accidental int) (Step, error) {
-	if key.Mode == Major {
-		if q, ok := borrowedQuality(key, step.Degree, seventh, suffix, accidental); ok {
-			step.Quality = &q
-			step.Accidental = accidental
-			step.Borrowed = true
-			return step, nil
-		}
+func outsideStep(key Key, label string, step Step, seventh, upper bool, suffix string, accidental int) (Step, error) {
+	q, ok := ChordQuality(0), false
+	switch key.Mode {
+	case Major:
+		q, ok = borrowedQuality(key, step.Degree, seventh, suffix, accidental)
+	case Minor:
+		q, ok = minorBorrowedQuality(step.Degree, seventh, upper, suffix, accidental)
+	}
+	if ok {
+		step.Quality = &q
+		step.Accidental = accidental
+		step.Borrowed = true
+		return step, nil
 	}
 	if accidental == 0 {
 		return step, nil
@@ -110,6 +115,24 @@ func borrowedQuality(key Key, degree int, seventh bool, suffix string, accidenta
 		return 0, false
 	}
 	return c.Quality, true
+}
+
+// minorBorrowedQuality is the minor key's side of borrowing (BL-075, ADR-0012
+// decision 3): the major I and IV of the parallel major (the Picardy third,
+// and the raised sixth of melodic minor or dorian), and the Neapolitan bII.
+// All are major triads; the label is written against the minor key's own
+// scale, with a flat only for the Neapolitan root, which is not in it.
+func minorBorrowedQuality(degree int, seventh, upper bool, suffix string, accidental int) (ChordQuality, bool) {
+	if seventh || !upper || suffix != "" {
+		return 0, false
+	}
+	switch {
+	case (degree == 1 || degree == 4) && accidental == 0:
+		return MajorTriad, true
+	case degree == 2 && accidental == -1:
+		return MajorTriad, true
+	}
+	return 0, false
 }
 
 func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err error) {
