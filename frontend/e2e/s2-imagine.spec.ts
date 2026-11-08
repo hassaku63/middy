@@ -184,6 +184,7 @@ test('a Celtic reel holds its tonic chord for two bars, kept when the key change
     '緑の丘のリール',
   );
   await expect(card).toContainText('長さ: 8・4・2・2 拍');
+  await expect(card).toContainText('スタイル: ケルト'); // BL-119
   const overview = result.getByLabel('全体と流れ');
   await expect(overview).toContainText('4 個の和音で 4 小節');
   // D dorian to E dorian: the numerals and each chord's length stay.

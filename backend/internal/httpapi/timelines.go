@@ -83,6 +83,7 @@ type patternsResponse struct {
 	Accompaniments []pattern.Accompaniment `json:"accompaniments"`
 	Drums          []pattern.Drums         `json:"drums"`
 	Feels          []pattern.FeelInfo      `json:"feels"`
+	Styles         []pattern.Style         `json:"styles"`
 }
 
 func handlePatterns(w http.ResponseWriter, _ *http.Request) {
@@ -90,6 +91,7 @@ func handlePatterns(w http.ResponseWriter, _ *http.Request) {
 		Accompaniments: pattern.Accompaniments(),
 		Drums:          pattern.DrumPatterns(),
 		Feels:          pattern.Feels(),
+		Styles:         pattern.Styles(),
 	})
 }
 

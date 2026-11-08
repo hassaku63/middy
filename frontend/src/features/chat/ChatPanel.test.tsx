@@ -104,6 +104,7 @@ describe('ChatPanel', () => {
           ],
           drums: [],
           feels: [{ id: 'swing', name: 'スウィング', description: '跳ねる' }],
+          styles: [],
         }}
       />,
     );
