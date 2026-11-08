@@ -3,6 +3,7 @@ package music
 import (
 	"errors"
 	"fmt"
+	"slices"
 )
 
 // Step is one chord of a progression: a scale degree played for a number of
@@ -114,15 +115,21 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 	track := Track{Name: ChordTrackName, Channel: 0, Program: 0}
 
 	beat := BeatTicks(ts, tl.PPQ)
-	var cursor Tick
+	chords := make([]Chord, len(prog))
 	for i, s := range prog {
-		chord, numeral, symbol, err := stepChord(key, s)
+		chord, _, _, err := stepChord(key, s)
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
 		}
+		chords[i] = chord
+	}
+	led := LeadVoicings(chords) // each chord voiced from the one before (BL-086)
+	var cursor Tick
+	for i, s := range prog {
+		chord, numeral, symbol, _ := stepChord(key, s)
 		duration := Tick(s.Beats) * beat
 
-		pitches := chord.Voicing(ChordOctave)
+		pitches := slices.Clone(led[i])
 		var bass *PitchClass
 		if s.Bass != nil {
 			pc := s.Bass.pitchClass(key)

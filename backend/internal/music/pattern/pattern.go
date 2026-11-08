@@ -33,6 +33,9 @@ const (
 	// VoiceDrone is the key's tonic and fifth below the chords: it does
 	// not follow the chord, so it keeps sounding as the harmony moves.
 	VoiceDrone Voice = "drone"
+	// VoiceWalk is a walking bass (BL-086): the root, the chord's tones,
+	// and a semitone into the next chord's root on the chord's last walk.
+	VoiceWalk Voice = "walk"
 )
 
 // Hit is one event of an accompaniment template, positioned within a bar.
@@ -171,6 +174,15 @@ var accompaniments = []Accompaniment{
 			{0, quarter, VoiceBass, 84}, {0, eighth * 3 / 4, VoiceChord, 70},
 			{quarter + eighth, eighth * 3 / 4, VoiceChord, 64},
 			{2 * quarter, quarter, VoiceBass, 76},
+		},
+	},
+	{
+		ID: "walking", Meter: &fourFour, Name: "ウォーキング・ベース", Program: 0,
+		Description: "ベースが 4 分音符で歩く。和音の 1 拍目に根音、間に和音の音、和音の最後の拍で次の和音の根音の半音下から入る。上では短い和音がチャールストンのリズムで鳴る。ジャズの 4 ビート。ノリはスウィングと組み合わせる。",
+		Hits: []Hit{
+			{0, quarter * 9 / 10, VoiceWalk, 84}, {quarter, quarter * 9 / 10, VoiceWalk, 70},
+			{2 * quarter, quarter * 9 / 10, VoiceWalk, 78}, {3 * quarter, quarter * 9 / 10, VoiceWalk, 70},
+			{0, eighth * 3 / 4, VoiceChord, 64}, {quarter + eighth, eighth * 3 / 4, VoiceChord, 58},
 		},
 	},
 	{
@@ -392,29 +404,56 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 	track := music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
-	for _, h := range tl.Harmony {
-		voicing := h.Chord.Voicing(music.ChordOctave)
-		end := h.Start + h.Duration
-		for barStart := h.Start; barStart < end; barStart += bar {
-			for _, hit := range acc.Hits {
-				start := barStart + hit.Start
-				if start >= end {
-					continue
-				}
-				dur := hit.Duration
-				if dur == 0 {
-					dur = bar - hit.Start // to the end of the bar
-				}
-				dur = min(dur, end-start)
-				for _, p := range pitches(tl.Key, voicing, h.Bass, hit.Voice) {
-					track.Notes = append(track.Notes, music.NoteEvent{Pitch: p, Velocity: hit.Velocity, Start: start, Duration: dur})
-				}
-			}
-		}
+	led := music.LeadVoicings(chordsOf(tl.Harmony)) // BL-086
+	for i := range tl.Harmony {
+		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], bar)...)
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
 	sortNotes(track.Notes)
 	return track
+}
+
+// chordNotes realises the accompaniment over chord i, a bar of the
+// template at a time from the chord's start; the led voicing plays the
+// chord, and the walking bass is filled in once its hits are known.
+func chordNotes(tl music.Timeline, acc Accompaniment, i int, led []music.Pitch, bar music.Tick) []music.NoteEvent {
+	h := tl.Harmony[i]
+	voicing := h.Chord.Voicing(music.ChordOctave)
+	end := h.Start + h.Duration
+	var notes, walks []music.NoteEvent
+	for barStart := h.Start; barStart < end; barStart += bar {
+		for _, hit := range acc.Hits {
+			start := barStart + hit.Start
+			if start >= end {
+				continue
+			}
+			dur := hit.Duration
+			if dur == 0 {
+				dur = bar - hit.Start // to the end of the bar
+			}
+			n := music.NoteEvent{Velocity: hit.Velocity, Start: start, Duration: min(dur, end-start)}
+			if hit.Voice == VoiceWalk {
+				walks = append(walks, n)
+				continue
+			}
+			for _, p := range pitches(tl.Key, voicing, led, h.Bass, hit.Voice) {
+				n.Pitch = p
+				notes = append(notes, n)
+			}
+		}
+	}
+	for k, p := range walkLine(tl.Harmony, i, len(walks)) {
+		walks[k].Pitch = p
+	}
+	return append(notes, walks...)
+}
+
+func chordsOf(harmony []music.HarmonyEvent) []music.Chord {
+	out := make([]music.Chord, len(harmony))
+	for i, h := range harmony {
+		out[i] = h.Chord
+	}
+	return out
 }
 
 // drumTrack repeats the percussion figure for the length of the timeline.
@@ -435,7 +474,7 @@ func drumTrack(tl music.Timeline, dr Drums) music.Track {
 }
 
 // pitches resolves a voice against a close voicing (root first).
-func pitches(key music.Key, voicing []music.Pitch, bass *music.PitchClass, v Voice) []music.Pitch {
+func pitches(key music.Key, voicing, led []music.Pitch, bass *music.PitchClass, v Voice) []music.Pitch {
 	root := voicing[0]
 	at := func(i int) music.Pitch {
 		if i < len(voicing) {
@@ -445,7 +484,7 @@ func pitches(key music.Key, voicing []music.Pitch, bass *music.PitchClass, v Voi
 	}
 	switch v {
 	case VoiceChord:
-		return voicing
+		return led // voiced from the chord before (BL-086)
 	case VoiceBass:
 		if bass != nil { // a slash chord's own bass (ADR-0020)
 			return []music.Pitch{music.NewPitch(*bass, music.ChordOctave-1)}
@@ -458,7 +497,7 @@ func pitches(key music.Key, voicing []music.Pitch, bass *music.PitchClass, v Voi
 	case VoiceFifth:
 		return []music.Pitch{at(2)}
 	case VoiceTop:
-		return []music.Pitch{voicing[len(voicing)-1]}
+		return []music.Pitch{led[len(led)-1]}
 	case VoiceOctave:
 		return []music.Pitch{root.Transpose(12)}
 	case VoiceDrone:
