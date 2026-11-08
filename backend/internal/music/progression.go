@@ -114,8 +114,10 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 	if err := prog.Validate(); err != nil {
 		return Timeline{}, err
 	}
-	if tempoBPM <= 0 {
-		return Timeline{}, fmt.Errorf("music: tempoBpm must be positive, got %v", tempoBPM)
+	// The same range Timeline.Validate holds a timeline to, so block chords
+	// (which no pattern re-checks) cannot get past it.
+	if tempoBPM < minTempoBPM || tempoBPM > maxTempoBPM {
+		return Timeline{}, fmt.Errorf("music: tempoBpm must be %g..%g, got %v", minTempoBPM, maxTempoBPM, tempoBPM)
 	}
 
 	tl := NewTimeline(key, tempoBPM)
