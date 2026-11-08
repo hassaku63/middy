@@ -11,9 +11,12 @@ async function inViewport(page: Page, locator: Locator) {
   expect(box).not.toBeNull();
   expect(vp).not.toBeNull();
   if (!box || !vp) return;
-  expect(box.y).toBeGreaterThanOrEqual(0);
-  expect(box.y + box.height).toBeLessThanOrEqual(vp.height);
-  expect(box.x + box.width).toBeLessThanOrEqual(vp.width);
+  // Layout lands on fractional pixels (800.0156 for a box that ends at the
+  // bottom edge); allow the rounding, not a visible overflow.
+  const px = 1;
+  expect(box.y).toBeGreaterThanOrEqual(-px);
+  expect(box.y + box.height).toBeLessThanOrEqual(vp.height + px);
+  expect(box.x + box.width).toBeLessThanOrEqual(vp.width + px);
 }
 
 test.describe('at 1280×800', () => {
