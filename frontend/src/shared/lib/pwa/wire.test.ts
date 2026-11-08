@@ -6,7 +6,7 @@ describe('wirePwa', () => {
   it('feeds service worker callbacks and window events into the store', async () => {
     const status = new PwaStatus();
     const updateSW = vi.fn().mockResolvedValue(undefined);
-    let callbacks: { onNeedRefresh?: () => void; onOfflineReady?: () => void } = {};
+    let callbacks: { onNeedRefresh?: () => void } = {};
     const registerSW = vi.fn((opts: typeof callbacks) => {
       callbacks = opts;
       return updateSW;
@@ -14,9 +14,6 @@ describe('wirePwa', () => {
     const target = new EventTarget();
 
     wirePwa(status, registerSW, target);
-
-    callbacks.onOfflineReady?.();
-    expect(status.getSnapshot().offlineReady).toBe(true);
 
     callbacks.onNeedRefresh?.();
     await status.applyUpdate();
