@@ -567,3 +567,15 @@ func TestParseIgnoresTheCaseOfEveryEnum(t *testing.T) {
 		t.Errorf("enums not normalised: %+v %+v", c, c.DrumGrid)
 	}
 }
+
+// TestDominantHint (review): "II7" in C major gets the secondary dominant
+// it most likely meant, alongside the engine's own fix.
+func TestDominantHint(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Key = music.Key{Tonic: music.C, Mode: music.Major}
+	in.Candidates[0].Progression = []string{"I", "II7", "V7", "I"}
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), `write "V7/V"`) {
+		t.Errorf("want the V7/V hint, got %v", err)
+	}
+}
