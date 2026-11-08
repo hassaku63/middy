@@ -9,6 +9,7 @@ import (
 
 	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
+	"github.com/hassaku63/middy/backend/internal/music"
 )
 
 const goodIntent = `{
@@ -236,5 +237,31 @@ func TestDiagnosticServiceAsksForAndKeepsTheUnconstrainedField(t *testing.T) {
 	}
 	if strings.Contains(string(plain.Requests()[0].OutputSchema), "unconstrained") {
 		t.Fatal("the production schema must not ask for the diagnostic field")
+	}
+}
+
+// TestImagineRendersSixEight: the fake answers a rocking image in 6/8; the
+// service renders it in dotted-quarter beats with the tempo of the beat
+// (ADR-0017, ADR-0019), and the prompt lists the 6/8 catalogue.
+func TestImagineRendersSixEight(t *testing.T) {
+	res, err := New(fake.New()).Imagine(context.Background(), []Message{user("ゆりかごの子守唄")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	for _, c := range res.Candidates {
+		tl := c.Timeline
+		if tl.TimeSignature != music.SixEight || tl.TempoBPM != c.TempoBPM {
+			t.Fatalf("%s: meter %v at %v BPM", c.Title, tl.TimeSignature, tl.TempoBPM)
+		}
+		want := music.Tick(c.BeatsPerChord) * 720 // dotted quarters
+		if d := tl.Harmony[0].Duration; d != want {
+			t.Errorf("%s: a chord of %d beats lasts %d ticks, want %d", c.Title, c.BeatsPerChord, d, want)
+		}
+	}
+	p := SystemPrompt()
+	for _, want := range []string{"6/8 で使える伴奏の型", "- rocking-6:", "- jig:", "付点 4 分"} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q", want)
+		}
 	}
 }

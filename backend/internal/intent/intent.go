@@ -30,17 +30,19 @@ const (
 // AllowedBeats are the per-chord lengths a candidate may use, in beats of
 // its meter (ADR-0017): in 4/4 a beat, half a bar, a bar or two; in 3/4 a
 // bar or two, since a chord on two of three beats would cross the beat
-// pattern (a hemiola, a special effect left out for now).
+// pattern (a hemiola, a special effect left out for now); in 6/8, whose
+// beat is a dotted quarter, half a bar, a bar or two.
 var AllowedBeats = map[music.TimeSignature][]int{
 	music.FourFour:  {1, 2, 4, 8},
 	music.ThreeFour: {3, 6},
+	music.SixEight:  {1, 2, 4},
 }
 
 // Meters are the time signatures a candidate may ask for; omitted is 4/4.
-var Meters = map[string]music.TimeSignature{"4/4": music.FourFour, "3/4": music.ThreeFour}
+var Meters = map[string]music.TimeSignature{"4/4": music.FourFour, "3/4": music.ThreeFour, "6/8": music.SixEight}
 
 // MeterIDs lists Meters in a stable order.
-func MeterIDs() []string { return []string{"4/4", "3/4"} }
+func MeterIDs() []string { return []string{"4/4", "3/4", "6/8"} }
 
 // Intent is the LLM's whole answer for one turn of the conversation.
 type Intent struct {
@@ -71,7 +73,7 @@ type Candidate struct {
 	Drums         string `json:"drums,omitempty"`
 	// Feel is how the eighths are played (pattern.Feels); empty means straight.
 	Feel string `json:"feel,omitempty"`
-	// Meter is "4/4" or "3/4" (ADR-0017); empty means 4/4.
+	// Meter is one of MeterIDs (ADR-0017); empty means 4/4.
 	Meter string `json:"meter,omitempty"`
 }
 
@@ -183,6 +185,9 @@ func (c Candidate) validatePatterns() []error {
 	}
 	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {
 		errs = append(errs, fmt.Errorf("feel must be one of %v, got %q", FeelIDs(), c.Feel))
+	}
+	if c.Feel == string(pattern.FeelSwing) && ts.Compound() {
+		errs = append(errs, fmt.Errorf("feel swing is not used in %d/%d: its beat already divides in three", ts.Numerator, ts.Denominator))
 	}
 	return errs
 }

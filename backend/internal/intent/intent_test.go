@@ -225,3 +225,47 @@ func TestParseSpellsLabelsAsTheEngineDoes(t *testing.T) {
 		t.Fatalf("labels not canonicalised: %q", got)
 	}
 }
+
+// TestSixEightCandidate: 6/8 is counted in dotted-quarter beats, so a chord
+// lasts half a bar (1), a bar (2) or two bars (4); the patterns must be the
+// 6/8 ones, and swing is refused because the beat already divides in three.
+func TestSixEightCandidate(t *testing.T) {
+	ok := func(c *Candidate) {
+		c.Meter, c.BeatsPerChord, c.Accompaniment, c.Drums = "6/8", 2, "rocking-6", "six-eight"
+	}
+	tests := []struct {
+		name   string
+		mutate func(*Candidate)
+		want   string // "" means valid
+	}{
+		{"one bar", func(c *Candidate) {}, ""},
+		{"half a bar", func(c *Candidate) { c.BeatsPerChord = 1 }, ""},
+		{"two bars", func(c *Candidate) { c.BeatsPerChord = 4 }, ""},
+		{"three beats", func(c *Candidate) { c.BeatsPerChord = 3 }, "beatsPerChord must be one of [1 2 4] in 6/8"},
+		{"a 3/4 pattern", func(c *Candidate) { c.Accompaniment = "waltz" }, "accompaniment must be one of"},
+		{"4/4 drums", func(c *Candidate) { c.Drums = "eight-beat" }, "drums must be one of"},
+		{"swing", func(c *Candidate) { c.Feel = "swing" }, "swing"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			ok(&in.Candidates[0])
+			tt.mutate(&in.Candidates[0])
+			err := in.Validate()
+			switch {
+			case tt.want == "" && err != nil:
+				t.Fatalf("should be valid: %v", err)
+			case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+				t.Fatalf("error %v should mention %q", err, tt.want)
+			}
+		})
+	}
+	if got := valid().Candidates[0]; got.TimeSignature() != music.FourFour {
+		t.Errorf("an omitted meter is 4/4")
+	}
+	c := valid().Candidates[0]
+	ok(&c)
+	if c.TimeSignature() != music.SixEight {
+		t.Errorf("6/8 should map to music.SixEight")
+	}
+}
