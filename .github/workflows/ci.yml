@@ -13,8 +13,35 @@ permissions:
   contents: read
 
 jobs:
+  # Which jobs this change needs (ADR-0016). Pull requests run only the jobs
+  # whose inputs changed (scripts/ci-changes.sh); pushes to main run all.
+  # There are no required checks yet, so a skipped job blocks nothing. When
+  # they are turned on, add one job that needs all others, treats skipped
+  # as success, and make only that job required.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      image: ${{ steps.filter.outputs.image }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash scripts/ci-changes.sh "origin/${{ github.base_ref }}" | tee -a "$GITHUB_OUTPUT"
+          else
+            printf 'backend=true\nfrontend=true\nimage=true\n' | tee -a "$GITHUB_OUTPUT"
+          fi
+
   backend:
     name: backend (Go)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -78,6 +105,8 @@ jobs:
 
   frontend:
     name: frontend (React)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -119,6 +148,8 @@ jobs:
 
   image:
     name: image (Docker build + smoke)
+    needs: changes
+    if: needs.changes.outputs.image == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
