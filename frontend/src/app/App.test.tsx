@@ -142,10 +142,10 @@ describe('App (docs/product/experience.md)', () => {
     expect(screen.queryByRole('button', { name: '保存' })).not.toBeInTheDocument();
     await sendImage(user);
 
-    await user.type(screen.getByLabelText('プロジェクト名'), '練習 1');
+    await user.type(screen.getByLabelText('例の名前'), '練習 1');
     await user.click(screen.getByRole('button', { name: '保存' }));
-    await user.click(await screen.findByText('保存したプロジェクト（1）'));
-    const list = screen.getByRole('list', { name: 'プロジェクト一覧' });
+    await user.click(await screen.findByText('保存した例（1）'));
+    const list = screen.getByRole('list', { name: '保存した例の一覧' });
     const saved = await store.list();
     expect(saved).toHaveLength(1);
     expect(saved[0]?.source).toMatchObject({
@@ -155,7 +155,7 @@ describe('App (docs/product/experience.md)', () => {
     });
 
     await user.click(within(list).getByRole('button', { name: '開く' }));
-    expect(screen.getByText('プロジェクト: 練習 1')).toBeInTheDocument();
+    expect(screen.getByText('保存した例: 練習 1')).toBeInTheDocument();
   });
 
   it('reports an unreachable backend', async () => {

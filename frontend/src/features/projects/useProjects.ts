@@ -25,7 +25,7 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
       setProjects(await store.list());
       setError(null);
     } catch {
-      setError('保存したプロジェクトを読み込めませんでした');
+      setError('保存した例を読み込めませんでした');
     }
   }, [store]);
 
@@ -38,7 +38,7 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
         if (!cancelled) setProjects(list);
       })
       .catch(() => {
-        if (!cancelled) setError('保存したプロジェクトを読み込めませんでした');
+        if (!cancelled) setError('保存した例を読み込めませんでした');
       });
     return () => {
       cancelled = true;

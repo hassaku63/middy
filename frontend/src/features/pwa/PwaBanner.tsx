@@ -10,7 +10,7 @@ export function PwaBanner({ pwa }: { pwa: Pwa }) {
   const notices = [
     !pwa.online && (
       <p key="offline" className="pwa__notice is-offline" role="status">
-        オフラインです。保存したプロジェクトは開いて再生できます。生成と AI
+        オフラインです。保存した例は開いて再生できます。生成と AI
         の提案はオンラインに戻ってから使えます。
       </p>
     ),
