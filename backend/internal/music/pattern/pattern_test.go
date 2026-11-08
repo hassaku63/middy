@@ -209,9 +209,9 @@ func TestDrumsRepeatPerBarOnChannelTen(t *testing.T) {
 
 func TestApplyRejectsUnsupportedInput(t *testing.T) {
 	tl := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1)
-	tl.TimeSignature = music.TimeSignature{Numerator: 6, Denominator: 8}
-	if _, err := Apply(tl, mustAcc(t, "block"), nil); err == nil || !strings.Contains(err.Error(), "4/4 and 3/4") {
-		t.Fatalf("6/8 should be rejected for now, got %v", err)
+	tl.TimeSignature = music.TimeSignature{Numerator: 9, Denominator: 8}
+	if _, err := Apply(tl, mustAcc(t, "block"), nil); err == nil || !strings.Contains(err.Error(), "4/4, 3/4 and 6/8") {
+		t.Fatalf("9/8 should be rejected for now, got %v", err)
 	}
 	empty := music.NewTimeline(music.Key{Tonic: music.C, Mode: music.Major}, 100)
 	if _, err := Apply(empty, mustAcc(t, "block"), nil); err == nil || !strings.Contains(err.Error(), "no harmony") {

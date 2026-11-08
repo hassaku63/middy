@@ -83,8 +83,12 @@ func TestTempoAndTimeSignature(t *testing.T) {
 	if got := tempoBytes(90); !bytes.Equal(got, []byte{0x0A, 0x2C, 0x2B}) { // 666667 us
 		t.Errorf("tempo 90 = % X", got)
 	}
-	if got := timeSignatureBytes(music.TimeSignature{Numerator: 6, Denominator: 8}); !bytes.Equal(got, []byte{6, 3, 24, 8}) {
+	// The click is the beat: a dotted quarter (36 clocks) in 6/8.
+	if got := timeSignatureBytes(music.SixEight); !bytes.Equal(got, []byte{6, 3, 36, 8}) {
 		t.Errorf("6/8 = % X", got)
+	}
+	if got := timeSignatureBytes(music.ThreeFour); !bytes.Equal(got, []byte{3, 2, 24, 8}) {
+		t.Errorf("3/4 = % X", got)
 	}
 }
 

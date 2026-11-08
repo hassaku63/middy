@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -172,5 +173,42 @@ func TestPatternsCatalogue(t *testing.T) {
 		if a.Name == "" || a.Description == "" {
 			t.Errorf("%s needs name and description for the UI", a.ID)
 		}
+	}
+}
+
+// TestFromProgressionInSixEight: a numeral without beats lasts one bar of
+// the meter, which is two dotted-quarter beats (1440 ticks) in 6/8.
+func TestFromProgressionInSixEight(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"},
+		"tempoBpm": 60,
+		"timeSignature": {"numerator": 6, "denominator": 8},
+		"accompaniment": "rocking-6",
+		"progression": [{"numeral": "I"}, {"numeral": "IV", "beats": 1}, {"numeral": "V", "beats": 1}, {"numeral": "I"}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, b)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	var durations []music.Tick
+	for _, h := range body.Timeline.Harmony {
+		durations = append(durations, h.Duration)
+	}
+	if got := fmt.Sprint(durations); got != "[1440 720 720 1440]" {
+		t.Errorf("durations = %s, want one bar, two half bars, one bar", got)
+	}
+	swing := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 60,
+		"timeSignature": {"numerator": 6, "denominator": 8},
+		"accompaniment": "rocking-6", "feel": "swing",
+		"progression": [{"numeral": "I"}]
+	}`)
+	if swing.StatusCode != http.StatusBadRequest {
+		t.Errorf("swing in 6/8 should be a bad request, got %d", swing.StatusCode)
 	}
 }

@@ -114,13 +114,15 @@ func tempoBytes(bpm float64) []byte {
 }
 
 // timeSignatureBytes is numerator, log2(denominator), MIDI clocks per
-// metronome click (24 = one quarter), 32nd notes per quarter (8).
+// metronome click, 32nd notes per quarter (8). The click is the meter's
+// beat at 24 clocks per quarter: 24 in 4/4 and 3/4, 36 (a dotted quarter)
+// in 6/8.
 func timeSignatureBytes(ts music.TimeSignature) []byte {
 	dd := byte(0)
 	for d := ts.Denominator; d > 1; d >>= 1 {
 		dd++
 	}
-	return []byte{byte(ts.Numerator), dd, 24, 8}
+	return []byte{byte(ts.Numerator), dd, byte(music.BeatTicks(ts, 24)), 8}
 }
 
 // keySignatureBytes is the number of sharps (positive) or flats (negative)

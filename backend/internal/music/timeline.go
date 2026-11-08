@@ -12,11 +12,39 @@ type Tick int
 // DefaultPPQ is the pulses-per-quarter-note resolution used by middy.
 const DefaultPPQ = 480
 
-// The meters the engine renders (ADR-0017): 4/4 and, for the waltz, 3/4.
+// The meters the engine renders (ADR-0017): 4/4, 3/4 for the waltz, and
+// the compound 6/8 for lullabies and jigs.
 var (
 	FourFour  = TimeSignature{Numerator: 4, Denominator: 4}
 	ThreeFour = TimeSignature{Numerator: 3, Denominator: 4}
+	SixEight  = TimeSignature{Numerator: 6, Denominator: 8}
 )
+
+// Compound reports whether ts is a compound meter (6/8, 9/8, 12/8): its
+// beat is a dotted note divided in three, not the denominator's note.
+func (ts TimeSignature) Compound() bool {
+	return ts.Denominator == 8 && ts.Numerator > 3 && ts.Numerator%3 == 0
+}
+
+// BeatsPerBar is how many beats a musician counts in one bar: the
+// numerator in a simple meter, a third of it in a compound one (6/8 is
+// counted in two).
+func (ts TimeSignature) BeatsPerBar() int {
+	if ts.Compound() {
+		return ts.Numerator / 3
+	}
+	return ts.Numerator
+}
+
+// BeatTicks is the length of one beat of ts at ppq ticks per quarter note:
+// a quarter in 4/4 and 3/4, a dotted quarter in 6/8. Chord lengths
+// (Step.Beats) are counted in these beats.
+func BeatTicks(ts TimeSignature, ppq int) Tick {
+	if beats := ts.BeatsPerBar(); beats > 0 {
+		return BarTicks(ts, ppq) / Tick(beats)
+	}
+	return 0
+}
 
 // BarTicks is the length of one bar of ts at ppq ticks per quarter note.
 func BarTicks(ts TimeSignature, ppq int) Tick {

@@ -132,6 +132,10 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		}
 		drums = &d
 	}
+	if info.ID == FeelSwing && tl.TimeSignature.Compound() {
+		ts := tl.TimeSignature
+		return music.Timeline{}, fmt.Errorf("pattern: swing is for simple meters; %d/%d already divides each beat in three", ts.Numerator, ts.Denominator)
+	}
 	out, err := Apply(tl, acc, drums)
 	if err != nil {
 		return music.Timeline{}, err
