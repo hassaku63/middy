@@ -15,11 +15,12 @@
 | [0009](0009-generated-api-types.md) | TypeScript の API 型を OpenAPI から生成する | Accepted |
 | [0010](0010-ux-decisions-follow-product-intent.md) | UI の判断は、プロダクトの意思を根拠に共通の原則と手順で行う | Accepted |
 | [0011](0011-settings-only-from-launch-environment.md) | ローカル実行の設定と秘密情報は、起動時の環境変数だけで渡す | Accepted |
-| [0012](0012-harmony-groove-style.md) | 例を「和声 × グルーヴ」に分け、「スタイル」で結ぶ（付録: [和声](0012/harmony.md)、[リズム](0012/rhythm.md)、[結びつき](0012/combination.md)、[類似アプリ](0012/apps.md)） | Proposed |
+| [0012](0012-harmony-groove-style.md) | 例を「和声 × グルーヴ」に分け、「スタイル」で結ぶ（付録: [和声](0012/harmony.md)、[リズム](0012/rhythm.md)、[結びつき](0012/combination.md)、[類似アプリ](0012/apps.md)） | Accepted |
 | [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Accepted |
 | [0014](0014-issues-in-the-loop.md) | 観察と企画を GitHub Issue に置き、backlog と ADR はそのまま正典に保つ | Accepted |
 | [0015](0015-modes.md) | モードを調の属性として足し、特徴音で解説する | Accepted |
 | [0016](0016-ci-speed.md) | CI は、アプリと同じ版をキャッシュで速く取り、検査を 1 回ずつ走らせ、差分でジョブを選ぶ | Accepted |
+| [0017](0017-meter.md) | 拍子を例全体の枠にし、3/4 から足す | Accepted |
 
 ## いつ ADR を書くか
 
