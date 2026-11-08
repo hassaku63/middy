@@ -52,6 +52,22 @@ describe('fetchHealth', () => {
       code: 'http_error',
     });
   });
+
+  it.each([null, { error: 'oops' }, { error: { code: 1, message: 'x' } }])(
+    'falls back to the HTTP status for JSON that is not the error envelope: %j (review)',
+    async (body) => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify(body), { status: 502, statusText: 'Bad Gateway' }),
+        );
+      await expect(fetchHealth(fetchMock)).rejects.toMatchObject({
+        status: 502,
+        code: 'http_error',
+        message: '502 Bad Gateway',
+      });
+    },
+  );
 });
 
 describe('exportMidi', () => {
