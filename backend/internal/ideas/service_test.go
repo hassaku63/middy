@@ -322,3 +322,14 @@ func TestImagineRendersPerChordBeats(t *testing.T) {
 		t.Error("the prompt should explain beats")
 	}
 }
+
+// TestPromptSteersJazzToTheRide (BL-081): the prompt lists the jazz
+// patterns and asks for them, with swing, on a jazz image.
+func TestPromptSteersJazzToTheRide(t *testing.T) {
+	p := SystemPrompt()
+	for _, want := range []string{"- comp:", "- jazz-ride:", "drums を jazz-ride", "8 ビートとボサノバのドラムはジャズには使わない"} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q", want)
+		}
+	}
+}

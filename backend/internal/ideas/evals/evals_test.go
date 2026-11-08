@@ -306,3 +306,20 @@ func TestReportShowsPerChordBeats(t *testing.T) {
 		t.Errorf("progression should carry the lengths: %v", v.Progression)
 	}
 }
+
+// TestJudgeDrums (BL-081): a case can name the drums its first candidate
+// must use; "none" stands for no drums.
+func TestJudgeDrums(t *testing.T) {
+	tests := []struct{ want, got, problem string }{
+		{"", "eight-beat", ""},
+		{"jazz-ride", "jazz-ride", ""},
+		{"jazz-ride", "eight-beat", "expected drums jazz-ride, got eight-beat"},
+		{"jazz-ride/none", "", ""},
+		{"jazz-ride", "", "expected drums jazz-ride, got none"},
+	}
+	for _, tt := range tests {
+		if got := judgeDrums(tt.want, tt.got); got != tt.problem {
+			t.Errorf("judgeDrums(%q, %q) = %q, want %q", tt.want, tt.got, got, tt.problem)
+		}
+	}
+}

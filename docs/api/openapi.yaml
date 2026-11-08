@@ -628,7 +628,7 @@ components:
         id: { type: string }
         name: { type: string }
         description: { type: string }
-        hits: { type: integer, description: 1 小節あたりの打点数（ドラムはキックとスネアのみ） }
+        hits: { type: integer, description: 1 小節あたりの打点数（ドラムは骨格の打音だけ。キットならキックとスネア、ボーランのような手で叩く太鼓なら低いタムとサイドスティック） }
         onBeat: { type: integer, description: 拍の頭に乗る打点 }
         offBeat: { type: integer, description: 8 分の裏に乗る打点 }
         finer: { type: integer, description: それより細かい位置の打点 }

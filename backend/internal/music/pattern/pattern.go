@@ -99,9 +99,11 @@ const (
 	SideStick music.Pitch = 37
 	Snare     music.Pitch = 38
 	ClosedHat music.Pitch = 42
+	PedalHat  music.Pitch = 44
 	LowTom    music.Pitch = 45
 	OpenHat   music.Pitch = 46
 	MidTom    music.Pitch = 47
+	Ride      music.Pitch = 51
 	RideBell  music.Pitch = 53
 )
 
@@ -160,6 +162,15 @@ var accompaniments = []Accompaniment{
 			{quarter + eighth, eighth * 3 / 4, VoiceChord, 60},
 			{2 * quarter, quarter, VoiceBass, 80}, {2*quarter + eighth, eighth * 3 / 4, VoiceChord, 62},
 			{3*quarter + eighth, eighth * 3 / 4, VoiceChord, 58},
+		},
+	},
+	{
+		ID: "comp", Meter: &fourFour, Name: "4 ビートのコンピング", Program: 0,
+		Description: "1・3 拍にベース、1 拍目と 2 拍目の裏に短い和音（チャールストンのリズム）。和音を短く切って間を空け、ジャズのピアノが伴奏する形。ノリはスウィングと組み合わせる。",
+		Hits: []Hit{
+			{0, quarter, VoiceBass, 84}, {0, eighth * 3 / 4, VoiceChord, 70},
+			{quarter + eighth, eighth * 3 / 4, VoiceChord, 64},
+			{2 * quarter, quarter, VoiceBass, 76},
 		},
 	},
 	{
@@ -224,6 +235,16 @@ var drums = []Drums{
 			DrumHit{2 * quarter, eighth, Kick, 92}, DrumHit{3*quarter + eighth, eighth, Kick, 84},
 			DrumHit{quarter, eighth, RideBell, 70}, DrumHit{3 * quarter, eighth, RideBell, 70},
 		),
+	},
+	{
+		ID: "jazz-ride", Meter: &fourFour, Name: "ジャズのライド",
+		Description: "ライドシンバルが 1・2・2 拍の裏・3・4・4 拍の裏を刻み（チン・チキ・チン・チキ）、足のハイハットが 2・4 拍で閉じる。キックは 4 分でごく弱く支えるだけで、スネアの強い 2・4 拍はない。スウィングと組み合わせる、ジャズの 4 ビートの土台。",
+		Hits: []DrumHit{
+			{0, eighth, Ride, 72}, {quarter, eighth, Ride, 66}, {quarter + eighth, eighth, Ride, 54},
+			{2 * quarter, eighth, Ride, 70}, {3 * quarter, eighth, Ride, 66}, {3*quarter + eighth, eighth, Ride, 54},
+			{quarter, eighth, PedalHat, 58}, {3 * quarter, eighth, PedalHat, 58},
+			{0, eighth, Kick, 34}, {quarter, eighth, Kick, 30}, {2 * quarter, eighth, Kick, 32}, {3 * quarter, eighth, Kick, 30},
+		},
 	},
 	{
 		ID: "bodhran", Meter: &fourFour, Name: "ボーラン風",

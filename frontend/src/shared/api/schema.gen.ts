@@ -392,7 +392,7 @@ export interface components {
       id: string;
       name: string;
       description: string;
-      /** @description 1 小節あたりの打点数（ドラムはキックとスネアのみ） */
+      /** @description 1 小節あたりの打点数（ドラムは骨格の打音だけ。キットならキックとスネア、ボーランのような手で叩く太鼓なら低いタムとサイドスティック） */
       hits: number;
       /** @description 拍の頭に乗る打点 */
       onBeat: number;

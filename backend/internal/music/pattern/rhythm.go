@@ -56,10 +56,12 @@ func describeAccompaniment(a Accompaniment, ts music.TimeSignature) *music.Rhyth
 func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 	kit := make([]music.Tick, 0, len(d.Hits))
 	hand := make([]music.Tick, 0, len(d.Hits))
+	var kick, snare bool
 	for _, h := range d.Hits {
 		switch h.Note {
 		case Kick, Snare:
 			kit = append(kit, h.Start)
+			kick, snare = kick || h.Note == Kick, snare || h.Note == Snare
 		case LowTom, SideStick:
 			hand = append(hand, h.Start)
 		}
@@ -67,7 +69,15 @@ func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 	if len(kit) == 0 && len(hand) > 0 {
 		return part(d.ID, d.Name, d.Description, hand, "低いタムとサイドスティック", ts)
 	}
-	return part(d.ID, d.Name, d.Description, kit, "キックとスネア", ts)
+	// Name only what plays: a jazz ride or a bossa has a kick and no snare.
+	subject := "キックとスネア"
+	switch {
+	case kick && !snare:
+		subject = "キック"
+	case snare && !kick:
+		subject = "スネア"
+	}
+	return part(d.ID, d.Name, d.Description, kit, subject, ts)
 }
 
 func part(id, name, desc string, starts []music.Tick, subject string, ts music.TimeSignature) *music.RhythmPart {
