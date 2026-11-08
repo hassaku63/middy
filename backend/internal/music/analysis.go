@@ -92,7 +92,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Function:    fn,
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
-			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following),
+			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
