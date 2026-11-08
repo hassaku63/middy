@@ -42,7 +42,7 @@ type Case struct {
 	// every candidate.
 	ModeInAny string `json:"modeInAny,omitempty"`
 	// Wants are chords of which at least one should sound in the first
-	// candidate, written as music.LiteralChord reads them: against the major
+	// candidate, written as music.LiteralSlash reads them: against the major
 	// scale of the candidate's tonic, so "bVII" is the same sound in major,
 	// mixolydian or minor. A miss is reported, not failed: some wants are not
 	// yet expressible, and the report measures exactly that (ADR-0013).
@@ -135,7 +135,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 		reasons = append(reasons, cand.Reason)
 		v.Labels = append(v.Labels, cand.Progression...)
 		modes = append(modes, cand.Key.Mode)
-		if v.WantsIn == 0 && wantsHit(c.Wants, cand.Key.Tonic, chordsOf(cand.Timeline)) {
+		if v.WantsIn == 0 && wantsHit(c.Wants, cand.Key.Tonic, cand.Timeline.Harmony) {
 			v.WantsIn = i + 1
 		}
 	}
@@ -214,30 +214,24 @@ func Report(verdicts []Verdict) string {
 }
 
 // wantsHit reports whether any wanted chord sounds in the progression.
-// Wants are read literally against the tonic (music.LiteralChord) and
+// Wants are read literally against the tonic (music.LiteralSlash) and
 // compared with the chords the engine rendered, so a want names a sound,
 // not a spelling: "bVII" matches mixolydian's VII, and "IV" in a minor key
-// (the dorian colour) does not match "iv".
-func wantsHit(wants []string, tonic music.PitchClass, chords []music.Chord) bool {
+// (the dorian colour) does not match "iv". A want with a slash bass
+// ("I/7") must also sound over that bass; one without matches any bass.
+func wantsHit(wants []string, tonic music.PitchClass, harmony []music.HarmonyEvent) bool {
 	for _, w := range wants {
-		want, err := music.LiteralChord(tonic, w)
+		want, bass, err := music.LiteralSlash(tonic, w)
 		if err != nil {
 			continue // Load-time tests keep cases.json readable
 		}
-		if slices.Contains(chords, want) {
-			return true
+		for _, h := range harmony {
+			if h.Chord == want && (bass == nil || (h.Bass != nil && *h.Bass == *bass)) {
+				return true
+			}
 		}
 	}
 	return false
-}
-
-// chordsOf lists the chords a timeline sounds, in order.
-func chordsOf(tl music.Timeline) []music.Chord {
-	out := make([]music.Chord, 0, len(tl.Harmony))
-	for _, h := range tl.Harmony {
-		out = append(out, h.Chord)
-	}
-	return out
 }
 
 // shorten cuts s to at most n runes, marking the cut.

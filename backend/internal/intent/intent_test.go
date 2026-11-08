@@ -370,3 +370,27 @@ func TestRetryHints(t *testing.T) {
 		t.Errorf("a label that reads keeps only the engine's correction: %v", err)
 	}
 }
+
+// TestSlashChordCandidates (BL-115): the slash chords the prompt shows as
+// examples pass validation, and a bass degree out of range is refused.
+func TestSlashChordCandidates(t *testing.T) {
+	for _, tt := range []struct {
+		key  music.Key
+		prog []string
+	}{
+		{music.Key{Tonic: music.C, Mode: music.Major}, []string{"I", "I/7", "vi", "vi/5", "IV", "I/3", "ii7", "V7"}},
+		{music.Key{Tonic: music.A, Mode: music.Minor}, []string{"i", "i/#7", "i/7", "i/#6"}},
+		{music.Key{Tonic: music.C, Mode: music.Major}, []string{"I", "IV/1", "V7/V/#4", "V"}},
+	} {
+		in := valid()
+		in.Candidates[0].Key, in.Candidates[0].Progression = tt.key, tt.prog
+		if err := in.Validate(); err != nil {
+			t.Errorf("%v should be valid: %v", tt.prog, err)
+		}
+	}
+	in := valid()
+	in.Candidates[0].Progression = []string{"i", "i/9"}
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "scale degree 1..7") {
+		t.Errorf("i/9 should be refused with the reason: %v", err)
+	}
+}
