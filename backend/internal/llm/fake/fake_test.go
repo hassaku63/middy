@@ -71,3 +71,26 @@ func TestUnscriptedStructuredOutputIsDeterministicAndMoodAware(t *testing.T) {
 		t.Fatalf("sample is not JSON: %v", err)
 	}
 }
+
+func TestUnscriptedFakeCanGoLong(t *testing.T) {
+	c := New()
+	resp, err := c.Complete(context.Background(), llm.Request{
+		OutputSchema: json.RawMessage(`{}`),
+		Messages:     []llm.Message{{Role: llm.RoleUser, Content: "長い曲を雨の日に"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var in struct {
+		Candidates []struct {
+			Title       string   `json:"title"`
+			Progression []string `json:"progression"`
+		} `json:"candidates"`
+	}
+	if err := json.Unmarshal([]byte(resp.Text), &in); err != nil {
+		t.Fatal(err)
+	}
+	if len(in.Candidates[0].Progression) != 16 || in.Candidates[0].Title != "窓辺の雨（長め）" {
+		t.Fatalf("long sample = %+v", in.Candidates[0])
+	}
+}

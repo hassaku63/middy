@@ -1,0 +1,19 @@
+.lab-scroll {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.timeline.timeline--natural {
+  max-width: none;
+}
+
+.lab-rows,
+.lab-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline.timeline--overview {
+  opacity: 0.85;
+}
