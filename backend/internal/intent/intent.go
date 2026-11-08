@@ -77,6 +77,9 @@ type Candidate struct {
 	Drums         string `json:"drums,omitempty"`
 	// Feel is how the eighths are played (pattern.Feels); empty means straight.
 	Feel string `json:"feel,omitempty"`
+	// Style is the kind of music the candidate is (pattern.Styles, BL-082);
+	// its patterns and feel must belong to it. Empty in older answers.
+	Style string `json:"style,omitempty"`
 	// Meter is one of MeterIDs (ADR-0017); empty means 4/4.
 	Meter string `json:"meter,omitempty"`
 }
@@ -276,6 +279,15 @@ func (c Candidate) validatePatterns() []error {
 	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {
 		errs = append(errs, fmt.Errorf("feel must be one of %v, got %q", FeelIDs(), c.Feel))
 	}
+	if c.Style != "" {
+		if st, err := pattern.FindStyle(c.Style); err != nil {
+			errs = append(errs, fmt.Errorf("style must be one of %v, got %q", StyleIDs(), c.Style))
+		} else {
+			for _, m := range st.Misfits(c.Accompaniment, c.Drums, pattern.Feel(c.Feel)) {
+				errs = append(errs, errors.New(m))
+			}
+		}
+	}
 	if c.Feel == string(pattern.FeelSwing) && ts.Compound() {
 		errs = append(errs, fmt.Errorf("feel swing is not used in %d/%d: its beat already divides in three", ts.Numerator, ts.Denominator))
 	}
@@ -296,6 +308,15 @@ func AccompanimentIDsFor(ts music.TimeSignature) []string {
 	var ids []string
 	for _, a := range pattern.AccompanimentsFor(ts) {
 		ids = append(ids, a.ID)
+	}
+	return ids
+}
+
+// StyleIDs lists the style catalogue's ids (the schema's enum).
+func StyleIDs() []string {
+	var ids []string
+	for _, s := range pattern.Styles() {
+		ids = append(ids, s.ID)
 	}
 	return ids
 }

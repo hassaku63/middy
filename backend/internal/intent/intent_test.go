@@ -3,6 +3,7 @@ package intent
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -392,5 +393,39 @@ func TestSlashChordCandidates(t *testing.T) {
 	in.Candidates[0].Progression = []string{"i", "i/9"}
 	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "scale degree 1..7") {
 		t.Errorf("i/9 should be refused with the reason: %v", err)
+	}
+}
+
+// TestStyleBindsThePatterns (BL-082): a candidate's style must be known,
+// and its patterns and feel must belong to the style; the error says what
+// would fit. A candidate without a style is not checked (older answers).
+func TestStyleBindsThePatterns(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*Candidate)
+		want   string // "" means valid
+	}{
+		{"celtic reel", func(c *Candidate) { c.Style, c.Accompaniment, c.Drums = "celtic", "reel", "bodhran" }, ""},
+		{"celtic on the eight-beat", func(c *Candidate) { c.Style, c.Accompaniment, c.Drums = "celtic", "strum", "eight-beat" },
+			`accompaniment "strum" does not fit the celtic style`},
+		{"jazz with swing", func(c *Candidate) { c.Style, c.Accompaniment, c.Drums, c.Feel = "jazz", "comp", "jazz-ride", "swing" }, ""},
+		{"unknown style", func(c *Candidate) { c.Style = "polka" }, "style must be one of"},
+		{"no style", func(c *Candidate) { c.Accompaniment, c.Drums = "strum", "eight-beat" }, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			tt.mutate(&in.Candidates[0])
+			err := in.Validate()
+			switch {
+			case tt.want == "" && err != nil:
+				t.Fatalf("should be valid: %v", err)
+			case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+				t.Fatalf("error %v should mention %q", err, tt.want)
+			}
+		})
+	}
+	if !strings.Contains(string(Schema), `"style"`) || !slices.Contains(StyleIDs(), "celtic") {
+		t.Error("the schema should ask for a style from the catalogue")
 	}
 }

@@ -378,8 +378,12 @@ components:
           $ref: '#/components/schemas/Feel'
         meter:
           type: string
-          enum: ['4/4', '3/4']
+          enum: ['4/4', '3/4', '6/8']
           description: 拍子。省略時は 4/4（ADR-0017）
+        style:
+          type: string
+          enum: [pop, ballad, rock, jazz, bossa, celtic]
+          description: 候補の音楽のスタイル（BL-082、ADR-0012）。伴奏・ドラム・ノリはこのスタイルに合うものに限られる。以前の候補にはない
         timeline:
           $ref: '#/components/schemas/Timeline'
     IdeasResponse:

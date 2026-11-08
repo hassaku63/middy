@@ -36,9 +36,10 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["title", "key", "tempoBpm", "progression", "beatsPerChord", "reason"],
+        "required": ["title", "style", "key", "tempoBpm", "progression", "beatsPerChord", "reason"],
         "properties": {
           "title": { "type": "string", "description": "候補の短い見出し（日本語）" },
+          "style": { "type": "string", "enum": [%s], "description": "候補の音楽のスタイル。最初に選び、伴奏・ドラム・ノリはこのスタイルに合うものから選ぶ" },
           "key": {
             "type": "object",
             "additionalProperties": false,
@@ -66,7 +67,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
       }
     }
   }
-}`, MaxMoodTags, MinCandidates, MaxCandidates, MinTempoBPM, MaxTempoBPM, MaxChords,
+}`, MaxMoodTags, MinCandidates, MaxCandidates, quoted(StyleIDs()), MinTempoBPM, MaxTempoBPM, MaxChords,
 	quoted(AccompanimentIDs()), quoted(DrumIDs()), quoted(FeelIDs())))
 
 func quoted(ids []string) string {

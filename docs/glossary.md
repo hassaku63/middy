@@ -26,6 +26,7 @@
 | ペダル (Pedal) | 和音が変わってもベースが同じ音に留まること。和音にない音でも続く | `bassText` |
 | ライン・クリシェ (Line cliché) | 同じ和音を保ったまま、1 つの声部（middy ではベース）が半音ずつ動く書き方。Am → Am/G# → Am/G → Am/F# | `lineText` |
 | シンコペーション (Syncopation) | 拍の裏で鳴った音のあと、次の拍の頭が鳴らないこと。音が拍をまたいで前に押し出される（Longuet-Higgins & Lee） | `pattern.classify`, `RhythmPart.Syncopated` |
+| スタイル (Style) | 曲の種類（ポップ、バラード、ロック、ジャズ、ボサノバ、ケルト）。合う伴奏・ドラム・ノリを束ねる（ADR-0012） | `pattern.Style`, `intent.Candidate.Style` |
 | 終止 (Cadence) | 隣接する 2 コードの進行の分類。正格・変格・半・偽・モーダル | `music.Cadence` |
 | 解説 (Explanation) | タイムラインの成り立ちを説明するデータ。度数・機能・終止・文章 | `music.Analysis`（表示は `features/explanation`） |
 | スライス (Slice) | 1 PR で完結する、UI〜API〜ドメインを縦に貫く小さな機能単位 | `docs/product/backlog.md` |

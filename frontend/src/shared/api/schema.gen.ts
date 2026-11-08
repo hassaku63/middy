@@ -244,7 +244,12 @@ export interface components {
        * @description 拍子。省略時は 4/4（ADR-0017）
        * @enum {string}
        */
-      meter?: '4/4' | '3/4';
+      meter?: '4/4' | '3/4' | '6/8';
+      /**
+       * @description 候補の音楽のスタイル（BL-082、ADR-0012）。伴奏・ドラム・ノリはこのスタイルに合うものに限られる。以前の候補にはない
+       * @enum {string}
+       */
+      style?: 'pop' | 'ballad' | 'rock' | 'jazz' | 'bossa' | 'celtic';
       timeline: components['schemas']['Timeline'];
     };
     IdeasResponse: {

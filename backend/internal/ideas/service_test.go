@@ -352,3 +352,14 @@ func TestFakeGraduationUsesSlashChords(t *testing.T) {
 		t.Errorf("the second candidate is a line cliché: %s", res.Candidates[1].Timeline.Overview.Flow)
 	}
 }
+
+// TestPromptListsTheStyles (BL-082): the prompt lists each style with the
+// patterns that belong to it, generated from the catalogue.
+func TestPromptListsTheStyles(t *testing.T) {
+	p := SystemPrompt()
+	for _, want := range []string{"最初にスタイルを選び", "- celtic: ケルト。", "ドラム: bodhran, jig, six-eight", "- jazz: ジャズ。"} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q", want)
+		}
+	}
+}
