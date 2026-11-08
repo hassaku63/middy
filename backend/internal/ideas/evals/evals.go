@@ -212,7 +212,7 @@ func Report(verdicts []Verdict) string {
 		} else {
 			pass++
 		}
-		if len(v.Case.Wants) > 0 {
+		if len(v.Case.Wants) > 0 && len(v.Progression) > 0 { // a case never answered was not judged on its wants
 			switch {
 			case v.WantsHit:
 				status += " · wants ✓"
@@ -275,6 +275,7 @@ type breadth struct {
 	wantsAny     int
 	retries      int
 	silent       int
+	judged       int // verdicts with an answer to measure
 }
 
 func measureBreadth(verdicts []Verdict) breadth {
@@ -286,6 +287,7 @@ func measureBreadth(verdicts []Verdict) breadth {
 		if len(v.Progression) == 0 {
 			continue
 		}
+		m.judged++
 		m.progressions[strings.Join(v.Chords, " ")]++ // the chords, not their lengths or pushes
 		m.keys[v.Key] = true
 		for _, label := range v.Labels {
@@ -329,7 +331,7 @@ func breadthReport(verdicts []Verdict) string {
 	m := measureBreadth(verdicts)
 	var b strings.Builder
 	b.WriteString("\n### 提案の幅\n\n")
-	fmt.Fprintf(&b, "- 最初の候補の進行の種類: %d（%d 件中）\n", len(m.progressions), len(verdicts))
+	fmt.Fprintf(&b, "- 最初の候補の進行の種類: %d（答えのあった %d 件中）\n", len(m.progressions), m.judged)
 	if top, n := m.mostRepeated(); n > 1 {
 		fmt.Fprintf(&b, "- 最も多い進行: `%s`（%d 回）\n", top, n)
 	}
