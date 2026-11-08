@@ -32,7 +32,7 @@ func TestCasesLoadAndAreWellFormed(t *testing.T) {
 			t.Errorf("%s: modeInAny %q", c.ID, c.ModeInAny)
 		}
 		for _, w := range c.Wants {
-			if _, err := music.LiteralChord(music.C, w); err != nil {
+			if _, _, err := music.LiteralSlash(music.C, w); err != nil {
 				t.Errorf("%s: want %q does not read as a chord: %v", c.ID, w, err)
 			}
 		}
@@ -144,9 +144,27 @@ func TestWantsAreMatchedBySound(t *testing.T) {
 		{"no wants, no hit", nil, music.C, []music.Chord{maj(music.C)}, false},
 	}
 	for _, tt := range tests {
-		if got := wantsHit(tt.wants, tt.tonic, tt.chords); got != tt.hit {
+		harmony := make([]music.HarmonyEvent, len(tt.chords))
+		for i, c := range tt.chords {
+			harmony[i] = music.HarmonyEvent{Chord: c}
+		}
+		if got := wantsHit(tt.wants, tt.tonic, harmony); got != tt.hit {
 			t.Errorf("%s: wantsHit = %v, want %v", tt.name, got, tt.hit)
 		}
+	}
+	// A wanted slash chord must sound over its bass (BL-115); a want
+	// without a slash matches the chord over any bass.
+	b, gs := music.B, music.Gs
+	cOverB := []music.HarmonyEvent{{Chord: maj(music.C)}, {Chord: maj(music.C), Bass: &b}}
+	if !wantsHit([]string{"I/7"}, music.C, cOverB) || !wantsHit([]string{"I"}, music.C, cOverB[1:]) {
+		t.Error("I/7 should match C/B, and I should match C over any bass")
+	}
+	if wantsHit([]string{"I/7"}, music.C, cOverB[:1]) {
+		t.Error("I/7 should not match a plain C")
+	}
+	amOverGs := []music.HarmonyEvent{{Chord: min(music.A), Bass: &gs}}
+	if !wantsHit([]string{"i/7"}, music.A, amOverGs) || wantsHit([]string{"i/b7"}, music.A, amOverGs) {
+		t.Error("in A, i/7 is Am/G# and i/b7 is Am/G")
 	}
 }
 
