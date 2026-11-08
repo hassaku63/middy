@@ -126,18 +126,17 @@ func timeSignatureBytes(ts music.TimeSignature) []byte {
 }
 
 // keySignatureBytes is the number of sharps (positive) or flats (negative)
-// in -7..7 and 0 for major, 1 for minor. Spellings beyond six accidentals
-// use the flat side (C# major is written as Db major).
+// in -7..7 and 0 for major, 1 for minor. A mode uses its parent major's
+// signature (D dorian has none, as C major); the key with six either way
+// is written with flats, as the app spells it (Gb major, Eb minor).
 func keySignatureBytes(k music.Key) []byte {
-	tonicOfMajor := k.Tonic
 	mi := byte(0)
 	if k.Mode == music.Minor {
-		tonicOfMajor = k.Tonic.Add(3) // relative major
 		mi = 1
 	}
 	// Position on the circle of fifths: tonic = 7*fifths mod 12.
-	fifths := (int(tonicOfMajor.Normalize()) * 7) % 12
-	if fifths > 6 {
+	fifths := (int(k.ParentMajor().Normalize()) * 7) % 12
+	if fifths >= 6 {
 		fifths -= 12
 	}
 	return []byte{byte(int8(fifths)), mi}
