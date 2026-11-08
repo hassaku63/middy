@@ -160,7 +160,7 @@ func (c Candidate) validateProgression() []error {
 		// minor, I7 in major) is an error the model can act on, not
 		// something to fix quietly (ADR-0013).
 		if _, err := music.CanonicalLabel(c.Key, label); err != nil {
-			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
+			errs = append(errs, fmt.Errorf("progression[%d]: %w%s", i, err, c.suggestLabel(label)))
 		}
 	}
 	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
@@ -168,9 +168,46 @@ func (c Candidate) validateProgression() []error {
 	}
 	ts := c.TimeSignature()
 	if allowed := AllowedBeats[ts]; !slices.Contains(allowed, c.BeatsPerChord) {
-		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v in %d/%d, got %d", allowed, ts.Numerator, ts.Denominator, c.BeatsPerChord))
+		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v in %d/%d, got %d%s", allowed, ts.Numerator, ts.Denominator, c.BeatsPerChord, lengthHint(ts, c.BeatsPerChord)))
 	}
 	return append(errs, c.validateBeats(ts)...)
+}
+
+// suggestLabel offers the label one deletion away from a misspelt one
+// ("Imaxj7" → "Imaj7"), so a retry can fix it (#133); "" when none reads.
+func (c Candidate) suggestLabel(label string) string {
+	r := []rune(label)
+	for i := range r {
+		try := string(r[:i]) + string(r[i+1:])
+		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
+			return fmt.Sprintf(`; did you mean %q?`, try)
+		}
+	}
+	return ""
+}
+
+// lengthHint names the meter a length belongs to when the candidate's
+// meter does not allow it (a waltz's 3 without meter "3/4"; #133).
+func lengthHint(ts music.TimeSignature, beats int) string {
+	for _, id := range MeterIDs() {
+		if m := Meters[id]; m != ts && slices.Contains(AllowedBeats[m], beats) && !slices.Contains(AllowedBeats[ts], beats) {
+			return fmt.Sprintf(`; %d is a length in %s; set meter to %q to use it`, beats, id, id)
+		}
+	}
+	return ""
+}
+
+// patternHint names the meter a pattern is written for when it does not
+// fit the candidate's (#133); "" for an unknown id or a pattern of any meter.
+func patternHint(id string, meter *music.TimeSignature) string {
+	if meter == nil {
+		return ""
+	}
+	name := fmt.Sprintf("%d/%d", meter.Numerator, meter.Denominator)
+	if _, ok := Meters[name]; !ok {
+		return ""
+	}
+	return fmt.Sprintf(`; %q is a %s pattern; set meter to %q to use it`, id, name, name)
 }
 
 // validateBeats checks per-chord lengths (BL-109) against the rule of
@@ -222,12 +259,12 @@ func (c Candidate) validatePatterns() []error {
 	ts := c.TimeSignature()
 	if c.Accompaniment != "" {
 		if a, err := pattern.FindAccompaniment(c.Accompaniment); err != nil || !a.Fits(ts) {
-			errs = append(errs, fmt.Errorf("accompaniment must be one of %v in %d/%d, got %q", AccompanimentIDsFor(ts), ts.Numerator, ts.Denominator, c.Accompaniment))
+			errs = append(errs, fmt.Errorf("accompaniment must be one of %v in %d/%d, got %q%s", AccompanimentIDsFor(ts), ts.Numerator, ts.Denominator, c.Accompaniment, patternHint(c.Accompaniment, a.Meter)))
 		}
 	}
 	if c.Drums != "" {
 		if d, err := pattern.FindDrums(c.Drums); err != nil || !d.Fits(ts) {
-			errs = append(errs, fmt.Errorf("drums must be one of %v in %d/%d, got %q", DrumIDsFor(ts), ts.Numerator, ts.Denominator, c.Drums))
+			errs = append(errs, fmt.Errorf("drums must be one of %v in %d/%d, got %q%s", DrumIDsFor(ts), ts.Numerator, ts.Denominator, c.Drums, patternHint(c.Drums, d.Meter)))
 		}
 	}
 	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {

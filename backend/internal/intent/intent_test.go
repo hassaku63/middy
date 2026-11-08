@@ -323,3 +323,41 @@ func TestPerChordBeats(t *testing.T) {
 		t.Errorf("steps carry the per-chord beats: %v", got)
 	}
 }
+
+// TestRetryHints (#133): an error the model makes again and again carries
+// the fix, so the retry can act on it: a misspelt label gets the label one
+// deletion away, and a length or pattern of another meter names that meter.
+func TestRetryHints(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*Candidate)
+		want   string
+	}{
+		{"misspelt maj7", func(c *Candidate) {
+			c.Key = music.Key{Tonic: music.C, Mode: music.Major}
+			c.Progression = []string{"Imaxj7", "IV"}
+		},
+			`did you mean "Imaj7"?`},
+		{"waltz length without the meter", func(c *Candidate) { c.BeatsPerChord = 3 },
+			`3 is a length in 3/4; set meter to "3/4" to use it`},
+		{"waltz pattern without the meter", func(c *Candidate) { c.Accompaniment = "arpeggio-3" },
+			`"arpeggio-3" is a 3/4 pattern; set meter to "3/4" to use it`},
+		{"6/8 drums without the meter", func(c *Candidate) { c.Drums = "jig" },
+			`"jig" is a 6/8 pattern; set meter to "6/8" to use it`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			tt.mutate(&in.Candidates[0])
+			err := in.Validate()
+			if err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("error %v should say %q", err, tt.want)
+			}
+		})
+	}
+	in := valid()
+	in.Candidates[0].Progression = []string{"Q7"}
+	if err := in.Validate(); err == nil || strings.Contains(err.Error(), "did you mean") {
+		t.Errorf("no suggestion when no label is one deletion away: %v", err)
+	}
+}
