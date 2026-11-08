@@ -121,7 +121,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 func Report(verdicts []Verdict) string {
 	var b strings.Builder
 	pass := 0
-	b.WriteString("| case | first candidate | result |\n| --- | --- | --- |\n")
+	b.WriteString("| case | first candidate | progression | result |\n| --- | --- | --- | --- |\n")
 	for _, v := range verdicts {
 		status := "✅"
 		if !v.Pass {
@@ -136,7 +136,7 @@ func Report(verdicts []Verdict) string {
 				status += " · wants ✗ (" + strings.Join(v.Case.Wants, "/") + ")"
 			}
 		}
-		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM) | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, status)
+		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, strings.Join(v.Progression, " "), status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
 	b.WriteString(breadthReport(verdicts))
