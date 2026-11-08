@@ -160,6 +160,7 @@ func flow(tl Timeline) string {
 	} else {
 		s += fmt.Sprintf("最後は %sで、主和音に戻らずに終わる。", chordName(last))
 	}
+	s += lineText(tl.Key, h)
 	// A loop closes again when it repeats: say what the turn-around makes.
 	if wrap := cadenceBetween(tl.Key.Mode, placedOf(last), placedOf(first)); wrap != NoCadence && degreeOfEvent(first) == 1 {
 		s += fmt.Sprintf("繰り返すと、%s から頭の %s への%sになる。", last.RomanNumeral, first.RomanNumeral, cadenceName[wrap])

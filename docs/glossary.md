@@ -21,6 +21,10 @@
 | ダイアトニックコード | 調の音だけで作られるコード | `Key.Diatonic` |
 | ローマ数字 (Roman numeral) | 度数とコードの質をあらわす記法。I, ii, V7, vii° | `music.RomanNumeral` |
 | 和声機能 (Harmonic function) | T（トニック）/ S（サブドミナント）/ D（ドミナント） | `music.Function` |
+| 分数コード (Slash chord) | 和音の下に、根音以外の音をベースとして置いたもの。「C/E」。middy のラベルでは `/` のあとに調の度数を書く（`I/3`）（ADR-0020） | `music.Bass`, `HarmonyEvent.Bass` |
+| 転回形 (Inversion) | 和音の音（3 度・5 度・7 度）がベースにある形。第 1 転回形は 3 度、第 2 は 5 度、第 3 は 7 度がベース | `bassText` |
+| ペダル (Pedal) | 和音が変わってもベースが同じ音に留まること。和音にない音でも続く | `bassText` |
+| ライン・クリシェ (Line cliché) | 同じ和音を保ったまま、1 つの声部（middy ではベース）が半音ずつ動く書き方。Am → Am/G# → Am/G → Am/F# | `lineText` |
 | 終止 (Cadence) | 隣接する 2 コードの進行の分類。正格・変格・半・偽・モーダル | `music.Cadence` |
 | 解説 (Explanation) | タイムラインの成り立ちを説明するデータ。度数・機能・終止・文章 | `music.Analysis`（表示は `features/explanation`） |
 | スライス (Slice) | 1 PR で完結する、UI〜API〜ドメインを縦に貫く小さな機能単位 | `docs/product/backlog.md` |
