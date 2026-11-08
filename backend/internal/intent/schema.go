@@ -91,3 +91,27 @@ func Parse(data []byte) (Intent, error) {
 	}
 	return in, nil
 }
+
+// DiagnosticSchema is Schema plus an optional free-text field in which the
+// model says what it would have proposed without the engine's limits
+// (diatonic chords, major and minor only, the pattern catalogue). The
+// evaluation set uses it to tell "cannot be expressed" from "was not
+// chosen" (ADR-0013); production requests use Schema.
+var DiagnosticSchema = diagnosticSchema()
+
+func diagnosticSchema() json.RawMessage {
+	var root map[string]any
+	if err := json.Unmarshal(Schema, &root); err != nil {
+		panic("intent: Schema is not JSON: " + err.Error())
+	}
+	props := root["properties"].(map[string]any)
+	props["unconstrained"] = map[string]any{
+		"type":        "string",
+		"description": "評価のための欄。エンジンの制約（ダイアトニックの和音だけ、長調・短調だけ、伴奏とドラムの型のカタログ）がなければ、このイメージに本当は何を書きたかったか。和音名、音階やモード、リズムを自由に 1〜3 文で。音には使われない",
+	}
+	out, err := json.Marshal(root)
+	if err != nil {
+		panic("intent: " + err.Error())
+	}
+	return out
+}

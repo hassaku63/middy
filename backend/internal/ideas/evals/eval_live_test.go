@@ -34,7 +34,7 @@ func TestLiveEval(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
 	defer cancel()
-	verdicts := Run(ctx, ideas.New(client), cases)
+	verdicts := Run(ctx, ideas.NewDiagnostic(client), cases)
 	fmt.Println(Report(verdicts))
 	failed := 0
 	for _, v := range verdicts {

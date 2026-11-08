@@ -116,3 +116,43 @@ func TestJudgeFeel(t *testing.T) {
 		}
 	}
 }
+
+func TestWantsAreMatchedAsWritten(t *testing.T) {
+	if wantsHit([]string{"IV", "VII"}, []string{"i", "iv", "VII"}) != true {
+		t.Fatal("VII should hit")
+	}
+	if wantsHit([]string{"IV"}, []string{"i", "iv"}) {
+		t.Fatal("iv must not satisfy a want for IV: the case carries the modal meaning")
+	}
+	if wantsHit(nil, []string{"I"}) {
+		t.Fatal("no wants, no hit")
+	}
+}
+
+func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
+	v := func(id string, prog ...string) Verdict {
+		return Verdict{Case: Case{ID: id}, Pass: true, Key: "A minor", Progression: prog, Labels: prog}
+	}
+	verdicts := []Verdict{
+		v("a", "i", "VI", "III", "VII"),
+		v("b", "i", "VI", "III", "VII"),
+		v("c", "i", "iv", "V7"),
+	}
+	verdicts[2].Key = "D minor"
+	verdicts[2].Case.Wants = []string{"IV"}
+	verdicts[2].Unconstrained = "ドリアンの IV を\n使いたい | 本当は"
+	report := Report(verdicts)
+	for _, want := range []string{
+		"進行の種類: 2（3 件中）",
+		"最も多い進行: `i VI III VII`（2 回）",
+		"調の種類: 2",
+		"使った語彙（度数 × 七の和音の有無）: 6 / 14", // i VI III VII iv V7 → 1,6,3,7,4 triads + 5 seventh
+		"期待した語彙（wants）の命中: 0 / 1",
+		"wants ✗ (IV)",
+		"| c | ドリアンの IV を 使いたい / 本当は |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Errorf("report lacks %q:\n%s", want, report)
+		}
+	}
+}

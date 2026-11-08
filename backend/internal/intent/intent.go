@@ -39,6 +39,10 @@ type Intent struct {
 	Mood []string `json:"mood"`
 	// Candidates are concrete musical proposals, best first.
 	Candidates []Candidate `json:"candidates"`
+	// Unconstrained is what the model would have written without the
+	// engine's limits. Asked for only by DiagnosticSchema (evaluation);
+	// never rendered, never validated (ADR-0013).
+	Unconstrained string `json:"unconstrained,omitempty"`
 }
 
 // Candidate is one proposal the engine can render as a Timeline.

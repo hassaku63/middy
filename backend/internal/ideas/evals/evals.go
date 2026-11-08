@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
@@ -28,6 +29,11 @@ type Case struct {
 	// Feel, when set, is the feel the first candidate must have ("straight"
 	// also matches an omitted feel).
 	Feel string `json:"feel,omitempty"`
+	// Wants are labels of which at least one should appear in the first
+	// candidate's progression, compared as written (case carries modal
+	// meaning). A miss is reported, not failed: some wants are not yet
+	// expressible, and the report measures exactly that (ADR-0013).
+	Wants []string `json:"wants,omitempty"`
 }
 
 // Load returns the embedded cases.
@@ -50,9 +56,17 @@ type Verdict struct {
 	Pass     bool
 	Problems []string
 	// First candidate, for the report.
-	Title    string
-	Key      string
-	TempoBPM float64
+	Title       string
+	Key         string
+	TempoBPM    float64
+	Progression []string
+	// Labels of every candidate, for the vocabulary metric.
+	Labels []string
+	// WantsHit is true when a wanted label appears; meaningful only when
+	// the case has Wants.
+	WantsHit bool
+	// Unconstrained is the model's free-text wish (diagnostic runs only).
+	Unconstrained string
 }
 
 // Judge scores a result against the case: the first candidate must match
@@ -66,6 +80,12 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	first := res.Candidates[0]
 	v.Title, v.Key, v.TempoBPM = first.Title, first.Key.String(), first.TempoBPM
+	v.Progression = first.Progression
+	v.Unconstrained = res.Unconstrained
+	for _, cand := range res.Candidates {
+		v.Labels = append(v.Labels, cand.Progression...)
+	}
+	v.WantsHit = wantsHit(c.Wants, first.Progression)
 
 	switch c.Mode {
 	case "major":
@@ -109,10 +129,121 @@ func Report(verdicts []Verdict) string {
 		} else {
 			pass++
 		}
+		if len(v.Case.Wants) > 0 {
+			if v.WantsHit {
+				status += " · wants ✓"
+			} else {
+				status += " · wants ✗ (" + strings.Join(v.Case.Wants, "/") + ")"
+			}
+		}
 		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM) | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
+	b.WriteString(breadthReport(verdicts))
 	return b.String()
+}
+
+// wantsHit reports whether any wanted label is in the progression, as
+// written: "IV" in a minor key is a want for a dorian colour and must not
+// match "iv".
+func wantsHit(wants, progression []string) bool {
+	if len(wants) == 0 {
+		return false
+	}
+	for _, w := range wants {
+		if slices.Contains(progression, w) {
+			return true
+		}
+	}
+	return false
+}
+
+// breadth is what breadthReport counts across a whole run.
+type breadth struct {
+	progressions map[string]int
+	keys         map[string]bool
+	vocab        map[string]bool
+	wantsTotal   int
+	wantsHits    int
+}
+
+func measureBreadth(verdicts []Verdict) breadth {
+	m := breadth{progressions: map[string]int{}, keys: map[string]bool{}, vocab: map[string]bool{}}
+	for _, v := range verdicts {
+		if len(v.Progression) == 0 {
+			continue
+		}
+		m.progressions[strings.Join(v.Progression, " ")]++
+		m.keys[v.Key] = true
+		for _, label := range v.Labels {
+			if degree, seventh, err := music.ParseRomanNumeral(label); err == nil {
+				m.vocab[fmt.Sprintf("%d/%t", degree, seventh)] = true
+			}
+		}
+		if len(v.Case.Wants) > 0 {
+			m.wantsTotal++
+			if v.WantsHit {
+				m.wantsHits++
+			}
+		}
+	}
+	return m
+}
+
+// mostRepeated returns the progression seen most often and how often;
+// ties go to the alphabetically first so the report is stable.
+func (m breadth) mostRepeated() (string, int) {
+	top, topN := "", 0
+	for p, n := range m.progressions {
+		if n > topN || (n == topN && p < top) {
+			top, topN = p, n
+		}
+	}
+	return top, topN
+}
+
+// breadthReport measures how varied the proposals were across the whole
+// run (ADR-0013): distinct first progressions, the most repeated one,
+// distinct keys, the share of the diatonic vocabulary used, wants, and
+// what the model said it wanted to write.
+func breadthReport(verdicts []Verdict) string {
+	m := measureBreadth(verdicts)
+	var b strings.Builder
+	b.WriteString("\n### 提案の幅\n\n")
+	fmt.Fprintf(&b, "- 最初の候補の進行の種類: %d（%d 件中）\n", len(m.progressions), len(verdicts))
+	if top, n := m.mostRepeated(); n > 1 {
+		fmt.Fprintf(&b, "- 最も多い進行: `%s`（%d 回）\n", top, n)
+	}
+	fmt.Fprintf(&b, "- 調の種類: %d\n", len(m.keys))
+	fmt.Fprintf(&b, "- 使った語彙（度数 × 七の和音の有無）: %d / %d\n", len(m.vocab), diatonicVocabulary)
+	if m.wantsTotal > 0 {
+		fmt.Fprintf(&b, "- 期待した語彙（wants）の命中: %d / %d\n", m.wantsHits, m.wantsTotal)
+	}
+	b.WriteString(wishesReport(verdicts))
+	return b.String()
+}
+
+// wishesReport lists what the model would have written without the
+// engine's limits (diagnostic runs only).
+func wishesReport(verdicts []Verdict) string {
+	var rows []string
+	for _, v := range verdicts {
+		if v.Unconstrained != "" {
+			rows = append(rows, fmt.Sprintf("| %s | %s |", v.Case.ID, oneLine(v.Unconstrained)))
+		}
+	}
+	if len(rows) == 0 {
+		return ""
+	}
+	return "\n### 制約がなければ書きたかったこと\n\n| case | unconstrained |\n| --- | --- |\n" + strings.Join(rows, "\n") + "\n"
+}
+
+// diatonicVocabulary counts the labels the engine can express in one key:
+// seven degrees, each as a triad or a seventh chord.
+const diatonicVocabulary = 14
+
+func oneLine(s string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(s), "\n", " "), "|", "/")
 }
 
 func judgeFeel(want, got string) string {
