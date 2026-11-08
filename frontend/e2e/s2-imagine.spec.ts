@@ -192,3 +192,27 @@ test('a Celtic reel holds its tonic chord for two bars, kept when the key change
   await expect(overview).toContainText('E dorian');
   await expect(overview).toContainText('4 個の和音で 4 小節');
 });
+
+test('a graduation song walks its bass down with slash chords, kept when the key changes (BL-116)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { card, result } = await openExample(page, '卒業式の合唱曲', '一歩ずつ下がるベース');
+  await expect(card).toContainText('I - I/7 - vi - vi/5 - IV - I/3 - ii7 - V7');
+  const overview = result.getByLabel('全体と流れ');
+  await expect(overview).toContainText('ベースが C → B → A → G → F → E → D と順に下がる');
+  // The slash chord names its bass, and the explanation says what the bass does.
+  await result
+    .getByRole('listbox', { name: 'コード' })
+    .getByRole('option', { name: 'I/7 (C/B)' })
+    .click();
+  await expect(result.locator('.explanation__text').first()).toContainText('経過音');
+  await page.getByRole('button', { name: /固定を解除/ }).click();
+  // C major to D major: the numerals keep their basses, now spelled for D.
+  await result.getByLabel('キー').selectOption('2');
+  await expect(result.getByLabel('キー')).toHaveValue('2');
+  await expect(overview).toContainText('ベースが D → C# → B → A → G → F# → E と順に下がる');
+  await expect(
+    result.getByRole('listbox', { name: 'コード' }).getByRole('option', { name: 'I/7 (D/C#)' }),
+  ).toHaveCount(1);
+});
