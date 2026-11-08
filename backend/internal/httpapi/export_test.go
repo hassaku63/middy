@@ -68,7 +68,7 @@ func TestExportMIDIErrors(t *testing.T) {
 		wantMsg  string
 	}{
 		{"malformed", `{"timeline":`, "invalid_json", "invalid JSON body"},
-		{"empty timeline", `{"timeline":{}}`, "invalid_request", "ppq must be positive"},
+		{"empty timeline", `{"timeline":{}}`, "invalid_request", "ppq must be 1..32767"},
 		{"bad note", `{"timeline":{"ppq":480,"tempoBpm":120,"timeSignature":{"numerator":4,"denominator":4},"key":{"tonic":0,"mode":"major"},"tracks":[{"name":"p","channel":0,"program":0,"notes":[{"pitch":200,"velocity":100,"start":0,"duration":1}]}],"harmony":[]}}`, "invalid_request", "pitch out of range"},
 	}
 	for _, tt := range tests {

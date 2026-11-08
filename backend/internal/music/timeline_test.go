@@ -45,8 +45,8 @@ func TestTimelineValidate(t *testing.T) {
 		mutate func(*Timeline)
 		want   string
 	}{
-		{"zero ppq", func(tl *Timeline) { tl.PPQ = 0 }, "ppq must be positive"},
-		{"zero tempo", func(tl *Timeline) { tl.TempoBPM = 0 }, "tempoBpm must be positive"},
+		{"zero ppq", func(tl *Timeline) { tl.PPQ = 0 }, "ppq must be 1..32767"},
+		{"zero tempo", func(tl *Timeline) { tl.TempoBPM = 0 }, "tempoBpm must be 10..1000"},
 		{"bad denominator", func(tl *Timeline) { tl.TimeSignature.Denominator = 3 }, "invalid time signature"},
 		{"bad channel", func(tl *Timeline) { tl.Tracks[0].Channel = 16 }, "channel must be 0..15"},
 		{"bad program", func(tl *Timeline) { tl.Tracks[0].Program = 128 }, "program must be 0..127"},
