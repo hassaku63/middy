@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"slices"
 )
 
 // ChordQuality is the interval structure of a chord above its root.
@@ -38,6 +39,17 @@ var qualities = map[ChordQuality]qualityInfo{
 	Dominant7:       {"dom7", "7", []int{0, 4, 7, 10}, true},
 	HalfDiminished7: {"m7b5", "m7b5", []int{0, 3, 6, 10}, false},
 	MinorSixth:      {"min6", "m6", []int{0, 3, 7, 9}, false},
+}
+
+// Qualities lists every chord quality the engine knows, in declaration
+// order, so mirrors of the table (the frontend fixtures) cannot miss one.
+func Qualities() []ChordQuality {
+	out := make([]ChordQuality, 0, len(qualities))
+	for q := range qualities {
+		out = append(out, q)
+	}
+	slices.Sort(out)
+	return out
 }
 
 func (q ChordQuality) info() (qualityInfo, error) {
