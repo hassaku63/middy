@@ -39,7 +39,7 @@ export function SaveProjectForm({ projects, current }: Props) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="名前（空なら自動）"
-        aria-label="プロジェクト名"
+        aria-label="例の名前"
         disabled={saving}
       />
       <button type="submit" disabled={saving}>

@@ -36,23 +36,23 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={onOpen} />);
 
-    await user.type(screen.getByLabelText('プロジェクト名'), '雨の曲');
+    await user.type(screen.getByLabelText('例の名前'), '雨の曲');
     await user.click(screen.getByRole('button', { name: '保存' }));
 
     // The list stays folded until asked for.
-    await user.click(await screen.findByText('保存したプロジェクト（1）'));
-    const list = screen.getByRole('list', { name: 'プロジェクト一覧' });
+    await user.click(await screen.findByText('保存した例（1）'));
+    const list = screen.getByRole('list', { name: '保存した例の一覧' });
     const item = within(list).getByRole('listitem');
     expect(item).toHaveTextContent('雨の曲');
     expect(item).toHaveTextContent('A minor · 90 BPM');
-    expect(screen.getByLabelText('プロジェクト名')).toHaveValue('');
+    expect(screen.getByLabelText('例の名前')).toHaveValue('');
 
     await user.click(within(item).getByRole('button', { name: '開く' }));
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ name: '雨の曲', timeline }));
 
     await user.click(within(item).getByRole('button', { name: '雨の曲 を削除' }));
     await waitFor(() =>
-      expect(screen.queryByRole('list', { name: 'プロジェクト一覧' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('list', { name: '保存した例の一覧' })).not.toBeInTheDocument(),
     );
     expect(await store.list()).toHaveLength(0);
   });
@@ -71,6 +71,6 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
       return <ProjectList projects={projects} onOpen={vi.fn()} />;
     }
     render(<Empty />);
-    expect(screen.queryByRole('region', { name: '保存したプロジェクト' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: '保存した例' })).not.toBeInTheDocument();
   });
 });

@@ -16,7 +16,7 @@ export function ProjectList({ projects, onOpen }: Props) {
   const count = projects.projects.length;
   if (count === 0 && !projects.error) return null;
   return (
-    <section className="projects" aria-label="保存したプロジェクト">
+    <section className="projects" aria-label="保存した例">
       {projects.error && (
         <p role="alert" className="projects__error">
           {projects.error}
@@ -24,8 +24,8 @@ export function ProjectList({ projects, onOpen }: Props) {
       )}
       {count > 0 && (
         <details className="projects__fold">
-          <summary>保存したプロジェクト（{count}）</summary>
-          <ul className="projects__list" aria-label="プロジェクト一覧">
+          <summary>保存した例（{count}）</summary>
+          <ul className="projects__list" aria-label="保存した例の一覧">
             {projects.projects.map((p) => (
               <li key={p.id} className="projects__item">
                 <span className="projects__name">{p.name}</span>
