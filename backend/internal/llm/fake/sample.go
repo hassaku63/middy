@@ -180,6 +180,17 @@ func applyKeywords(text string, in map[string]any) {
 			break
 		}
 	}
+	// A half-time word writes the first candidate's drums as a grid
+	// (BL-077): the eight-beat with its snare on 3 alone.
+	for _, kw := range []string{"ハーフタイム", "half-time", "half time"} {
+		if strings.Contains(text, kw) {
+			first := in["candidates"].([]map[string]any)[0]
+			delete(first, "drums")
+			first["drumGrid"] = map[string]any{"division": 2, "basedOn": "eight-beat",
+				"voices": map[string]string{"kick": "x... ....", "snare": ".... x...", "hat": "xxxx xxxx"}}
+			break
+		}
+	}
 	// A "long" word repeats the first candidate's progression four times
 	// (16 chords), so long-timeline layouts can be tried without a key.
 	for _, kw := range []string{"長い", "long"} {

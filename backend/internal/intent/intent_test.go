@@ -474,3 +474,52 @@ func TestPushes(t *testing.T) {
 		t.Error("the schema offers pushes")
 	}
 }
+
+// TestDrumGrids (BL-077): a candidate may write its drums as a grid; the
+// engine's checks become retry errors, a grid and a drums id do not mix,
+// and basedOn names catalogue drums that fit the meter and the style.
+func TestDrumGrids(t *testing.T) {
+	backbeat := &music.DrumGrid{Division: 2, Voices: map[string]string{"kick": "x... x.x.", "snare": "..x. ..x.", "hat": "xxxx xxxx"}}
+	tests := []struct {
+		name string
+		edit func(c *Candidate)
+		want string // "" means valid
+	}{
+		{"a grid in pop", func(c *Candidate) { c.Style, c.DrumGrid = "pop", backbeat }, ""},
+		{"based on the eight-beat", func(c *Candidate) {
+			g := *backbeat
+			g.BasedOn = "eight-beat"
+			c.Style, c.DrumGrid = "pop", &g
+		}, ""},
+		{"grid and drums", func(c *Candidate) { c.DrumGrid, c.Drums = backbeat, "eight-beat" }, "write drums or drumGrid, not both"},
+		{"bad grid", func(c *Candidate) {
+			c.DrumGrid = &music.DrumGrid{Division: 2, Voices: map[string]string{"kick": "x..."}}
+		}, `drumGrid: pattern: grid voices["kick"] has 4 steps, want 8`},
+		{"basedOn of another style", func(c *Candidate) {
+			g := *backbeat
+			g.BasedOn = "jazz-ride"
+			c.Style, c.DrumGrid = "pop", &g
+		}, `drums "jazz-ride" does not fit the pop style`},
+		{"basedOn unknown", func(c *Candidate) {
+			g := *backbeat
+			g.BasedOn = "polka"
+			c.DrumGrid = &g
+		}, `drumGrid.basedOn must be one of`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			tt.edit(&in.Candidates[0])
+			err := in.Validate()
+			switch {
+			case tt.want == "" && err != nil:
+				t.Fatalf("should be valid: %v", err)
+			case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+				t.Fatalf("error %v should mention %q", err, tt.want)
+			}
+		})
+	}
+	if !strings.Contains(string(Schema), `"drumGrid"`) || !strings.Contains(string(Schema), `"cross-stick"`) {
+		t.Error("the schema offers the grid and its voices")
+	}
+}

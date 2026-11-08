@@ -236,3 +236,16 @@ test('a driving image pushes a chord early and explains the push (BL-085)', asyn
     .click();
   await expect(result.locator('.explanation__text').first()).toContainText('（押し）');
 });
+
+test('a half-time image writes its drums as a grid and explains it (BL-077)', async ({ page }) => {
+  await page.goto('/');
+  const { result } = await openExample(page, 'ハーフタイムのポップ', '朝の光');
+  const rhythm = result.getByLabel('リズム');
+  await expect(rhythm).toContainText('ハーフタイム');
+  await expect(rhythm).toContainText('格子');
+  await expect(result.getByTestId('drum-lane')).toBeVisible();
+  // A key change sends the grid back.
+  await result.getByLabel('キー').selectOption('2');
+  await expect(result.getByLabel('キー')).toHaveValue('2');
+  await expect(rhythm).toContainText('ハーフタイム');
+});

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
+	"github.com/hassaku63/middy/backend/internal/music/pattern"
 )
 
 // Schema is the JSON Schema handed to the LLM as the required output
@@ -63,13 +64,34 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
           "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で。この例で鳴るものだけを語り、鳴らない楽器やメロディには触れない" },
           "accompaniment": { "type": "string", "enum": [%s], "description": "伴奏の型。例の拍子の型から選ぶ。省略するとブロックコード" },
           "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。例の拍子の型から選ぶ。省略するとドラムなし" },
+          "drumGrid": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["division", "voices"],
+            "description": "ドラムを型の代わりに 1 小節の格子で書く。drums とは同時に使わない。division は 1 拍のマスの数（4/4・3/4 では 2・3・4、6/8 では 3・6）。voices は声部ごとに 1 小節を 1 マス 1 文字で書き（X は強く、x は普通、o はゴースト、. は休み。拍の区切りに空白を入れてよい）、手で叩く声部は 1 マスに 2 つまで",
+            "properties": {
+              "division": { "type": "integer", "enum": [2, 3, 4, 6] },
+              "voices": { "type": "object", "additionalProperties": false, "properties": { %s } },
+              "basedOn": { "type": "string", "enum": [%s], "description": "もとにしたドラムの型。スタイルの型から選ぶ" }
+            }
+          },
           "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる。伴奏かドラムがあるときに効く。6/8 では使わない。省略するとストレート" }
         }
       }
     }
   }
 }`, MaxMoodTags, MinCandidates, MaxCandidates, quoted(StyleIDs()), MinTempoBPM, MaxTempoBPM, MaxChords,
-	quoted(AccompanimentIDs()), quoted(DrumIDs()), quoted(FeelIDs())))
+	quoted(AccompanimentIDs()), quoted(DrumIDs()), gridVoiceProperties(), quoted(DrumIDs()), quoted(FeelIDs())))
+
+// gridVoiceProperties lists the grid voices as string properties.
+func gridVoiceProperties() string {
+	voices := pattern.GridVoices()
+	out := make([]string, len(voices))
+	for i, v := range voices {
+		out[i] = fmt.Sprintf("%q: { \"type\": \"string\" }", v)
+	}
+	return strings.Join(out, ", ")
+}
 
 func quoted(ids []string) string {
 	out := make([]string, len(ids))

@@ -369,3 +369,15 @@ func TestReportShowsPushes(t *testing.T) {
 		t.Errorf("progression should mark the pushes: %q", got)
 	}
 }
+
+// TestReportNamesGrids (BL-077): a grid is named in the patterns column
+// with the drums it is based on, and a case's drums are judged by that.
+func TestReportNamesGrids(t *testing.T) {
+	res := result()
+	res.Candidates[0].Accompaniment = "strum"
+	res.Candidates[0].DrumGrid = &music.DrumGrid{Division: 2, Voices: map[string]string{"kick": "x......."}, BasedOn: "eight-beat"}
+	v := Judge(Case{ID: "c", Mode: "either", Drums: "eight-beat"}, res)
+	if v.Patterns != "strum/grid<eight-beat" || len(v.Problems) > 0 {
+		t.Errorf("patterns %q, problems %v", v.Patterns, v.Problems)
+	}
+}
