@@ -116,17 +116,18 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 
 	beat := BeatTicks(ts, tl.PPQ)
 	chords := make([]Chord, len(prog))
+	numerals, symbols := make([]string, len(prog)), make([]string, len(prog))
 	for i, s := range prog {
-		chord, _, _, err := stepChord(key, s)
+		chord, numeral, symbol, err := stepChord(key, s)
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
 		}
-		chords[i] = chord
+		chords[i], numerals[i], symbols[i] = chord, numeral, symbol
 	}
 	led := LeadVoicings(chords) // each chord voiced from the one before (BL-086)
 	var cursor Tick
 	for i, s := range prog {
-		chord, numeral, symbol, _ := stepChord(key, s)
+		chord, numeral, symbol := chords[i], numerals[i], symbols[i]
 		duration := Tick(s.Beats) * beat
 
 		pitches := slices.Clone(led[i])

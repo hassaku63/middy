@@ -166,6 +166,17 @@ func applyKeywords(text string, in map[string]any) {
 			break
 		}
 	}
+	// A "long" word repeats the first candidate's progression four times
+	// (16 chords), so long-timeline layouts can be tried without a key.
+	for _, kw := range []string{"長い", "long"} {
+		if strings.Contains(text, kw) {
+			first := in["candidates"].([]map[string]any)[0]
+			prog := first["progression"].([]string)
+			first["progression"] = append(append(append(append([]string{}, prog...), prog...), prog...), prog...)
+			first["title"] = first["title"].(string) + "（長め）"
+			break
+		}
+	}
 	// A driving word pushes the first candidate's last chord an eighth
 	// (BL-085), so a pushed chord can be heard and read without a key.
 	for _, kw := range []string{"ロック", "勢い", "rock", "drive"} {
@@ -183,22 +194,15 @@ func applyKeywords(text string, in map[string]any) {
 	// A half-time word writes the first candidate's drums as a grid
 	// (BL-077): the eight-beat with its snare on 3 alone.
 	for _, kw := range []string{"ハーフタイム", "half-time", "half time"} {
+		first := in["candidates"].([]map[string]any)[0]
+		_, meter := first["meter"]
+		if style := first["style"]; meter || (style != "pop" && style != "rock") {
+			break // the grid is a 4/4 eight-beat variation
+		}
 		if strings.Contains(text, kw) {
-			first := in["candidates"].([]map[string]any)[0]
 			delete(first, "drums")
 			first["drumGrid"] = map[string]any{"division": 2, "basedOn": "eight-beat",
 				"voices": []map[string]string{{"voice": "kick", "steps": "x... ...."}, {"voice": "snare", "steps": ".... x..."}, {"voice": "hat", "steps": "xxxx xxxx"}}}
-			break
-		}
-	}
-	// A "long" word repeats the first candidate's progression four times
-	// (16 chords), so long-timeline layouts can be tried without a key.
-	for _, kw := range []string{"長い", "long"} {
-		if strings.Contains(text, kw) {
-			first := in["candidates"].([]map[string]any)[0]
-			prog := first["progression"].([]string)
-			first["progression"] = append(append(append(append([]string{}, prog...), prog...), prog...), prog...)
-			first["title"] = first["title"].(string) + "（長め）"
 			break
 		}
 	}

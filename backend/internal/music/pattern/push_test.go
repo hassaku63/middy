@@ -42,3 +42,33 @@ func TestPushesComeBeforeTheFeel(t *testing.T) {
 		t.Errorf("the pushed eighth should swing to 800")
 	}
 }
+
+// TestPushStaysTiedUnderSwing (review of BL-085/084): swing moves a pushed
+// eighth to the swung "and", and the chord before it now ends there too,
+// so no silence opens before the push.
+func TestPushStaysTiedUnderSwing(t *testing.T) {
+	prog := music.Progression{
+		{Degree: 1, Beats: 4},
+		{Degree: 5, Beats: 4, Push: music.PushEighth},
+	}
+	tl, err := music.FromProgression(music.Key{Tonic: music.C, Mode: music.Major}, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := Render(tl, Choice{Accompaniment: "block", Feel: FeelSwing})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var firstEnd, pushAt music.Tick
+	for _, n := range out.Tracks[0].Notes {
+		switch {
+		case n.Start == 0:
+			firstEnd = n.Start + n.Duration
+		case pushAt == 0 || n.Start < pushAt:
+			pushAt = n.Start
+		}
+	}
+	if pushAt == 1680 || firstEnd != pushAt {
+		t.Errorf("the push should swing and stay tied: first chord ends %d, push at %d", firstEnd, pushAt)
+	}
+}
