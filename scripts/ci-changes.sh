@@ -23,8 +23,13 @@ backend='^(backend/|docs/api/openapi\.yaml|frontend/src/shared/api/fixtures/)'
 frontend='^(frontend/|docs/api/openapi\.yaml|backend/internal/fixtures/|backend/cmd/fixtures/)'
 # the image builds both apps.
 image='^(backend/|frontend/|Dockerfile|\.dockerignore)'
+# the real-API evaluation (eval.yml, ADR-0018) only matters when what the
+# model is told, or how its answer is read and rendered, may have changed.
+# It costs money, so it does not follow the "everything" paths above.
+eval='^(backend/internal/(ideas|intent|llm|music)/|backend/go\.(mod|sum)|\.github/workflows/eval\.yml|Makefile)'
 
 touches() { grep -qE "$1" <<<"$changed"; }
 for job in backend frontend image; do
   if touches "$all" || touches "${!job}"; then echo "$job=true"; else echo "$job=false"; fi
 done
+if touches "$eval"; then echo "eval=true"; else echo "eval=false"; fi
