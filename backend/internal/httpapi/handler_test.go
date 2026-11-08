@@ -1,11 +1,13 @@
 package httpapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
@@ -76,4 +78,50 @@ func TestWriteErrorEnvelope(t *testing.T) {
 	if body.Error.Code != "invalid_request" || body.Error.Message != "bad input" {
 		t.Fatalf("unexpected body %+v", body)
 	}
+}
+
+func TestRequestLoggerTurnsAPanicIntoTheErrorEnvelope(t *testing.T) {
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&logs, nil))
+	h := requestLogger(logger, http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		panic("engine bug")
+	}))
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/v1/ideas", nil))
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500", rec.Code)
+	}
+	var body errorResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil || body.Error.Code != "internal_error" {
+		t.Fatalf("body = %s (%v), want the internal_error envelope", rec.Body.String(), err)
+	}
+	for _, want := range []string{`"panic":"engine bug"`, `"status":500`, `"duration_ms"`} {
+		if !strings.Contains(logs.String(), want) {
+			t.Errorf("logs lack %s:\n%s", want, logs.String())
+		}
+	}
+}
+
+func TestRequestLoggerLeavesAStartedResponseAlone(t *testing.T) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	h := requestLogger(logger, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusAccepted)
+		panic("late")
+	}))
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusAccepted || rec.Body.Len() != 0 {
+		t.Fatalf("got %d %q, want the handler's own 202 with nothing appended", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRequestLoggerReachesTheRealWriter(t *testing.T) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	h := requestLogger(logger, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if err := http.NewResponseController(w).Flush(); err != nil {
+			t.Errorf("Flush through the logger: %v", err)
+		}
+	}))
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
 }

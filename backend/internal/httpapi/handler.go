@@ -6,9 +6,12 @@
 package httpapi
 
 import (
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"runtime/debug"
+	"time"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
 	"github.com/hassaku63/middy/backend/internal/llm"
@@ -61,22 +64,47 @@ func NewHandler(d Deps) http.Handler {
 	return requestLogger(d.Logger, mux)
 }
 
-// requestLogger is the only middleware for now. Add more (recover, CORS)
-// here rather than in main so tests exercise the same stack.
+// requestLogger is the only middleware: it logs every request with its
+// status and duration, and turns a handler's panic into the JSON error
+// envelope (500 internal_error) instead of a dropped connection. Add more
+// (CORS) here rather than in main so tests exercise the same stack.
 func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		start := time.Now()
+		defer func() {
+			if v := recover(); v != nil {
+				if v == http.ErrAbortHandler { //nolint:errorlint // sentinel value, compared as net/http does
+					panic(v)
+				}
+				logger.Error("http handler panicked", "method", r.Method, "path", r.URL.Path, "panic", fmt.Sprint(v), "stack", string(debug.Stack()))
+				if !rec.wrote {
+					writeError(rec, http.StatusInternalServerError, "internal_error", "the server failed on this request")
+				}
+			}
+			logger.Info("http", "method", r.Method, "path", r.URL.Path, "status", rec.status, "duration_ms", time.Since(start).Milliseconds())
+		}()
 		next.ServeHTTP(rec, r)
-		logger.Info("http", "method", r.Method, "path", r.URL.Path, "status", rec.status)
 	})
 }
 
 type statusRecorder struct {
 	http.ResponseWriter
 	status int
+	wrote  bool
 }
 
 func (s *statusRecorder) WriteHeader(code int) {
 	s.status = code
+	s.wrote = true
 	s.ResponseWriter.WriteHeader(code)
 }
+
+func (s *statusRecorder) Write(b []byte) (int, error) {
+	s.wrote = true
+	return s.ResponseWriter.Write(b)
+}
+
+// Unwrap lets http.ResponseController and optional interfaces (Flusher,
+// ReaderFrom) reach the real writer.
+func (s *statusRecorder) Unwrap() http.ResponseWriter { return s.ResponseWriter }
