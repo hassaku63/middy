@@ -294,3 +294,15 @@ func TestReportNamesTheFirstPatterns(t *testing.T) {
 		t.Errorf("block chords without drums add nothing:\n%s", got)
 	}
 }
+
+// TestReportShowsPerChordBeats (BL-109): when the first candidate gives
+// each chord a length, the progression column shows it ("i:8").
+func TestReportShowsPerChordBeats(t *testing.T) {
+	res := result()
+	res.Candidates[0].Progression = []string{"i", "VI", "III", "VII"}
+	res.Candidates[0].Beats = []int{8, 4, 2, 2}
+	v := Judge(Case{ID: "c", Mode: "either"}, res)
+	if !strings.HasSuffix(v.Progression[0], ":8") || !strings.HasSuffix(v.Progression[1], ":4") {
+		t.Errorf("progression should carry the lengths: %v", v.Progression)
+	}
+}

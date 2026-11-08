@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -297,5 +298,27 @@ func TestPromptSteersCelticAwayFromPopGrooves(t *testing.T) {
 	}
 	if c := res.Candidates[0]; c.Accompaniment != "reel" || c.Drums != "bodhran" {
 		t.Errorf("the fake's Celtic reel should use the Celtic patterns: %s / %s", c.Accompaniment, c.Drums)
+	}
+}
+
+// TestImagineRendersPerChordBeats (BL-109): a candidate's beats give each
+// chord its own length; the prompt says how to write them.
+func TestImagineRendersPerChordBeats(t *testing.T) {
+	const held = `{"summary": "s", "mood": [], "candidates": [
+	  {"title": "t", "key": {"tonic": 2, "mode": "dorian"}, "tempoBpm": 112,
+	   "progression": ["i", "IV", "i", "VII"], "beatsPerChord": 4, "beats": [8, 4, 2, 2], "reason": "r"}]}`
+	res, err := New(fake.New(llm.Response{Text: held})).Imagine(context.Background(), []Message{user("ケルト")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	var durations []music.Tick
+	for _, h := range res.Candidates[0].Timeline.Harmony {
+		durations = append(durations, h.Duration)
+	}
+	if got := fmt.Sprint(durations); got != "[3840 1920 960 960]" {
+		t.Errorf("durations = %s, want two bars, a bar, two beats, two beats", got)
+	}
+	if !strings.Contains(SystemPrompt(), "beats に progression と同じ数の長さ") {
+		t.Error("the prompt should explain beats")
 	}
 }

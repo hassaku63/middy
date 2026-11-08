@@ -122,7 +122,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	first := res.Candidates[0]
 	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
-	v.Progression = first.Progression
+	v.Progression = withBeats(first.Progression, first.Beats)
 	v.Patterns = patternsOf(first.Accompaniment, first.Drums)
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
@@ -387,6 +387,19 @@ func judgeMode(want string, got music.Mode) string {
 }
 
 // meterNote marks a first candidate that is not in 4/4.
+// withBeats marks each label with its length ("i:8") when the candidate
+// gives per-chord beats (BL-109); otherwise it returns the labels as they are.
+func withBeats(labels []string, beats []int) []string {
+	if len(beats) != len(labels) {
+		return labels
+	}
+	out := make([]string, len(labels))
+	for i, l := range labels {
+		out[i] = fmt.Sprintf("%s:%d", l, beats[i])
+	}
+	return out
+}
+
 // patternsOf names the patterns a candidate chose: "reel/bodhran",
 // "strum" (no drums), "block/eight-beat" (drums alone), or "".
 func patternsOf(acc, drums string) string {

@@ -173,3 +173,22 @@ test('a rocking lullaby gets a 6/8 example counted in two beats, kept when the k
   await expect(overview).toContainText('4 個の和音で 4 小節');
   await expect(overview).toContainText('D major');
 });
+
+test('a Celtic reel holds its tonic chord for two bars, kept when the key changes (BL-109)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { card, result } = await openExample(
+    page,
+    'アイルランドのパブのケルト音楽',
+    '緑の丘のリール',
+  );
+  await expect(card).toContainText('長さ: 8・4・2・2 拍');
+  const overview = result.getByLabel('全体と流れ');
+  await expect(overview).toContainText('4 個の和音で 4 小節');
+  // D dorian to E dorian: the numerals and each chord's length stay.
+  await result.getByLabel('キー').selectOption('4');
+  await expect(result.getByLabel('キー')).toHaveValue('4');
+  await expect(overview).toContainText('E dorian');
+  await expect(overview).toContainText('4 個の和音で 4 小節');
+});
