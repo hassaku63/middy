@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
@@ -33,9 +34,13 @@ func handleIdeas(svc *ideas.Service) http.HandlerFunc {
 		case errors.Is(err, ideas.ErrDeclined):
 			// Not an upstream fault: the request was understood and refused.
 			writeError(w, http.StatusUnprocessableEntity, "llm_declined", "the language model declined this request; try rephrasing")
-		default:
-			// Conversation validation errors come back as plain errors.
+		case errors.Is(err, ideas.ErrInvalidConversation):
 			writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		default:
+			// An answer that passed validation but could not be built is
+			// the engine's fault, not the caller's.
+			slog.ErrorContext(r.Context(), "ideas: could not build the examples", "error", err)
+			writeError(w, http.StatusInternalServerError, "internal_error", "the examples could not be built; try again")
 		}
 	}
 }

@@ -37,10 +37,10 @@ export function useIdeas(onAnswer?: (answer: Answer) => void): Ideas {
     async (text: string) => {
       const content = text.trim();
       if (!content || busy) return;
-      const history: ChatMessage[] = [
+      const history = recentHistory([
         ...turns.map((t) => ({ role: t.role, content: t.content })),
         { role: 'user', content },
-      ];
+      ]);
       setTurns((prev) => [...prev, { role: 'user', content }]);
       setBusy(true);
       setError(null);
@@ -82,4 +82,18 @@ function describe(e: unknown): string {
     }
   }
   return 'バックエンドに接続できません';
+}
+
+/** The most messages a turn may send (the API's `messages.maxItems`). */
+export const MAX_MESSAGES = 20;
+
+/**
+ * The latest messages that fit the API, starting from a user message: a
+ * long conversation keeps going on its recent turns instead of failing
+ * once it passes the limit.
+ */
+export function recentHistory(messages: ChatMessage[]): ChatMessage[] {
+  let out = messages.slice(-MAX_MESSAGES);
+  while (out.length > 1 && out[0]?.role !== 'user') out = out.slice(1);
+  return out;
 }

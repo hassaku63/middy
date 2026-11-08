@@ -13,11 +13,16 @@ type exportMIDIRequest struct {
 	Timeline music.Timeline `json:"timeline"`
 }
 
+// maxTimelineBody bounds a request that carries a whole analysed timeline:
+// a long example with a dense pattern runs to a few hundred KB.
+const maxTimelineBody = 4 << 20
+
 // handleExportMIDI returns the timeline as a Standard MIDI File. The file
 // name is fixed; the client chooses a descriptive one for the download.
+
 func handleExportMIDI(w http.ResponseWriter, r *http.Request) {
 	var req exportMIDIRequest
-	if err := decodeJSON(r, &req); err != nil {
+	if err := decodeJSONUpTo(r, &req, maxTimelineBody); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
 		return
 	}

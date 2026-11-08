@@ -706,6 +706,15 @@ export interface operations {
           'application/json': components['schemas']['Error'];
         };
       };
+      /** @description `internal_error`（検証を通った答えから例を作れなかった。エンジンの不具合） */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
       /** @description `llm_unavailable`（プロバイダに到達できない）または `llm_invalid_output`（再試行後も使えない答え） */
       502: {
         headers: {
