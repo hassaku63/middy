@@ -18,8 +18,8 @@ func TestRhythmDescriptions(t *testing.T) {
 		wantDrumSy bool
 	}{
 		{"pulse", "eight-beat", 4, 0, false, 4, false},
-		{"arpeggio", "ballad", 4, 4, true, 2, false},
-		{"strum", "bossa", 3, 2, true, 2, true},
+		{"arpeggio", "ballad", 4, 4, false, 2, false}, // even eighths: every offbeat is answered (BL-083)
+		{"strum", "bossa", 3, 2, false, 2, false},     // the next beat sounds after each offbeat (BL-083)
 		{"block", "", 1, 0, false, 0, false},
 	}
 	for _, tt := range tests {
@@ -69,8 +69,13 @@ func TestExplainPlacementWording(t *testing.T) {
 	if got := explainPlacement("伴奏", placement{onBeat: 4}, 4); !strings.Contains(got, "すべて拍の頭（1・2・3・4）") {
 		t.Errorf("all on beats: %q", got)
 	}
-	if got := explainPlacement("伴奏", placement{onBeat: 2, offBeat: 2}, 4); !strings.Contains(got, "シンコペーション") {
-		t.Errorf("half off beats should be syncopated: %q", got)
+	// Syncopation is a skipped beat after an offbeat hit (BL-083), not a
+	// share of offbeats: half off the beat is not enough on its own.
+	if got := explainPlacement("伴奏", placement{onBeat: 2, offBeat: 2}, 4); strings.Contains(got, "シンコペーション") {
+		t.Errorf("offbeats answered by the beats are not syncopated: %q", got)
+	}
+	if got := explainPlacement("伴奏", placement{onBeat: 2, offBeat: 2, skipped: []int{3}}, 4); !strings.Contains(got, "3 拍目の頭が鳴らない") {
+		t.Errorf("a skipped beat 3 is a syncopation over beat 3: %q", got)
 	}
 	if got := explainPlacement("伴奏", placement{onBeat: 7, offBeat: 1}, 4); !strings.Contains(got, "軽い推進力") {
 		t.Errorf("mostly on beats: %q", got)
