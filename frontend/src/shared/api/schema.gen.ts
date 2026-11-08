@@ -405,7 +405,7 @@ export interface components {
       offBeat: number;
       /** @description それより細かい位置の打点 */
       finer: number;
-      /** @description 裏拍の割合が 4 分の 1 以上 */
+      /** @description 拍の裏で鳴ったあと、次の拍の頭が鳴らない打点がある（Longuet-Higgins & Lee。型は 1 小節を繰り返すので、最後の拍の次は次の小節の 1 拍目。BL-083） */
       syncopated: boolean;
       /** @description UI にそのまま出せる日本語 */
       explanation: string;
