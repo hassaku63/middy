@@ -45,7 +45,7 @@ func TestFlatsNamingTheKeysOwnChordAreRespelled(t *testing.T) {
 		key   Key
 		label string
 	}{
-		{Key{E, Minor}, "bII"},        // F: phrygian, not in E minor
+		{Key{E, Minor}, "bV"},         // Bb: not in E minor, not borrowed
 		{Key{C, Mixolydian}, "bVII7"}, // Bb7: mixolydian's VII7 is Bbmaj7
 		{Key{C, Major}, "bIII"},       // Eb: not in C major, not in the borrowed set
 		{Key{C, Dorian}, "bVI"},       // Ab: dorian has A

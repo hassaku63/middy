@@ -76,9 +76,9 @@ func TestStepFromLabelHarmonicMinorDominant(t *testing.T) {
 		{minor, "V7", ptr(Dominant7), 5},
 		{minor, "v", nil, 5},
 		{minor, "v7", nil, 5},
-		{minor, "IV", nil, 4}, // only the dominant is special
-		{major, "V", nil, 5},  // already major; no override needed
-		{major, "v", nil, 5},  // case is ignored outside minor V
+		{minor, "IV", ptr(MajorTriad), 4}, // borrowed from the parallel major (BL-075)
+		{major, "V", nil, 5},              // already major; no override needed
+		{major, "v", nil, 5},              // case is ignored outside minor V
 	}
 	for _, tt := range tests {
 		t.Run(tt.key.String()+" "+tt.label, func(t *testing.T) {
@@ -164,7 +164,7 @@ func TestCanonicalLabelRejectsWhatTheKeyWouldSilentlyChange(t *testing.T) {
 		{dMinor, "iiø7", "iiø7", ""},
 		{dMinor, "iim7b5", "iiø7", ""}, // same chord, the engine's spelling wins
 		{dMinor, "VII7", "VII7", ""},
-		{dMinor, "IV", "", `"IV" would sound as Gm (iv) in D minor`}, // the dorian IV is not available
+		{dMinor, "II", "", `"II" would sound as Edim (ii°) in D minor`}, // no major II in minor
 		{dMinor, "VIImaj7", "", `"VIImaj7" would sound as C7 (VII7) in D minor`},
 		{dMajor, "VII", "", `"VII" would sound as C#dim (vii°) in D major`}, // the mixolydian VII
 		{dMajor, "vii°", "vii°", ""},

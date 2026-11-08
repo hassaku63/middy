@@ -53,6 +53,9 @@ func whole(tl Timeline) string {
 		if used := distinct(tl, func(h HarmonyEvent) bool { return isHarmonicMinorDominant(k, h.Chord) }); len(used) > 0 {
 			s += fmt.Sprintf("%sは和声的短音階の形で、導音が主和音へ強く引き寄せる。", joinChords(used))
 		}
+		if used := distinct(tl, func(h HarmonyEvent) bool { return h.Analysis != nil && h.Analysis.Borrowed }); len(used) > 0 {
+			s += fmt.Sprintf("この例では %sが短調の外から借りた和音（同主長調の I・IV、ナポリの ♭II）。", joinChords(used))
+		}
 	}
 	return s
 }

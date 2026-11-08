@@ -60,9 +60,9 @@ func TestBorrowingIsLimitedToTheApprovedSet(t *testing.T) {
 			t.Errorf("%q must not be accepted in C major yet", label)
 		}
 	}
-	// Minor keys borrow nothing yet (BL-075): the dorian IV is still refused.
-	if _, err := CanonicalLabel(Key{A, Minor}, "IV"); err == nil || !strings.Contains(err.Error(), "would sound as Dm (iv)") {
-		t.Errorf("minor keys keep today's rule: %v", err)
+	// Minor keys borrow only their own set (BL-075): a major II is refused.
+	if _, err := CanonicalLabel(Key{A, Minor}, "II"); err == nil || !strings.Contains(err.Error(), "would sound as Bdim (ii°)") {
+		t.Errorf("minor keys refuse a major II: %v", err)
 	}
 }
 
