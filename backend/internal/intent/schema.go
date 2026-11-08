@@ -57,7 +57,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
           },
           "meter": { "type": "string", "enum": ["4/4", "3/4", "6/8"], "description": "拍子。省略すると 4/4。ワルツ、メヌエット、ジャズ・ワルツのように 3 拍子が典型のイメージでは 3/4。子守唄、舟歌、ジグのように付点 4 分の 2 拍で揺れるイメージでは 6/8" },
           "beatsPerChord": { "type": "integer", "enum": [1, 2, 3, 4, 6, 8], "description": "1 コードの長さ（拍子の拍の数）。4/4 では 1・2・4・8、3/4 では 3（1 小節）か 6（2 小節）、6/8 では拍が付点 4 分で 1（半小節）・2（1 小節）・4（2 小節）" },
-          "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で" },
+          "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で。この例で鳴るものだけを語り、鳴らない楽器やメロディには触れない" },
           "accompaniment": { "type": "string", "enum": [%s], "description": "伴奏の型。例の拍子の型から選ぶ。省略するとブロックコード" },
           "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。例の拍子の型から選ぶ。省略するとドラムなし" },
           "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる。伴奏かドラムがあるときに効く。6/8 では使わない。省略するとストレート" }

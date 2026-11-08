@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hassaku63/middy/backend/internal/intent"
 	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -263,5 +264,20 @@ func TestImagineRendersSixEight(t *testing.T) {
 		if !strings.Contains(p, want) {
 			t.Errorf("prompt lacks %q", want)
 		}
+	}
+}
+
+// TestReasonSpeaksOnlyOfWhatSounds (#128): the reason is the listening
+// guide to this example, so the prompt and the schema keep it to what the
+// example plays; instruments it does not play, or a melody, stay out.
+func TestReasonSpeaksOnlyOfWhatSounds(t *testing.T) {
+	p := SystemPrompt()
+	for _, want := range []string{"reason は、この例で実際に鳴るもの", "鳴らない楽器", "メロディ"} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q", want)
+		}
+	}
+	if !strings.Contains(string(intent.Schema), "この例で鳴るものだけ") {
+		t.Error("the schema's reason should say it speaks only of what the example plays")
 	}
 }

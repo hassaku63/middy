@@ -255,3 +255,27 @@ func TestJudgeMeter(t *testing.T) {
 		t.Error("the report marks a 3/4 first candidate")
 	}
 }
+
+// TestSilentWordsInReasons (#128): a reason that names an instrument middy
+// never plays, or a melody, is reported (not failed) with the words found.
+func TestSilentWordsInReasons(t *testing.T) {
+	tests := []struct {
+		reasons []string
+		want    string
+	}{
+		{[]string{"VII が導音のない明るさを生み、ホイッスルやフィドルが似合う響きに。"}, "フィドル/ホイッスル"},
+		{[]string{"ストロークの 8 ビートで軽快に。", "メロディが映える穏やかな I–IV。"}, "メロディ"},
+		{[]string{"i と IV の往復でドリアンの明るさを出す。"}, ""},
+	}
+	for _, tt := range tests {
+		if got := strings.Join(silentWords(tt.reasons), "/"); got != tt.want {
+			t.Errorf("silentWords(%q) = %q, want %q", tt.reasons, got, tt.want)
+		}
+	}
+	report := Report([]Verdict{{Case: Case{ID: "muji"}, Pass: true, Silent: []string{"フィドル"}}})
+	for _, want := range []string{"· reason names フィドル", "説明が鳴らないものに触れた件数: 1"} {
+		if !strings.Contains(report, want) {
+			t.Errorf("report lacks %q:\n%s", want, report)
+		}
+	}
+}
