@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /**
  * BL-080 trial: long timelines in four layouts, chosen with ?timeline=<id>.
@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
  */
 test.use({ viewport: { width: 1280, height: 800 } });
 
-async function openLong(page: import('@playwright/test').Page, layout: string) {
+async function openLong(page: Page, layout: string) {
   await page.goto(`/?timeline=${layout}`);
   await page.getByLabel('イメージ', { exact: true }).fill('長い雨の日');
   await page.getByRole('button', { name: '送る' }).click();

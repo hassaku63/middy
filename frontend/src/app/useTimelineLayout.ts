@@ -12,12 +12,15 @@ export function useTimelineLayout() {
   const [layout, setLayout] = useState<TimelineLayout>(isTimelineLayout(fromUrl) ? fromUrl : 'fit');
   const lab = params.has('lab') || fromUrl !== null;
 
-  const choose = useCallback((next: TimelineLayout) => {
-    setLayout(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set('timeline', next);
-    window.history.replaceState(null, '', url);
-  }, [setLayout]);
+  const choose = useCallback(
+    (next: TimelineLayout) => {
+      setLayout(next);
+      const url = new URL(window.location.href);
+      url.searchParams.set('timeline', next);
+      window.history.replaceState(null, '', url);
+    },
+    [setLayout],
+  );
 
   return { layout, lab, choose };
 }
