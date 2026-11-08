@@ -218,7 +218,9 @@ func cadenceOfEvent(h HarmonyEvent) Cadence {
 	return h.Analysis.Cadence
 }
 
-func chordName(k Key, h HarmonyEvent) string { return fmt.Sprintf("%s（%s）", h.RomanNumeral, symbolOf(k, h)) }
+func chordName(k Key, h HarmonyEvent) string {
+	return fmt.Sprintf("%s（%s）", h.RomanNumeral, symbolOf(k, h))
+}
 
 // distinct returns the first event of each roman numeral that matches.
 func distinct(tl Timeline, match func(HarmonyEvent) bool) []HarmonyEvent {
