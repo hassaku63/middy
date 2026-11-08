@@ -9,6 +9,32 @@ export function midiToHz(pitch: number): number {
   return 440 * 2 ** ((pitch - 69) / 12);
 }
 
+/** How the synth voices a GM percussion note. */
+export type DrumVoice =
+  | { kind: 'kick' }
+  | { kind: 'tom'; startHz: number; endHz: number }
+  | { kind: 'stick' }
+  | { kind: 'snare' }
+  | { kind: 'hat' };
+
+/**
+ * The voice for a GM drum note: kicks and toms are pitched membranes (a
+ * sine that drops), the side stick a short click, the snare a noise burst
+ * with a tone, and everything else a short bright noise (hats, bells). The
+ * toms carry the bodhrán-like pattern, so they must not sound like hats.
+ */
+export function drumVoice(pitch: number): DrumVoice {
+  if (pitch === 35 || pitch === 36) return { kind: 'kick' };
+  if (pitch === 37) return { kind: 'stick' };
+  if (pitch === 38 || pitch === 40) return { kind: 'snare' };
+  // GM toms: 41 low floor .. 50 high tom; higher note, higher drum.
+  if ([41, 43, 45, 47, 48, 50].includes(pitch)) {
+    const startHz = 80 + (pitch - 41) * 14;
+    return { kind: 'tom', startHz, endHz: startHz * 0.6 };
+  }
+  return { kind: 'hat' };
+}
+
 /**
  * A small subtractive "piano-ish" voice: two detuned oscillators through a
  * low-pass filter with a percussive envelope. Good enough to hear chords
@@ -67,30 +93,63 @@ export class WebAudioSynth implements Synth {
     oscs[0]?.addEventListener('ended', () => this.active.delete(voice));
   }
 
-  /**
-   * GM percussion: kick = sine pitch drop, snare = noise burst with a
-   * short tone, everything else = short high-passed noise (hats, bells).
-   */
+  /** GM percussion, voiced by drumVoice. */
   private playDrum(note: ScheduledNote & { time: number }): void {
     const { time } = note;
     const level = (note.velocity / 127) ** 1.2;
     const gain = this.ctx.createGain();
     gain.connect(this.master);
-
-    if (note.pitch === 35 || note.pitch === 36) {
-      const osc = this.ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(150, time);
-      osc.frequency.exponentialRampToValueAtTime(45, time + 0.12);
-      gain.gain.setValueAtTime(level, time);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.25);
-      osc.connect(gain);
-      osc.start(time);
-      osc.stop(time + 0.3);
-      return;
+    const voice = drumVoice(note.pitch);
+    switch (voice.kind) {
+      case 'kick':
+        this.membrane(gain, time, level, 150, 45, 0.25);
+        return;
+      case 'tom':
+        this.membrane(gain, time, level * 0.9, voice.startHz, voice.endHz, 0.3);
+        return;
+      case 'stick':
+        this.click(gain, time, level);
+        return;
+      case 'snare':
+      case 'hat':
+        this.noiseHit(gain, time, level, voice.kind === 'snare');
     }
+  }
 
-    const isSnare = note.pitch === 38 || note.pitch === 40;
+  /** A pitched drum head: a sine falling from startHz to endHz. */
+  private membrane(
+    gain: GainNode,
+    time: number,
+    level: number,
+    startHz: number,
+    endHz: number,
+    length: number,
+  ): void {
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(startHz, time);
+    osc.frequency.exponentialRampToValueAtTime(endHz, time + length * 0.5);
+    gain.gain.setValueAtTime(level, time);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + length);
+    osc.connect(gain);
+    osc.start(time);
+    osc.stop(time + length + 0.05);
+  }
+
+  /** A side stick: a very short, woody tone with a touch of noise. */
+  private click(gain: GainNode, time: number, level: number): void {
+    const osc = this.ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1100, time);
+    gain.gain.setValueAtTime(level * 0.6, time);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.04);
+    osc.connect(gain);
+    osc.start(time);
+    osc.stop(time + 0.06);
+  }
+
+  /** A snare (band-passed noise and a tone) or a hat (short high-passed noise). */
+  private noiseHit(gain: GainNode, time: number, level: number, isSnare: boolean): void {
     const length = isSnare ? 0.18 : 0.06;
     const src = this.ctx.createBufferSource();
     src.buffer = this.noise();
