@@ -60,7 +60,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		h := &out.Harmony[i]
 		degree, ok := degreeOf(tl.Key, h.Chord.Root)
 		if !ok {
-			return Timeline{}, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, h.Chord, tl.Key)
+			return Timeline{}, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, tl.Key.ChordSymbol(h.Chord), tl.Key)
 		}
 		fn := functionByDegree[degree]
 		cad := cadenceBetween(prevDegree, degree)
@@ -121,7 +121,7 @@ var cadenceText = map[Cadence]string{
 const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
 
 func explain(key Key, h HarmonyEvent, fn Function, cad Cadence) string {
-	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, h.Chord, functionText[fn])
+	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, key.ChordSymbol(h.Chord), functionText[fn])
 	if isHarmonicMinorDominant(key, h.Chord) {
 		s += " " + harmonicMinorText
 	}

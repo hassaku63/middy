@@ -282,6 +282,13 @@ export interface components {
        * @example vii°
        */
       romanNumeral: string;
+      /**
+       * @description 調に合わせて綴った和音記号（B♭ major では `Bbmaj7`。`chord` から機械的に作ると `A#maj7` になる）。エンジンが付ける。以前に保存したタイムラインにはない
+       * @example Bbmaj7
+       * @example Gm7
+       * @example A7
+       */
+      symbol?: string;
       /** @description 解説データ。分析前のタイムラインでは省略される */
       analysis?: components['schemas']['HarmonyAnalysis'];
     };

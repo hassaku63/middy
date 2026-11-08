@@ -77,7 +77,8 @@ test('change the key of an example: the numerals stay, the chords move (BL-078)'
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨'); // A minor, arpeggio + ballad
   await result.getByLabel('キー').selectOption('0'); // C minor
   const chords = result.getByRole('listbox', { name: 'コード' }).getByRole('option');
-  await expect(chords).toHaveText([/i.*Cm/, /VI.*G#/, /III.*D#/, /VII.*A#/]);
+  // Spelled for C minor (three flats), not with sharps.
+  await expect(chords).toHaveText([/i.*Cm/, /VI.*Ab/, /III.*Eb/, /VII.*Bb/]);
   // The patterns come along: the drum lane is still there.
   await expect(result.getByTestId('drum-lane')).toBeVisible();
   const [download] = await Promise.all([

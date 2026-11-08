@@ -100,6 +100,7 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 			Duration:     duration,
 			Chord:        chord,
 			RomanNumeral: numeral,
+			Symbol:       key.ChordSymbol(chord),
 		})
 		cursor += duration
 	}

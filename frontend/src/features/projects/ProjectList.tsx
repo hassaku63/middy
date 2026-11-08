@@ -1,4 +1,4 @@
-import { pitchClassName } from '@/shared/lib/notation';
+import { keyName } from '@/shared/lib/notation';
 import type { Project } from '@/shared/lib/storage/projects';
 import type { Projects } from './useProjects';
 import './projects.css';
@@ -30,8 +30,8 @@ export function ProjectList({ projects, onOpen }: Props) {
               <li key={p.id} className="projects__item">
                 <span className="projects__name">{p.name}</span>
                 <span className="projects__meta">
-                  {pitchClassName(p.timeline.key.tonic)} {p.timeline.key.mode} ·{' '}
-                  {p.timeline.tempoBpm} BPM · {new Date(p.updatedAt).toLocaleString('ja-JP')}
+                  {keyName(p.timeline.key)} · {p.timeline.tempoBpm} BPM ·{' '}
+                  {new Date(p.updatedAt).toLocaleString('ja-JP')}
                 </span>
                 <button type="button" onClick={() => onOpen(p)}>
                   開く

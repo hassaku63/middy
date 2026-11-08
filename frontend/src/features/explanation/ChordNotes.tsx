@@ -1,5 +1,5 @@
 import type { Cadence, HarmonicFunction, HarmonyEvent } from '@/shared/api/client';
-import { chordSymbol } from '@/shared/lib/notation';
+import { harmonySymbol } from '@/shared/lib/notation';
 
 const FUNCTION_LABEL: Record<HarmonicFunction, string> = {
   T: 'トニック',
@@ -28,7 +28,7 @@ export function ChordNotes({ event, pinned, onClearSelection }: Props) {
       <header className="explanation__header">
         <h2 className="explanation__title">
           <span className="explanation__numeral">{event.romanNumeral}</span>
-          <span className="explanation__symbol">{chordSymbol(event.chord)}</span>
+          <span className="explanation__symbol">{harmonySymbol(event)}</span>
         </h2>
         {analysis && (
           <span className={`explanation__function is-${analysis.function}`}>

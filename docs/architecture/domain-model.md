@@ -7,7 +7,7 @@
 | 項目 | 規約 |
 | --- | --- |
 | ピッチ | MIDI ノート番号 0..127。**C4 = 60**（middle C） |
-| ピッチクラス | 0..11、C = 0。表示は既定でシャープ（`C#`）、必要なら `FlatName()` |
+| ピッチクラス | 0..11、C = 0。調に依存しない表示（`String()`）はシャープ。調の中での綴りは `Key.PitchClassName` / `Key.ChordSymbol`（B♭ major では `Bb`、`Bbmaj7`）。親となる長調の調号から決め、同数なら ♭ |
 | 時間 | tick。`DefaultPPQ = 480`（四分音符 = 480 tick） |
 | 度数 | 1 始まり（1 = 主音, 5 = 属音） |
 | チャンネル | 0 始まり。9 = GM パーカッション |
@@ -71,6 +71,7 @@ Timeline
 
 - `intent.Intent{Summary, Mood, Candidates}` — LLM が 1 ターンで返す構造化の答え。`Summary` は返答文、`Mood` はタグ、`Candidates` は 1〜3 個の提案
 - `intent.Candidate{Title, Key, TempoBPM, Progression, BeatsPerChord, Reason, Accompaniment?, Drums?, Feel?}` — エンジンが描画できる具体案。`Progression` はローマ数字の文字列（`ParseRomanNumeral` の語彙）、`BeatsPerChord` は 1 / 2 / 4 / 8、`Accompaniment` / `Drums` はパターンカタログの id、`Feel` は 8 分音符のノリ（`straight` / `swing`。`Schema` の enum とシステムプロンプトの一覧はカタログから生成される）
+- 綴り（`spelling.go`）: 調の親となる長調（短調は主音から長 6 度上。モードを足すときは `parentOffset` に 1 行）の主音の綴りを表で決め、その音階を 7 つの文字に乗せる。ダイアトニックな音は文字で、それ以外は調の側（♭ の調なら ♭）で綴る。`HarmonyEvent.Symbol` と解説文はこれを使い、画面は `symbol` をそのまま出す（`keyName` の表だけフィクスチャで一致を検査）
 - `Validate()` が全問題をまとめて返す（テンポ 40〜220、進行 1〜16 個、ローマ数字の妥当性など）。`Schema` は同じ制約を LLM に伝えるが、構造化出力が受け付ける JSON Schema のサブセット（`maxItems` や `minimum` / `maximum` は不可）で書けない上限は説明文で伝え、`Validate` が最終判定する（サブセットの遵守は `TestSchemaUsesOnlySupportedKeywords` が検査）。`Parse(data)` は復号と検証
 - `Candidate.ToProgression()` で `music.Progression` に変換し、`FromProgression` → `Analyze` の既存経路に乗せる
 
