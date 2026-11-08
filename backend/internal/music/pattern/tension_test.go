@@ -110,3 +110,40 @@ func TestTensionsReview(t *testing.T) {
 		t.Error("Styles() must not hand out the catalogue's own rule")
 	}
 }
+
+// TestTensionsSecondReview: the rhythm note names only the tensions that
+// sounded (ii7–Imaj7 has no dominant, so no 13th), swing on block chords
+// in 6/8 is still refused, and a style from FindStyle cannot change the
+// catalogue's rule.
+func TestTensionsSecondReview(t *testing.T) {
+	c := music.Key{Tonic: music.C, Mode: music.Major}
+	tl, err := music.FromProgression(c, music.Progression{{Degree: 2, Seventh: true, Beats: 4}, {Degree: 1, Seventh: true, Beats: 4}}, 120)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := Render(tl, Choice{Accompaniment: "block", Style: "jazz"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if text := out.Rhythm.Style.Tensions; !strings.Contains(text, "9 度") || strings.Contains(text, "13 度") {
+		t.Errorf("ii7–Imaj7 adds 9ths only: %q", text)
+	}
+
+	six, err := music.FromProgressionIn(music.TimeSignature{Numerator: 6, Denominator: 8}, c, music.Progression{{Degree: 1, Beats: 2}}, 60)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Render(six, Choice{Accompaniment: "block", Feel: FeelSwing}); err == nil {
+		t.Error("swing on 6/8 block chords was accepted")
+	}
+
+	s, err := FindStyle("jazz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.Tensions.Ninths = false
+	again, _ := FindStyle("jazz")
+	if !again.Tensions.Ninths {
+		t.Error("changing a found style changed the catalogue")
+	}
+}

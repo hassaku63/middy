@@ -158,9 +158,9 @@ func Styles() []Style {
 	return out
 }
 
-// FindStyle returns the style with the id.
+// FindStyle returns the style with the id, a copy the caller may change.
 func FindStyle(id string) (Style, error) {
-	for _, s := range styles {
+	for _, s := range Styles() {
 		if s.ID == id {
 			return s, nil
 		}
