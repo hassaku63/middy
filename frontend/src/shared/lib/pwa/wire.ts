@@ -3,7 +3,6 @@ import type { InstallPrompt, PwaStatus } from './status';
 type RegisterSW = (options: {
   immediate?: boolean;
   onNeedRefresh?: () => void;
-  onOfflineReady?: () => void;
 }) => (reloadPage?: boolean) => Promise<void>;
 
 /**
@@ -18,8 +17,8 @@ export function wirePwa(
 ): void {
   const updateSW = registerSW({
     immediate: true,
+    // Being ready offline is the normal state and needs no notice (BL-071).
     onNeedRefresh: () => status.needRefresh(() => updateSW(true)),
-    onOfflineReady: () => status.offlineIsReady(),
   });
 
   target.addEventListener('beforeinstallprompt', (event) => {

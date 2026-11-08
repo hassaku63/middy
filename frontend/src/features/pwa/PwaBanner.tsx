@@ -2,9 +2,9 @@ import type { Pwa } from './usePwa';
 import './PwaBanner.css';
 
 /**
- * One-line notices about the app itself: offline, a new version, offline
- * readiness and the install offer. Renders nothing when there is nothing
- * to say.
+ * One-line notices about the app itself: offline, a new version and the
+ * install offer. Renders nothing when there is nothing to say; being ready
+ * to work offline is normal and says nothing (principle 7, BL-071).
  */
 export function PwaBanner({ pwa }: { pwa: Pwa }) {
   const notices = [
@@ -19,14 +19,6 @@ export function PwaBanner({ pwa }: { pwa: Pwa }) {
         新しいバージョンがあります。
         <button type="button" onClick={() => void pwa.applyUpdate()}>
           更新して再読み込み
-        </button>
-      </p>
-    ),
-    pwa.offlineReady && (
-      <p key="ready" className="pwa__notice" role="status">
-        オフラインでも開けるようになりました。
-        <button type="button" onClick={pwa.dismissOfflineReady}>
-          閉じる
         </button>
       </p>
     ),
