@@ -7,40 +7,48 @@ import (
 	"github.com/hassaku63/middy/backend/internal/music"
 )
 
-// placement classifies where in the bar a hit starts. In a compound meter
-// the eighths between the beats divide the beat in three rather than
-// answer it, so they are counted as offBeat but are not syncopation.
+// placement classifies where in the bar a hit starts, and which beats a
+// hit off the beat pushes over: a syncopation (BL-083, after Longuet-Higgins
+// & Lee) is a hit between beats whose next beat does not sound. The
+// pattern repeats every bar, so the beat after the last is the next bar's
+// first. In a compound meter the eighths between the beats divide the beat
+// in three rather than answer it; they count as offBeat like any other.
 type placement struct {
 	onBeat, offBeat, finer int
 	compound               bool
+	skipped                []int // 1-based beats left silent after a hit before them
 }
 
 func classify(starts []music.Tick, ts music.TimeSignature) placement {
 	beat := music.BeatTicks(ts, music.DefaultPPQ)
+	bar := music.BarTicks(ts, music.DefaultPPQ)
 	p := placement{compound: ts.Compound()}
+	sounds := map[music.Tick]bool{}
+	for _, s := range starts {
+		sounds[s%bar] = true
+	}
+	skipped := map[int]bool{}
 	for _, s := range starts {
 		switch {
 		case s%beat == 0:
 			p.onBeat++
+			continue
 		case s%eighth == 0:
 			p.offBeat++
 		default:
 			p.finer++
 		}
+		next := (s/beat + 1) * beat % bar
+		if !sounds[next] && !skipped[int(next/beat)+1] {
+			skipped[int(next/beat)+1] = true
+			p.skipped = append(p.skipped, int(next/beat)+1)
+		}
 	}
 	return p
 }
 
-// syncopated is true when a noticeable share of the hits avoids the beats
-// and their division.
-func (p placement) syncopated() bool {
-	total := p.onBeat + p.offBeat + p.finer
-	off := p.offBeat + p.finer
-	if p.compound {
-		off = p.finer
-	}
-	return total > 0 && off*4 >= total
-}
+// syncopated is true when a hit off the beat leaves the next beat silent.
+func (p placement) syncopated() bool { return len(p.skipped) > 0 }
 
 func describeAccompaniment(a Accompaniment, ts music.TimeSignature) *music.RhythmPart {
 	starts := make([]music.Tick, 0, len(a.Hits))
@@ -105,7 +113,7 @@ func explainPlacement(subject string, p placement, beats int) string {
 	case p.compound && p.finer == 0:
 		fmt.Fprintf(&b, "拍の頭（%s）が %d 回、拍を 3 つに分けた残りの 8 分が %d 回。付点 4 分の拍が 3 つに分かれ、「タタタ」と回る揺れが出る。", beatNames(beats), p.onBeat, p.offBeat)
 	case p.syncopated():
-		fmt.Fprintf(&b, "拍の頭が %d 回、裏拍が %d 回。裏拍の割合が多く、拍をまたいで前に押し出すシンコペーションの感じが出る。", p.onBeat, p.offBeat+p.finer)
+		fmt.Fprintf(&b, "拍の頭が %d 回、裏拍が %d 回。裏拍で鳴ったあと %sの頭が鳴らないので、音が拍をまたいで前に押し出すシンコペーションになる。", p.onBeat, p.offBeat+p.finer, skippedNames(p.skipped))
 	default:
 		fmt.Fprintf(&b, "拍の頭が %d 回、裏拍が %d 回。土台は拍の頭にあり、裏拍が軽い推進力を足している。", p.onBeat, p.offBeat+p.finer)
 	}
@@ -119,4 +127,13 @@ func beatNames(beats int) string {
 		names[i] = fmt.Sprint(i + 1)
 	}
 	return strings.Join(names, "・")
+}
+
+// skippedNames lists the skipped beats: "1 拍目", "2 拍目と 4 拍目".
+func skippedNames(beats []int) string {
+	names := make([]string, len(beats))
+	for i, b := range beats {
+		names[i] = fmt.Sprintf("%d 拍目", b)
+	}
+	return strings.Join(names, "と ")
 }
