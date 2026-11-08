@@ -76,6 +76,7 @@ func TestFromProgressionErrors(t *testing.T) {
 		{"empty progression", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[]}`, "invalid_request", "at least one chord"},
 		{"bad numerals reported together", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I"},{"numeral":"VIII"},{"numeral":"X"}]}`, "invalid_request", "progression[1]"},
 		{"zero beats", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I","beats":0}]}`, "invalid_request", "beats must be >= 1"},
+		{"push on the first chord", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I","push":"eighth"}]}`, "invalid_request", "nothing to push into"},
 		{"zero tempo", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":0,"progression":[{"numeral":"I"}]}`, "invalid_request", "tempoBpm"},
 	}
 	for _, tt := range tests {
@@ -245,5 +246,27 @@ func TestFromProgressionKeepsTheStyle(t *testing.T) {
 	}`)
 	if bad.StatusCode != http.StatusBadRequest {
 		t.Errorf("an unknown style should be a bad request, got %d", bad.StatusCode)
+	}
+}
+
+// TestFromProgressionPushes (BL-085): a pushed chord is struck early and
+// keeps its push, so a key change can send it back.
+func TestFromProgressionPushes(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 120,
+		"progression": [{"numeral": "ii7", "beats": 2}, {"numeral": "V7", "beats": 2, "push": "eighth"}, {"numeral": "Imaj7"}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, b)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	h := body.Timeline.Harmony[1]
+	if h.Push != music.PushEighth || h.Start != 960 || !strings.Contains(h.Analysis.Explanation, "押し") {
+		t.Errorf("V7 should keep its beat and its push and be explained: %+v", h)
 	}
 }

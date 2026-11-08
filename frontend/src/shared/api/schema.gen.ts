@@ -235,7 +235,13 @@ export interface components {
       numeral: string;
       /** @description 拍子の拍の数で数えた長さ（4/4・3/4 では四分音符、6/8 では付点四分音符で 1 小節は 2 拍）。省略時は 1 小節 */
       beats?: number;
+      push?: components['schemas']['Push'];
     };
+    /**
+     * @description 押し（BL-085）。和音を拍の頭より 8 分（eighth）か 16 分（sixteenth）早く弾き、そのままつなぐ。最初の和音には付けられない。省略時は押さない
+     * @enum {string}
+     */
+    Push: 'eighth' | 'sixteenth';
     TimelineResponse: {
       timeline: components['schemas']['Timeline'];
     };
@@ -353,6 +359,8 @@ export interface components {
       symbol?: string;
       /** @description 分数コードのベース音（ADR-0020）。省略時は和音の根音がベース */
       bass?: components['schemas']['PitchClass'];
+      /** @description 押し（BL-085）。音は `start` より早く鳴るが、`start` は和音の属する拍のまま */
+      push?: components['schemas']['Push'];
       /** @description 解説データ。分析前のタイムラインでは省略される */
       analysis?: components['schemas']['HarmonyAnalysis'];
     };

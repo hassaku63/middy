@@ -133,3 +133,16 @@ describe('regrooveRequest (BL-087)', () => {
     expect(regrooveRequest(sixEight, 'jazz', groove)).not.toHaveProperty('drums');
   });
 });
+
+describe('pushes survive a rebuild (BL-085)', () => {
+  it('sends a pushed chord back with its push', () => {
+    const pushed: Timeline = {
+      ...base,
+      harmony: [base.harmony[0]!, { ...base.harmony[1]!, push: 'eighth' }],
+    };
+    expect(rebuildRequest(pushed, 0).progression).toEqual([
+      { numeral: 'i', beats: 4 },
+      { numeral: 'V7', beats: 2, push: 'eighth' },
+    ]);
+  });
+});
