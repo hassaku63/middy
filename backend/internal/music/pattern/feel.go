@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/hassaku63/middy/backend/internal/music"
 )
@@ -103,6 +104,10 @@ type Choice struct {
 	Accompaniment string
 	Drums         string
 	Feel          Feel
+	// Style, when set, may choose the chords' instrument (BL-110) and is
+	// recorded on the timeline. Render does not check that the patterns
+	// fit it: the intent does, and a caller may mix on purpose.
+	Style string
 }
 
 // Render layers a Choice on a block-chord timeline. With no accompaniment
@@ -113,8 +118,12 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	if c.Accompaniment == "" && c.Drums == "" {
-		return tl, nil
+	st, err := styleOf(c.Style)
+	if err != nil {
+		return music.Timeline{}, err
+	}
+	if c.Accompaniment == "" && c.Drums == "" && (st == nil || st.Program == nil) {
+		return tl, nil // block chords on the piano: nothing to render
 	}
 	accID := c.Accompaniment
 	if accID == "" {
@@ -140,5 +149,38 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	return applyFeel(out, info), nil
+	return applyStyle(applyFeel(out, info), st, acc), nil
+}
+
+// styleOf finds the choice's style; nil when it names none.
+func styleOf(id string) (*Style, error) {
+	if id == "" {
+		return nil, nil
+	}
+	st, err := FindStyle(id)
+	if err != nil {
+		return nil, err
+	}
+	return &st, nil
+}
+
+// applyStyle records the style on the timeline and, when the style has an
+// instrument and the pattern plays on the keyboard default, puts the
+// chords on that instrument (BL-110). A pattern with an instrument of its
+// own (a guitar strum, the drone's organ) keeps it.
+func applyStyle(tl music.Timeline, st *Style, acc Accompaniment) music.Timeline {
+	if st == nil || tl.Rhythm == nil {
+		return tl
+	}
+	rs := &music.RhythmStyle{ID: st.ID, Name: st.Name}
+	if st.Program != nil && acc.Program == 0 && len(tl.Tracks) > 0 {
+		tracks := slices.Clone(tl.Tracks)
+		tracks[0].Program = *st.Program
+		tl.Tracks = tracks
+		rs.Instrument = st.Instrument
+	}
+	rhythm := *tl.Rhythm
+	rhythm.Style = rs
+	tl.Rhythm = &rhythm
+	return tl
 }

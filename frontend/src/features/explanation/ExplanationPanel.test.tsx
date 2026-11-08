@@ -178,3 +178,14 @@ describe('RhythmNotes inside the panel', () => {
     expect(screen.queryByRole('heading', { name: 'リズム' })).not.toBeInTheDocument();
   });
 });
+
+describe('RhythmNotes style (BL-110)', () => {
+  it('says which instrument the style gave the chords', () => {
+    const styled: Timeline = {
+      ...timeline,
+      rhythm: { style: { id: 'celtic', name: 'ケルト', instrument: 'ハープ' } },
+    };
+    render(<ExplanationPanel timeline={styled} positionTick={0} selectedHarmony={null} />);
+    expect(screen.getByText('ケルトのスタイルなので、和音はハープで鳴らす。')).toBeInTheDocument();
+  });
+});

@@ -17,7 +17,13 @@ type Style struct {
 	Accompaniments []string `json:"accompaniments"`
 	Drums          []string `json:"drums"`
 	Feels          []Feel   `json:"feels"`
+	// Program, when set, is the GM instrument the style plays a
+	// keyboard-default pattern on (BL-110); Instrument names it.
+	Program    *int   `json:"program,omitempty"`
+	Instrument string `json:"instrument,omitempty"`
 }
+
+func program(p int) *int { return &p }
 
 var styles = []Style{
 	{
@@ -37,6 +43,7 @@ var styles = []Style{
 		Accompaniments: []string{"strum", "pulse"},
 		Drums:          []string{"eight-beat"},
 		Feels:          []Feel{FeelStraight, FeelSwing},
+		Program:        program(29), Instrument: "歪んだギター",
 	},
 	{
 		ID: "jazz", Name: "ジャズ", Description: "ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。",
@@ -49,12 +56,14 @@ var styles = []Style{
 		Accompaniments: []string{"arpeggio", "comp", "ballad"},
 		Drums:          []string{"bossa"},
 		Feels:          []Feel{FeelStraight},
+		Program:        program(24), Instrument: "ナイロン弦ギター",
 	},
 	{
 		ID: "celtic", Name: "ケルト", Description: "アイルランドやスコットランドの舞曲と民謡。リールの裏打ちとボーラン、6/8 のジグ、ドローン。",
 		Accompaniments: []string{"reel", "drone", "arpeggio", "arpeggio-3", "waltz", "rocking-6", "arpeggio-6"},
 		Drums:          []string{"bodhran", "jig", "six-eight"},
 		Feels:          []Feel{FeelStraight},
+		Program:        program(46), Instrument: "ハープ",
 	},
 }
 

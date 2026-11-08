@@ -3,6 +3,8 @@ package pattern
 import (
 	"strings"
 	"testing"
+
+	"github.com/hassaku63/middy/backend/internal/music"
 )
 
 // TestStylesBindTheirPatterns (BL-082, ADR-0012): a style lists the
@@ -71,5 +73,39 @@ func TestEveryStyledPatternExists(t *testing.T) {
 		if !used["drums:"+d.ID] {
 			t.Errorf("drums %q belong to no style", d.ID)
 		}
+	}
+}
+
+// TestStyleSetsTheInstrument (BL-110): a style with an instrument plays a
+// keyboard-default pattern on it (Celtic arpeggios on the harp, bossa on a
+// nylon guitar); a pattern with its own instrument keeps it, a style
+// without one changes nothing, and the timeline records the style.
+func TestStyleSetsTheInstrument(t *testing.T) {
+	tl := progression(t, music.Key{Tonic: music.D, Mode: music.Dorian}, 4, 1, 7)
+	tests := []struct {
+		style, acc string
+		program    int
+	}{
+		{"celtic", "arpeggio", 46}, // harp
+		{"celtic", "reel", 25},     // the reel keeps its steel-string guitar
+		{"celtic", "", 46},         // block chords too
+		{"bossa", "arpeggio", 24},  // nylon guitar
+		{"jazz", "comp", 0},        // jazz stays on the piano
+		{"", "arpeggio", 0},
+	}
+	for _, tt := range tests {
+		got, err := Render(tl, Choice{Accompaniment: tt.acc, Style: tt.style})
+		if err != nil {
+			t.Fatalf("%s/%s: %v", tt.style, tt.acc, err)
+		}
+		if p := got.Tracks[0].Program; p != tt.program {
+			t.Errorf("%s/%s: program %d, want %d", tt.style, tt.acc, p, tt.program)
+		}
+		if tt.style != "" && (got.Rhythm == nil || got.Rhythm.Style == nil || got.Rhythm.Style.ID != tt.style) {
+			t.Errorf("%s/%s: the timeline should record the style: %+v", tt.style, tt.acc, got.Rhythm)
+		}
+	}
+	if _, err := Render(tl, Choice{Accompaniment: "arpeggio", Style: "polka"}); err == nil {
+		t.Error("an unknown style is an error")
 	}
 }

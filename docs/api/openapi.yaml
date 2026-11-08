@@ -217,6 +217,9 @@ components:
           description: ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし
         feel:
           $ref: '#/components/schemas/Feel'
+        style:
+          type: string
+          description: スタイルの id（`GET /patterns` の styles）。鍵盤を既定とする型の音色をスタイルの楽器にし、タイムラインに記録する（BL-110）。型がスタイルに合うかは検査しない
         timeSignature:
           $ref: '#/components/schemas/TimeSignature'
           description: 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017）
@@ -255,6 +258,8 @@ components:
         accompaniments: { type: array, items: { type: string } }
         drums: { type: array, items: { type: string } }
         feels: { type: array, items: { $ref: '#/components/schemas/Feel' } }
+        program: { type: integer, description: 鍵盤を既定とする型をこの GM の音色で鳴らす（BL-110）。省略時は型のまま }
+        instrument: { type: string, description: その楽器の名前 }
     FeelInfo:
       type: object
       required: [id, name, description]
@@ -634,6 +639,16 @@ components:
           $ref: '#/components/schemas/RhythmPart'
         feel:
           $ref: '#/components/schemas/RhythmFeel'
+        style:
+          $ref: '#/components/schemas/RhythmStyle'
+    RhythmStyle:
+      description: 例を描画したスタイル（BL-110）。調を変えて作り直すときに送り返す
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        instrument: { type: string, description: スタイルが和音に与えた楽器の名前。型が自分の楽器を持つときは省略 }
     RhythmFeel:
       description: ストレートでないときのノリの説明。決定論的に生成される
       type: object
