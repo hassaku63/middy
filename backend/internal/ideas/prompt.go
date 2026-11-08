@@ -21,7 +21,7 @@ func SystemPrompt() string {
 		for _, m := range []struct {
 			name string
 			ts   music.TimeSignature
-		}{{"4/4", music.FourFour}, {"3/4", music.ThreeFour}} {
+		}{{"4/4", music.FourFour}, {"3/4", music.ThreeFour}, {"6/8", music.SixEight}} {
 			fmt.Fprintf(&b, "\n\n%s で使える伴奏の型（accompaniment）:\n", m.name)
 			for _, a := range pattern.AccompanimentsFor(m.ts) {
 				fmt.Fprintf(&b, "- %s: %s %s\n", a.ID, a.Name, a.Description)
@@ -36,6 +36,7 @@ func SystemPrompt() string {
 			fmt.Fprintf(&b, "- %s: %s %s\n", f.ID, f.Name, f.Description)
 		}
 		b.WriteString("拍子（meter）は 4/4 が既定。ワルツ、メヌエット、ジャズ・ワルツ、3 拍子のバラードのように 3 拍子が典型のイメージでは 3/4 にし、beatsPerChord は 3（1 小節）か 6（2 小節）、伴奏とドラムは 3/4 の型から選ぶ。")
+		b.WriteString("ゆりかごの子守唄、舟歌、ジグ、6/8 のバラードのように、付点 4 分の 2 拍で揺れ、各拍が 3 つに分かれるイメージでは 6/8 にする。6/8 の拍は付点 4 分で、beatsPerChord は 1（半小節）・2（1 小節）・4（2 小節）、tempoBpm も付点 4 分の速さで書く（ゆったりした子守唄なら 50〜70、ジグなら 100〜130）。伴奏とドラムは 6/8 の型から選び、feel は使わない（拍がすでに 3 つに分かれている）。")
 		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。ジャズやシャッフルのように跳ねるイメージなら feel を swing にする。")
 		prompt = b.String()
 	})

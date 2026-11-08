@@ -152,3 +152,24 @@ test('a waltz image gets a 3/4 example that stays in 3/4 when the key changes (B
   await expect(overview).toContainText('3 拍子（3/4）');
   await expect(overview).toContainText('D major');
 });
+
+test('a rocking lullaby gets a 6/8 example counted in two beats, kept when the key changes (BL-102)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { card, result } = await openExample(page, 'ゆりかごの子守唄', 'ゆりかごの 6/8');
+  await expect(card).toContainText('拍子: 6/8');
+  await expect(card).toContainText('伴奏: 6/8 の揺れ');
+  await expect(card).toContainText('56 BPM');
+  const overview = result.getByLabel('全体と流れ');
+  await expect(overview).toContainText('6/8 拍子で、付点 4 分の 2 拍に数え');
+  await expect(overview).toContainText('4 個の和音で 4 小節');
+  // The rocking accompaniment names two beats, each divided in three.
+  await expect(result.getByLabel('リズム')).toContainText('拍の頭（1・2）');
+  // G major to D major: the meter and the chord lengths stay.
+  await result.getByLabel('キー').selectOption('2');
+  await expect(result.getByLabel('キー')).toHaveValue('2');
+  await expect(overview).toContainText('6/8 拍子');
+  await expect(overview).toContainText('4 個の和音で 4 小節');
+  await expect(overview).toContainText('D major');
+});

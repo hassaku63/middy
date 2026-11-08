@@ -28,10 +28,9 @@ func sampleIntent(req llm.Request) string {
 			break
 		}
 	}
-	var in map[string]any
+	in := meterSample(text)
 	switch {
-	case hasAny(text, "ワルツ", "3拍子", "三拍子", "舞踏会", "waltz"):
-		in = waltzSample
+	case in != nil:
 	case modal:
 		in = map[string]any{
 			"summary": "ケルトの舞曲の情景。ドリアンの明るい IV と、ミクソリディアンの導音のない開放感が合います。",
@@ -98,6 +97,18 @@ func sampleIntent(req llm.Request) string {
 	return string(b)
 }
 
+// meterSample answers images whose meter is typical of them (ADR-0017):
+// three-beat images in 3/4, rocking ones in 6/8; nil for any other.
+func meterSample(text string) map[string]any {
+	switch {
+	case hasAny(text, "ワルツ", "3拍子", "三拍子", "舞踏会", "waltz"):
+		return waltzSample
+	case hasAny(text, "ゆりかご", "子守唄", "舟歌", "ジグ", "6/8", "lullaby", "jig"):
+		return sixEightSample
+	}
+	return nil
+}
+
 // hasAny reports whether text contains any of the words.
 func hasAny(text string, words ...string) bool {
 	for _, w := range words {
@@ -122,5 +133,23 @@ var waltzSample = map[string]any{
 			"meter": "3/4", "progression": []string{"I", "vi", "IV", "V7"}, "beatsPerChord": 6,
 			"reason":        "2 小節ずつの和音を 3 拍のアルペジオで流し、ゆったりとした 3 拍子の揺れにします。",
 			"accompaniment": "arpeggio-3"},
+	},
+}
+
+// sixEightSample answers rocking images in 6/8 (ADR-0017, ADR-0019): two
+// dotted-quarter beats a bar, each divided in three, and the tempo counted
+// in those beats.
+var sixEightSample = map[string]any{
+	"summary": "ゆりかごがゆっくり揺れる子守唄の情景。6/8 拍子で、1 小節に 2 回、大きく揺れる感じを作ります。",
+	"mood":    []string{"穏やか", "やさしい"},
+	"candidates": []map[string]any{
+		{"title": "ゆりかごの 6/8", "key": map[string]any{"tonic": 7, "mode": "major"}, "tempoBpm": 56,
+			"meter": "6/8", "progression": []string{"I", "IV", "V7", "I"}, "beatsPerChord": 2,
+			"reason":        "付点 4 分の拍の頭にベース、残りの 8 分 2 つに和音を置き、1 小節に 2 回揺れる 6/8 の子守唄にします。",
+			"accompaniment": "rocking-6"},
+		{"title": "跳ねるジグ", "key": map[string]any{"tonic": 2, "mode": "major"}, "tempoBpm": 116,
+			"meter": "6/8", "progression": []string{"I", "V", "I", "IV", "I", "V", "I", "I"}, "beatsPerChord": 1,
+			"reason":        "半小節ごとに和音を替え、「タタタ・タタタ」と回るジグの推進力を、拍の 3 つめから次の拍へ跳ねるドラムで出します。",
+			"accompaniment": "arpeggio-6", "drums": "jig"},
 	},
 }
