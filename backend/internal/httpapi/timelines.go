@@ -25,6 +25,8 @@ type fromProgressionRequest struct {
 	// block chords and no drums, exactly what FromProgression produces.
 	Accompaniment string `json:"accompaniment,omitempty"`
 	Drums         string `json:"drums,omitempty"`
+	// DrumGrid writes the drums out instead of naming them (BL-123).
+	DrumGrid *music.DrumGrid `json:"drumGrid,omitempty"`
 	// Feel is "straight" (default) or "swing"; it needs a pattern to act on.
 	Feel string `json:"feel,omitempty"`
 	// Style may choose the chords' instrument (BL-110); the key change sends
@@ -68,7 +70,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Feel: pattern.Feel(req.Feel), Style: req.Style})
+	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Grid: req.DrumGrid, Feel: pattern.Feel(req.Feel), Style: req.Style})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return

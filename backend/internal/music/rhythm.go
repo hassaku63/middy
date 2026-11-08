@@ -12,6 +12,9 @@ type Rhythm struct {
 	// Style is present when the example was rendered in a style (BL-110):
 	// it chose the instrument, and rebuilding in another key keeps it.
 	Style *RhythmStyle `json:"style,omitempty"`
+	// DrumGrid is the grid the drums were written as (BL-123); a rebuild
+	// sends it back. Drums.ID is then "grid".
+	DrumGrid *DrumGrid `json:"drumGrid,omitempty"`
 }
 
 // RhythmStyle names the style an example was rendered in and the

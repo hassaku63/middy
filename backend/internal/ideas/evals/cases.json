@@ -36,6 +36,7 @@
     {"id": "rocking-lullaby", "image": "ゆりかごをゆっくり揺らしながら歌う、1 小節に 2 回大きく揺れる子守唄", "mode": "either", "meter": "6/8", "tempoMax": 80},
     {"id": "muji-celtic", "image": "無印良品の店内で流れていそうな、ケルト風味のメロディとリズム", "mode": "major/dorian/mixolydian", "style": "celtic"},
     {"id": "irish-jig", "image": "アイルランドのパブで踊るジグ。フィドルがタタタ・タタタと跳ねる", "mode": "major/dorian/mixolydian", "meter": "6/8", "tempoMin": 90, "style": "celtic"},
+    {"id": "rock-drive", "image": "放課後の部室で鳴らす、勢いのあるロックバンドの曲。サビの前で前のめりに入る", "mode": "either", "tempoMin": 110, "style": "rock"},
     {"id": "autumn-leaves", "image": "紅葉が散っていく静かな公園", "mode": "either", "tempoMax": 100}
   ]
 }

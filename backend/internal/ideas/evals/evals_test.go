@@ -357,3 +357,15 @@ func TestJudgeStyle(t *testing.T) {
 		t.Errorf("report should name the style and patterns:\n%s", got)
 	}
 }
+
+// TestReportShowsPushes (BL-085): a pushed chord is marked in the
+// progression column, ^8 for an eighth and ^16 for a sixteenth.
+func TestReportShowsPushes(t *testing.T) {
+	res := result()
+	res.Candidates[0].Progression = []string{"i", "VI", "III", "VII"}
+	res.Candidates[0].Pushes = []string{"none", "none", "sixteenth", "eighth"}
+	v := Judge(Case{ID: "c", Mode: "either"}, res)
+	if got := strings.Join(v.Progression, " "); got != "i VI III^16 VII^8" {
+		t.Errorf("progression should mark the pushes: %q", got)
+	}
+}

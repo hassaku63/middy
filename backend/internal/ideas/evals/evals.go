@@ -128,7 +128,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	first := res.Candidates[0]
 	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
-	v.Progression = withBeats(first.Progression, first.Beats)
+	v.Progression = withPushes(withBeats(first.Progression, first.Beats), first.Pushes)
 	v.Patterns = patternsOf(first.Accompaniment, first.Drums)
 	if first.Style != "" {
 		v.Patterns = strings.TrimSuffix(first.Style+": "+v.Patterns, ": ")
@@ -427,6 +427,20 @@ func withBeats(labels []string, beats []int) []string {
 	out := make([]string, len(labels))
 	for i, l := range labels {
 		out[i] = fmt.Sprintf("%s:%d", l, beats[i])
+	}
+	return out
+}
+
+// withPushes marks pushed chords (BL-085): "V7^8" is struck an eighth
+// early, "I^16" a sixteenth.
+func withPushes(labels, pushes []string) []string {
+	if len(pushes) != len(labels) {
+		return labels
+	}
+	marks := map[string]string{"eighth": "^8", "sixteenth": "^16"}
+	out := make([]string, len(labels))
+	for i, l := range labels {
+		out[i] = l + marks[pushes[i]]
 	}
 	return out
 }
