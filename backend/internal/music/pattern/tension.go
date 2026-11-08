@@ -21,12 +21,13 @@ type Tensions struct {
 }
 
 // tensionsOf lists the tones the rule adds to a chord in the key: only
-// tones of the key's scale, and never a semitone above a chord tone (a
-// minor ninth clashes).
-func tensionsOf(t *Tensions, key music.Key, ch music.Chord) []music.PitchClass {
+// tones of the key's scale, and never a semitone above a chord tone or
+// the slash bass (a minor ninth clashes).
+func tensionsOf(t *Tensions, key music.Key, h music.HarmonyEvent) []music.PitchClass {
 	if t == nil {
 		return nil
 	}
+	ch := h.Chord
 	var adds []int // semitones above the root
 	switch ch.Quality {
 	case music.Major7, music.Minor7:
@@ -46,6 +47,9 @@ func tensionsOf(t *Tensions, key music.Key, ch music.Chord) []music.PitchClass {
 		}
 	}
 	tones := ch.PitchClasses()
+	if h.Bass != nil {
+		tones = append(tones, *h.Bass)
+	}
 	var out []music.PitchClass
 	for _, a := range adds {
 		pc := music.PitchClass((int(ch.Root) + a) % 12)

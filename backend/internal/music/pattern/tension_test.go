@@ -74,3 +74,39 @@ func TestStyleTensions(t *testing.T) {
 }
 
 func ptrQuality(q music.ChordQuality) *music.ChordQuality { return &q }
+
+// TestTensionsReview (review of BL-125): jazz on plain block chords still
+// colours them; a tension a semitone above a slash bass is not added; and
+// the catalogue cannot be changed through Styles().
+func TestTensionsReview(t *testing.T) {
+	c := music.Key{Tonic: music.C, Mode: music.Major}
+	tl, err := music.FromProgression(c, music.Progression{{Degree: 2, Seventh: true, Beats: 4}}, 120)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plain, err := Render(tl, Choice{Style: "jazz"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plain.Tracks[0].Notes) != 5 || plain.Rhythm == nil || plain.Rhythm.Style.Tensions == "" {
+		t.Errorf("Dm7 in jazz takes its 9th even without a pattern: %d notes, %+v", len(plain.Tracks[0].Notes), plain.Rhythm)
+	}
+
+	// Cmaj7 over a C# bass: its 9th, D, would sit a semitone above the
+	// bass, so it is not added.
+	bass := music.PitchClass(1)
+	h := music.HarmonyEvent{Chord: music.Chord{Root: music.C, Quality: music.Major7}, Bass: &bass}
+	jazz, _ := FindStyle("jazz")
+	if got := tensionsOf(jazz.Tensions, music.Key{Tonic: music.C, Mode: music.Major}, h); len(got) != 0 {
+		t.Errorf("no 9th a semitone above the slash bass: %v", got)
+	}
+
+	for _, st := range Styles() {
+		if st.Tensions != nil {
+			st.Tensions.Ninths = false
+		}
+	}
+	if again, _ := FindStyle("jazz"); !again.Tensions.Ninths {
+		t.Error("Styles() must not hand out the catalogue's own rule")
+	}
+}

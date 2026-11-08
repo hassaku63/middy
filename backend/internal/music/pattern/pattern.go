@@ -413,7 +413,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	led := music.LeadVoicings(chordsOf(tl.Harmony)) // BL-086
 	for i := range tl.Harmony {
-		chord := colour(led[i], tensionsOf(tensions, tl.Key, tl.Harmony[i].Chord))
+		chord := colour(led[i], tensionsOf(tensions, tl.Key, tl.Harmony[i]))
 		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, bar)...)
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)

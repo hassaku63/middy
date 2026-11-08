@@ -140,6 +140,10 @@ func (s *Style) tensions() *Tensions {
 func Styles() []Style {
 	out := slices.Clone(styles)
 	for i := range out {
+		if t := out[i].Tensions; t != nil {
+			copied := *t // callers must not change the catalogue's rule
+			out[i].Tensions = &copied
+		}
 		out[i].Grooves = nil
 		for _, ts := range GrooveMeters {
 			out[i].Grooves = append(out[i].Grooves, out[i].Groove(ts))

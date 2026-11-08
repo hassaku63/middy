@@ -200,7 +200,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	if c.Accompaniment == "" && c.Drums == "" && c.Grid == nil && (st == nil || st.Program == nil) {
+	if plain(c, st) {
 		return tl, nil // block chords on the piano: nothing to render
 	}
 	accID := c.Accompaniment
@@ -259,6 +259,15 @@ func choiceDrums(c Choice, tl music.Timeline) (*Drums, error) {
 	return nil, nil
 }
 
+// plain is true when the choice changes nothing on block chords: no
+// patterns, and no style instrument or colouring.
+func plain(c Choice, st *Style) bool {
+	if c.Accompaniment != "" || c.Drums != "" || c.Grid != nil {
+		return false
+	}
+	return st == nil || (st.Program == nil && st.Tensions == nil)
+}
+
 // styleOf finds the choice's style; nil when it names none.
 func styleOf(id string) (*Style, error) {
 	if id == "" {
@@ -310,11 +319,12 @@ func swingText(sw Swing, beatBPM float64) string {
 	return text
 }
 
-// coloured is true when the style's tensions sound: the pattern plays the
-// chord voice and some chord takes a tension.
+// coloured is true when the style's tensions sound: some chord takes a
+// tension and the pattern strikes its chord voice within that chord.
 func coloured(tl music.Timeline, t *Tensions, acc Accompaniment) bool {
-	if !slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceChord }) {
-		return false
-	}
-	return slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool { return len(tensionsOf(t, tl.Key, h.Chord)) > 0 })
+	return slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool {
+		return len(tensionsOf(t, tl.Key, h)) > 0 && slices.ContainsFunc(acc.Hits, func(x Hit) bool {
+			return x.Voice == VoiceChord && x.Start < h.Duration
+		})
+	})
 }
