@@ -34,6 +34,7 @@ const (
 	Plagal    Cadence = "plagal"    // IV -> I
 	Half      Cadence = "half"      // anything (except V) -> V
 	Deceptive Cadence = "deceptive" // V -> vi
+	Modal     Cadence = "modal"     // VII -> I in dorian and mixolydian (no leading tone)
 )
 
 // Analysis is the explanation data attached to a HarmonyEvent. It is the
@@ -63,7 +64,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			return Timeline{}, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, tl.Key.ChordSymbol(h.Chord), tl.Key)
 		}
 		fn := functionByDegree[degree]
-		cad := cadenceBetween(prevDegree, degree)
+		cad := cadenceBetween(tl.Key.Mode, prevDegree, degree)
 		h.Analysis = &Analysis{
 			Degree:      degree,
 			Function:    fn,
@@ -88,10 +89,12 @@ func degreeOf(k Key, pc PitchClass) (int, bool) {
 
 // cadenceBetween classifies the motion from the previous degree (0 when
 // there is none) into the current one.
-func cadenceBetween(prev, cur int) Cadence {
+func cadenceBetween(mode Mode, prev, cur int) Cadence {
 	switch {
 	case prev == 0:
 		return NoCadence
+	case prev == 7 && cur == 1 && mode.Characteristic() != 0:
+		return Modal
 	case prev == 5 && cur == 1:
 		return Authentic
 	case prev == 4 && cur == 1:
@@ -116,6 +119,14 @@ var cadenceText = map[Cadence]string{
 	Plagal:    "直前の IV から I へ落ち着く変格終止。「アーメン終止」とも呼ばれる、柔らかい区切り。",
 	Half:      "V で止まる半終止。「続きがある」と感じさせる。",
 	Deceptive: "V から I ではなく vi へ進む偽終止。解決を先延ばしにして意外性を出す。",
+	Modal:     "直前の VII から主和音へ進むモーダル終止。導音を使わずに主音へ戻る、ロックやケルトに多い動き。",
+}
+
+// characteristicText explains why a chord carrying the mode's
+// characteristic tone sounds the way it does. %s is the tone's name.
+var characteristicText = map[Mode]string{
+	Dorian:     "この和音はドリアンの特徴音（主音から長 6 度の %s）を含む。短調に似た響きの中で明るく聞こえる理由。",
+	Mixolydian: "この和音はミクソリディアンの特徴音（主音から短 7 度の %s）を含む。導音がないので、長調より開放的に聞こえる理由。",
 }
 
 const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
@@ -124,6 +135,9 @@ func explain(key Key, h HarmonyEvent, fn Function, cad Cadence) string {
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, key.ChordSymbol(h.Chord), functionText[fn])
 	if isHarmonicMinorDominant(key, h.Chord) {
 		s += " " + harmonicMinorText
+	}
+	if tone, ok := characteristicTone(key, h.Chord); ok {
+		s += " " + fmt.Sprintf(characteristicText[key.Mode], key.PitchClassName(tone))
 	}
 	if cad != NoCadence {
 		s += " " + cadenceText[cad]
@@ -139,4 +153,20 @@ func isHarmonicMinorDominant(key Key, c Chord) bool {
 	}
 	dominant, _ := key.Degree(5)
 	return c.Root == dominant && (c.Quality == MajorTriad || c.Quality == Dominant7)
+}
+
+// characteristicTone returns the mode's characteristic pitch when the chord
+// contains it.
+func characteristicTone(key Key, c Chord) (PitchClass, bool) {
+	deg := key.Mode.Characteristic()
+	if deg == 0 {
+		return 0, false
+	}
+	tone, _ := key.Degree(deg)
+	for _, pc := range c.PitchClasses() {
+		if pc == tone {
+			return tone, true
+		}
+	}
+	return 0, false
 }

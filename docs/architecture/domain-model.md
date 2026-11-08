@@ -22,7 +22,7 @@
 
 ### 調と音階
 
-- `Mode` — `Major`, `Minor`（自然短音階）。JSON では `"major"` / `"minor"`。モード追加は `modeIntervals` に 1 行足すだけで `Diatonic` が追従する
+- `Mode` — `Major`, `Minor`（自然短音階）, `Dorian`, `Mixolydian`（ADR-0015）。JSON では `"major"` / `"minor"` / `"dorian"` / `"mixolydian"`。ローマ数字はそのモードの音階に対して書く（D ドリアンは `i ii III IV v vi° VII`、G ミクソリディアンは `I ii iii° IV v vi VII`）。質は音階から導くので、モードを足すのは `modeIntervals`・`parentOffset`（綴り）・`characteristicDegree`（解説）の 3 行。`Characteristic()` はモードの特徴音の度数（ドリアン 6、ミクソリディアン 7。長調・短調は 0）
 - `Key{Tonic, Mode}` — `Scale()`（7 音）, `Degree(n)`, `Contains(pc)`, `Diatonic(degree, seventh)`
 
 ### コード
@@ -59,8 +59,8 @@ Timeline
 ### 分析（解説データ）
 
 - `Function` — `T` / `S` / `D`。度数で決まる: I, III, VI = T、II, IV = S、V, VII = D。長調・自然短音階とも同じ割り当て（短調の v と VII は「弱いドミナント」扱い。和声的短音階の V や借用和音の扱いは未実装）
-- `Cadence` — 直前のコードからの進行の分類: `authentic`（V→I）、`plagal`（IV→I）、`half`（V 以外→V）、`deceptive`（V→vi）。該当なしは空
-- `Analysis{Degree, Function, Cadence, Explanation}` — `HarmonyEvent.Analysis` に付く。`Explanation` は UI にそのまま出せる日本語で、決定論的に組み立てる（LLM は使わない）
+- `Cadence` — 直前のコードからの進行の分類: `authentic`（V→I）、`plagal`（IV→I）、`half`（V 以外→V）、`deceptive`（V→vi）、`modal`（ドリアン・ミクソリディアンの VII→I。導音を使わない）。該当なしは空
+- `Analysis{Degree, Function, Cadence, Explanation}` — `HarmonyEvent.Analysis` に付く。`Explanation` は UI にそのまま出せる日本語で、決定論的に組み立てる（LLM は使わない）。機能（T/S/D）は全モードで度数から付ける初学者向けの単純化。モードの特徴音を含む和音には、その音を名指しして「なぜそう聞こえるか」の一文を足す（ADR-0015）
 - `Analyze(Timeline) (Timeline, error)` — 入力を変更せず、`Harmony` に `Analysis` を付けた複製を返す。非ダイアトニックなコードがあればエラー
 
 ### 書き出し
@@ -94,4 +94,4 @@ Timeline
 
 - **質はスケールから導出する。** `Key.Diatonic` は三度堆積の音程から質を判定するため、モードを追加してもコードの表が不要。
 - **ローマ数字の文字列は境界でだけ扱う。** 内部の分析は `degree + quality` で行い、文字列は入力（API、将来は LLM の出力）を `ParseRomanNumeral` で度数と七の和音の有無に変換するときにだけ現れる。コードの質は常に調から導出され、文字列の大文字小文字や `°` は結果に影響しない。
-- **自然短音階 + 和声的短音階のドミナント。** 短調で `V` / `V7`（大文字）と書くと `StepFromLabel` が `Step.Quality` を長三和音・属七に上書きし、導音（第 7 音の半音上げ）が鳴る。根音は自然短音階上にあるので `Analyze` はそのまま度数を求め、解説に和声的短音階の一文を足す。小文字 `v` は自然短音階の短三和音。借用和音、セカンダリドミナント、その他の非ダイアトニックなコードは未対応で、`Analyze` は拒否する。
+- **自然短音階 + 和声的短音階のドミナント。** 短調で `V` / `V7`（大文字）と書くと `StepFromLabel` が `Step.Quality` を長三和音・属七に上書きし、導音（第 7 音の半音上げ）が鳴る。根音は自然短音階上にあるので `Analyze` はそのまま度数を求め、解説に和声的短音階の一文を足す。小文字 `v` は自然短音階の短三和音。ドリアンとミクソリディアンにはこの例外がなく、`V` と書けば `CanonicalLabel` が落とす。借用和音、セカンダリドミナント、その他の非ダイアトニックなコードは未対応で、`Analyze` は拒否する。

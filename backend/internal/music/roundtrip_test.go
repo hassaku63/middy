@@ -11,7 +11,7 @@ func TestHarmonyLabelsReadBackAsTheSameChords(t *testing.T) {
 		"i", "ii°", "III", "iv", "v", "VI", "VII",
 		"Imaj7", "ii7", "iii7", "IVmaj7", "V7", "vi7", "viiø7",
 	}
-	for _, mode := range []Mode{Major, Minor} {
+	for _, mode := range []Mode{Major, Minor, Dorian, Mixolydian} {
 		key := Key{Tonic: A, Mode: mode}
 		for _, label := range labels {
 			first, err := StepFromLabel(key, label, 4)

@@ -15,12 +15,12 @@
 | ピッチクラス (PitchClass) | オクターブを無視した音名。C=0 … B=11 | `music.PitchClass` |
 | ピッチ (Pitch) | MIDI ノート番号 0..127。C4=60 | `music.Pitch` |
 | 調 (Key) | 主音 + モード | `music.Key` |
-| モード（旋法, Mode） | 音階をどの音を中心に聞かせるかで区別したもの。長調はイオニアン、自然短音階はエオリアンで、どちらもモードの 1 つ。今は長調と短調だけ（ADR-0013） | `music.Mode` |
+| モード（旋法, Mode） | 音階をどの音を中心に聞かせるかで区別したもの。長調はイオニアン、自然短音階はエオリアンで、どちらもモードの 1 つ。ドリアン（短調に似て 6 度が長い）とミクソリディアン（長調に似て 7 度が短い）がある（ADR-0015） | `music.Mode` |
 | スケール（音階, Scale） | 音を高さの順に並べた集合。長音階、自然短音階、和声的短音階、ペンタトニックなど。モードより広い言葉 | `Mode.Intervals` |
 | 度数 (Degree) | 音階上の位置。1 始まり | `Key.Degree`, `Key.Diatonic` |
 | ダイアトニックコード | 調の音だけで作られるコード | `Key.Diatonic` |
 | ローマ数字 (Roman numeral) | 度数とコードの質をあらわす記法。I, ii, V7, vii° | `music.RomanNumeral` |
 | 和声機能 (Harmonic function) | T（トニック）/ S（サブドミナント）/ D（ドミナント） | `music.Function` |
-| 終止 (Cadence) | 隣接する 2 コードの進行の分類。正格・変格・半・偽 | `music.Cadence` |
+| 終止 (Cadence) | 隣接する 2 コードの進行の分類。正格・変格・半・偽・モーダル | `music.Cadence` |
 | 解説 (Explanation) | タイムラインの成り立ちを説明するデータ。度数・機能・終止・文章 | `music.Analysis`（表示は `features/explanation`） |
 | スライス (Slice) | 1 PR で完結する、UI〜API〜ドメインを縦に貫く小さな機能単位 | `docs/product/backlog.md` |
