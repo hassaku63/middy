@@ -67,3 +67,33 @@ test('a swing image swings the example and says so (BL-076)', async ({ page }) =
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('region', { name: 'ノリ: スウィング' })).toBeVisible();
 });
+
+test('a Celtic image gets a modal example with its characteristic tone explained (BL-091)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByLabel('イメージ', { exact: true }).fill('アイルランドのパブのケルト音楽');
+  await page.getByRole('button', { name: '送る' }).click();
+  const card = page.getByRole('article', { name: '緑の丘のリール' });
+  await expect(card).toContainText('D dorian');
+  await expect(card).toContainText('i - IV - i - VII');
+  const result = page.getByRole('region', { name: '結果' });
+  // The dorian IV is a major chord, spelled for the key, and explained by its sixth.
+  await result
+    .getByRole('listbox', { name: 'コード' })
+    .getByRole('option', { name: 'IV (G)' })
+    .click();
+  await expect(result.locator('.explanation__text').first()).toContainText(
+    'ドリアンの特徴音（主音から長 6 度の B）',
+  );
+  await page.getByRole('button', { name: /固定を解除/ }).click();
+  // Switching to the mixolydian example keeps the key selector in that mode.
+  await page
+    .getByRole('article', { name: '港町のジグ' })
+    .getByRole('button', { name: 'この候補を開く' })
+    .click();
+  await expect(result.getByLabel('キー')).toHaveValue('7');
+  await expect(
+    result.getByLabel('キー').locator('option', { hasText: 'G mixolydian' }),
+  ).toHaveCount(1);
+});

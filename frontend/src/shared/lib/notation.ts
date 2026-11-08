@@ -30,13 +30,17 @@ const QUALITY_SUFFIX: Record<ChordQuality, string> = {
  * with fewer accidentals, ties and Db/C# going to flats; minor keys take
  * their parent major's signature (Eb minor from Gb major, G# minor from B).
  */
-const MAJOR_TONICS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
-const MINOR_TONICS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'] as const;
+const TONICS: Record<Key['mode'], readonly string[]> = {
+  major: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
+  minor: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
+  // Dorian takes the signature of the major a tone below, mixolydian of the major a fifth below.
+  dorian: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
+  mixolydian: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
+};
 
-/** "Bb major", "C# minor": the key as notation spells it. */
+/** "Bb major", "C# minor", "D dorian": the key as notation spells it. */
 export function keyName(key: Key): string {
-  const table = key.mode === 'minor' ? MINOR_TONICS : MAJOR_TONICS;
-  return `${table[((key.tonic % 12) + 12) % 12] ?? 'C'} ${key.mode}`;
+  return `${TONICS[key.mode][((key.tonic % 12) + 12) % 12] ?? 'C'} ${key.mode}`;
 }
 
 /** The engine's key-spelled symbol when present; older saved timelines fall back to sharps. */

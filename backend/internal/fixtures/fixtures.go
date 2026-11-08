@@ -76,7 +76,7 @@ var allQualities = []music.ChordQuality{
 
 func notation() (notationFixture, error) {
 	var f notationFixture
-	for _, mode := range []music.Mode{music.Major, music.Minor} {
+	for _, mode := range []music.Mode{music.Major, music.Minor, music.Dorian, music.Mixolydian} {
 		for pc := music.PitchClass(0); pc < 12; pc++ {
 			k := music.Key{Tonic: pc, Mode: mode}
 			f.KeyNames = append(f.KeyNames, keyNameFixture{k, k.String()})

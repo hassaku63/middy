@@ -22,7 +22,8 @@ var casesJSON []byte
 type Case struct {
 	ID    string `json:"id"`
 	Image string `json:"image"`
-	// Mode is "major", "minor" or "either".
+	// Mode is "major", "minor", "dorian", "mixolydian", "either", or several
+	// of those joined with "/" when more than one would fit.
 	Mode     string  `json:"mode"`
 	TempoMin float64 `json:"tempoMin,omitempty"`
 	TempoMax float64 `json:"tempoMax,omitempty"`
@@ -87,18 +88,8 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	v.WantsHit = wantsHit(c.Wants, first.Progression)
 
-	switch c.Mode {
-	case "major":
-		if first.Key.Mode != music.Major {
-			v.Problems = append(v.Problems, "expected major, got "+first.Key.Mode.String())
-		}
-	case "minor":
-		if first.Key.Mode != music.Minor {
-			v.Problems = append(v.Problems, "expected minor, got "+first.Key.Mode.String())
-		}
-	case "either", "":
-	default:
-		v.Problems = append(v.Problems, "case has unknown mode "+c.Mode)
+	if problem := judgeMode(c.Mode, first.Key.Mode); problem != "" {
+		v.Problems = append(v.Problems, problem)
 	}
 	if c.TempoMin > 0 && first.TempoBPM < c.TempoMin {
 		v.Problems = append(v.Problems, fmt.Sprintf("tempo %.0f below %.0f", first.TempoBPM, c.TempoMin))
@@ -254,4 +245,22 @@ func judgeFeel(want, got string) string {
 		return ""
 	}
 	return "expected feel " + want + ", got " + got
+}
+
+// judgeMode accepts "either", one mode name, or several joined with "/".
+func judgeMode(want string, got music.Mode) string {
+	if want == "" || want == "either" {
+		return ""
+	}
+	options := strings.Split(want, "/")
+	for _, o := range options {
+		var m music.Mode
+		if err := m.UnmarshalText([]byte(o)); err != nil {
+			return "case has unknown mode " + o
+		}
+		if m == got {
+			return ""
+		}
+	}
+	return "expected " + want + ", got " + got.String()
 }

@@ -45,7 +45,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "required": ["tonic", "mode"],
             "properties": {
               "tonic": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "description": "0=C, 1=C#, 2=D, 3=D#, 4=E, 5=F, 6=F#, 7=G, 8=G#, 9=A, 10=A#, 11=B" },
-              "mode": { "type": "string", "enum": ["major", "minor"] }
+              "mode": { "type": "string", "enum": ["major", "minor", "dorian", "mixolydian"], "description": "major / minor のほか、dorian（短調に似て 6 度が長い。IV が長三和音）と mixolydian（長調に似て 7 度が短い。VII が長三和音、導音なし）。ローマ数字はそのモードの音階に対して書く" }
             }
           },
           "tempoBpm": { "type": "number", "description": "テンポ（BPM）。%d〜%d" },

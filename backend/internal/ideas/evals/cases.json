@@ -22,10 +22,10 @@
     {"id": "reunion", "image": "久しぶりの再会、懐かしくて温かい", "mode": "major", "tempoMax": 120},
     {"id": "jazz-bar", "image": "夜のジャズバーで、ピアノが軽くスウィングしている", "mode": "either", "feel": "swing"},
     {"id": "shuffle-walk", "image": "スキップしたくなるような、跳ねるリズムの散歩", "mode": "either", "feel": "swing"},
-    {"id": "celtic-reel", "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "either", "tempoMin": 100, "wants": ["IV", "VII"]},
+    {"id": "celtic-reel", "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "dorian/mixolydian", "tempoMin": 100, "wants": ["IV", "VII"]},
     {"id": "blues-shuffle", "image": "煙たいバーで鳴るスロー・ブルース", "mode": "either", "tempoMax": 100, "wants": ["I7", "IV7"]},
     {"id": "flamenco", "image": "フラメンコのギター。情熱的で、足を踏み鳴らす", "mode": "either", "wants": ["II", "bII"]},
-    {"id": "rock-anthem", "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major", "tempoMin": 110, "wants": ["VII", "bVII"]},
+    {"id": "rock-anthem", "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major/mixolydian", "tempoMin": 110, "wants": ["VII", "bVII"]},
     {"id": "jpop-royal-road", "image": "J-pop の王道のサビ。切なくて盛り上がる", "mode": "major", "wants": ["iii", "iii7"]},
     {"id": "bossa-cafe", "image": "リオの午後、ボサノバのギターと小さなカフェ", "mode": "major", "wants": ["Imaj7", "IVmaj7", "ii7"]},
     {"id": "autumn-leaves", "image": "紅葉が散っていく静かな公園", "mode": "either", "tempoMax": 100}
