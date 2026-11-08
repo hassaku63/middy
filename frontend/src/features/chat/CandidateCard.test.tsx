@@ -34,3 +34,36 @@ describe('CandidateCard', () => {
     expect(screen.queryByText('4 拍/コード')).not.toBeInTheDocument();
   });
 });
+
+describe('CandidateCard style (BL-119)', () => {
+  it('names the style from the catalogue, falling back to its id', () => {
+    const patterns = {
+      accompaniments: [],
+      drums: [],
+      feels: [],
+      styles: [
+        {
+          id: 'celtic',
+          name: 'ケルト',
+          description: '',
+          accompaniments: ['reel'],
+          drums: ['bodhran'],
+          feels: ['straight' as const],
+        },
+      ],
+    };
+    const { rerender } = render(
+      <CandidateCard
+        candidate={{ ...base, style: 'celtic' }}
+        open={false}
+        onOpen={vi.fn()}
+        patterns={patterns}
+      />,
+    );
+    expect(screen.getByText('スタイル: ケルト')).toBeInTheDocument();
+    rerender(
+      <CandidateCard candidate={{ ...base, style: 'jazz' }} open={false} onOpen={vi.fn()} />,
+    );
+    expect(screen.getByText('スタイル: jazz')).toBeInTheDocument();
+  });
+});

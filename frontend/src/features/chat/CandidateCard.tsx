@@ -45,6 +45,7 @@ function patternLabels(c: IdeaCandidate, patterns: PatternsResponse | undefined)
   const name = (list: { id: string; name: string }[] | undefined, id: string) =>
     list?.find((x) => x.id === id)?.name ?? id;
   const labels: string[] = [];
+  if (c.style) labels.push(`スタイル: ${name(patterns?.styles, c.style)}`);
   if (c.accompaniment) labels.push(`伴奏: ${name(patterns?.accompaniments, c.accompaniment)}`);
   if (c.drums) labels.push(`ドラム: ${name(patterns?.drums, c.drums)}`);
   if (c.feel && c.feel !== 'straight') labels.push(`ノリ: ${name(patterns?.feels, c.feel)}`);
