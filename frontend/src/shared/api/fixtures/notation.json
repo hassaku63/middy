@@ -1,4 +1,174 @@
 {
+  "keyNames": [
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "name": "C major"
+    },
+    {
+      "key": {
+        "tonic": 1,
+        "mode": "major"
+      },
+      "name": "Db major"
+    },
+    {
+      "key": {
+        "tonic": 2,
+        "mode": "major"
+      },
+      "name": "D major"
+    },
+    {
+      "key": {
+        "tonic": 3,
+        "mode": "major"
+      },
+      "name": "Eb major"
+    },
+    {
+      "key": {
+        "tonic": 4,
+        "mode": "major"
+      },
+      "name": "E major"
+    },
+    {
+      "key": {
+        "tonic": 5,
+        "mode": "major"
+      },
+      "name": "F major"
+    },
+    {
+      "key": {
+        "tonic": 6,
+        "mode": "major"
+      },
+      "name": "Gb major"
+    },
+    {
+      "key": {
+        "tonic": 7,
+        "mode": "major"
+      },
+      "name": "G major"
+    },
+    {
+      "key": {
+        "tonic": 8,
+        "mode": "major"
+      },
+      "name": "Ab major"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "major"
+      },
+      "name": "A major"
+    },
+    {
+      "key": {
+        "tonic": 10,
+        "mode": "major"
+      },
+      "name": "Bb major"
+    },
+    {
+      "key": {
+        "tonic": 11,
+        "mode": "major"
+      },
+      "name": "B major"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "minor"
+      },
+      "name": "C minor"
+    },
+    {
+      "key": {
+        "tonic": 1,
+        "mode": "minor"
+      },
+      "name": "C# minor"
+    },
+    {
+      "key": {
+        "tonic": 2,
+        "mode": "minor"
+      },
+      "name": "D minor"
+    },
+    {
+      "key": {
+        "tonic": 3,
+        "mode": "minor"
+      },
+      "name": "Eb minor"
+    },
+    {
+      "key": {
+        "tonic": 4,
+        "mode": "minor"
+      },
+      "name": "E minor"
+    },
+    {
+      "key": {
+        "tonic": 5,
+        "mode": "minor"
+      },
+      "name": "F minor"
+    },
+    {
+      "key": {
+        "tonic": 6,
+        "mode": "minor"
+      },
+      "name": "F# minor"
+    },
+    {
+      "key": {
+        "tonic": 7,
+        "mode": "minor"
+      },
+      "name": "G minor"
+    },
+    {
+      "key": {
+        "tonic": 8,
+        "mode": "minor"
+      },
+      "name": "G# minor"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "minor"
+      },
+      "name": "A minor"
+    },
+    {
+      "key": {
+        "tonic": 10,
+        "mode": "minor"
+      },
+      "name": "Bb minor"
+    },
+    {
+      "key": {
+        "tonic": 11,
+        "mode": "minor"
+      },
+      "name": "B minor"
+    }
+  ],
   "pitchClasses": [
     {
       "pitchClass": 0,

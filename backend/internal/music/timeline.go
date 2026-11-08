@@ -44,11 +44,14 @@ type Track struct {
 // the raw material for the visual explanation layer; it does not sound.
 // Analysis is nil until Analyze has run.
 type HarmonyEvent struct {
-	Start        Tick      `json:"start"`
-	Duration     Tick      `json:"duration"`
-	Chord        Chord     `json:"chord"`
-	RomanNumeral string    `json:"romanNumeral"`
-	Analysis     *Analysis `json:"analysis,omitempty"`
+	Start        Tick   `json:"start"`
+	Duration     Tick   `json:"duration"`
+	Chord        Chord  `json:"chord"`
+	RomanNumeral string `json:"romanNumeral"`
+	// Symbol is the chord spelled as the key wants it ("Bbmaj7"); the UI
+	// shows it instead of deriving a sharp-only name from Chord.Root.
+	Symbol   string    `json:"symbol,omitempty"`
+	Analysis *Analysis `json:"analysis,omitempty"`
 }
 
 // Timeline is the central artifact of middy: everything the player, the

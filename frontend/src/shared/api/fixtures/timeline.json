@@ -99,6 +99,7 @@
         "quality": "maj"
       },
       "romanNumeral": "I",
+      "symbol": "C",
       "analysis": {
         "degree": 1,
         "function": "T",
@@ -113,6 +114,7 @@
         "quality": "maj"
       },
       "romanNumeral": "V",
+      "symbol": "G",
       "analysis": {
         "degree": 5,
         "function": "D",
@@ -128,6 +130,7 @@
         "quality": "min"
       },
       "romanNumeral": "vi",
+      "symbol": "Am",
       "analysis": {
         "degree": 6,
         "function": "T",
@@ -143,6 +146,7 @@
         "quality": "maj"
       },
       "romanNumeral": "IV",
+      "symbol": "F",
       "analysis": {
         "degree": 4,
         "function": "S",

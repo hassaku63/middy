@@ -474,6 +474,10 @@ components:
         romanNumeral:
           type: string
           examples: [I, ii, V7, 'vii°']
+        symbol:
+          type: string
+          description: 調に合わせて綴った和音記号（B♭ major では `Bbmaj7`。`chord` から機械的に作ると `A#maj7` になる）。エンジンが付ける。以前に保存したタイムラインにはない
+          examples: [Bbmaj7, Gm7, 'A7']
         analysis:
           $ref: '#/components/schemas/HarmonyAnalysis'
           description: 解説データ。分析前のタイムラインでは省略される

@@ -1,5 +1,5 @@
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
-import { pitchClassName } from '@/shared/lib/notation';
+import { keyName } from '@/shared/lib/notation';
 
 type Props = {
   candidate: IdeaCandidate;
@@ -17,9 +17,7 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
     <article className={`candidate${open ? ' is-open' : ''}`} aria-label={title}>
       <h3 className="candidate__title">{title}</h3>
       <p className="candidate__spec">
-        <span>
-          {pitchClassName(key.tonic)} {key.mode}
-        </span>
+        <span>{keyName(key)}</span>
         <span>{tempoBpm} BPM</span>
         <span>{beatsPerChord} 拍/コード</span>
       </p>
