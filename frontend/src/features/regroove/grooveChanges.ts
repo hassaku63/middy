@@ -7,6 +7,8 @@ const PARTS: Part[] = [
   { label: '伴奏', name: (r) => r?.accompaniment?.name ?? 'ブロック' },
   { label: 'ドラム', name: (r) => r?.drums?.name ?? 'なし' },
   { label: 'ノリ', name: (r) => r?.feel?.name ?? 'ストレート' },
+  // A style may voice the chords on its own instrument (BL-110).
+  { label: '楽器', name: (r) => r?.style?.instrument ?? '型の楽器' },
 ];
 
 /**
@@ -23,6 +25,6 @@ export function grooveChanges(
   );
   const head = `${styleName}で鳴らし直しました。和声はそのままです。`;
   return changed.length === 0
-    ? `${head}伴奏・ドラム・ノリも前と同じです。`
+    ? `${head}伴奏・ドラム・ノリ・楽器も前と同じです。`
     : `${head}${changed.join('、')}。`;
 }

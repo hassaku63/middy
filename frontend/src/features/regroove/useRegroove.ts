@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import {
-  ApiError,
   createTimelineFromProgression,
   type PatternsResponse,
   type Timeline,
@@ -39,8 +38,8 @@ export function useRegroove(): Regroove {
       const next = await createTimelineFromProgression(regrooveRequest(timeline, style.id, groove));
       setNote(grooveChanges(style.name, timeline.rhythm, next.rhythm));
       return next;
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'スタイルを替えられませんでした');
+    } catch {
+      setError('スタイルを替えられませんでした');
       return null;
     } finally {
       setBusy(false);

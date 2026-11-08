@@ -39,6 +39,18 @@ describe('grooveChanges (BL-087)', () => {
   });
 
   it('says so when the groove is the same', () => {
-    expect(grooveChanges('ケルト', celtic, celtic)).toContain('伴奏・ドラム・ノリも前と同じです');
+    expect(grooveChanges('ケルト', celtic, celtic)).toContain(
+      '伴奏・ドラム・ノリ・楽器も前と同じです',
+    );
+  });
+
+  it('names the instrument when only the instrument changes (review)', () => {
+    const guitar: Rhythm = {
+      ...celtic,
+      style: { id: 'folk', name: 'フォーク', instrument: 'ギター' },
+    };
+    expect(grooveChanges('フォーク', celtic, guitar)).toBe(
+      'フォークで鳴らし直しました。和声はそのままです。楽器: 型の楽器 → ギター。',
+    );
   });
 });
