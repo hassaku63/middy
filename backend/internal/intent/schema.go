@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/hassaku63/middy/backend/internal/music"
 )
 
 // Schema is the JSON Schema handed to the LLM as the required output
@@ -88,6 +90,16 @@ func Parse(data []byte) (Intent, error) {
 	}
 	if err := in.Validate(); err != nil {
 		return Intent{}, fmt.Errorf("intent: invalid: %w", err)
+	}
+	// Labels are valid here; spell them as the engine will, so the card
+	// and the timeline agree ("iim7b5" becomes "iiø7").
+	for i := range in.Candidates {
+		c := &in.Candidates[i]
+		for j, label := range c.Progression {
+			if canonical, err := music.CanonicalLabel(c.Key, label); err == nil {
+				c.Progression[j] = canonical
+			}
+		}
 	}
 	return in, nil
 }

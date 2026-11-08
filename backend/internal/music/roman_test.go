@@ -146,3 +146,46 @@ func TestHarmonicMinorDominantRendersAndAnalyses(t *testing.T) {
 }
 
 func ptr(q ChordQuality) *ChordQuality { return &q }
+
+func TestCanonicalLabelRejectsWhatTheKeyWouldSilentlyChange(t *testing.T) {
+	dMinor := Key{Tonic: D, Mode: Minor}
+	dMajor := Key{Tonic: D, Mode: Major}
+	bbMajor := Key{Tonic: As, Mode: Major}
+	tests := []struct {
+		key     Key
+		label   string
+		want    string // canonical label when accepted
+		wantErr string // substring of the error when rejected
+	}{
+		{dMinor, "i", "i", ""},
+		{dMinor, "V", "V", ""},   // harmonic-minor dominant, as the prompt allows
+		{dMinor, "V7", "V7", ""}, // its seventh
+		{dMinor, "v", "v", ""},   // natural-minor triad
+		{dMinor, "iiø7", "iiø7", ""},
+		{dMinor, "iim7b5", "iiø7", ""}, // same chord, the engine's spelling wins
+		{dMinor, "VII7", "VII7", ""},
+		{dMinor, "IV", "", `"IV" would sound as Gm (iv) in D minor`}, // the dorian IV is not available
+		{dMinor, "VIImaj7", "", `"VIImaj7" would sound as C7 (VII7) in D minor`},
+		{dMajor, "VII", "", `"VII" would sound as C#dim (vii°) in D major`}, // the mixolydian VII
+		{dMajor, "vii°", "vii°", ""},
+		{dMajor, "vii", "vii°", ""}, // lowercase alone is close enough for a diminished degree
+		{dMajor, "v", "", `"v" would sound as A (V) in D major`},
+		{bbMajor, "I7", "", `"I7" would sound as Bbmaj7 (Imaj7) in Bb major`}, // the blues I7
+		{bbMajor, "Imaj7", "Imaj7", ""},
+		{bbMajor, "ii7", "ii7", ""},
+		{bbMajor, "bVII", "", "is not a roman numeral"},
+	}
+	for _, tt := range tests {
+		got, err := CanonicalLabel(tt.key, tt.label)
+		switch {
+		case tt.wantErr != "":
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("%s %q: want error containing %q, got %q / %v", tt.key, tt.label, tt.wantErr, got, err)
+			}
+		case err != nil:
+			t.Errorf("%s %q: unexpected error %v", tt.key, tt.label, err)
+		case got != tt.want:
+			t.Errorf("%s %q: canonical %q, want %q", tt.key, tt.label, got, tt.want)
+		}
+	}
+}
