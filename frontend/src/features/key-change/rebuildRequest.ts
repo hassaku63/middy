@@ -22,5 +22,6 @@ export function rebuildRequest(timeline: Timeline, tonic: PitchClass): FromProgr
   if (rhythm?.accompaniment) req.accompaniment = rhythm.accompaniment.id;
   if (rhythm?.drums) req.drums = rhythm.drums.id;
   if (rhythm?.feel) req.feel = rhythm.feel.id;
+  if (rhythm?.style) req.style = rhythm.style.id; // keeps the style's instrument (BL-110)
   return req;
 }

@@ -27,6 +27,9 @@ type fromProgressionRequest struct {
 	Drums         string `json:"drums,omitempty"`
 	// Feel is "straight" (default) or "swing"; it needs a pattern to act on.
 	Feel string `json:"feel,omitempty"`
+	// Style may choose the chords' instrument (BL-110); the key change sends
+	// back the style the example was rendered in.
+	Style string `json:"style,omitempty"`
 	// TimeSignature is 4/4 (default) or 3/4; beats count in its beats (ADR-0017).
 	TimeSignature *music.TimeSignature `json:"timeSignature,omitempty"`
 }
@@ -64,7 +67,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Feel: pattern.Feel(req.Feel)})
+	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Feel: pattern.Feel(req.Feel), Style: req.Style})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
