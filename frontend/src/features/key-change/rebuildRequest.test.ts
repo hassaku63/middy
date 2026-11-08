@@ -32,6 +32,21 @@ describe('rebuildRequest', () => {
     expect(rebuildRequest(waltz, 5).timeSignature).toEqual({ numerator: 3, denominator: 4 });
   });
 
+  it('counts chord lengths in dotted-quarter beats in 6/8', () => {
+    const sixEight: Timeline = {
+      ...base,
+      timeSignature: { numerator: 6, denominator: 8 },
+      harmony: [
+        { start: 0, duration: 1440, chord: { root: 9, quality: 'min' }, romanNumeral: 'i' },
+        { start: 1440, duration: 720, chord: { root: 4, quality: 'dom7' }, romanNumeral: 'V7' },
+      ],
+    };
+    expect(rebuildRequest(sixEight, 0).progression).toEqual([
+      { numeral: 'i', beats: 2 },
+      { numeral: 'V7', beats: 1 },
+    ]);
+  });
+
   it('carries the patterns and the feel the timeline was rendered with', () => {
     const grooved: Timeline = {
       ...base,

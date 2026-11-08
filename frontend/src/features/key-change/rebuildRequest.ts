@@ -1,4 +1,5 @@
 import type { FromProgressionRequest, PitchClass, Timeline } from '@/shared/api/client';
+import { ticksPerBeat } from '@/shared/lib/timing';
 
 /**
  * The request that renders the same example in another key (BL-078): the
@@ -7,13 +8,14 @@ import type { FromProgressionRequest, PitchClass, Timeline } from '@/shared/api/
  * chords (music.TestHarmonyLabelsReadBackAsTheSameChords).
  */
 export function rebuildRequest(timeline: Timeline, tonic: PitchClass): FromProgressionRequest {
+  const beat = ticksPerBeat(timeline.ppq, timeline.timeSignature);
   const req: FromProgressionRequest = {
     key: { tonic, mode: timeline.key.mode },
     tempoBpm: timeline.tempoBpm,
     timeSignature: timeline.timeSignature,
     progression: timeline.harmony.map((h) => ({
       numeral: h.romanNumeral,
-      beats: Math.round(h.duration / timeline.ppq),
+      beats: Math.round(h.duration / beat),
     })),
   };
   const rhythm = timeline.rhythm;

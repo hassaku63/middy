@@ -50,10 +50,11 @@ Timeline
 - `Harmony` は音を出さない注釈。解説レイヤー（和声機能、ケーデンス）はここに情報を足す。
 - `Validate()` は API 境界で必ず呼ぶ。内部の関数は妥当な Timeline を前提にしてよい。
 - `LengthTicks()` は最後のノート／注釈の終端。
+- `TempoBPM` は拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019）。秒や MIDI のテンポは 4 分音符で数えるので、`QuarterBPM()` で換算する（6/8 の 60 は 90）。
 
 ### 進行
 
-- `Step{Degree, Seventh, Beats, Quality?}` — 度数（1..7）を何拍（四分音符単位）鳴らすか。拍は拍子に依存しない。`Quality` は根音を保ったまま質を上書きする（今は短調の V のためだけに使う）
+- `Step{Degree, Seventh, Beats, Quality?}` — 度数（1..7）を何拍鳴らすか。拍は拍子の拍（ADR-0017。`BeatTicks`）。`Quality` は根音を保ったまま質を上書きする（今は短調の V のためだけに使う）
 - `StepFromLabel(key, label, beats)` — ローマ数字の文字列から `Step` を作る唯一の入口（API と intent が使う）。短調の大文字 `V` / `V7` を和声的短音階のドミナントにする規則はここにある
 - `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
 - `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordOctave`=4 の基本形, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）

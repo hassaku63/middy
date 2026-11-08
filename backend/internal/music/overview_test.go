@@ -180,3 +180,18 @@ func TestBeatsOfEachMeter(t *testing.T) {
 		}
 	}
 }
+
+// TestTempoCountsTheBeat: 60 BPM in 6/8 is 60 dotted quarters a minute,
+// so 90 quarters; in 4/4 and 3/4 the beat is the quarter (ADR-0019).
+func TestTempoCountsTheBeat(t *testing.T) {
+	for _, tt := range []struct {
+		ts   TimeSignature
+		want float64
+	}{{FourFour, 60}, {ThreeFour, 60}, {SixEight, 90}} {
+		tl := NewTimeline(Key{C, Major}, 60)
+		tl.TimeSignature = tt.ts
+		if got := tl.QuarterBPM(); got != tt.want {
+			t.Errorf("%d/%d at 60 BPM = %v quarters a minute, want %v", tt.ts.Numerator, tt.ts.Denominator, got, tt.want)
+		}
+	}
+}

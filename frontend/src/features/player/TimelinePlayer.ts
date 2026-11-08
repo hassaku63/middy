@@ -1,5 +1,6 @@
 import type { Timeline } from '@/shared/api/client';
 import {
+  quarterBpm,
   scheduleNotes,
   secondsToTicks,
   ticksToSeconds,
@@ -77,7 +78,11 @@ export class TimelinePlayer {
     this.stop();
     this.timeline = timeline;
     this.notes = scheduleNotes(timeline);
-    this.lengthSec = ticksToSeconds(timelineLengthTicks(timeline), timeline.ppq, timeline.tempoBpm);
+    this.lengthSec = ticksToSeconds(
+      timelineLengthTicks(timeline),
+      timeline.ppq,
+      quarterBpm(timeline),
+    );
   }
 
   get isPlaying(): boolean {
@@ -89,7 +94,7 @@ export class TimelinePlayer {
     if (this.state !== 'playing' || !this.timeline) return 0;
     const elapsed = Math.max(0, this.clock.now() - this.startTime);
     return Math.min(
-      secondsToTicks(elapsed, this.timeline.ppq, this.timeline.tempoBpm),
+      secondsToTicks(elapsed, this.timeline.ppq, quarterBpm(this.timeline)),
       timelineLengthTicks(this.timeline),
     );
   }
