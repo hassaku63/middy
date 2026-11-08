@@ -10,6 +10,9 @@ func TestHarmonyLabelsReadBackAsTheSameChords(t *testing.T) {
 		"I", "ii", "iii", "IV", "V", "vi", "vii°",
 		"i", "ii°", "III", "iv", "v", "VI", "VII",
 		"Imaj7", "ii7", "iii7", "IVmaj7", "V7", "vi7", "viiø7",
+		// Secondary dominants (BL-074); each exists only in some modes.
+		"V/ii", "V7/ii", "V/iii", "V7/iii", "V7/IV", "V/V", "V7/V", "V/vi", "V7/vi",
+		"V/III", "V7/iv", "V/v", "V7/VI", "V/VII", "V7/VII", "V/IV",
 	}
 	for _, mode := range []Mode{Major, Minor, Dorian, Mixolydian} {
 		key := Key{Tonic: A, Mode: mode}

@@ -22,6 +22,9 @@ type Step struct {
 	// Borrowed marks a chord taken from the parallel minor (BL-094); the
 	// analysis says so.
 	Borrowed bool `json:"borrowed,omitempty"`
+	// Applied makes the step the secondary dominant of Degree (V/x, V7/x
+	// with Seventh; BL-074) instead of the chord on it.
+	Applied bool `json:"applied,omitempty"`
 }
 
 // Progression is an ordered list of steps, e.g. I-V-vi-IV. It is key-agnostic:
@@ -43,6 +46,9 @@ func (p Progression) Validate() error {
 		}
 		if s.Accidental != 0 && s.Accidental != -1 {
 			errs = append(errs, fmt.Errorf("music: steps[%d]: accidental must be 0 or -1, got %d", i, s.Accidental))
+		}
+		if s.Applied && (s.Accidental != 0 || s.Quality != nil || s.Borrowed) {
+			errs = append(errs, fmt.Errorf("music: steps[%d]: an applied chord has no accidental, quality or borrowing of its own", i))
 		}
 		if s.Quality != nil {
 			if _, err := s.Quality.info(); err != nil {
@@ -83,15 +89,7 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 
 	var cursor Tick
 	for i, s := range prog {
-		chord, err := key.Diatonic(s.Degree, s.Seventh)
-		if err != nil {
-			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
-		}
-		chord.Root = chord.Root.Add(s.Accidental)
-		if s.Quality != nil {
-			chord.Quality = *s.Quality
-		}
-		numeral, err := RomanNumeralAlt(s.Degree, s.Accidental, chord.Quality)
+		chord, numeral, symbol, err := stepChord(key, s)
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
 		}
@@ -110,11 +108,39 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 			Duration:     duration,
 			Chord:        chord,
 			RomanNumeral: numeral,
-			Symbol:       key.spellDegree(s.Degree, s.Accidental) + chord.Quality.Symbol(),
+			Symbol:       symbol,
 		})
 		cursor += duration
 	}
 
 	tl.Tracks = []Track{track}
 	return tl, nil
+}
+
+// stepChord resolves a step to its chord, roman numeral and spelled symbol.
+func stepChord(key Key, s Step) (Chord, string, string, error) {
+	if s.Applied {
+		chord, err := key.appliedChord(s.Degree, s.Seventh)
+		if err != nil {
+			return Chord{}, "", "", err
+		}
+		numeral, err := key.appliedNumeral(s.Degree, s.Seventh)
+		if err != nil {
+			return Chord{}, "", "", err
+		}
+		return chord, numeral, key.spellApplied(s.Degree) + chord.Quality.Symbol(), nil
+	}
+	chord, err := key.Diatonic(s.Degree, s.Seventh)
+	if err != nil {
+		return Chord{}, "", "", err
+	}
+	chord.Root = chord.Root.Add(s.Accidental)
+	if s.Quality != nil {
+		chord.Quality = *s.Quality
+	}
+	numeral, err := RomanNumeralAlt(s.Degree, s.Accidental, chord.Quality)
+	if err != nil {
+		return Chord{}, "", "", err
+	}
+	return chord, numeral, key.spellDegree(s.Degree, s.Accidental) + chord.Quality.Symbol(), nil
 }
