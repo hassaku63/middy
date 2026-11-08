@@ -226,7 +226,7 @@ components:
       description: 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing は使えない。省略時は straight
     PatternsResponse:
       type: object
-      required: [accompaniments, drums, feels]
+      required: [accompaniments, drums, feels, styles]
       properties:
         accompaniments:
           type: array
@@ -240,6 +240,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeelInfo'
+        styles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Style'
+    Style:
+      description: スタイル（BL-082）。合う伴奏・ドラム・ノリの一覧を持つ。ブロックの和音とドラムなしはどのスタイルでも使える
+      type: object
+      required: [id, name, description, accompaniments, drums, feels]
+      properties:
+        id: { type: string, examples: [celtic] }
+        name: { type: string, examples: [ケルト] }
+        description: { type: string }
+        accompaniments: { type: array, items: { type: string } }
+        drums: { type: array, items: { type: string } }
+        feels: { type: array, items: { $ref: '#/components/schemas/Feel' } }
     FeelInfo:
       type: object
       required: [id, name, description]

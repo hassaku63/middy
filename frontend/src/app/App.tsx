@@ -122,7 +122,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
               <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />
             )}
             {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
-            {projectName && <span className="app__open-title">プロジェクト: {projectName}</span>}
+            {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
             <LabControls layout={timelineLayout} degreeMap={degreeMap} />
           </div>
           {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
