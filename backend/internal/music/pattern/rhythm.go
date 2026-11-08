@@ -75,7 +75,9 @@ func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 		}
 	}
 	if len(kit) == 0 && len(hand) > 0 {
-		return part(d.ID, d.Name, d.Description, hand, "低いタムとサイドスティック", ts)
+		rp := part(d.ID, d.Name, d.Description, hand, "低いタムとサイドスティック", ts)
+		rp.Explanation += densityText(d, ts) + nearestText(d, ts)
+		return rp
 	}
 	// Name only what plays: a jazz ride or a bossa has a kick and no snare.
 	subject := "キックとスネア"
@@ -86,7 +88,7 @@ func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 		subject = "スネア"
 	}
 	rp := part(d.ID, d.Name, d.Description, kit, subject, ts)
-	rp.Explanation += backbeatText(d, ts) + densityText(d, ts)
+	rp.Explanation += backbeatText(d, ts) + densityText(d, ts) + nearestText(d, ts)
 	return rp
 }
 
