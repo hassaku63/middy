@@ -72,6 +72,9 @@ type Verdict struct {
 	Case     Case
 	Pass     bool
 	Problems []string
+	// Errored is true when the case never got an answer to judge: the
+	// model could not be reached, or the case was not sent.
+	Errored bool
 	// First candidate, for the report.
 	Title       string
 	Key         string

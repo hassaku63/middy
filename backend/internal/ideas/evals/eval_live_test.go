@@ -30,7 +30,13 @@ func TestLiveEval(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
+	// End a minute before `go test` would kill the run, so the report is
+	// printed with whatever finished (the default -timeout is 10 minutes).
+	budget := 9 * time.Minute
+	if dl, ok := t.Deadline(); ok {
+		budget = time.Until(dl) - time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
 	verdicts := Run(ctx, ideas.NewDiagnostic(client), cases)
 	fmt.Println(Report(verdicts))
