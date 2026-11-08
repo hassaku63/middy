@@ -9,6 +9,11 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
   return (
     <div className="explanation__rhythm" aria-label="リズム">
       <h3 className="explanation__subtitle">リズム</h3>
+      {rhythm.style?.instrument && (
+        <p className="explanation__text">
+          {rhythm.style.name}のスタイルなので、和音は{rhythm.style.instrument}で鳴らす。
+        </p>
+      )}
       {parts.map(([label, part]) =>
         part ? (
           <section key={label} aria-label={`${label}: ${part.name}`} className="explanation__part">

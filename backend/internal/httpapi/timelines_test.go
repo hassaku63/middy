@@ -216,3 +216,34 @@ func TestFromProgressionInSixEight(t *testing.T) {
 		t.Errorf("swing in 6/8 should be a bad request, got %d", swing.StatusCode)
 	}
 }
+
+// TestFromProgressionKeepsTheStyle (BL-110): a style puts a keyboard
+// pattern on its instrument and is recorded on the timeline, so a key
+// change can send it back.
+func TestFromProgressionKeepsTheStyle(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 2, "mode": "dorian"}, "tempoBpm": 100,
+		"accompaniment": "arpeggio", "style": "celtic",
+		"progression": [{"numeral": "i"}, {"numeral": "VII"}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, b)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	tl := body.Timeline
+	if tl.Tracks[0].Program != 46 || tl.Rhythm == nil || tl.Rhythm.Style == nil || tl.Rhythm.Style.Instrument != "ハープ" {
+		t.Errorf("celtic arpeggios should be on the harp: program %d, rhythm %+v", tl.Tracks[0].Program, tl.Rhythm)
+	}
+	bad := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 2, "mode": "dorian"}, "tempoBpm": 100, "style": "polka",
+		"progression": [{"numeral": "i"}]
+	}`)
+	if bad.StatusCode != http.StatusBadRequest {
+		t.Errorf("an unknown style should be a bad request, got %d", bad.StatusCode)
+	}
+}

@@ -9,6 +9,17 @@ type Rhythm struct {
 	Drums         *RhythmPart `json:"drums,omitempty"`
 	// Feel is present when the eighths are not straight (e.g. swing).
 	Feel *RhythmFeel `json:"feel,omitempty"`
+	// Style is present when the example was rendered in a style (BL-110):
+	// it chose the instrument, and rebuilding in another key keeps it.
+	Style *RhythmStyle `json:"style,omitempty"`
+}
+
+// RhythmStyle names the style an example was rendered in and the
+// instrument it gave the chords, if any.
+type RhythmStyle struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Instrument string `json:"instrument,omitempty"`
 }
 
 // RhythmFeel explains how the eighths are played.

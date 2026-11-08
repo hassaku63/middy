@@ -136,6 +136,8 @@ export interface components {
       /** @description ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし */
       drums?: string;
       feel?: components['schemas']['Feel'];
+      /** @description スタイルの id（`GET /patterns` の styles）。鍵盤を既定とする型の音色をスタイルの楽器にし、タイムラインに記録する（BL-110）。型がスタイルに合うかは検査しない */
+      style?: string;
       /** @description 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017） */
       timeSignature?: components['schemas']['TimeSignature'];
     };
@@ -160,6 +162,10 @@ export interface components {
       accompaniments: string[];
       drums: string[];
       feels: components['schemas']['Feel'][];
+      /** @description 鍵盤を既定とする型をこの GM の音色で鳴らす（BL-110）。省略時は型のまま */
+      program?: number;
+      /** @description その楽器の名前 */
+      instrument?: string;
     };
     FeelInfo: {
       id: components['schemas']['Feel'];
@@ -402,6 +408,14 @@ export interface components {
       accompaniment?: components['schemas']['RhythmPart'];
       drums?: components['schemas']['RhythmPart'];
       feel?: components['schemas']['RhythmFeel'];
+      style?: components['schemas']['RhythmStyle'];
+    };
+    /** @description 例を描画したスタイル（BL-110）。調を変えて作り直すときに送り返す */
+    RhythmStyle: {
+      id: string;
+      name: string;
+      /** @description スタイルが和音に与えた楽器の名前。型が自分の楽器を持つときは省略 */
+      instrument?: string;
     };
     /** @description ストレートでないときのノリの説明。決定論的に生成される */
     RhythmFeel: {

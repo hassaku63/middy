@@ -47,6 +47,14 @@ describe('rebuildRequest', () => {
     ]);
   });
 
+  it('carries the style, so the key change keeps its instrument (BL-110)', () => {
+    const styled: Timeline = {
+      ...base,
+      rhythm: { style: { id: 'celtic', name: 'ケルト', instrument: 'ハープ' } },
+    };
+    expect(rebuildRequest(styled, 2).style).toBe('celtic');
+  });
+
   it('carries the patterns and the feel the timeline was rendered with', () => {
     const grooved: Timeline = {
       ...base,
