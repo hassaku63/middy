@@ -391,7 +391,8 @@ components:
       description: MIDI ノート番号。60 = C4
     Mode:
       type: string
-      enum: [major, minor]
+      enum: [major, minor, dorian, mixolydian]
+      description: 長調、自然短音階、ドリアン、ミクソリディアン（ADR-0015）。ローマ数字はそのモードの音階に対して読む
     Key:
       type: object
       required: [tonic, mode]

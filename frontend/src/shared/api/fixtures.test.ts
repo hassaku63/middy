@@ -22,7 +22,7 @@ describe('fixtures from backend/internal/fixtures', () => {
     for (const { key, name } of notation.keyNames) {
       expect(keyName(key as Key)).toBe(name);
     }
-    expect(notation.keyNames).toHaveLength(24);
+    expect(notation.keyNames).toHaveLength(48);
   });
 
   it('chord symbols match for every root and quality', () => {

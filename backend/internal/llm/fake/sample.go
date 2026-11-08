@@ -21,8 +21,30 @@ func sampleIntent(req llm.Request) string {
 			break
 		}
 	}
+	modal := false
+	for _, kw := range []string{"ケルト", "アイルランド", "ドリアン", "ミクソリディアン", "celtic", "irish", "dorian", "mixolydian"} {
+		if strings.Contains(text, kw) {
+			modal = true
+			break
+		}
+	}
 	var in map[string]any
-	if minor {
+	switch {
+	case modal:
+		in = map[string]any{
+			"summary": "ケルトの舞曲の情景。ドリアンの明るい IV と、ミクソリディアンの導音のない開放感が合います。",
+			"mood":    []string{"素朴", "軽やか"},
+			"candidates": []map[string]any{
+				{"title": "緑の丘のリール", "key": map[string]any{"tonic": 2, "mode": "dorian"}, "tempoBpm": 112,
+					"progression": []string{"i", "IV", "i", "VII"}, "beatsPerChord": 4,
+					"reason":        "D ドリアンの i と IV（G）の往復。長 6 度の B が短調の暗さを和らげ、ケルトらしい明るさを作ります。",
+					"accompaniment": "strum", "drums": "eight-beat"},
+				{"title": "港町のジグ", "key": map[string]any{"tonic": 7, "mode": "mixolydian"}, "tempoBpm": 120,
+					"progression": []string{"I", "VII", "IV", "I"}, "beatsPerChord": 4,
+					"reason": "G ミクソリディアンの I–VII–IV–I。導音のない VII（F）がそのまま I へ戻る、モーダルな終止です。"},
+			},
+		}
+	case minor:
 		in = map[string]any{
 			"summary": "静かで少し切ない情景。ゆっくりした短調で、落ち着いた動きが合います。",
 			"mood":    []string{"静か", "切ない"},
@@ -36,7 +58,7 @@ func sampleIntent(req llm.Request) string {
 					"reason": "iiø7 → V7 → i の進行で、戻ってくる安心感と緊張を両方入れます。"},
 			},
 		}
-	} else {
+	default:
 		in = map[string]any{
 			"summary": "明るく開けた情景。軽快な長調で、前に進む感じが合います。",
 			"mood":    []string{"明るい", "軽やか"},

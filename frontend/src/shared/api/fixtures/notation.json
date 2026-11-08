@@ -167,6 +167,174 @@
         "mode": "minor"
       },
       "name": "B minor"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "dorian"
+      },
+      "name": "C dorian"
+    },
+    {
+      "key": {
+        "tonic": 1,
+        "mode": "dorian"
+      },
+      "name": "C# dorian"
+    },
+    {
+      "key": {
+        "tonic": 2,
+        "mode": "dorian"
+      },
+      "name": "D dorian"
+    },
+    {
+      "key": {
+        "tonic": 3,
+        "mode": "dorian"
+      },
+      "name": "Eb dorian"
+    },
+    {
+      "key": {
+        "tonic": 4,
+        "mode": "dorian"
+      },
+      "name": "E dorian"
+    },
+    {
+      "key": {
+        "tonic": 5,
+        "mode": "dorian"
+      },
+      "name": "F dorian"
+    },
+    {
+      "key": {
+        "tonic": 6,
+        "mode": "dorian"
+      },
+      "name": "F# dorian"
+    },
+    {
+      "key": {
+        "tonic": 7,
+        "mode": "dorian"
+      },
+      "name": "G dorian"
+    },
+    {
+      "key": {
+        "tonic": 8,
+        "mode": "dorian"
+      },
+      "name": "Ab dorian"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "dorian"
+      },
+      "name": "A dorian"
+    },
+    {
+      "key": {
+        "tonic": 10,
+        "mode": "dorian"
+      },
+      "name": "Bb dorian"
+    },
+    {
+      "key": {
+        "tonic": 11,
+        "mode": "dorian"
+      },
+      "name": "B dorian"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "mixolydian"
+      },
+      "name": "C mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 1,
+        "mode": "mixolydian"
+      },
+      "name": "Db mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 2,
+        "mode": "mixolydian"
+      },
+      "name": "D mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 3,
+        "mode": "mixolydian"
+      },
+      "name": "Eb mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 4,
+        "mode": "mixolydian"
+      },
+      "name": "E mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 5,
+        "mode": "mixolydian"
+      },
+      "name": "F mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 6,
+        "mode": "mixolydian"
+      },
+      "name": "F# mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 7,
+        "mode": "mixolydian"
+      },
+      "name": "G mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 8,
+        "mode": "mixolydian"
+      },
+      "name": "Ab mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "mixolydian"
+      },
+      "name": "A mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 10,
+        "mode": "mixolydian"
+      },
+      "name": "Bb mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 11,
+        "mode": "mixolydian"
+      },
+      "name": "B mixolydian"
     }
   ],
   "pitchClasses": [

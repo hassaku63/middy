@@ -25,7 +25,7 @@ func TestCasesLoadAndAreWellFormed(t *testing.T) {
 			t.Errorf("bad or duplicate case %+v", c)
 		}
 		seen[c.ID] = true
-		if c.Mode != "major" && c.Mode != "minor" && c.Mode != "either" {
+		if problem := judgeMode(c.Mode, music.Major); strings.Contains(problem, "unknown") {
 			t.Errorf("%s: mode %q", c.ID, c.Mode)
 		}
 		if c.TempoMin > 0 && c.TempoMax > 0 && c.TempoMin > c.TempoMax {
@@ -156,5 +156,17 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 		if !strings.Contains(report, want) {
 			t.Errorf("report lacks %q:\n%s", want, report)
 		}
+	}
+}
+
+func TestJudgeModeAcceptsAlternatives(t *testing.T) {
+	if judgeMode("dorian/mixolydian", music.Mixolydian) != "" {
+		t.Error("mixolydian satisfies dorian/mixolydian")
+	}
+	if judgeMode("dorian/mixolydian", music.Minor) != "expected dorian/mixolydian, got minor" {
+		t.Error("minor does not")
+	}
+	if !strings.Contains(judgeMode("lydian", music.Major), "unknown mode") {
+		t.Error("unsupported modes are reported")
 	}
 }
