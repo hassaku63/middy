@@ -31,9 +31,10 @@ export type RhythmPart = Schemas['RhythmPart'];
 export type Rhythm = Schemas['Rhythm'];
 export type Timeline = Schemas['Timeline'];
 
-// --- Timelines saved from POST /timelines/from-progression (older projects) --
+// --- POST /timelines/from-progression (changing an example's key; older projects) --
 
 export type FromProgressionRequest = Schemas['FromProgressionRequest'];
+type TimelineResponse = Schemas['TimelineResponse'];
 
 export class ApiError extends Error {
   constructor(
@@ -57,6 +58,19 @@ const defaultFetch: typeof fetch = (input, init) => globalThis.fetch(input, init
 
 export async function fetchHealth(fetchImpl: typeof fetch = defaultFetch): Promise<Health> {
   return requestJson<Health>('/api/v1/health', { fetchImpl });
+}
+
+/** Renders a progression in a key without the LLM (used to change an example's key). */
+export async function createTimelineFromProgression(
+  req: FromProgressionRequest,
+  fetchImpl: typeof fetch = defaultFetch,
+): Promise<Timeline> {
+  const res = await requestJson<TimelineResponse>('/api/v1/timelines/from-progression', {
+    fetchImpl,
+    method: 'POST',
+    body: req,
+  });
+  return res.timeline;
 }
 
 // --- GET /patterns -----------------------------------------------------------

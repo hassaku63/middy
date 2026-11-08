@@ -54,7 +54,7 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 
 イメージはマルチステージ（Node でフロント → Go でバイナリ → distroless、非 root）で、`HEALTHCHECK` はバイナリ自身の `-healthcheck` フラグが担います。
 
-ブラウザで http://localhost:5173 を開き、曲のイメージを言葉で送ると、調・テンポ・進行の候補が返ります（既定の `LLM_PROVIDER=fake` では気分語で変わる見本）。答えが届くと最初の候補が開き、タイムラインが表示されます（別の候補は「この候補を開く」で切り替え）。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。名前をつけて「保存」すると、プロジェクトとしてブラウザ（IndexedDB）に残り、次に開いたときも一覧から開けます。
+ブラウザで http://localhost:5173 を開き、曲のイメージを言葉で送ると、調・テンポ・進行の候補が返ります（既定の `LLM_PROVIDER=fake` では気分語で変わる見本）。答えが届くと最初の候補が開き、タイムラインが表示されます（別の候補は「この候補を開く」で切り替え、「キー」で調を変えられる）。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。名前をつけて「保存」すると、プロジェクトとしてブラウザ（IndexedDB）に残り、次に開いたときも一覧から開けます。
 
 実際の LLM を使うときは、起動するコマンドに環境変数で `LLM_PROVIDER=anthropic` と `ANTHROPIC_API_KEY` を渡します（`make dev-backend` でも `make up` でも同じ）。どのファイルも読まないので、秘密情報を注入する道具をコマンドの前に付けて使えます。使える変数の一覧は `backend/.env.example` です（ADR-0011）。
 
@@ -79,7 +79,7 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 ├── frontend/              # React PWA
 │   └── src/
 │       ├── app/           # アプリシェル
-│       ├── features/      # 機能ごとの縦スライス（chat, player, timeline, explanation, export, projects, pwa）
+│       ├── features/      # 機能ごとの縦スライス（chat, player, timeline, explanation, key-change, export, projects, pwa）
 │       └── shared/        # API クライアント等の共有コード
 └── docs/
     ├── product/           # ビジョン・ロードマップ・バックログ

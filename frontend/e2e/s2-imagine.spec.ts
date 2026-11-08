@@ -23,7 +23,12 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
 
   // The first example is open without another click (BL-064): one press of 再生 makes sound.
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result.getByRole('option')).toHaveText([/i.*Am/, /VI.*F/, /III.*C/, /VII.*G/]);
+  await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
+    /i.*Am/,
+    /VI.*F/,
+    /III.*C/,
+    /VII.*G/,
+  ]);
   await expect(result).toContainText('候補: 窓辺の雨');
   // The fake's sample carries patterns (arpeggio + ballad drums): a drum lane and rhythm notes appear.
   await expect(result.getByTestId('drum-lane')).toBeVisible();
@@ -45,7 +50,12 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(page.getByRole('article', { name: '朝の光' })).toBeVisible();
   // A refined answer opens its first example again.
   await expect(result).toContainText('候補: 朝の光');
-  await expect(result.getByRole('option')).toHaveText([/I.*C/, /V.*G/, /vi.*Am/, /IV.*F/]);
+  await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
+    /I.*C/,
+    /V.*G/,
+    /vi.*Am/,
+    /IV.*F/,
+  ]);
 });
 
 test('a swing image swings the example and says so (BL-076)', async ({ page }) => {
