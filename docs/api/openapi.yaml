@@ -252,6 +252,9 @@ components:
         name: { type: string }
         description: { type: string, description: 学習者向けの説明（日本語） }
         program: { type: integer, description: GM プログラム番号 }
+        meter:
+          $ref: '#/components/schemas/TimeSignature'
+          description: この型が書かれた拍子。省略時はどの拍子でも使える（block）
         hits:
           type: array
           items:
@@ -259,7 +262,7 @@ components:
             required: [start, duration, voice, velocity]
             properties:
               start: { type: integer, description: 小節内の tick }
-              duration: { type: integer }
+              duration: { type: integer, description: 0 は小節の終わりまで }
               voice: { type: string, enum: [chord, bass, root, third, fifth, top, octave] }
               velocity: { type: integer, minimum: 1, maximum: 127 }
     DrumPattern:
@@ -269,6 +272,9 @@ components:
         id: { type: string }
         name: { type: string }
         description: { type: string }
+        meter:
+          $ref: '#/components/schemas/TimeSignature'
+          description: この型が書かれた拍子
         hits:
           type: array
           items:

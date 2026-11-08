@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hassaku63/middy/backend/internal/music"
 	"github.com/hassaku63/middy/backend/internal/music/pattern"
 )
 
@@ -18,11 +19,12 @@ func SystemPrompt() string {
 		var b strings.Builder
 		b.WriteString(promptBody)
 		b.WriteString("\n\n使える伴奏の型（accompaniment）:\n")
-		for _, a := range pattern.Accompaniments() {
+		// The model cannot choose a meter yet (BL-101), so it sees the 4/4 catalogue only.
+		for _, a := range pattern.AccompanimentsFor(music.FourFour) {
 			fmt.Fprintf(&b, "- %s: %s %s\n", a.ID, a.Name, a.Description)
 		}
 		b.WriteString("使えるドラムの型（drums）:\n")
-		for _, d := range pattern.DrumPatterns() {
+		for _, d := range pattern.DrumPatternsFor(music.FourFour) {
 			fmt.Fprintf(&b, "- %s: %s %s\n", d.ID, d.Name, d.Description)
 		}
 		b.WriteString("8 分音符のノリ（feel）:\n")

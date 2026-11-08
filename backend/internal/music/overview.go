@@ -97,7 +97,7 @@ func characteristicSentence(tl Timeline) string {
 func flow(tl Timeline) string {
 	h := tl.Harmony
 	first, last := h[0], h[len(h)-1]
-	s := fmt.Sprintf("%d 個の和音で %s 小節。", len(h), bars(tl))
+	s := meterText[tl.TimeSignature] + fmt.Sprintf("%d 個の和音で %s 小節。", len(h), bars(tl))
 	if len(h) == 1 {
 		return s
 	}
@@ -141,11 +141,16 @@ func bars(tl Timeline) string {
 			end = e
 		}
 	}
-	perBar := float64(tl.PPQ * tl.TimeSignature.Numerator)
+	perBar := BarTicks(tl.TimeSignature, tl.PPQ)
 	if perBar <= 0 {
 		return "?"
 	}
-	return strconv.FormatFloat(float64(end)/perBar, 'f', -1, 64)
+	return strconv.FormatFloat(float64(end)/float64(perBar), 'f', -1, 64)
+}
+
+// meterText describes a meter other than the default 4/4 (ADR-0017).
+var meterText = map[TimeSignature]string{
+	ThreeFour: "3 拍子（3/4）で、1 拍目が強く 2・3 拍目が弱い。ワルツのように 1 小節ごとに回る。",
 }
 
 func degreeOfEvent(h HarmonyEvent) int {

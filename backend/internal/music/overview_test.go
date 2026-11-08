@@ -97,3 +97,31 @@ func TestOverviewOfASingleChordAndOfNothing(t *testing.T) {
 		t.Errorf("an empty timeline has no overview: %+v", empty.Overview)
 	}
 }
+
+func TestOverviewNamesTheMeterAndCountsItsBars(t *testing.T) {
+	key := Key{C, Major}
+	var prog Progression
+	for _, l := range []string{"I", "IV", "V7", "I"} {
+		s, err := StepFromLabel(key, l, 3)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := FromProgressionIn(ThreeFour, key, prog, 150)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tl, err = Analyze(tl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"3 拍子（3/4）で、1 拍目が強く 2・3 拍目が弱い", "4 個の和音で 4 小節"} {
+		if !strings.Contains(tl.Overview.Flow, want) {
+			t.Errorf("flow lacks %q: %s", want, tl.Overview.Flow)
+		}
+	}
+	if _, err := FromProgressionIn(TimeSignature{6, 8}, key, prog, 150); err == nil {
+		t.Error("6/8 is not supported yet")
+	}
+}

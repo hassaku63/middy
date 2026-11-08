@@ -57,6 +57,7 @@ Timeline
 - `StepFromLabel(key, label, beats)` — ローマ数字の文字列から `Step` を作る唯一の入口（API と intent が使う）。短調の大文字 `V` / `V7` を和声的短音階のドミナントにする規則はここにある
 - `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
 - `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordOctave`=4 の基本形, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）
+- `FromProgressionIn(ts, key, prog, tempoBPM)` — 同じことを別の拍子で行う（4/4 と 3/4。ADR-0017）。`Step.Beats` は拍子の拍で数える（4/4 と 3/4 では 4 分音符）。`FromProgression` は 4/4 のこれ
 
 ### 分析（解説データ）
 
@@ -80,10 +81,10 @@ Timeline
 
 ### パターン（`internal/music/pattern`）
 
-- `pattern.Accompaniment{ID, Name, Description, Program, Hits}` — 1 小節（4/4、`DefaultPPQ`）の伴奏テンプレート。`Hit{Start, Duration, Voice, Velocity}` の `Voice` はコードの密集ボイシングに対する相対指定（`chord` / `bass` / `root` / `third` / `fifth` / `top` / `octave`）
-- `pattern.Drums{ID, Name, Description, Hits}` — 1 小節のドラムテンプレート。`DrumHit.Note` は GM ドラムマップ（36 キック、38 スネア、42 クローズドハイハット…）
-- カタログ: 伴奏 `block` / `pulse` / `ballad` / `arpeggio` / `strum`、ドラム `eight-beat` / `ballad` / `bossa`、ノリ `straight` / `swing`。`Accompaniments()` / `DrumPatterns()` / `Feels()` / `FindAccompaniment(id)` / `FindDrums(id)`
-- `pattern.Apply(tl, acc, drums)` — `Harmony` を元にトラックを作り直す。コードごとに小節単位でテンプレートを繰り返し、小節より短いコードは先頭部分だけ鳴らす。ドラムは ch.9 にタイムライン長ぶん繰り返す。入力は変更しない。4/4 以外はエラー
+- `pattern.Accompaniment{ID, Name, Description, Program, Meter, Hits}` — 1 小節（`DefaultPPQ`）の伴奏テンプレート。`Meter` はその型が書かれた拍子で、`nil` はどの拍子でも使える（`block`。`Duration` 0 は小節の終わりまで）。`Hit{Start, Duration, Voice, Velocity}` の `Voice` はコードの密集ボイシングに対する相対指定（`chord` / `bass` / `root` / `third` / `fifth` / `top` / `octave`）
+- `pattern.Drums{ID, Name, Description, Meter, Hits}` — 1 小節のドラムテンプレート。拍子を必ず宣言する。`DrumHit.Note` は GM ドラムマップ（36 キック、38 スネア、42 クローズドハイハット…）
+- カタログ: 伴奏は 4/4 の `pulse` / `ballad` / `arpeggio` / `strum`、3/4 の `waltz`（1 拍目にベース、2・3 拍目に和音）/ `arpeggio-3`、どの拍子でも使える `block`。ドラムは 4/4 の `eight-beat` / `ballad` / `bossa`、3/4 の `waltz`。ノリ `straight` / `swing`。`Accompaniments()` / `DrumPatterns()` / `AccompanimentsFor(ts)` / `DrumPatternsFor(ts)` / `Feels()` / `FindAccompaniment(id)` / `FindDrums(id)`。AI に見せるのは、インテントが拍子を持つまで（BL-101）4/4 の型だけ
+- `pattern.Apply(tl, acc, drums)` — `Harmony` を元にトラックを作り直す。コードごとに小節単位でテンプレートを繰り返し、小節より短いコードは先頭部分だけ鳴らす。ドラムは ch.9 にタイムライン長ぶん繰り返す。入力は変更しない。小節の長さは拍子から決める（`music.BarTicks`）。4/4 と 3/4 以外、または型の拍子がタイムラインと違うときはエラー（ADR-0017）
 - `pattern.Render(tl, Choice{Accompaniment, Drums, Feel})` — id で選んで `Apply` し、ノリを掛ける。HTTP と `ideas` の入口。伴奏もドラムもなければそのまま返し、ドラムだけならブロックコードを使う
 - ノリ（`Feel`）: `swing` は、拍の頭の 8 分を拍の 3 分の 2 まで伸ばし、裏拍（8 分の 2 つ目）で始まる音を 3 連符の 3 つ目まで遅らせる（終わりの位置は保つ）。4 分音符や 16 分音符は動かさない。拍の位置の分析はテンプレートの位置で行うので、スウィングしても裏拍は裏拍として数える
 - 説明文（`Description`）は解説レイヤーと LLM がそのまま使う前提で、日本語で「何が起きるか」を書く
