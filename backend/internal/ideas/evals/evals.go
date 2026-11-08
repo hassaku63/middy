@@ -70,6 +70,7 @@ type Verdict struct {
 	Key         string
 	TempoBPM    float64
 	Meter       string
+	Patterns    string // "accompaniment/drums", "" for block chords and no drums
 	Progression []string
 	// Labels of every candidate, for the vocabulary metric.
 	Labels []string
@@ -122,6 +123,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 	first := res.Candidates[0]
 	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
 	v.Progression = first.Progression
+	v.Patterns = patternsOf(first.Accompaniment, first.Drums)
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
 	modes := make([]music.Mode, 0, len(res.Candidates))
@@ -191,7 +193,7 @@ func Report(verdicts []Verdict) string {
 		if v.Retry != "" {
 			status += " · retry: " + shorten(oneLine(v.Retry), 120)
 		}
-		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, meterNote(v.Meter), strings.Join(v.Progression, " "), status)
+		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, meterNote(v.Meter)+patternsNote(v.Patterns), strings.Join(v.Progression, " "), status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
 	b.WriteString(breadthReport(verdicts))
@@ -385,6 +387,27 @@ func judgeMode(want string, got music.Mode) string {
 }
 
 // meterNote marks a first candidate that is not in 4/4.
+// patternsOf names the patterns a candidate chose: "reel/bodhran",
+// "strum" (no drums), "block/eight-beat" (drums alone), or "".
+func patternsOf(acc, drums string) string {
+	switch {
+	case acc == "" && drums == "":
+		return ""
+	case drums == "":
+		return acc
+	case acc == "":
+		return "block/" + drums
+	}
+	return acc + "/" + drums
+}
+
+func patternsNote(p string) string {
+	if p == "" {
+		return ""
+	}
+	return ", " + p
+}
+
 func meterNote(m string) string {
 	if m == "" || m == "4/4" {
 		return ""

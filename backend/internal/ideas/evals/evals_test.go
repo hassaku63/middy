@@ -279,3 +279,18 @@ func TestSilentWordsInReasons(t *testing.T) {
 		}
 	}
 }
+
+// TestReportNamesTheFirstPatterns (#131): the report shows the first
+// candidate's accompaniment and drums, so a run can be read for whether a
+// Celtic image got the Celtic patterns.
+func TestReportNamesTheFirstPatterns(t *testing.T) {
+	res := result()
+	res.Candidates[0].Accompaniment, res.Candidates[0].Drums = "reel", "bodhran"
+	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); !strings.Contains(got, "BPM, reel/bodhran)") {
+		t.Errorf("report should name the patterns:\n%s", got)
+	}
+	res.Candidates[0].Accompaniment, res.Candidates[0].Drums = "", ""
+	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); strings.Contains(got, "BPM, ") {
+		t.Errorf("block chords without drums add nothing:\n%s", got)
+	}
+}
