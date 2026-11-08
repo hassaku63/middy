@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -51,9 +52,12 @@ func classify(starts []music.Tick, ts music.TimeSignature) placement {
 func (p placement) syncopated() bool { return len(p.skipped) > 0 }
 
 func describeAccompaniment(a Accompaniment, ts music.TimeSignature) *music.RhythmPart {
+	// Hits struck together (a bass and its chord) are one attack.
 	starts := make([]music.Tick, 0, len(a.Hits))
 	for _, h := range a.Hits {
-		starts = append(starts, h.Start)
+		if !slices.Contains(starts, h.Start) {
+			starts = append(starts, h.Start)
+		}
 	}
 	return part(a.ID, a.Name, a.Description, starts, "伴奏", ts)
 }
