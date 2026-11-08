@@ -120,6 +120,26 @@ export function instrumentVoice(program: number): InstrumentVoice {
 }
 
 /**
+ * When a note's envelope moves (s): the attack, then the decay to the held
+ * level, released at the note's end. A note shorter than its decay (a
+ * comping stab) is released at its end, not held through the decay; only
+ * the attack is never cut short.
+ */
+export function envelope(
+  inst: InstrumentVoice,
+  time: number,
+  durationSec: number,
+  peak: number,
+): { held: number; decayEnd: number; release: number } {
+  const release = Math.max(time + durationSec, time + inst.attack);
+  return {
+    held: Math.max(peak * inst.sustain, 0.0001),
+    decayEnd: Math.min(time + inst.attack + inst.decay, release),
+    release,
+  };
+}
+
+/**
  * A small subtractive synth: a couple of oscillators through a low-pass
  * filter, shaped per instrument family (instrumentVoice). Good enough to
  * hear a guitar from an organ; sample-based instruments are a backlog
@@ -143,9 +163,8 @@ export class WebAudioSynth implements Synth {
     const { time, durationSec } = note;
     const inst = instrumentVoice(note.program);
     const peak = (note.velocity / 127) ** 1.5;
+    const { held, decayEnd, release } = envelope(inst, time, durationSec, peak);
     const end = time + durationSec;
-    const held = Math.max(peak * inst.sustain, 0.0001);
-    const release = Math.max(end, time + inst.attack + inst.decay);
 
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
@@ -155,7 +174,7 @@ export class WebAudioSynth implements Synth {
 
     gain.gain.setValueAtTime(0, time);
     gain.gain.linearRampToValueAtTime(peak, time + inst.attack);
-    gain.gain.exponentialRampToValueAtTime(held, time + inst.attack + inst.decay);
+    if (decayEnd > time + inst.attack) gain.gain.exponentialRampToValueAtTime(held, decayEnd);
     gain.gain.setValueAtTime(held, release);
     gain.gain.exponentialRampToValueAtTime(0.0001, release + 0.15);
 

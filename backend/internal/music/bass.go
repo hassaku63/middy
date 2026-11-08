@@ -104,7 +104,13 @@ func bassText(key Key, harmony []HarmonyEvent, i int) string {
 	name := bassName(key, h)
 	prev, next := neighbourBasses(harmony, i)
 	pedal := (prev != nil && *prev == *h.Bass) || (next != nil && *next == *h.Bass)
-	if idx := inversionIndex(h); idx > 0 {
+	if idx := inversionIndex(h); idx == 3 && h.Chord.Quality == MinorSixth {
+		s := fmt.Sprintf(" 根音ではなく、足した 6 度の %s がベース。6 度が下に来ると、和音の重心が下がって陰りが深まる。", name)
+		if pedal {
+			s += "隣の和音と同じベースが続くので、ペダルとしても働く。"
+		}
+		return s
+	} else if idx > 0 {
 		s := fmt.Sprintf(" 根音ではなく %sの %s がベース（%s", inversionName[idx], name, inversionText[idx])
 		if pedal { // e.g. I – IV/1 – I, the pedal six-four
 			s += "隣の和音と同じベースが続くので、ペダルとしても働き、ベースは留まって和音だけが上で動く。"
