@@ -207,3 +207,49 @@ func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, 
 	degree, seventh, upper, err = parseRomanNumeral(s)
 	return degree, seventh, upper, suffix, accidental, err
 }
+
+// LiteralChord reads a label as written, against the major scale of tonic,
+// whatever key the music is in: the case and suffix give the quality and a
+// leading ♭ or b lowers the root ("bVII" is the major chord a whole step
+// below the tonic, "iv" the minor chord on the fourth, "I7" the dominant
+// seventh on the tonic). It is the reference lead sheets and borrowed-chord
+// tables use, and lets an evaluation ask for a sound rather than for a
+// spelling that only some keys accept.
+func LiteralChord(tonic PitchClass, label string) (Chord, error) {
+	degree, _, upper, suffix, accidental, err := parseLabel(label)
+	if err != nil {
+		return Chord{}, err
+	}
+	if accidental == 1 {
+		return Chord{}, fmt.Errorf("music: %q: sharps are not supported", strings.TrimSpace(label))
+	}
+	major := Key{Tonic: tonic, Mode: Major}
+	return Chord{Root: major.Scale()[degree-1].Add(accidental), Quality: literalQuality(upper, suffix)}, nil
+}
+
+// literalQuality is the quality a numeral's case and suffix name.
+func literalQuality(upper bool, suffix string) ChordQuality {
+	switch suffix {
+	case "maj7":
+		return Major7
+	case "ø7", "m7b5":
+		return HalfDiminished7
+	case "m7":
+		return Minor7
+	case "m6":
+		return MinorSixth
+	case "7":
+		if upper {
+			return Dominant7
+		}
+		return Minor7
+	case "°", "dim":
+		return DiminishedTriad
+	case "+", "aug":
+		return AugmentedTriad
+	}
+	if upper {
+		return MajorTriad
+	}
+	return MinorTriad
+}

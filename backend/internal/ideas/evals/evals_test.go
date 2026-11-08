@@ -28,6 +28,14 @@ func TestCasesLoadAndAreWellFormed(t *testing.T) {
 		if problem := judgeMode(c.Mode, music.Major); strings.Contains(problem, "unknown") {
 			t.Errorf("%s: mode %q", c.ID, c.Mode)
 		}
+		if c.ModeInAny != "" && strings.Contains(judgeMode(c.ModeInAny, music.Major), "unknown") {
+			t.Errorf("%s: modeInAny %q", c.ID, c.ModeInAny)
+		}
+		for _, w := range c.Wants {
+			if _, err := music.LiteralChord(music.C, w); err != nil {
+				t.Errorf("%s: want %q does not read as a chord: %v", c.ID, w, err)
+			}
+		}
 		if c.TempoMin > 0 && c.TempoMax > 0 && c.TempoMin > c.TempoMax {
 			t.Errorf("%s: tempo band inverted", c.ID)
 		}
@@ -117,15 +125,42 @@ func TestJudgeFeel(t *testing.T) {
 	}
 }
 
-func TestWantsAreMatchedAsWritten(t *testing.T) {
-	if wantsHit([]string{"IV", "VII"}, []string{"i", "iv", "VII"}) != true {
-		t.Fatal("VII should hit")
+func TestWantsAreMatchedBySound(t *testing.T) {
+	maj := func(root music.PitchClass) music.Chord { return music.Chord{Root: root, Quality: music.MajorTriad} }
+	min := func(root music.PitchClass) music.Chord { return music.Chord{Root: root, Quality: music.MinorTriad} }
+	tests := []struct {
+		name   string
+		wants  []string
+		tonic  music.PitchClass
+		chords []music.Chord
+		hit    bool
+	}{
+		{"bVII in E major is D", []string{"bVII"}, music.E, []music.Chord{maj(music.E), maj(music.D)}, true},
+		{"G mixolydian's VII is its bVII", []string{"bVII"}, music.G, []music.Chord{maj(music.G), maj(music.F)}, true},
+		{"the dorian IV is not the minor iv", []string{"IV"}, music.D, []music.Chord{min(music.D), min(music.G)}, false},
+		{"the dorian IV", []string{"IV"}, music.D, []music.Chord{min(music.D), maj(music.G)}, true},
+		{"I7 is a dominant seventh, not Imaj7", []string{"I7"}, music.As,
+			[]music.Chord{{Root: music.As, Quality: music.Major7}}, false},
+		{"no wants, no hit", nil, music.C, []music.Chord{maj(music.C)}, false},
 	}
-	if wantsHit([]string{"IV"}, []string{"i", "iv"}) {
-		t.Fatal("iv must not satisfy a want for IV: the case carries the modal meaning")
+	for _, tt := range tests {
+		if got := wantsHit(tt.wants, tt.tonic, tt.chords); got != tt.hit {
+			t.Errorf("%s: wantsHit = %v, want %v", tt.name, got, tt.hit)
+		}
 	}
-	if wantsHit(nil, []string{"I"}) {
-		t.Fatal("no wants, no hit")
+}
+
+func TestJudgeModeInAnyLooksAtEveryCandidate(t *testing.T) {
+	res := ideas.Result{Reply: "ok", Candidates: []ideas.Candidate{{}, {}}}
+	res.Candidates[0].Key = music.Key{Tonic: music.D, Mode: music.Major}
+	res.Candidates[1].Key = music.Key{Tonic: music.E, Mode: music.Dorian}
+	c := Case{Mode: "major/dorian/mixolydian", ModeInAny: "dorian/mixolydian"}
+	if v := Judge(c, res); !v.Pass {
+		t.Fatalf("the second candidate is dorian: %v", v.Problems)
+	}
+	res.Candidates[1].Key.Mode = music.Minor
+	if v := Judge(c, res); v.Pass || !strings.Contains(strings.Join(v.Problems, ";"), "no candidate in dorian/mixolydian") {
+		t.Fatalf("no candidate is modal, want a problem: %v", v.Problems)
 	}
 }
 
@@ -141,6 +176,7 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 	verdicts[2].Key = "D minor"
 	verdicts[2].Case.Wants = []string{"IV"}
 	verdicts[2].Unconstrained = "ドリアンの IV を\n使いたい | 本当は"
+	verdicts[1].Retry = "music: \"IV\" would sound as Gm (iv) in D minor; write \"iv\""
 	report := Report(verdicts)
 	for _, want := range []string{
 		"| a | ", // every row carries its progression (BL-090)
@@ -152,6 +188,8 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 		"期待した語彙（wants）の命中: 0 / 1",
 		"wants ✗ (IV)",
 		"| c | ドリアンの IV を 使いたい / 本当は |",
+		"retry: music: \"IV\" would sound as Gm (iv) in D minor",
+		"再試行が要った件数: 1",
 	} {
 		if !strings.Contains(report, want) {
 			t.Errorf("report lacks %q:\n%s", want, report)
