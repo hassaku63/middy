@@ -533,6 +533,20 @@ components:
         rhythm:
           $ref: '#/components/schemas/Rhythm'
           description: パターン適用後に付く解説データ。ブロックコードのみのタイムラインでは省略
+        overview:
+          $ref: '#/components/schemas/Overview'
+          description: 例全体の解説。分析前のタイムラインでは省略
+    Overview:
+      description: 例全体の解説（全体と流れ）。決定論的に生成される
+      type: object
+      required: [whole, flow]
+      properties:
+        whole:
+          type: string
+          description: モードとその性格、特徴音を含む和音や借用和音。UI にそのまま出せる日本語
+        flow:
+          type: string
+          description: 進行の長さ、始まり、終わりの終止、繰り返したときの戻り方。UI にそのまま出せる日本語
     Rhythm:
       type: object
       properties:

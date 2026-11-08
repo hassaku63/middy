@@ -327,6 +327,15 @@ export interface components {
       harmony: components['schemas']['HarmonyEvent'][];
       /** @description パターン適用後に付く解説データ。ブロックコードのみのタイムラインでは省略 */
       rhythm?: components['schemas']['Rhythm'];
+      /** @description 例全体の解説。分析前のタイムラインでは省略 */
+      overview?: components['schemas']['Overview'];
+    };
+    /** @description 例全体の解説（全体と流れ）。決定論的に生成される */
+    Overview: {
+      /** @description モードとその性格、特徴音を含む和音や借用和音。UI にそのまま出せる日本語 */
+      whole: string;
+      /** @description 進行の長さ、始まり、終わりの終止、繰り返したときの戻り方。UI にそのまま出せる日本語 */
+      flow: string;
     };
     Rhythm: {
       accompaniment?: components['schemas']['RhythmPart'];

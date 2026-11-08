@@ -5,6 +5,28 @@
   min-height: 96px;
 }
 
+.explanation__overview {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #374151;
+}
+
+.explanation__overview-line {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.explanation__overview-line + .explanation__overview-line {
+  margin-top: 4px;
+}
+
+.explanation__overview-label {
+  margin-right: 8px;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
 .explanation__empty {
   margin: 0;
   color: #9ca3af;

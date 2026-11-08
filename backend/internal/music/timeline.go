@@ -65,6 +65,8 @@ type Timeline struct {
 	Harmony       []HarmonyEvent `json:"harmony"`
 	// Rhythm is present once patterns have been applied (see pattern.Apply).
 	Rhythm *Rhythm `json:"rhythm,omitempty"`
+	// Overview explains the example as a whole; Analyze fills it.
+	Overview *Overview `json:"overview,omitempty"`
 }
 
 // NewTimeline returns an empty timeline with sensible defaults.

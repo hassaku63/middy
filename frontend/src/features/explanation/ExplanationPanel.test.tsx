@@ -101,6 +101,33 @@ describe('ExplanationPanel', () => {
   });
 });
 
+describe('OverviewNotes inside the panel', () => {
+  it('shows the whole and the flow above the chord, and keeps them while playback moves', () => {
+    const withOverview: Timeline = {
+      ...timeline,
+      overview: {
+        whole: 'C major（長調）。明るく安定して聞こえる。',
+        flow: '2 個の和音で 2 小節。最後は V7 から I への正格終止で閉じる。',
+      },
+    };
+    const { rerender } = render(
+      <ExplanationPanel timeline={withOverview} positionTick={0} selectedHarmony={null} />,
+    );
+    const overview = screen.getByLabelText('全体と流れ');
+    expect(overview).toHaveTextContent('全体C major（長調）');
+    expect(overview).toHaveTextContent('流れ2 個の和音で 2 小節');
+    rerender(
+      <ExplanationPanel timeline={withOverview} positionTick={2000} selectedHarmony={null} />,
+    );
+    expect(screen.getByLabelText('全体と流れ')).toHaveTextContent('最後は V7 から I への正格終止');
+  });
+
+  it('is absent for a timeline without an overview', () => {
+    render(<ExplanationPanel timeline={timeline} positionTick={0} selectedHarmony={null} />);
+    expect(screen.queryByLabelText('全体と流れ')).toBeNull();
+  });
+});
+
 describe('RhythmNotes inside the panel', () => {
   it('describes applied patterns and flags syncopation', () => {
     const withRhythm: Timeline = {
