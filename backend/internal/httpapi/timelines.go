@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -83,8 +84,10 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 	}
 	tl, err = music.Analyze(tl)
 	if err != nil {
-		// FromProgression only emits diatonic chords, so this is a bug, not user error.
-		writeError(w, http.StatusInternalServerError, "internal_error", err.Error())
+		// Every chord the request may name is one Analyze can place, so
+		// this is a bug, not user error: log it, tell the client little.
+		slog.ErrorContext(r.Context(), "timelines: could not analyse the timeline", "error", err)
+		writeError(w, http.StatusInternalServerError, "internal_error", "the timeline could not be analysed")
 		return
 	}
 	writeJSON(w, http.StatusOK, timelineResponse{Timeline: tl})
@@ -165,7 +168,9 @@ func decodeJSONUpTo(r *http.Request, v any, limit int64) error {
 	if err := dec.Decode(v); err != nil {
 		return fmt.Errorf("invalid JSON body: %w", err)
 	}
-	if dec.More() {
+	// More() is false before a stray "}" or "]", so read once more: only the
+	// end of the body may follow the value.
+	if err := dec.Decode(&json.RawMessage{}); !errors.Is(err, io.EOF) {
 		return errors.New("invalid JSON body: trailing data")
 	}
 	return nil
