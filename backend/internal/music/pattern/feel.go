@@ -105,8 +105,9 @@ func (s Swing) resolved(beatBPM float64) Swing {
 }
 
 // move swings one note: a unit on the first of a pair stretches to the
-// long note, and a note starting on the second of a pair starts there
-// instead, keeping its end. Anything else is untouched.
+// long note, a note starting on the second of a pair starts there instead
+// (keeping its end), and a longer note ending on the second of a pair ends
+// there. Anything else is untouched.
 func (s Swing) move(start, dur music.Tick) (music.Tick, music.Tick) {
 	unit := eighth
 	if s.Unit == UnitSixteenth {
@@ -114,17 +115,25 @@ func (s Swing) move(start, dur music.Tick) (music.Tick, music.Tick) {
 	}
 	pair := 2 * unit
 	long := music.Tick(math.Round(float64(pair) * s.Ratio / (s.Ratio + 1)))
+	shift := long - unit
+	end := start + dur
 	switch start % pair {
 	case 0:
 		if dur == unit {
 			return start, long
 		}
 	case unit:
-		if shift := long - unit; dur > shift {
-			return start + shift, dur - shift
+		if dur <= shift {
+			return start, dur
 		}
+		start += shift
 	}
-	return start, dur
+	// A longer note that ends on the second of a pair ends where that
+	// note now starts, so a chord held into a pushed one stays tied.
+	if dur > unit && end%pair == unit {
+		end += shift
+	}
+	return start, end - start
 }
 
 // applyFeel swings every track and adds the feel to the explanation. The

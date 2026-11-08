@@ -94,3 +94,37 @@ func TestUnscriptedFakeCanGoLong(t *testing.T) {
 		t.Fatalf("long sample = %+v", in.Candidates[0])
 	}
 }
+
+// TestUnscriptedKeywordsCombine (review of BL-085/077): keywords that
+// change the first candidate stay valid together: pushes match a long
+// progression, and a half-time grid is written only where it fits.
+func TestUnscriptedKeywordsCombine(t *testing.T) {
+	for _, text := range []string{"ロックで長い曲", "ハーフタイムのワルツ", "ハーフタイムのケルト"} {
+		resp, err := New().Complete(context.Background(), llm.Request{
+			OutputSchema: json.RawMessage(`{}`),
+			Messages:     []llm.Message{{Role: llm.RoleUser, Content: text}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var in struct {
+			Candidates []struct {
+				Meter       string          `json:"meter"`
+				Style       string          `json:"style"`
+				Progression []string        `json:"progression"`
+				Pushes      []string        `json:"pushes"`
+				DrumGrid    json.RawMessage `json:"drumGrid"`
+			} `json:"candidates"`
+		}
+		if err := json.Unmarshal([]byte(resp.Text), &in); err != nil {
+			t.Fatal(err)
+		}
+		c := in.Candidates[0]
+		if c.Pushes != nil && len(c.Pushes) != len(c.Progression) {
+			t.Errorf("%s: %d pushes for %d chords", text, len(c.Pushes), len(c.Progression))
+		}
+		if c.DrumGrid != nil && (c.Meter != "" || (c.Style != "pop" && c.Style != "rock")) {
+			t.Errorf("%s: a 4/4 eight-beat grid on %q %q", text, c.Meter, c.Style)
+		}
+	}
+}

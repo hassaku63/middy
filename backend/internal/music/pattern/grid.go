@@ -92,6 +92,9 @@ func GridDrums(g music.DrumGrid, ts music.TimeSignature, tempoBPM float64) (Drum
 		hits = append(hits, vh...)
 	}
 	errs = append(errs, unknownVoices(g)...)
+	if err := basedOnErr(g, ts); err != nil {
+		errs = append(errs, err)
+	}
 	for i, h := range hands {
 		if len(h) > 2 {
 			errs = append(errs, fmt.Errorf("pattern: grid step %d needs %d hands (%s); two hands play at most 2", i+1, len(h), strings.Join(h, ", ")))
@@ -126,6 +129,25 @@ func (v gridVoice) read(line string, steps int, stepTicks music.Tick) ([]DrumHit
 		}
 	}
 	return hits, errors.Join(errs...)
+}
+
+// basedOnErr checks that a grid's basedOn names drums of its meter.
+func basedOnErr(g music.DrumGrid, ts music.TimeSignature) error {
+	if g.BasedOn == "" {
+		return nil
+	}
+	if d, err := FindDrums(g.BasedOn); err == nil && d.Fits(ts) {
+		return nil
+	}
+	return fmt.Errorf("pattern: grid basedOn %q is not drums written for %d/%d; use one of %v", g.BasedOn, ts.Numerator, ts.Denominator, drumIDs(DrumPatternsFor(ts)))
+}
+
+func drumIDs(ds []Drums) []string {
+	out := make([]string, len(ds))
+	for i, d := range ds {
+		out[i] = d.ID
+	}
+	return out
 }
 
 // unknownVoices reports voices outside the vocabulary, in a stable order.
