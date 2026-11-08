@@ -14,7 +14,7 @@
     {"id": "road-trip", "image": "海沿いのドライブ、窓を開けて", "mode": "major", "tempoMin": 95, "wants": ["III7", "VI7", "II7"]},
     {"id": "old-photo", "image": "古い写真を見返すときの気持ち", "mode": "either", "tempoMax": 100, "wants": ["iv", "ivm6", "bVI", "bVII"]},
     {"id": "spring", "image": "春の始まり、桜が咲き始めた", "mode": "major"},
-    {"id": "farewell", "image": "大切な人との別れ", "mode": "minor", "tempoMax": 100, "wants": ["I"]},
+    {"id": "farewell", "image": "大切な人との別れ", "mode": "minor/major", "tempoMax": 100, "wants": ["I"]},
     {"id": "workout", "image": "朝のランニングで気合いを入れる", "mode": "major", "tempoMin": 120},
     {"id": "mystery", "image": "霧の中の古い屋敷、何かが起こりそう", "mode": "minor", "wants": ["bII"]},
     {"id": "picnic", "image": "家族でピクニック、子どもが走り回る", "mode": "major", "tempoMin": 100},
