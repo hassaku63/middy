@@ -114,6 +114,30 @@ describe('TimelineView', () => {
     expect(screen.getByText('Snare')).toBeInTheDocument();
   });
 
+  it('names the bodhrán and grid drums: toms and side stick (review)', () => {
+    const bodhran: Timeline = {
+      ...timeline,
+      tracks: [
+        ...timeline.tracks,
+        {
+          name: 'drums',
+          channel: 9,
+          program: 0,
+          notes: [45, 47, 50, 37].map((pitch, i) => ({
+            pitch,
+            velocity: 90,
+            start: i * 240,
+            duration: 240,
+          })),
+        },
+      ],
+    };
+    render(<TimelineView timeline={bodhran} positionTick={0} />);
+    for (const name of ['Tom L', 'Tom M', 'Tom H', 'Stick']) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
   it('renders an empty timeline as a single empty bar', () => {
     const empty: Timeline = { ...timeline, tracks: [], harmony: [] };
     render(<TimelineView timeline={empty} positionTick={0} />);
