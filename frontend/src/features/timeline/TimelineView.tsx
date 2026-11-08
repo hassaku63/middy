@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { ChordLane } from './ChordLane';
 import { DrumLane } from './DrumLane';
@@ -43,11 +44,15 @@ export function TimelineView({
   decorative = false,
   className,
 }: TimelineViewProps) {
-  const layout = computeLayout(timeline);
-  const notes = timeline.tracks.filter((t) => t.channel !== DRUM_CHANNEL).flatMap((t) => t.notes);
-  const drumNotes = timeline.tracks
-    .filter((t) => t.channel === DRUM_CHANNEL)
-    .flatMap((t) => t.notes);
+  // The playhead re-renders this every frame; the layout only changes with the timeline.
+  const { layout, notes, drumNotes } = useMemo(
+    () => ({
+      layout: computeLayout(timeline),
+      notes: timeline.tracks.filter((t) => t.channel !== DRUM_CHANNEL).flatMap((t) => t.notes),
+      drumNotes: timeline.tracks.filter((t) => t.channel === DRUM_CHANNEL).flatMap((t) => t.notes),
+    }),
+    [timeline],
+  );
 
   return (
     <svg

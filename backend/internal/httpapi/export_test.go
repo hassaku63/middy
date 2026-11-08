@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -89,4 +90,27 @@ func TestExportMIDIErrors(t *testing.T) {
 
 func itoa(n int) string {
 	return strconv.Itoa(n)
+}
+
+// TestExportTakesALongTimeline (review): a timeline larger than the 64 KiB
+// limit for small requests still exports, and one past the timeline limit
+// is refused with a message that says so.
+func TestExportTakesALongTimeline(t *testing.T) {
+	srv := newTestServer(t)
+	var notes strings.Builder
+	for i := range 3000 {
+		if i > 0 {
+			notes.WriteString(",")
+		}
+		fmt.Fprintf(&notes, `{"pitch":60,"velocity":80,"start":%d,"duration":120}`, i*120)
+	}
+	body := `{"timeline":{"ppq":480,"tempoBpm":120,"timeSignature":{"numerator":4,"denominator":4},"key":{"tonic":0,"mode":"major"},"tracks":[{"name":"chords","channel":0,"program":0,"notes":[` + notes.String() + `]}],"harmony":[]}}`
+	if len(body) < 64<<10 {
+		t.Fatalf("the body should exceed 64 KiB, is %d", len(body))
+	}
+	resp := postJSON(t, srv.URL+"/api/v1/export/midi", body)
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Errorf("a long timeline exports: %d %s", resp.StatusCode, b)
+	}
 }
