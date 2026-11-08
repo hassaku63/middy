@@ -236,7 +236,7 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 	for _, want := range []string{
 		"| a | ", // every row carries its progression (BL-090)
 		"| i VI III VII |",
-		"進行の種類: 2（3 件中）",
+		"進行の種類: 2（答えのあった 3 件中）",
 		"最も多い進行: `i VI III VII`（2 回）",
 		"調の種類: 2",
 		"使った語彙（度数 × 七の和音の有無）: 6 / 14", // i VI III VII iv V7 → 1,6,3,7,4 triads + 5 seventh
@@ -469,5 +469,21 @@ func TestRunAllWithNoLimitStillRuns(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("runAll with limit 0 blocked")
+	}
+}
+
+// TestUnjudgedCasesStayOutOfWantsAndBreadth (review): a case that never got
+// an answer shows no "wants ✗" and is not counted in the breadth.
+func TestUnjudgedCasesStayOutOfWantsAndBreadth(t *testing.T) {
+	answered := Verdict{Case: Case{ID: "a", Wants: []string{"IV"}}, Pass: true, Progression: []string{"I", "IV"}, Chords: []string{"I", "IV"}, WantsHit: true}
+	missing := Verdict{Case: Case{ID: "b", Wants: []string{"V"}}, Errored: true, Problems: []string{"not run"}}
+	report := Report([]Verdict{answered, missing})
+	for _, line := range strings.Split(report, "\n") {
+		if strings.HasPrefix(line, "| b |") && strings.Contains(line, "wants") {
+			t.Errorf("an unanswered case was judged on its wants: %s", line)
+		}
+	}
+	if !strings.Contains(report, "答えのあった 1 件中") {
+		t.Errorf("the breadth counts unanswered cases:\n%s", report)
 	}
 }
