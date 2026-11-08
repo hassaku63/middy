@@ -21,8 +21,8 @@ const (
 // functionByDegree is the textbook assignment, used for both modes:
 // I, III, VI are tonic; II, IV subdominant; V, VII dominant. In natural
 // minor this makes v (minor) a weak dominant and VII a subtonic dominant,
-// which is the usual beginner-level simplification; refinements (harmonic
-// minor V, borrowed chords) are backlog material.
+// which is the usual beginner-level simplification. The harmonic-minor V,
+// borrowed and applied chords are placed before this table is read.
 var functionByDegree = [8]Function{"", Tonic, Subdominant, Tonic, Subdominant, Dominant, Tonic, Dominant}
 
 // Cadence names how the previous chord resolves into this one.
@@ -154,12 +154,20 @@ func subtonicText(k Key, p, prev, following placed) string {
 	if k.Mode != Minor || p.degree != 7 || p.borrowed {
 		return ""
 	}
+	// A secondary dominant's degree is only its root's: V7/VI on III is no III.
+	prevDeg, nextDeg := prev.degree, following.degree
+	if prev.applied != 0 {
+		prevDeg = 0
+	}
+	if following.applied != 0 {
+		nextDeg = 0
+	}
 	switch {
-	case prev.degree == 1 && following.degree == 6:
+	case prevDeg == 1 && nextDeg == 6:
 		return " ここでは機能というより、i から VI、V へ下りていく線の途中（経過）。"
-	case following.degree == 3:
+	case nextDeg == 3:
 		return " ここでは次の III へ向かう。III を一時的な主音とみれば、その V にあたる（V/III の働き）。"
-	case following.degree == 1:
+	case nextDeg == 1:
 		return " ここでは導音を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
 	}
 	return ""
@@ -219,7 +227,7 @@ func isNeapolitan(k Key, c Chord) bool {
 
 // borrowable lists what a major key may take from its parallel minor today
 // (BL-094): iv (also iv7, ivm6), ii° (also iiø7), ♭VI (also ♭VImaj7), ♭VII
-// (also ♭VII7). The rest waits for BL-075.
+// (also ♭VII7). Other borrowings (♭II and ♭III in major) are not supported.
 func borrowable(degree int, q ChordQuality) bool {
 	switch degree {
 	case 4:
@@ -250,9 +258,15 @@ func degreeOf(k Key, pc PitchClass) (int, bool) {
 // cadences need a V with the leading tone (hasLeadingTone).
 func cadenceBetween(mode Mode, prev, cur placed) Cadence {
 	switch {
-	case prev.degree == 0, prev.applied != 0:
+	case prev.degree == 0:
+		return NoCadence
+	case prev.applied != 0:
 		// A secondary dominant is named for what it pulls towards, not
-		// for its root's degree (V/VII is not a IV).
+		// for its root's degree (V/VII is not a IV); arriving on V from
+		// one (V/V – V) is still a half cadence.
+		if cur.leading {
+			return Half
+		}
 		return NoCadence
 	case prev.degree == 7 && cur.degree == 1 && mode.Characteristic() != 0:
 		return Modal
