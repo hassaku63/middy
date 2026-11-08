@@ -108,3 +108,22 @@ func TestBackbeatAndHalfTime(t *testing.T) {
 		}
 	}
 }
+
+// TestGridExplanationReview: a ride-only grid is counted by what plays,
+// and a snare on 1 and 3 is not called half time.
+func TestGridExplanationReview(t *testing.T) {
+	ride, err := GridDrums(grid(2, map[string]string{"ride": "x.x. x.x.", "pedal-hat": "..x. ..x."}), music.FourFour, 120)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := describeDrums(ride, music.FourFour).Explanation; strings.Contains(e, "キック") || strings.Contains(e, " 0 回") {
+		t.Errorf("a ride grid names a kick or counts nothing: %s", e)
+	}
+	oneThree, err := GridDrums(grid(2, map[string]string{"kick": "x... x...", "snare": "x... x..."}), music.FourFour, 120)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := describeDrums(oneThree, music.FourFour).Explanation; strings.Contains(e, "ハーフタイム") {
+		t.Errorf("a snare on 1 and 3 is not half time: %s", e)
+	}
+}

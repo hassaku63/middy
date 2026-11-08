@@ -118,3 +118,18 @@ func TestRunAllReportsWhatTimeLeft(t *testing.T) {
 		t.Errorf("sent %d, verdicts %+v", sent, got)
 	}
 }
+
+// TestRunGoesOnAfterAModelFailure (review): only a model that cannot be
+// reached stops the run; an answer that failed validation is a result
+// the report must show, and the rest are still sent.
+func TestRunGoesOnAfterAModelFailure(t *testing.T) {
+	cases := []Case{{ID: "a"}, {ID: "b"}}
+	sent := 0
+	runAll(context.Background(), cases, 1, func(c Case) Verdict {
+		sent++
+		return Verdict{Case: c, Problems: []string{"invalid intent"}}
+	})
+	if sent != 2 {
+		t.Errorf("a failed answer must not stop the run: sent %d", sent)
+	}
+}

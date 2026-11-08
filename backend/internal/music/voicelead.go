@@ -2,12 +2,13 @@ package music
 
 import "slices"
 
-// The range the led chords keep their lowest tone in (C4..G4), so a long
-// progression does not drift up or down the keyboard (BL-086), and the
-// bass in octave 3 (a slash chord's, a pattern's) stays under the chord.
+// The range the led chords keep their lowest tone in (C4..B4, where the
+// first chord's root position already lies), so a long progression does
+// not drift up or down the keyboard (BL-086), and the bass in octave 3 (a
+// slash chord's, a pattern's) stays under the chord.
 const (
 	leadLow  Pitch = 60
-	leadHigh Pitch = 67
+	leadHigh Pitch = 71
 )
 
 // LeadVoicings voices each chord from the one before with the least
@@ -82,9 +83,4 @@ func movement(a, b []Pitch) int {
 	return total
 }
 
-func dist(a, b Pitch) int {
-	if a > b {
-		return int(a - b)
-	}
-	return int(b - a)
-}
+func dist(a, b Pitch) int { return abs(int(a) - int(b)) }

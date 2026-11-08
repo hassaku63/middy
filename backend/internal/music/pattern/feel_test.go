@@ -21,7 +21,7 @@ func TestSwingDelaysOffBeatEighths(t *testing.T) {
 		{"off-beat in a later beat", 3*quarter + eighth, eighth, 3*quarter + 320, 160},
 		{"quarter notes are untouched", quarter, quarter, quarter, quarter},
 		{"long off-beat note keeps its end", eighth, 3 * eighth, 320, 3*eighth - 80},
-		{"sixteenths are untouched", quarter / 4, quarter / 4, quarter / 4, quarter / 4},
+		{"a sixteenth follows the stretched first half", quarter / 4, quarter / 4, 160, 160},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -141,5 +141,23 @@ func TestSwingFollowsTheTempo(t *testing.T) {
 	}
 	if f := out.Rhythm.Feel; f.Ratio != 2.6 || f.Unit != string(UnitEighth) || !strings.Contains(f.Explanation, "2.6 : 1") {
 		t.Errorf("the feel reports its ratio: %+v", f)
+	}
+}
+
+// TestSwingKeepsSixteenthsInOrder (review of BL-084): under eighth swing
+// the sixteenths of a grid keep their order and spacing within each half
+// of the beat, instead of being crushed against the next one.
+func TestSwingKeepsSixteenthsInOrder(t *testing.T) {
+	sw := Swing{Ratio: 2.6, Unit: UnitEighth}
+	var prev music.Tick = -1
+	for i := range 4 {
+		start, dur := sw.move(music.Tick(i)*eighth/2, eighth/2)
+		if start <= prev || dur < 40 {
+			t.Errorf("sixteenth %d at %d (%d long) after %d", i, start, dur, prev)
+		}
+		prev = start
+	}
+	if start, _ := sw.move(eighth, eighth); start == eighth {
+		t.Error("an eighth on the and still swings")
 	}
 }
