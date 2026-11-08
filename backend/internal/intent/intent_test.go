@@ -549,3 +549,21 @@ func TestOneErrorPerBadPattern(t *testing.T) {
 		t.Errorf("one error for the bad drums id, got %v", err)
 	}
 }
+
+// TestParseIgnoresTheCaseOfEveryEnum (review of BL-062): style, pushes and
+// the grid's voices and basedOn are lowercased like the pattern ids, so a
+// re-cased enum is not a retry.
+func TestParseIgnoresTheCaseOfEveryEnum(t *testing.T) {
+	data := []byte(`{"summary":"s","mood":[],"candidates":[{"title":"t","style":"Pop",
+	  "key":{"tonic":0,"mode":"major"},"tempoBpm":120,"progression":["I","V","vi","IV"],
+	  "beatsPerChord":4,"reason":"r","pushes":["NONE","none","none","Eighth"],
+	  "drumGrid":{"division":2,"basedOn":"Eight-Beat","voices":[{"voice":"Kick","steps":"x... x..."},{"voice":"SNARE","steps":"..x. ..x."}]}}]}`)
+	in, err := Parse(data)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	c := in.Candidates[0]
+	if c.Style != "pop" || c.Pushes[3] != "eighth" || c.DrumGrid.BasedOn != "eight-beat" || c.DrumGrid.Voices[0].Voice != "kick" {
+		t.Errorf("enums not normalised: %+v %+v", c, c.DrumGrid)
+	}
+}
