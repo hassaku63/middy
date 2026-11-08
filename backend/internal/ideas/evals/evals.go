@@ -83,6 +83,31 @@ type Verdict struct {
 	Unconstrained string
 	// Retry is why the first answer was not used, when there was a retry.
 	Retry string
+	// Silent lists the words in the candidates' reasons that name what
+	// middy never plays (#128); reported, not failed.
+	Silent []string
+}
+
+// silentVocabulary names what the examples never sound: instruments beyond
+// the piano, guitar and drums of the pattern catalogue, and a melody.
+var silentVocabulary = []string{
+	"フィドル", "バイオリン", "ヴァイオリン", "ホイッスル", "フルート", "笛", "ストリングス", "弦楽",
+	"バグパイプ", "ハープ", "アコーディオン", "サックス", "トランペット", "ブラス", "メロディ", "旋律",
+}
+
+// silentWords returns, sorted and once each, the silent words the reasons use.
+func silentWords(reasons []string) []string {
+	var out []string
+	for _, w := range silentVocabulary {
+		for _, r := range reasons {
+			if strings.Contains(r, w) {
+				out = append(out, w)
+				break
+			}
+		}
+	}
+	slices.Sort(out)
+	return out
 }
 
 // Judge scores a result against the case: the first candidate must match
@@ -100,7 +125,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
 	modes := make([]music.Mode, 0, len(res.Candidates))
+	reasons := make([]string, 0, len(res.Candidates))
 	for i, cand := range res.Candidates {
+		reasons = append(reasons, cand.Reason)
 		v.Labels = append(v.Labels, cand.Progression...)
 		modes = append(modes, cand.Key.Mode)
 		if v.WantsIn == 0 && wantsHit(c.Wants, cand.Key.Tonic, chordsOf(cand.Timeline)) {
@@ -108,6 +135,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 		}
 	}
 	v.WantsHit = v.WantsIn == 1
+	v.Silent = silentWords(reasons)
 
 	if problem := judgeMode(c.Mode, first.Key.Mode); problem != "" {
 		v.Problems = append(v.Problems, problem)
@@ -156,6 +184,9 @@ func Report(verdicts []Verdict) string {
 			default:
 				status += " · wants ✗ (" + strings.Join(v.Case.Wants, "/") + ")"
 			}
+		}
+		if len(v.Silent) > 0 {
+			status += " · reason names " + strings.Join(v.Silent, "/")
 		}
 		if v.Retry != "" {
 			status += " · retry: " + shorten(oneLine(v.Retry), 120)
@@ -212,11 +243,15 @@ type breadth struct {
 	wantsHits    int
 	wantsAny     int
 	retries      int
+	silent       int
 }
 
 func measureBreadth(verdicts []Verdict) breadth {
 	m := breadth{progressions: map[string]int{}, keys: map[string]bool{}, vocab: map[string]bool{}}
 	for _, v := range verdicts {
+		if len(v.Silent) > 0 {
+			m.silent++
+		}
 		if len(v.Progression) == 0 {
 			continue
 		}
@@ -273,6 +308,7 @@ func breadthReport(verdicts []Verdict) string {
 		fmt.Fprintf(&b, "- 期待した語彙（wants）の命中: 最初の候補で %d / %d、どれかの候補で %d / %d\n", m.wantsHits, m.wantsTotal, m.wantsAny, m.wantsTotal)
 	}
 	fmt.Fprintf(&b, "- 再試行が要った件数: %d（理由は表の retry）\n", m.retries)
+	fmt.Fprintf(&b, "- 説明が鳴らないものに触れた件数: %d（楽器やメロディ。表の reason names。#128）\n", m.silent)
 	b.WriteString(wishesReport(verdicts))
 	return b.String()
 }
