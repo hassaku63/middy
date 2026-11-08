@@ -84,7 +84,7 @@ while IFS= read -r file; do
   grep -oE 'BL-[0-9]{3}' "$file" 2>/dev/null | sort -u | while IFS= read -r id; do
     printf '%s\n' "$known" | grep -qx "$id" || problem "$file: unknown backlog id -> $id"
   done
-done < <(md_files; find .github -type f -name '*.md' -o -name '*.yml' | sort)
+done < <(md_files; find .github -type f \( -name '*.yml' -o -name '*.yaml' \) | sort)
 
 # --- 5. instruction files stay short ---------------------------------------
 budget=150
@@ -97,7 +97,8 @@ done
 
 # --- 6. no leftover merge conflict markers ------------------------------------
 while IFS= read -r file; do
-  if grep -nE '^(<<<<<<< |>>>>>>> |=======$)' "$file" >/dev/null 2>&1; then
+  # A conflict always has both ends; a lone "=======" is a setext heading.
+  if grep -qE '^<<<<<<< ' "$file" && grep -qE '^>>>>>>> ' "$file"; then
     problem "$file: merge conflict markers left in the file"
   fi
 done < <(md_files)
