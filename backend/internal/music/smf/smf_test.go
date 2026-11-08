@@ -208,3 +208,19 @@ func formatUint(v uint32) string {
 	}
 	return string(buf)
 }
+
+// TestSixEightTempoIsPerDottedQuarter: 60 BPM in 6/8 is 60 dotted quarters a
+// minute, so the file's tempo (microseconds per quarter) is that of 90.
+func TestSixEightTempoIsPerDottedQuarter(t *testing.T) {
+	tl := oneNote()
+	tl.TimeSignature = music.SixEight
+	tl.TempoBPM = 60
+	data, err := Write(tl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tempo := append([]byte{0xFF, 0x51, 0x03}, tempoBytes(90)...)
+	if !bytes.Contains(data, tempo) {
+		t.Errorf("6/8 at 60 BPM should write the tempo of 90 quarters a minute: % X", data)
+	}
+}

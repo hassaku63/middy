@@ -46,6 +46,16 @@ func BeatTicks(ts TimeSignature, ppq int) Tick {
 	return 0
 }
 
+// QuarterBPM is the tempo in quarter notes per minute, the unit of a MIDI
+// tempo and of seconds per tick: TempoBPM times the beat's length in
+// quarters (1.5 in 6/8).
+func (t Timeline) QuarterBPM() float64 {
+	if t.PPQ <= 0 {
+		return t.TempoBPM
+	}
+	return t.TempoBPM * float64(BeatTicks(t.TimeSignature, t.PPQ)) / float64(t.PPQ)
+}
+
 // BarTicks is the length of one bar of ts at ppq ticks per quarter note.
 func BarTicks(ts TimeSignature, ppq int) Tick {
 	if ts.Denominator <= 0 {
@@ -99,7 +109,10 @@ type HarmonyEvent struct {
 // Timeline is the central artifact of middy: everything the player, the
 // piano roll, the explanation panel and the MIDI exporter consume.
 type Timeline struct {
-	PPQ           int            `json:"ppq"`
+	PPQ int `json:"ppq"`
+	// TempoBPM counts the beat of the meter (ADR-0019): a quarter in 4/4
+	// and 3/4, a dotted quarter in 6/8. QuarterBPM converts it for MIDI
+	// and the clock.
 	TempoBPM      float64        `json:"tempoBpm"`
 	TimeSignature TimeSignature  `json:"timeSignature"`
 	Key           Key            `json:"key"`

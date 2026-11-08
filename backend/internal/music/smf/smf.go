@@ -27,7 +27,7 @@ func Write(tl music.Timeline) ([]byte, error) {
 	}
 
 	var track bytes.Buffer
-	writeMeta(&track, 0, 0x51, tempoBytes(tl.TempoBPM))
+	writeMeta(&track, 0, 0x51, tempoBytes(tl.QuarterBPM()))
 	writeMeta(&track, 0, 0x58, timeSignatureBytes(tl.TimeSignature))
 	writeMeta(&track, 0, 0x59, keySignatureBytes(tl.Key))
 

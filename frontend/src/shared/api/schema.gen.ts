@@ -128,6 +128,7 @@ export interface components {
     };
     FromProgressionRequest: {
       key: components['schemas']['Key'];
+      /** @description 拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019） */
       tempoBpm: number;
       progression: components['schemas']['ProgressionLabel'][];
       /** @description 伴奏テンプレートの id（`GET /patterns`）。省略時はブロックコード */
@@ -221,6 +222,7 @@ export interface components {
     IdeaCandidate: {
       title: string;
       key: components['schemas']['Key'];
+      /** @description 拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019） */
       tempoBpm: number;
       /** @description ローマ数字（`ProgressionLabel.numeral` と同じ語彙） */
       progression: string[];
@@ -334,6 +336,7 @@ export interface components {
     Timeline: {
       /** @description 四分音符あたりの tick 数（既定 480） */
       ppq: number;
+      /** @description 拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019） */
       tempoBpm: number;
       timeSignature: components['schemas']['TimeSignature'];
       key: components['schemas']['Key'];

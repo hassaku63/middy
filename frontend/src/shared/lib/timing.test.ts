@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
 import {
+  beatsPerBar,
   formatPosition,
+  quarterBpm,
   scheduleNotes,
   secondsToTicks,
   ticksPerBar,
+  ticksPerBeat,
   ticksToSeconds,
   timelineLengthTicks,
 } from './timing';
@@ -35,6 +38,31 @@ describe('formatPosition', () => {
     expect(formatPosition(1919, 480, sig)).toBe('1.4');
     expect(formatPosition(1920, 480, sig)).toBe('2.1');
     expect(formatPosition(1440, 480, { numerator: 3, denominator: 4 })).toBe('2.1');
+  });
+
+  it('counts 6/8 in two dotted-quarter beats', () => {
+    const six = { numerator: 6, denominator: 8 };
+    expect(formatPosition(480, 480, six)).toBe('1.1');
+    expect(formatPosition(720, 480, six)).toBe('1.2');
+    expect(formatPosition(1440, 480, six)).toBe('2.1');
+  });
+});
+
+describe('beats of the meter (ADR-0019)', () => {
+  const six = { numerator: 6, denominator: 8 };
+  it('counts 6/8 in two dotted quarters and the simple meters in quarters', () => {
+    expect([
+      beatsPerBar(sig),
+      beatsPerBar({ numerator: 3, denominator: 4 }),
+      beatsPerBar(six),
+    ]).toEqual([4, 3, 2]);
+    expect(ticksPerBeat(480, six)).toBe(720);
+    expect(ticksPerBeat(480, sig)).toBe(480);
+  });
+
+  it('reads tempoBpm as beats of the meter: 60 in 6/8 is 90 quarters a minute', () => {
+    expect(quarterBpm({ ppq: 480, tempoBpm: 60, timeSignature: six })).toBe(90);
+    expect(quarterBpm({ ppq: 480, tempoBpm: 60, timeSignature: sig })).toBe(60);
   });
 });
 
