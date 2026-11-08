@@ -587,6 +587,15 @@ export interface operations {
           'application/json': components['schemas']['Error'];
         };
       };
+      /** @description `internal_error`（作ったタイムラインを分析できなかった。エンジンの不具合で、原因はサーバーのログにだけ残る） */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
     };
   };
   listPatterns: {
@@ -635,6 +644,15 @@ export interface operations {
       };
       /** @description `invalid_json` または `invalid_request`（`Timeline.Validate` の失敗） */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description `internal_error`（検証を通ったタイムラインを書き出せなかった。エンコーダの不具合で、原因はサーバーのログにだけ残る） */
+      500: {
         headers: {
           [name: string]: unknown;
         };

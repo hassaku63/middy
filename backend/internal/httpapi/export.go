@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -19,7 +20,6 @@ const maxTimelineBody = 4 << 20
 
 // handleExportMIDI returns the timeline as a Standard MIDI File. The file
 // name is fixed; the client chooses a descriptive one for the download.
-
 func handleExportMIDI(w http.ResponseWriter, r *http.Request) {
 	var req exportMIDIRequest
 	if err := decodeJSONUpTo(r, &req, maxTimelineBody); err != nil {
@@ -32,7 +32,9 @@ func handleExportMIDI(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := smf.Write(req.Timeline)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		// The timeline passed Validate, so the encoder failing is our bug.
+		slog.ErrorContext(r.Context(), "export: could not write the MIDI file", "error", err)
+		writeError(w, http.StatusInternalServerError, "internal_error", "the MIDI file could not be written")
 		return
 	}
 	w.Header().Set("Content-Type", "audio/midi")
