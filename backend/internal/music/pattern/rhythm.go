@@ -74,6 +74,15 @@ func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 			hand = append(hand, h.Start)
 		}
 	}
+	if len(kit) == 0 && len(hand) == 0 { // a grid of cymbals or high toms alone
+		all := make([]music.Tick, len(d.Hits))
+		for i, h := range d.Hits {
+			all[i] = h.Start
+		}
+		rp := part(d.ID, d.Name, d.Description, all, "打楽器", ts)
+		rp.Explanation += densityText(d, ts) + nearestText(d, ts)
+		return rp
+	}
 	if len(kit) == 0 && len(hand) > 0 {
 		rp := part(d.ID, d.Name, d.Description, hand, "低いタムとサイドスティック", ts)
 		rp.Explanation += densityText(d, ts) + nearestText(d, ts)
@@ -112,7 +121,7 @@ func backbeatText(d Drums, ts music.TimeSignature) string {
 		switch {
 		case b[2] && b[4]:
 			return fmt.Sprintf("2・4 拍目の%sがバックビート。拍の裏側に重みが来て、体が前後に揺れる。", n.name)
-		case b[3] && !b[2] && !b[4]:
+		case b[3] && !b[1] && !b[2] && !b[4]:
 			return fmt.Sprintf("%sが 3 拍目だけに来るハーフタイム。テンポの半分の速さで、ゆったり揺れて聞こえる。", n.name)
 		}
 	}

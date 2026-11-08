@@ -127,14 +127,14 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             <KeySelect
               tonic={timeline.key.tonic}
               mode={timeline.key.mode}
-              busy={keyChange.busy}
+              busy={keyChange.busy || regroove.busy}
               error={keyChange.error}
               onChange={(t) => void changeKey(t)}
             />
             <StyleSelect
               styles={patterns.styles}
               current={timeline.rhythm?.style?.id}
-              busy={regroove.busy}
+              busy={regroove.busy || keyChange.busy}
               error={regroove.error}
               note={regroove.note}
               onChange={(id) => void changeStyle(id)}
