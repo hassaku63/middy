@@ -250,7 +250,7 @@ components:
     Style:
       description: スタイル（BL-082）。合う伴奏・ドラム・ノリの一覧を持つ。ブロックの和音とドラムなしはどのスタイルでも使える
       type: object
-      required: [id, name, description, accompaniments, drums, feels]
+      required: [id, name, description, accompaniments, drums, feels, grooves]
       properties:
         id: { type: string, examples: [celtic] }
         name: { type: string, examples: [ケルト] }
@@ -260,6 +260,22 @@ components:
         feels: { type: array, items: { $ref: '#/components/schemas/Feel' } }
         program: { type: integer, description: 鍵盤を既定とする型をこの GM の音色で鳴らす（BL-110）。省略時は型のまま }
         instrument: { type: string, description: その楽器の名前 }
+        grooves:
+          type: array
+          description: 拍子ごとのこのスタイルのグルーヴ（BL-087）。例のスタイルを選び直すと、和声はそのままでこれで作り直す
+          items:
+            $ref: '#/components/schemas/Groove'
+    Groove:
+      description: あるスタイルがある拍子で鳴らす型。そのスタイルの一覧のうち、その拍子で使える最初の伴奏・ドラム・ノリ（拍子のために書かれた伴奏を優先）
+      type: object
+      required: [meter, accompaniment, feel]
+      properties:
+        meter:
+          $ref: '#/components/schemas/TimeSignature'
+        accompaniment: { type: string, description: その拍子の伴奏がなければ block }
+        drums: { type: string, description: その拍子のドラムがなければ省略 }
+        feel:
+          $ref: '#/components/schemas/Feel'
     FeelInfo:
       type: object
       required: [id, name, description]

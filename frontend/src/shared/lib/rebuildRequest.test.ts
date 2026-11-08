@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
-import { rebuildRequest } from './rebuildRequest';
+import { grooveFor, rebuildRequest, regrooveRequest } from './rebuildRequest';
 
 const base: Timeline = {
   ppq: 480,
@@ -78,5 +78,58 @@ describe('rebuildRequest', () => {
       feel: 'swing',
     });
     expect(rebuildRequest(grooved, 2)).not.toHaveProperty('drums');
+  });
+});
+
+describe('regrooveRequest (BL-087)', () => {
+  const jazz = {
+    id: 'jazz',
+    name: 'ジャズ',
+    description: '',
+    accompaniments: ['comp'],
+    drums: ['jazz-ride'],
+    feels: ['swing' as const],
+    grooves: [
+      {
+        meter: { numerator: 4, denominator: 4 },
+        accompaniment: 'comp',
+        drums: 'jazz-ride',
+        feel: 'swing' as const,
+      },
+      {
+        meter: { numerator: 6, denominator: 8 },
+        accompaniment: 'block',
+        feel: 'straight' as const,
+      },
+    ],
+  };
+
+  it("finds the style's groove for the timeline's meter", () => {
+    expect(grooveFor(jazz, base)?.accompaniment).toBe('comp');
+    const waltz: Timeline = { ...base, timeSignature: { numerator: 3, denominator: 4 } };
+    expect(grooveFor(jazz, waltz)).toBeUndefined();
+  });
+
+  it('keeps the harmony, key and tempo and swaps only the groove', () => {
+    const celtic: Timeline = {
+      ...base,
+      rhythm: { style: { id: 'celtic', name: 'ケルト', instrument: 'ハープ' } },
+    };
+    const groove = grooveFor(jazz, celtic);
+    if (!groove) throw new Error('no groove');
+    expect(regrooveRequest(celtic, 'jazz', groove)).toEqual({
+      ...rebuildRequest(base, 9),
+      style: 'jazz',
+      accompaniment: 'comp',
+      drums: 'jazz-ride',
+      feel: 'swing',
+    });
+  });
+
+  it('leaves the drums out when the style has none for the meter', () => {
+    const sixEight: Timeline = { ...base, timeSignature: { numerator: 6, denominator: 8 } };
+    const groove = grooveFor(jazz, sixEight);
+    if (!groove) throw new Error('no groove');
+    expect(regrooveRequest(sixEight, 'jazz', groove)).not.toHaveProperty('drums');
   });
 });

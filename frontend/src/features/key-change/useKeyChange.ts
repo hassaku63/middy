@@ -5,7 +5,7 @@ import {
   type PitchClass,
   type Timeline,
 } from '@/shared/api/client';
-import { rebuildRequest } from './rebuildRequest';
+import { rebuildRequest } from '@/shared/lib/rebuildRequest';
 
 export type KeyChange = {
   busy: boolean;

@@ -76,7 +76,7 @@ function stubBackend() {
         url.endsWith('/health')
           ? json(200, { status: 'ok', version: 'dev' })
           : url.endsWith('/patterns')
-            ? json(200, { accompaniments: [], drums: [], feels: [] })
+            ? json(200, { accompaniments: [], drums: [], feels: [], styles: [] })
             : json(200, ideasReply),
       ),
     ),
@@ -178,7 +178,7 @@ describe('App (docs/product/experience.md)', () => {
         url.endsWith('/health')
           ? json(200, { status: 'ok', version: 'dev' })
           : url.endsWith('/patterns')
-            ? json(200, { accompaniments: [], drums: [], feels: [] })
+            ? json(200, { accompaniments: [], drums: [], feels: [], styles: [] })
             : url.endsWith('/timelines/from-progression')
               ? json(200, { timeline: inD })
               : json(200, ideasReply),

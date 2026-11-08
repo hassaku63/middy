@@ -87,3 +87,20 @@ test('change the key of an example: the numerals stay, the chords move (BL-078)'
   ]);
   expect(download.suggestedFilename()).toBe('middy-C-minor-i-VI-III-VII.mid');
 });
+
+test('play the same example in another style: the harmony stays, the groove changes (BL-087)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨'); // A minor, arpeggio + ballad
+  const chords = result.getByRole('listbox', { name: 'コード' }).getByRole('option');
+  const before = await chords.allTextContents();
+  await result.getByLabel('スタイル').selectOption('jazz');
+  await expect(result.getByLabel('スタイル')).toHaveValue('jazz');
+  const note = result.getByRole('status').filter({ hasText: '鳴らし直しました' });
+  await expect(note).toContainText('ジャズで鳴らし直しました。和声はそのままです。');
+  await expect(note).toContainText('伴奏: アルペジオ → 4 ビートのコンピング');
+  await expect(note).toContainText('ノリ: ストレート → スウィング');
+  await expect(chords).toHaveText(before);
+  await expect(result.getByLabel('リズム')).toContainText('スウィング');
+});

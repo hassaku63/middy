@@ -3,6 +3,8 @@ package pattern
 import (
 	"fmt"
 	"slices"
+
+	"github.com/hassaku63/middy/backend/internal/music"
 )
 
 // Style binds the patterns and feels that suit a kind of music (ADR-0012):
@@ -21,6 +23,60 @@ type Style struct {
 	// keyboard-default pattern on (BL-110); Instrument names it.
 	Program    *int   `json:"program,omitempty"`
 	Instrument string `json:"instrument,omitempty"`
+	// Grooves is the style's own groove in each of GrooveMeters (BL-087).
+	Grooves []Groove `json:"grooves"`
+}
+
+// GrooveMeters are the meters a style lists a groove for.
+var GrooveMeters = []music.TimeSignature{music.FourFour, music.ThreeFour, music.SixEight}
+
+// Groove is what a style plays in a meter when the learner picks the style
+// for an example that already has its harmony (BL-087): the first of the
+// style's accompaniments, drums and feels that the meter takes, preferring
+// a figure written for the meter to one that fits any (a drone). The
+// catalogue lists the style's signature patterns first, so this is the
+// style's own sound, chosen by the engine and not by the model.
+type Groove struct {
+	Meter         music.TimeSignature `json:"meter"`
+	Accompaniment string              `json:"accompaniment"` // "block" when none is written for the meter
+	Drums         string              `json:"drums,omitempty"`
+	Feel          Feel                `json:"feel"`
+}
+
+// Groove picks the style's groove in the meter.
+func (s Style) Groove(ts music.TimeSignature) Groove {
+	g := Groove{Meter: ts, Accompaniment: "block", Feel: FeelStraight}
+	for _, id := range s.Accompaniments {
+		a, err := FindAccompaniment(id)
+		if err != nil || !a.Fits(ts) {
+			continue
+		}
+		if a.Meter != nil { // written for this meter: the style's figure
+			g.Accompaniment = id
+			break
+		}
+		if g.Accompaniment == "block" {
+			g.Accompaniment = id // fits any meter; kept unless a figure follows
+		}
+	}
+	for _, id := range s.Drums {
+		if d, err := FindDrums(id); err == nil && d.Fits(ts) {
+			g.Drums = id
+			break
+		}
+	}
+	for _, f := range s.Feels {
+		if f != FeelSwing || !ts.Compound() { // swing is for simple meters
+			g.Feel = f
+			break
+		}
+	}
+	return g
+}
+
+// Choice is the groove as a Render choice in the style.
+func (g Groove) Choice(style string) Choice {
+	return Choice{Accompaniment: g.Accompaniment, Drums: g.Drums, Feel: g.Feel, Style: style}
 }
 
 func program(p int) *int { return &p }
@@ -67,8 +123,17 @@ var styles = []Style{
 	},
 }
 
-// Styles lists the style catalogue.
-func Styles() []Style { return slices.Clone(styles) }
+// Styles lists the style catalogue, each with its grooves.
+func Styles() []Style {
+	out := slices.Clone(styles)
+	for i := range out {
+		out[i].Grooves = nil
+		for _, ts := range GrooveMeters {
+			out[i].Grooves = append(out[i].Grooves, out[i].Groove(ts))
+		}
+	}
+	return out
+}
 
 // FindStyle returns the style with the id.
 func FindStyle(id string) (Style, error) {

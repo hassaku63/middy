@@ -1,0 +1,22 @@
+.style-select {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.style-select label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.style-select__error {
+  color: #f87171;
+}
+
+.style-select__note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.9em;
+}
