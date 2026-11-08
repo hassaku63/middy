@@ -27,6 +27,9 @@ var (
 	// twice. Musical images are harmless, so this is almost always a false
 	// positive the user can get past by rephrasing.
 	ErrDeclined = errors.New("ideas: llm declined the request")
+	// ErrInvalidConversation means the messages themselves are not a
+	// conversation the service takes (empty, too many, wrong roles).
+	ErrInvalidConversation = errors.New("ideas: invalid conversation")
 )
 
 // Limits on what we send to the model.
@@ -88,7 +91,7 @@ func NewDiagnostic(client llm.Client) *Service {
 // Imagine runs one conversational turn. messages must end with a user turn.
 func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, error) {
 	if err := validateMessages(messages); err != nil {
-		return Result{}, err
+		return Result{}, fmt.Errorf("%w: %v", ErrInvalidConversation, err)
 	}
 	schema := intent.Schema
 	if s.diagnostics {

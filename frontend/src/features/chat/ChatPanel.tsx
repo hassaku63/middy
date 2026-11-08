@@ -49,8 +49,8 @@ export function ChatPanel({
           </ul>
         )}
         <ul className="chat__candidates" aria-label="候補">
-          {turn.candidates.map((c) => (
-            <li key={c.title}>
+          {turn.candidates.map((c, n) => (
+            <li key={`${n}-${c.title}`}>
               <CandidateCard
                 candidate={c}
                 open={openExample === c}

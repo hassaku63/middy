@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -139,7 +140,21 @@ func toProgression(key music.Key, labels []progressionLabel, barBeats int) (musi
 // decodeJSON reads a bounded JSON body and rejects unknown fields so that
 // typos in field names surface as 400s instead of silently defaulting.
 func decodeJSON(r *http.Request, v any) error {
-	dec := json.NewDecoder(io.LimitReader(r.Body, maxRequestBody))
+	return decodeJSONUpTo(r, v, maxRequestBody)
+}
+
+// decodeJSONUpTo is decodeJSON with its own limit, for bodies that carry a
+// whole timeline (a MIDI export). A body over the limit is an error that
+// says so, not a silently cut one.
+func decodeJSONUpTo(r *http.Request, v any, limit int64) error {
+	body, err := io.ReadAll(io.LimitReader(r.Body, limit+1))
+	if err != nil {
+		return fmt.Errorf("invalid JSON body: %w", err)
+	}
+	if int64(len(body)) > limit {
+		return fmt.Errorf("invalid JSON body: larger than %d bytes", limit)
+	}
+	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
 		return fmt.Errorf("invalid JSON body: %w", err)
