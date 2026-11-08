@@ -125,3 +125,36 @@ func TestRequestLoggerReachesTheRealWriter(t *testing.T) {
 	}))
 	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
 }
+
+// TestKnownPathWithAnotherMethodIs405 (review): the catch-all "/" must not
+// turn a wrong method on a real endpoint into "no such endpoint".
+func TestKnownPathWithAnotherMethodIs405(t *testing.T) {
+	srv := newTestServer(t)
+	resp := get(t, srv.URL+"/api/v1/ideas")
+	if resp.StatusCode != http.StatusMethodNotAllowed || resp.Header.Get("Allow") != http.MethodPost {
+		t.Fatalf("GET /ideas = %d (Allow %q), want 405 with Allow POST", resp.StatusCode, resp.Header.Get("Allow"))
+	}
+	var body errorResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil || body.Error.Code != "method_not_allowed" {
+		t.Fatalf("body = %+v (%v), want the method_not_allowed envelope", body, err)
+	}
+	if resp := get(t, srv.URL+"/api/v1/nope"); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("unknown path = %d, want 404", resp.StatusCode)
+	}
+}
+
+// TestTrailingClosersAreRejected (review): json.Decoder.More is false before
+// a stray "}" or "]", so those must still count as trailing data.
+func TestTrailingClosersAreRejected(t *testing.T) {
+	for _, tail := range []string{"}", "]", " {}", ""} {
+		r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"a":1}`+tail))
+		var v map[string]int
+		err := decodeJSON(r, &v)
+		if tail == "" && err != nil {
+			t.Errorf("a clean body: %v", err)
+		}
+		if tail != "" && err == nil {
+			t.Errorf("trailing %q accepted", tail)
+		}
+	}
+}

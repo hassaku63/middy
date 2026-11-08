@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
@@ -56,12 +57,28 @@ func NewHandler(d Deps) http.Handler {
 		d.Logger = slog.Default()
 	}
 	mux := http.NewServeMux()
+	allowed := map[string][]string{}
 	for _, r := range routes(d) {
 		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
+		allowed[r.Path] = append(allowed[r.Path], r.Method)
+	}
+	// A known path with another method is 405, not the catch-all's 404:
+	// "/" below matches every method, so the mux never says so itself.
+	for p, methods := range allowed {
+		mux.HandleFunc(p, methodNotAllowed(methods))
 	}
 	// Everything that is not an API route is the frontend (ADR-0008).
 	mux.Handle("/", staticHandler(d.Static))
 	return requestLogger(d.Logger, mux)
+}
+
+// methodNotAllowed answers a known path called with a method it does not take.
+func methodNotAllowed(methods []string) http.HandlerFunc {
+	allow := strings.Join(methods, ", ")
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Allow", allow)
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "this endpoint takes "+allow)
+	}
 }
 
 // requestLogger is the only middleware: it logs every request with its
