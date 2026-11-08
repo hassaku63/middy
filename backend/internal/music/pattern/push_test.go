@@ -34,7 +34,7 @@ func TestPushesComeBeforeTheFeel(t *testing.T) {
 	if !at(straight, 720) || at(straight, 960) {
 		t.Errorf("V7 should be struck at 720, not 960")
 	}
-	swung, err := Render(tl, Choice{Accompaniment: "ballad", Feel: FeelSwing})
+	swung, err := Render(tl, Choice{Accompaniment: "ballad", Feel: FeelSwing, Swing: Swing{Ratio: 2}})
 	if err != nil {
 		t.Fatal(err)
 	}

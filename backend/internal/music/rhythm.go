@@ -27,9 +27,13 @@ type RhythmStyle struct {
 
 // RhythmFeel explains how the eighths are played.
 type RhythmFeel struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Explanation string `json:"explanation"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Ratio and Unit say how much a swing swings (BL-084): the long note
+	// of each pair to the short one, on eighths or sixteenths.
+	Ratio       float64 `json:"ratio,omitempty"`
+	Unit        string  `json:"unit,omitempty"`
+	Explanation string  `json:"explanation"`
 }
 
 // RhythmPart describes one bar of a pattern in beginner terms.

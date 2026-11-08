@@ -144,7 +144,7 @@ export interface components {
       timeSignature?: components['schemas']['TimeSignature'];
     };
     /**
-     * @description 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing は使えない。省略時は straight
+     * @description 8 分音符のノリ。swing は裏拍を遅らせる（長・短の比はテンポから決まる。BL-084）。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing は使えない。省略時は straight
      * @enum {string}
      */
     Feel: 'straight' | 'swing';
@@ -465,6 +465,13 @@ export interface components {
     RhythmFeel: {
       id: components['schemas']['Feel'];
       name: string;
+      /** @description スウィングの長・短の比（BL-084）。指定がなければテンポから決まる（60 で 3、160 で 2、速いほど浅く、1.5 まで） */
+      ratio?: number;
+      /**
+       * @description 組にして揺らす音価
+       * @enum {string}
+       */
+      unit?: 'eighth' | 'sixteenth';
       explanation: string;
     };
     /** @description 1 小節のパターンを初学者向けに説明したもの。決定論的に生成される */
