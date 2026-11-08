@@ -108,6 +108,9 @@ type Choice struct {
 	// recorded on the timeline. Render does not check that the patterns
 	// fit it: the intent does, and a caller may mix on purpose.
 	Style string
+	// Grid, when set, writes the drums out instead of naming them
+	// (BL-122); Drums must then be empty.
+	Grid *music.DrumGrid
 }
 
 // Render layers a Choice on a block-chord timeline. With no accompaniment
@@ -122,7 +125,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	if c.Accompaniment == "" && c.Drums == "" && (st == nil || st.Program == nil) {
+	if c.Accompaniment == "" && c.Drums == "" && c.Grid == nil && (st == nil || st.Program == nil) {
 		return tl, nil // block chords on the piano: nothing to render
 	}
 	accID := c.Accompaniment
@@ -133,13 +136,9 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	var drums *Drums
-	if c.Drums != "" {
-		d, err := FindDrums(c.Drums)
-		if err != nil {
-			return music.Timeline{}, err
-		}
-		drums = &d
+	drums, err := choiceDrums(c, tl)
+	if err != nil {
+		return music.Timeline{}, err
 	}
 	if info.ID == FeelSwing && tl.TimeSignature.Compound() {
 		ts := tl.TimeSignature
@@ -150,6 +149,27 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		return music.Timeline{}, err
 	}
 	return applyStyle(applyFeel(out, info), st, acc), nil
+}
+
+// choiceDrums finds the named drums or renders the grid; nil for none.
+func choiceDrums(c Choice, tl music.Timeline) (*Drums, error) {
+	switch {
+	case c.Grid != nil && c.Drums != "":
+		return nil, fmt.Errorf("pattern: choose drums %q or a grid, not both", c.Drums)
+	case c.Grid != nil:
+		d, err := GridDrums(*c.Grid, tl.TimeSignature, tl.TempoBPM)
+		if err != nil {
+			return nil, err
+		}
+		return &d, nil
+	case c.Drums != "":
+		d, err := FindDrums(c.Drums)
+		if err != nil {
+			return nil, err
+		}
+		return &d, nil
+	}
+	return nil, nil
 }
 
 // styleOf finds the choice's style; nil when it names none.
