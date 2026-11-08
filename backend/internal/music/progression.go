@@ -81,10 +81,11 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 }
 
 // FromProgressionIn is FromProgression in another meter (ADR-0017). Step
-// lengths are in beats of the meter: quarter notes in 4/4 and 3/4.
+// lengths are in beats of the meter: quarter notes in 4/4 and 3/4, dotted
+// quarters in 6/8.
 func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM float64) (Timeline, error) {
-	if ts != FourFour && ts != ThreeFour {
-		return Timeline{}, fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4)", ts.Numerator, ts.Denominator)
+	if ts != FourFour && ts != ThreeFour && ts != SixEight {
+		return Timeline{}, fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4, 6/8)", ts.Numerator, ts.Denominator)
 	}
 	if err := prog.Validate(); err != nil {
 		return Timeline{}, err
@@ -97,13 +98,14 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 	tl.TimeSignature = ts
 	track := Track{Name: ChordTrackName, Channel: 0, Program: 0}
 
+	beat := BeatTicks(ts, tl.PPQ)
 	var cursor Tick
 	for i, s := range prog {
 		chord, numeral, symbol, err := stepChord(key, s)
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
 		}
-		duration := Tick(s.Beats) * Tick(tl.PPQ)
+		duration := Tick(s.Beats) * beat
 
 		for _, p := range chord.Voicing(ChordOctave) {
 			track.Notes = append(track.Notes, NoteEvent{

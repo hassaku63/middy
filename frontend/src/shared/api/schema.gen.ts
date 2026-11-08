@@ -135,11 +135,11 @@ export interface components {
       /** @description ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし */
       drums?: string;
       feel?: components['schemas']['Feel'];
-      /** @description 拍子。4/4 か 3/4。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017） */
+      /** @description 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017） */
       timeSignature?: components['schemas']['TimeSignature'];
     };
     /**
-     * @description 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。省略時は straight
+     * @description 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing は使えない。省略時は straight
      * @enum {string}
      */
     Feel: 'straight' | 'swing';
@@ -203,7 +203,7 @@ export interface components {
        * @example V7/V
        */
       numeral: string;
-      /** @description 拍子の拍の数で数えた長さ（4/4・3/4 では四分音符）。省略時は 1 小節 */
+      /** @description 拍子の拍の数で数えた長さ（4/4・3/4 では四分音符、6/8 では付点四分音符で 1 小節は 2 拍）。省略時は 1 小節 */
       beats?: number;
     };
     TimelineResponse: {

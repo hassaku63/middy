@@ -1,9 +1,9 @@
 // Package pattern turns a harmony-only timeline into something that
 // grooves: an accompaniment template (how the chord tones are played
 // across a bar) and a drum template (GM percussion on channel 10). Both
-// are one-bar figures at music.DefaultPPQ in the meter they declare (4/4 or
-// 3/4, ADR-0017), repeated over every harmony event; a chord shorter than a
-// bar simply gets the first part.
+// are one-bar figures at music.DefaultPPQ in the meter they declare (4/4,
+// 3/4 or 6/8, ADR-0017), repeated over every harmony event; a chord shorter
+// than a bar simply gets the first part.
 //
 // Templates are data so that the explanation layer (backlog BL-022) can
 // describe them and the LLM (BL-023) can pick them by id.
@@ -87,6 +87,7 @@ const (
 var (
 	fourFour  = music.FourFour
 	threeFour = music.ThreeFour
+	sixEight  = music.SixEight
 )
 
 // GM drum map notes used by the templates.
@@ -160,6 +161,22 @@ var accompaniments = []Accompaniment{
 			{3 * eighth, eighth, VoiceOctave, 70}, {4 * eighth, eighth, VoiceFifth, 70}, {5 * eighth, eighth, VoiceThird, 66},
 		},
 	},
+	{
+		ID: "rocking-6", Meter: &sixEight, Name: "6/8 の揺れ", Program: 0,
+		Description: "付点 4 分の拍の頭にベース、残りの 8 分 2 つにコード。「ズン・チャ・チャ」が 1 小節に 2 回来て、ゆりかごのように揺れる。",
+		Hits: []Hit{
+			{0, 3 * eighth, VoiceBass, 88}, {eighth, eighth, VoiceChord, 62}, {2 * eighth, eighth, VoiceChord, 58},
+			{3 * eighth, 3 * eighth, VoiceBass, 80}, {4 * eighth, eighth, VoiceChord, 60}, {5 * eighth, eighth, VoiceChord, 56},
+		},
+	},
+	{
+		ID: "arpeggio-6", Meter: &sixEight, Name: "6/8 のアルペジオ", Program: 0,
+		Description: "構成音を 8 分音符 6 つで上って下りる（根音・3 度・5 度・オクターブ・5 度・3 度）。2 拍目の頭にオクターブが来て、1 小節で波が 1 往復する。",
+		Hits: []Hit{
+			{0, eighth, VoiceRoot, 82}, {eighth, eighth, VoiceThird, 64}, {2 * eighth, eighth, VoiceFifth, 66},
+			{3 * eighth, eighth, VoiceOctave, 76}, {4 * eighth, eighth, VoiceFifth, 64}, {5 * eighth, eighth, VoiceThird, 62},
+		},
+	},
 }
 
 var drums = []Drums{
@@ -192,6 +209,21 @@ var drums = []Drums{
 		Description: "キックが 1 拍目、スネアが 2・3 拍目を軽く打つ。1 拍目の重みで、3 拍ごとに回る。",
 		Hits: append(hats(quarter, 3, 44),
 			DrumHit{0, eighth, Kick, 96}, DrumHit{quarter, eighth, Snare, 60}, DrumHit{2 * quarter, eighth, Snare, 56},
+		),
+	},
+	{
+		ID: "six-eight", Meter: &sixEight, Name: "6/8 のバラード",
+		Description: "キックが 1 拍目、スネアが 2 拍目（4 つめの 8 分）、ハイハットが 8 分を 6 つ刻む。大きく 2 つに揺れ、その中が 3 つに分かれて聞こえる。",
+		Hits: append(hats(eighth, 6, 46),
+			DrumHit{0, eighth, Kick, 96}, DrumHit{3 * eighth, eighth, Snare, 84},
+		),
+	},
+	{
+		ID: "jig", Meter: &sixEight, Name: "ジグ",
+		Description: "キックが 2 つの拍の頭、軽いスネアが各拍の 3 つめの 8 分。「タタタ・タタタ」と回り、拍の終わりから次の拍へ跳ねる、ケルトの舞曲の推進力。",
+		Hits: append(hats(eighth, 6, 50),
+			DrumHit{0, eighth, Kick, 98}, DrumHit{2 * eighth, eighth, Snare, 58},
+			DrumHit{3 * eighth, eighth, Kick, 90}, DrumHit{5 * eighth, eighth, Snare, 58},
 		),
 	},
 }
@@ -262,12 +294,12 @@ func FindDrums(id string) (Drums, error) {
 
 // Apply rebuilds the timeline's tracks from its Harmony: the chord track
 // follows acc, and a percussion track follows dr when it is not nil. The
-// input is not modified. The timeline must be in 4/4 or 3/4 at DefaultPPQ,
-// and the templates must be written for its meter (ADR-0017).
+// input is not modified. The timeline must be in 4/4, 3/4 or 6/8 at
+// DefaultPPQ, and the templates must be written for its meter (ADR-0017).
 func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, error) {
 	ts := tl.TimeSignature
-	if (ts != fourFour && ts != threeFour) || tl.PPQ != music.DefaultPPQ {
-		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for 4/4 and 3/4 at %d ppq, got %d/%d at %d",
+	if (ts != fourFour && ts != threeFour && ts != sixEight) || tl.PPQ != music.DefaultPPQ {
+		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for 4/4, 3/4 and 6/8 at %d ppq, got %d/%d at %d",
 			music.DefaultPPQ, ts.Numerator, ts.Denominator, tl.PPQ)
 	}
 	if !acc.Fits(ts) {
@@ -284,10 +316,10 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 
 	out := tl
 	out.Tracks = []music.Track{chordTrack(tl, acc)}
-	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc, ts.Numerator)}
+	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc, ts)}
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
-		out.Rhythm.Drums = describeDrums(*dr, ts.Numerator)
+		out.Rhythm.Drums = describeDrums(*dr, ts)
 	}
 	if err := out.Validate(); err != nil {
 		return music.Timeline{}, fmt.Errorf("pattern: %w", err)

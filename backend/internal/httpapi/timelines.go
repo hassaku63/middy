@@ -54,7 +54,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 	if req.TimeSignature != nil {
 		ts = *req.TimeSignature
 	}
-	prog, err := toProgression(req.Key, req.Progression, ts.Numerator)
+	prog, err := toProgression(req.Key, req.Progression, ts.BeatsPerBar())
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return

@@ -1,6 +1,7 @@
 package music
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -123,7 +124,59 @@ func TestOverviewNamesTheMeterAndCountsItsBars(t *testing.T) {
 			t.Errorf("flow lacks %q: %s", want, tl.Overview.Flow)
 		}
 	}
-	if _, err := FromProgressionIn(TimeSignature{6, 8}, key, prog, 150); err == nil {
-		t.Error("6/8 is not supported yet")
+	if _, err := FromProgressionIn(TimeSignature{9, 8}, key, prog, 150); err == nil {
+		t.Error("9/8 is not supported yet")
+	}
+}
+
+// TestSixEightCountsTwoDottedQuarterBeats checks the rule of ADR-0017 in a
+// compound meter: a chord of 2 beats lasts one bar of 6/8 (two dotted
+// quarters, 1440 ticks), and 1 beat lasts half a bar.
+func TestSixEightCountsTwoDottedQuarterBeats(t *testing.T) {
+	key := Key{C, Major}
+	prog := Progression{{Degree: 1, Beats: 2}, {Degree: 4, Beats: 1}, {Degree: 5, Beats: 1}, {Degree: 1, Beats: 2}}
+	tl, err := FromProgressionIn(SixEight, key, prog, 60)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var starts, durations []Tick
+	for _, h := range tl.Harmony {
+		starts = append(starts, h.Start)
+		durations = append(durations, h.Duration)
+	}
+	if fmt.Sprint(starts) != "[0 1440 2160 2880]" || fmt.Sprint(durations) != "[1440 720 720 1440]" {
+		t.Errorf("starts %v, durations %v", starts, durations)
+	}
+	tl, err = Analyze(tl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"付点 4 分の 2 拍", "4 個の和音で 3 小節"} {
+		if !strings.Contains(tl.Overview.Flow, want) {
+			t.Errorf("flow lacks %q: %s", want, tl.Overview.Flow)
+		}
+	}
+}
+
+func TestBeatsOfEachMeter(t *testing.T) {
+	tests := []struct {
+		ts          TimeSignature
+		compound    bool
+		beats       int
+		beat, whole Tick
+	}{
+		{FourFour, false, 4, 480, 1920},
+		{ThreeFour, false, 3, 480, 1440},
+		{SixEight, true, 2, 720, 1440},
+		{TimeSignature{12, 8}, true, 4, 720, 2880},
+		{TimeSignature{3, 8}, false, 3, 240, 720},
+		{TimeSignature{2, 2}, false, 2, 960, 1920},
+	}
+	for _, tt := range tests {
+		if tt.ts.Compound() != tt.compound || tt.ts.BeatsPerBar() != tt.beats ||
+			BeatTicks(tt.ts, DefaultPPQ) != tt.beat || BarTicks(tt.ts, DefaultPPQ) != tt.whole {
+			t.Errorf("%d/%d: compound %v, %d beats of %d in a bar of %d", tt.ts.Numerator, tt.ts.Denominator,
+				tt.ts.Compound(), tt.ts.BeatsPerBar(), BeatTicks(tt.ts, DefaultPPQ), BarTicks(tt.ts, DefaultPPQ))
+		}
 	}
 }
