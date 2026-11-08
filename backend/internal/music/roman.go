@@ -13,9 +13,11 @@ var romanDegrees = map[string]int{"i": 1, "ii": 2, "iii": 3, "iv": 4, "v": 5, "v
 //
 // The chord quality is derived from the key by Key.Diatonic, so
 // decorations such as "°" or "+" are accepted but do not change the
-// result. Case matters in exactly one place: StepFromLabel treats an
-// uppercase V / V7 in a minor key as the harmonic-minor dominant. Anything
-// that is not a diatonic label is an error.
+// result. A leading accidental (b, ♭, #, ♯) is read past, so "bVII" gives
+// degree 7; StepFromLabel is what reads it as borrowed. Case is not read
+// here: StepFromLabel and CanonicalLabel give it meaning (an uppercase V /
+// V7 in a minor key is the harmonic-minor dominant). Any other label that
+// is not a roman numeral is an error.
 func ParseRomanNumeral(s string) (degree int, seventh bool, err error) {
 	degree, seventh, _, err = parseRomanNumeral(s)
 	return degree, seventh, err
