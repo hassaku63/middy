@@ -35,10 +35,95 @@ export function drumVoice(pitch: number): DrumVoice {
   return { kind: 'hat' };
 }
 
+/** The instrument families the synth tells apart (BL-110); not a realistic rendering. */
+export type InstrumentFamily = 'keys' | 'plucked' | 'organ' | 'strings' | 'flute';
+
+type Wave = { type: OscillatorType; detune: number; level: number };
+
+/** How a family sounds: oscillators, attack (s), the level it decays to, and the decay time (s). */
+export type InstrumentVoice = {
+  family: InstrumentFamily;
+  waves: Wave[];
+  attack: number;
+  sustain: number;
+  decay: number;
+  /** Low-pass cutoff as a multiple of the note's frequency at the start. */
+  brightness: number;
+};
+
+const VOICES: Record<InstrumentFamily, Omit<InstrumentVoice, 'family'>> = {
+  keys: {
+    waves: [
+      { type: 'triangle', detune: 0, level: 1 },
+      { type: 'sine', detune: 4, level: 0.5 },
+    ],
+    attack: 0.01,
+    sustain: 0.35,
+    decay: 0.25,
+    brightness: 6,
+  },
+  plucked: {
+    waves: [
+      { type: 'sawtooth', detune: 0, level: 0.6 },
+      { type: 'triangle', detune: -3, level: 0.6 },
+    ],
+    attack: 0.005,
+    sustain: 0.08,
+    decay: 0.45,
+    brightness: 8,
+  },
+  organ: {
+    waves: [
+      { type: 'square', detune: 0, level: 0.35 },
+      { type: 'sine', detune: 1200, level: 0.4 },
+    ],
+    attack: 0.03,
+    sustain: 0.85,
+    decay: 0.1,
+    brightness: 5,
+  },
+  strings: {
+    waves: [
+      { type: 'sawtooth', detune: -6, level: 0.45 },
+      { type: 'sawtooth', detune: 6, level: 0.45 },
+    ],
+    attack: 0.15,
+    sustain: 0.8,
+    decay: 0.2,
+    brightness: 4,
+  },
+  flute: {
+    waves: [
+      { type: 'sine', detune: 0, level: 1 },
+      { type: 'triangle', detune: 1200, level: 0.15 },
+    ],
+    attack: 0.06,
+    sustain: 0.85,
+    decay: 0.1,
+    brightness: 3,
+  },
+};
+
+/** The family of a GM program (0-based): pianos, guitars and the harp, organs, strings, pipes. */
+export function instrumentVoice(program: number): InstrumentVoice {
+  let family: InstrumentFamily = 'keys';
+  if ((program >= 24 && program <= 31) || program === 46 || (program >= 104 && program <= 107)) {
+    family = 'plucked';
+  } else if (program >= 16 && program <= 23) {
+    family = 'organ';
+  } else if ((program >= 40 && program <= 45) || (program >= 48 && program <= 51)) {
+    family = 'strings';
+  } else if (program >= 72 && program <= 79) {
+    family = 'flute';
+  }
+  return { family, ...VOICES[family] };
+}
+
 /**
- * A small subtractive "piano-ish" voice: two detuned oscillators through a
- * low-pass filter with a percussive envelope. Good enough to hear chords
- * clearly; sample-based instruments are a backlog idea, not a requirement.
+ * A small subtractive synth: a couple of oscillators through a low-pass
+ * filter, shaped per instrument family (instrumentVoice). Good enough to
+ * hear a guitar from an organ; sample-based instruments are a backlog
+ * idea, not a requirement.
  */
 export class WebAudioSynth implements Synth {
   private readonly master: GainNode;
@@ -56,25 +141,25 @@ export class WebAudioSynth implements Synth {
       return;
     }
     const { time, durationSec } = note;
+    const inst = instrumentVoice(note.program);
     const peak = (note.velocity / 127) ** 1.5;
     const end = time + durationSec;
+    const held = Math.max(peak * inst.sustain, 0.0001);
+    const release = Math.max(end, time + inst.attack + inst.decay);
 
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(Math.min(8000, midiToHz(note.pitch) * 6), time);
+    filter.frequency.setValueAtTime(Math.min(8000, midiToHz(note.pitch) * inst.brightness), time);
     filter.frequency.exponentialRampToValueAtTime(Math.max(200, midiToHz(note.pitch) * 2), end);
 
     gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(peak, time + 0.01);
-    gain.gain.exponentialRampToValueAtTime(Math.max(peak * 0.35, 0.0001), time + 0.25);
-    gain.gain.setValueAtTime(Math.max(peak * 0.35, 0.0001), end);
-    gain.gain.exponentialRampToValueAtTime(0.0001, end + 0.15);
+    gain.gain.linearRampToValueAtTime(peak, time + inst.attack);
+    gain.gain.exponentialRampToValueAtTime(held, time + inst.attack + inst.decay);
+    gain.gain.setValueAtTime(held, release);
+    gain.gain.exponentialRampToValueAtTime(0.0001, release + 0.15);
 
-    const oscs = [
-      { type: 'triangle' as const, detune: 0, level: 1 },
-      { type: 'sine' as const, detune: 4, level: 0.5 },
-    ].map(({ type, detune, level }) => {
+    const oscs = inst.waves.map(({ type, detune, level }) => {
       const osc = this.ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = midiToHz(note.pitch);
@@ -83,7 +168,7 @@ export class WebAudioSynth implements Synth {
       level_.gain.value = level;
       osc.connect(level_).connect(filter);
       osc.start(time);
-      osc.stop(end + 0.2);
+      osc.stop(release + 0.2);
       return osc;
     });
     filter.connect(gain).connect(this.master);
