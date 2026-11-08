@@ -10,7 +10,7 @@
 
 ## 2. 作業の進め方（開発ループ）
 
-1. **`docs/product/backlog.md` を開き、「Now」の中で最も上にある `Ready` な項目を 1 つ選ぶ。** 自分で新しい機能を思いついても、backlog にない限り着手しない。思いついたものは backlog の「Later」か「Ideas」に 1 行で追記して終わり。
+1. **`docs/product/backlog.md` を開き、「Now」の中で最も上にある `Ready` な項目を 1 つ選ぶ。** 自分で新しい機能を思いついても、backlog にない限り着手しない。思いついたものは backlog の「Later」か「Ideas」に 1 行で追記して終わり。使っていて見つけた問題は `observation` の Issue に、検討が要るものは `/propose` で `proposal` の Issue にする（`docs/dev/workflow.md` の「Issue の使い方」）。
 2. 着手前に受け入れ条件を読み、曖昧なら **実装せずに質問する**（または最も保守的な解釈を選び、PR に明記する）。
 3. **テストを先に書く**（または同じコミットで書く）。ドメインロジックはテーブル駆動テスト、HTTP は `httptest`、UI は Testing Library。
 4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に、画面や操作の判断は `docs/design/ux-principles.md` の手順に従う。
