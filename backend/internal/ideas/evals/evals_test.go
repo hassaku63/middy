@@ -2,8 +2,10 @@ package evals
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
 	"github.com/hassaku63/middy/backend/internal/intent"
@@ -111,6 +113,38 @@ func TestRunnerAgainstTheFake(t *testing.T) {
 }
 
 var _ llm.Client = (*fake.Client)(nil)
+
+// TestFakeAnswersEveryImageWithAValidIntent (review): the fake keeps
+// keyless runs working, so every eval image (and its "long" variant) gets
+// an answer the service can render, and asking again gives the same
+// answer: a keyword's edit must not leak into the shared samples.
+func TestFakeAnswersEveryImageWithAValidIntent(t *testing.T) {
+	cases, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := ideas.New(fake.New())
+	ask := func(text string) ideas.Result {
+		t.Helper()
+		res, err := svc.Imagine(context.Background(), []ideas.Message{{Role: llm.RoleUser, Content: text}})
+		if err != nil {
+			t.Fatalf("%q: %v", text, err)
+		}
+		return res
+	}
+	for _, c := range cases {
+		for _, text := range []string{c.Image, "長い" + c.Image} {
+			first := ask(text)
+			for range 2 {
+				again := ask(text)
+				if fmt.Sprint(again.Candidates[0].Progression, again.Candidates[0].Feel, again.Candidates[0].Title) !=
+					fmt.Sprint(first.Candidates[0].Progression, first.Candidates[0].Feel, first.Candidates[0].Title) {
+					t.Errorf("%q: answer changed between requests: %v then %v", text, first.Candidates[0].Progression, again.Candidates[0].Progression)
+				}
+			}
+		}
+	}
+}
 
 func TestJudgeFeel(t *testing.T) {
 	tests := []struct{ want, got, problem string }{
@@ -393,5 +427,47 @@ func TestBreadthCountsChordsNotLengths(t *testing.T) {
 	m := measureBreadth([]Verdict{Judge(Case{ID: "a", Mode: "either"}, a), Judge(Case{ID: "b", Mode: "either"}, b)})
 	if len(m.progressions) != 1 {
 		t.Errorf("one progression, counted %d: %v", len(m.progressions), m.progressions)
+	}
+}
+
+// TestJudgingAGridOfItsOwn (review): a grid with no basedOn plays drums,
+// so it does not pass a case that wants none.
+func TestJudgingAGridOfItsOwn(t *testing.T) {
+	own := intent.Candidate{DrumGrid: &intent.GridSpec{Division: 2}}
+	if got := judgeDrums("none", gridBase(own)); got == "" {
+		t.Error("a grid of its own passed a case that wants no drums")
+	}
+	based := intent.Candidate{DrumGrid: &intent.GridSpec{Division: 2, BasedOn: "eight-beat"}}
+	if got := judgeDrums("eight-beat", gridBase(based)); got != "" {
+		t.Errorf("a grid based on eight-beat: %s", got)
+	}
+}
+
+// TestReportKeepsEachCaseOnOneRow (review): a problem or title with a
+// newline or "|" must not split the Markdown table.
+func TestReportKeepsEachCaseOnOneRow(t *testing.T) {
+	v := Verdict{Case: Case{ID: "x"}, Title: "a|b", Problems: []string{"line one\nline two"}}
+	report := Report([]Verdict{v})
+	for _, line := range strings.Split(report, "\n") {
+		if strings.HasPrefix(line, "line two") || strings.Contains(line, "a|b") {
+			t.Fatalf("row split or unescaped:\n%s", report)
+		}
+	}
+}
+
+// TestRunAllWithNoLimitStillRuns (review): a limit of 0 must not deadlock.
+func TestRunAllWithNoLimitStillRuns(t *testing.T) {
+	cases := []Case{{ID: "a"}, {ID: "b"}, {ID: "c"}}
+	done := make(chan []Verdict, 1)
+	go func() {
+		done <- runAll(context.Background(), cases, 0, func(c Case) Verdict { return Verdict{Case: c, Pass: true} })
+	}()
+	select {
+	case out := <-done:
+		if len(out) != 3 || !out[2].Pass {
+			t.Fatalf("verdicts = %+v", out)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("runAll with limit 0 blocked")
 	}
 }

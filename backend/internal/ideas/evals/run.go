@@ -55,7 +55,7 @@ func runAll(ctx context.Context, cases []Case, limit int, one func(Case) Verdict
 		return out
 	}
 
-	slots := make(chan struct{}, limit)
+	slots := make(chan struct{}, max(limit, 1)) // 0 would block every case after the first
 	var wg sync.WaitGroup
 	for i := 1; i < len(cases); i++ {
 		slots <- struct{}{}
