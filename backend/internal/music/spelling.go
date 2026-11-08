@@ -18,20 +18,21 @@ var majorTonicNames = [12]string{"C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab"
 var letters = []byte("CDEFGAB")
 var letterPitch = map[byte]PitchClass{'C': C, 'D': D, 'E': E, 'F': F, 'G': G, 'A': A, 'B': B}
 
-// parentMajor returns the major key whose signature this key uses.
-func (k Key) parentMajor() PitchClass {
+// ParentMajor returns the tonic of the major key whose signature this key
+// uses (D dorian and G mixolydian use C major's).
+func (k Key) ParentMajor() PitchClass {
 	return k.Tonic.Add(-parentOffset[k.Mode])
 }
 
 // usesFlats reports whether the key's signature is written with flats.
 func (k Key) usesFlats() bool {
-	name := majorTonicNames[k.parentMajor().Normalize()]
+	name := majorTonicNames[k.ParentMajor().Normalize()]
 	return len(name) == 2 && name[1] == 'b' || name == "F"
 }
 
 // scaleNames spells the key's seven degrees, tonic first.
 func (k Key) scaleNames() [7]string {
-	parent := majorTonicNames[k.parentMajor().Normalize()]
+	parent := majorTonicNames[k.ParentMajor().Normalize()]
 	// Letters of the parent major scale, then rotate to this key's tonic.
 	start := 0
 	for i, l := range letters {
@@ -40,7 +41,7 @@ func (k Key) scaleNames() [7]string {
 		}
 	}
 	var parentScale [7]string
-	parentPCs := Key{Tonic: k.parentMajor(), Mode: Major}.Scale()
+	parentPCs := Key{Tonic: k.ParentMajor(), Mode: Major}.Scale()
 	for i := range 7 {
 		letter := letters[(start+i)%7]
 		parentScale[i] = spell(letter, parentPCs[i])
