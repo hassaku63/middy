@@ -37,6 +37,9 @@ func TestImagineRendersEveryCandidate(t *testing.T) {
 	if res.Reply != "雨の日曜の午後。静かで少し切ない。" || len(res.Mood) != 2 {
 		t.Fatalf("unexpected reply/mood: %+v", res)
 	}
+	if res.Retry != "" {
+		t.Errorf("no retry happened, but Retry = %q", res.Retry)
+	}
 	if len(res.Candidates) != 2 {
 		t.Fatalf("got %d candidates", len(res.Candidates))
 	}
@@ -67,6 +70,9 @@ func TestImagineRetriesOnceWithTheValidationErrors(t *testing.T) {
 	}
 	if len(res.Candidates) != 2 {
 		t.Fatalf("retry result not used: %+v", res)
+	}
+	if !strings.Contains(res.Retry, "bIII") {
+		t.Errorf("the result must say why the first answer was not used: %q", res.Retry)
 	}
 	reqs := client.Requests()
 	if len(reqs) != 2 {

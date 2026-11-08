@@ -30,6 +30,7 @@
 - `ChordQuality` — 三和音 4 種（maj, min, dim, aug）、七の和音 4 種（maj7, min7, dom7, m7b5）、六の和音 1 種（min6。長調で借用する ivm6 のため）。JSON は識別子文字列（`"dom7"`）
 - `Chord{Root, Quality}` — `PitchClasses()`, `Voicing(octave)`（密集・基本形）, `String()`（`"G7"`）
 - `RomanNumeral(degree, quality)` — `I`, `ii`, `vii°`, `V7`, `iiø7`, `IVmaj7` など。大文字 = 長/増、小文字 = 短/減。`RomanNumeralAlt(degree, accidental, quality)` は根音を半音下げた `♭VI`, `♭VII7` も書く
+- `LiteralChord(tonic, label)` — ラベルを、調に関係なく、主音の長音階に対して書いたとおりに読む（大文字・小文字と接尾辞が質、先頭の ♭ / b が根音を半音下げる）。`bVII` は主音の全音下の長三和音。評価の `wants` のように「どの調でも同じ響き」を指すときに使う
 - `ParseRomanNumeral(s)` — 上記の表記（と `dim`, `aug`, `+`, `m7b5`）を度数と七の和音の有無に戻す。`RomanNumeral` の出力は必ず往復する。大文字・小文字の違いは `StepFromLabel` だけが（短調の V で）使う
 
 **未対応（backlog）**: 転回形、分数コード、テンション、長調の承認済みセット以外の借用和音（短調側の借用、♭II、♭III など）、セカンダリドミナント。

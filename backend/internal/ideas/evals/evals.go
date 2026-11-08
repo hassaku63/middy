@@ -30,10 +30,16 @@ type Case struct {
 	// Feel, when set, is the feel the first candidate must have ("straight"
 	// also matches an omitted feel).
 	Feel string `json:"feel,omitempty"`
-	// Wants are labels of which at least one should appear in the first
-	// candidate's progression, compared as written (case carries modal
-	// meaning). A miss is reported, not failed: some wants are not yet
-	// expressible, and the report measures exactly that (ADR-0013).
+	// ModeInAny, when set, is a mode (or several joined with "/") that at
+	// least one candidate must use. The first candidate is the plainest by
+	// design, so a case that asks whether a mode is offered at all checks
+	// every candidate.
+	ModeInAny string `json:"modeInAny,omitempty"`
+	// Wants are chords of which at least one should sound in the first
+	// candidate, written as music.LiteralChord reads them: against the major
+	// scale of the candidate's tonic, so "bVII" is the same sound in major,
+	// mixolydian or minor. A miss is reported, not failed: some wants are not
+	// yet expressible, and the report measures exactly that (ADR-0013).
 	Wants []string `json:"wants,omitempty"`
 }
 
@@ -68,6 +74,8 @@ type Verdict struct {
 	WantsHit bool
 	// Unconstrained is the model's free-text wish (diagnostic runs only).
 	Unconstrained string
+	// Retry is why the first answer was not used, when there was a retry.
+	Retry string
 }
 
 // Judge scores a result against the case: the first candidate must match
@@ -83,12 +91,18 @@ func Judge(c Case, res ideas.Result) Verdict {
 	v.Title, v.Key, v.TempoBPM = first.Title, first.Key.String(), first.TempoBPM
 	v.Progression = first.Progression
 	v.Unconstrained = res.Unconstrained
+	v.Retry = res.Retry
+	modes := make([]music.Mode, 0, len(res.Candidates))
 	for _, cand := range res.Candidates {
 		v.Labels = append(v.Labels, cand.Progression...)
+		modes = append(modes, cand.Key.Mode)
 	}
-	v.WantsHit = wantsHit(c.Wants, first.Progression)
+	v.WantsHit = wantsHit(c.Wants, first.Key.Tonic, chordsOf(first.Timeline))
 
 	if problem := judgeMode(c.Mode, first.Key.Mode); problem != "" {
+		v.Problems = append(v.Problems, problem)
+	}
+	if problem := judgeModeInAny(c.ModeInAny, modes); problem != "" {
 		v.Problems = append(v.Problems, problem)
 	}
 	if c.TempoMin > 0 && first.TempoBPM < c.TempoMin {
@@ -127,6 +141,9 @@ func Report(verdicts []Verdict) string {
 				status += " · wants ✗ (" + strings.Join(v.Case.Wants, "/") + ")"
 			}
 		}
+		if v.Retry != "" {
+			status += " · retry: " + shorten(oneLine(v.Retry), 120)
+		}
 		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, strings.Join(v.Progression, " "), status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
@@ -134,19 +151,40 @@ func Report(verdicts []Verdict) string {
 	return b.String()
 }
 
-// wantsHit reports whether any wanted label is in the progression, as
-// written: "IV" in a minor key is a want for a dorian colour and must not
-// match "iv".
-func wantsHit(wants, progression []string) bool {
-	if len(wants) == 0 {
-		return false
-	}
+// wantsHit reports whether any wanted chord sounds in the progression.
+// Wants are read literally against the tonic (music.LiteralChord) and
+// compared with the chords the engine rendered, so a want names a sound,
+// not a spelling: "bVII" matches mixolydian's VII, and "IV" in a minor key
+// (the dorian colour) does not match "iv".
+func wantsHit(wants []string, tonic music.PitchClass, chords []music.Chord) bool {
 	for _, w := range wants {
-		if slices.Contains(progression, w) {
+		want, err := music.LiteralChord(tonic, w)
+		if err != nil {
+			continue // Load-time tests keep cases.json readable
+		}
+		if slices.Contains(chords, want) {
 			return true
 		}
 	}
 	return false
+}
+
+// chordsOf lists the chords a timeline sounds, in order.
+func chordsOf(tl music.Timeline) []music.Chord {
+	out := make([]music.Chord, 0, len(tl.Harmony))
+	for _, h := range tl.Harmony {
+		out = append(out, h.Chord)
+	}
+	return out
+}
+
+// shorten cuts s to at most n runes, marking the cut.
+func shorten(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n]) + "…"
 }
 
 // breadth is what breadthReport counts across a whole run.
@@ -156,6 +194,7 @@ type breadth struct {
 	vocab        map[string]bool
 	wantsTotal   int
 	wantsHits    int
+	retries      int
 }
 
 func measureBreadth(verdicts []Verdict) breadth {
@@ -176,6 +215,9 @@ func measureBreadth(verdicts []Verdict) breadth {
 			if v.WantsHit {
 				m.wantsHits++
 			}
+		}
+		if v.Retry != "" {
+			m.retries++
 		}
 	}
 	return m
@@ -210,6 +252,7 @@ func breadthReport(verdicts []Verdict) string {
 	if m.wantsTotal > 0 {
 		fmt.Fprintf(&b, "- 期待した語彙（wants）の命中: %d / %d\n", m.wantsHits, m.wantsTotal)
 	}
+	fmt.Fprintf(&b, "- 再試行が要った件数: %d（理由は表の retry）\n", m.retries)
 	b.WriteString(wishesReport(verdicts))
 	return b.String()
 }
@@ -245,6 +288,19 @@ func judgeFeel(want, got string) string {
 		return ""
 	}
 	return "expected feel " + want + ", got " + got
+}
+
+// judgeModeInAny checks that some candidate uses one of the wanted modes.
+func judgeModeInAny(want string, got []music.Mode) string {
+	if want == "" {
+		return ""
+	}
+	for _, m := range got {
+		if judgeMode(want, m) == "" {
+			return ""
+		}
+	}
+	return "no candidate in " + want
 }
 
 // judgeMode accepts "either", one mode name, or several joined with "/".

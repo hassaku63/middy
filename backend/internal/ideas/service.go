@@ -60,6 +60,10 @@ type Result struct {
 	// Unconstrained is filled only by a diagnostic Service; it never
 	// reaches the API.
 	Unconstrained string `json:"-"`
+	// Retry is why the first answer was not used, when the turn needed the
+	// one retry: the validation error, or "refused". Empty otherwise. The
+	// evaluation report shows it; it never reaches the API.
+	Retry string `json:"-"`
 }
 
 // Service turns conversations into candidates.
@@ -98,13 +102,29 @@ func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, erro
 	}
 
 	in, err := s.ask(ctx, req)
+	retried := ""
 	if err != nil {
+		retried = retryReason(err)
 		in, err = s.retry(ctx, req, err)
 	}
 	if err != nil {
 		return Result{}, err
 	}
-	return render(in)
+	res, err := render(in)
+	res.Retry = retried
+	return res, err
+}
+
+// retryReason names the first failure for Result.Retry.
+func retryReason(err error) string {
+	var invalid invalidOutputError
+	if errors.As(err, &invalid) {
+		return invalid.reason
+	}
+	if errors.Is(err, llm.ErrRefused) {
+		return "refused"
+	}
+	return err.Error()
 }
 
 // retry gives the model exactly one more chance after a failure it may get

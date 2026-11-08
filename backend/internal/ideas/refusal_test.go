@@ -55,6 +55,9 @@ func TestImagineRetriesOnceAfterARefusal(t *testing.T) {
 			if tt.wantErr == nil && len(res.Candidates) != 2 {
 				t.Fatalf("second answer not used: %+v", res)
 			}
+			if tt.wantErr == nil && res.Retry != "refused" {
+				t.Errorf("Retry = %q, want \"refused\"", res.Retry)
+			}
 			if len(client.reqs) != 2 {
 				t.Fatalf("exactly one retry expected, got %d requests", len(client.reqs))
 			}
