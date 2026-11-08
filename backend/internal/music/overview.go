@@ -90,14 +90,14 @@ func whole(tl Timeline) string {
 	case k.Mode == Major:
 		if used := distinct(tl, func(h HarmonyEvent) bool { return h.Analysis != nil && h.Analysis.Borrowed }); len(used) > 0 {
 			s += fmt.Sprintf("この例では %sが同主短調（%s）から借りた和音で、明るさの中に陰りを差す。",
-				joinChords(used), Key{Tonic: k.Tonic, Mode: Minor})
+				joinChords(k, used), Key{Tonic: k.Tonic, Mode: Minor})
 		}
 	case k.Mode == Minor:
 		if used := distinct(tl, func(h HarmonyEvent) bool { return isHarmonicMinorDominant(k, h.Chord) }); len(used) > 0 {
-			s += fmt.Sprintf("%sは和声的短音階の形で、導音が主和音へ強く引き寄せる。", joinChords(used))
+			s += fmt.Sprintf("%sは和声的短音階の形で、導音が主和音へ強く引き寄せる。", joinChords(k, used))
 		}
 		if used := distinct(tl, func(h HarmonyEvent) bool { return h.Analysis != nil && h.Analysis.Borrowed }); len(used) > 0 {
-			s += fmt.Sprintf("この例では %sが短調の外から借りた和音（同主長調の I・IV、ナポリの ♭II）。", joinChords(used))
+			s += fmt.Sprintf("この例では %sが短調の外から借りた和音（同主長調の I・IV、ナポリの ♭II）。", joinChords(k, used))
 		}
 	}
 	return s
@@ -118,8 +118,8 @@ func characteristicSentence(tl Timeline) string {
 	}
 	var instead []string
 	for _, h := range used {
-		if h.Analysis == nil {
-			continue
+		if h.Analysis == nil || h.Analysis.AppliedTo != 0 {
+			continue // a secondary dominant has no counterpart in the other mode
 		}
 		c, err := ref.Diatonic(h.Analysis.Degree, len(h.Chord.Quality.Intervals()) == 4)
 		if err != nil {
@@ -131,7 +131,7 @@ func characteristicSentence(tl Timeline) string {
 		}
 		instead = append(instead, fmt.Sprintf("%s（%s）", rn, ref.ChordSymbol(c)))
 	}
-	s := fmt.Sprintf("この例では %sが特徴音 %s を含む。", joinChords(used), k.PitchClassName(tone))
+	s := fmt.Sprintf("この例では %sが特徴音 %s を含む。", joinChords(k, used), k.PitchClassName(tone))
 	if len(instead) == 1 {
 		s += fmt.Sprintf("%sなら、ここは %sになる。", modeName[ref.Mode], instead[0])
 	} else if len(instead) > 1 {
@@ -150,7 +150,7 @@ func flow(tl Timeline) string {
 	if degreeOfEvent(first) == 1 {
 		s += "主和音から始まり、"
 	} else {
-		s += fmt.Sprintf("%sから始まり、", chordName(first))
+		s += fmt.Sprintf("%sから始まり、", chordName(tl.Key, first))
 	}
 	prev := h[len(h)-2]
 	if cad := cadenceOfEvent(last); cad != NoCadence {
@@ -158,7 +158,7 @@ func flow(tl Timeline) string {
 	} else if degreeOfEvent(last) == 1 {
 		s += "最後は主和音に戻って落ち着く。"
 	} else {
-		s += fmt.Sprintf("最後は %sで、主和音に戻らずに終わる。", chordName(last))
+		s += fmt.Sprintf("最後は %sで、主和音に戻らずに終わる。", chordName(tl.Key, last))
 	}
 	s += lineText(tl.Key, h)
 	// A loop closes again when it repeats: say what the turn-around makes.
@@ -201,8 +201,11 @@ var meterText = map[TimeSignature]string{
 	SixEight:  "6/8 拍子で、付点 4 分の 2 拍に数え、それぞれの拍が 8 分音符 3 つに分かれる。1 拍目が強く、ゆりかごのように 1 小節に 2 回揺れる。",
 }
 
+// degreeOfEvent is the chord's scale degree; 0 for a secondary dominant,
+// whose root is not the function it has (V7/IV on the tonic's root pulls
+// away from home).
 func degreeOfEvent(h HarmonyEvent) int {
-	if h.Analysis == nil {
+	if h.Analysis == nil || h.Analysis.AppliedTo != 0 {
 		return 0
 	}
 	return h.Analysis.Degree
@@ -215,7 +218,7 @@ func cadenceOfEvent(h HarmonyEvent) Cadence {
 	return h.Analysis.Cadence
 }
 
-func chordName(h HarmonyEvent) string { return fmt.Sprintf("%s（%s）", h.RomanNumeral, h.Symbol) }
+func chordName(k Key, h HarmonyEvent) string { return fmt.Sprintf("%s（%s）", h.RomanNumeral, symbolOf(k, h)) }
 
 // distinct returns the first event of each roman numeral that matches.
 func distinct(tl Timeline, match func(HarmonyEvent) bool) []HarmonyEvent {
@@ -230,10 +233,10 @@ func distinct(tl Timeline, match func(HarmonyEvent) bool) []HarmonyEvent {
 	return out
 }
 
-func joinChords(hs []HarmonyEvent) string {
+func joinChords(k Key, hs []HarmonyEvent) string {
 	names := make([]string, len(hs))
 	for i, h := range hs {
-		names[i] = fmt.Sprintf("%s（%s）", h.RomanNumeral, h.Symbol)
+		names[i] = chordName(k, h)
 	}
 	return strings.Join(names, "と ")
 }

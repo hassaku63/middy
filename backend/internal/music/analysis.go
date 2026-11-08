@@ -250,7 +250,9 @@ func degreeOf(k Key, pc PitchClass) (int, bool) {
 // cadences need a V with the leading tone (hasLeadingTone).
 func cadenceBetween(mode Mode, prev, cur placed) Cadence {
 	switch {
-	case prev.degree == 0:
+	case prev.degree == 0, prev.applied != 0:
+		// A secondary dominant is named for what it pulls towards, not
+		// for its root's degree (V/VII is not a IV).
 		return NoCadence
 	case prev.degree == 7 && cur.degree == 1 && mode.Characteristic() != 0:
 		return Modal
@@ -310,11 +312,17 @@ func borrowedSentence(key Key, h HarmonyEvent) string {
 	return fmt.Sprintf(minorBorrowedText, Key{Tonic: key.Tonic, Mode: Major})
 }
 
-func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) string {
-	symbol := h.Symbol
-	if symbol == "" {
-		symbol = key.ChordSymbol(h.Chord)
+// symbolOf is the chord's spelled symbol, from the key when the event
+// carries none (a timeline built elsewhere or stored before symbols).
+func symbolOf(key Key, h HarmonyEvent) string {
+	if h.Symbol != "" {
+		return h.Symbol
 	}
+	return key.ChordSymbol(h.Chord)
+}
+
+func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) string {
+	symbol := symbolOf(key, h)
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, functionText[fn])
 	if borrowed {
 		s += " " + borrowedSentence(key, h)
@@ -386,7 +394,7 @@ func explainApplied(k Key, h HarmonyEvent, target int, following *Chord) string 
 	t, _ := k.Diatonic(target, false)
 	rn, _ := RomanNumeral(target, t.Quality)
 	symbol := k.ChordSymbol(t)
-	s := fmt.Sprintf(appliedText, h.RomanNumeral, h.Symbol, rn, symbol, symbol)
+	s := fmt.Sprintf(appliedText, h.RomanNumeral, symbolOf(k, h), rn, symbol, symbol)
 	switch {
 	case following == nil:
 	case following.Root == t.Root:

@@ -32,7 +32,7 @@ type fromProgressionRequest struct {
 	// Style may choose the chords' instrument (BL-110); the key change sends
 	// back the style the example was rendered in.
 	Style string `json:"style,omitempty"`
-	// TimeSignature is 4/4 (default) or 3/4; beats count in its beats (ADR-0017).
+	// TimeSignature is 4/4 (default), 3/4 or 6/8; beats count in its beats (ADR-0017).
 	TimeSignature *music.TimeSignature `json:"timeSignature,omitempty"`
 }
 
@@ -59,6 +59,10 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 	ts := music.FourFour
 	if req.TimeSignature != nil {
 		ts = *req.TimeSignature
+	}
+	if err := music.SupportedMeter(ts); err != nil { // before the default lengths, which count its beats
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
 	}
 	prog, err := toProgression(req.Key, req.Progression, ts.BeatsPerBar())
 	if err != nil {
