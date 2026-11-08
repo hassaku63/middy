@@ -34,12 +34,6 @@
           "duration": 1920
         },
         {
-          "pitch": 59,
-          "velocity": 80,
-          "start": 1920,
-          "duration": 1920
-        },
-        {
           "pitch": 62,
           "velocity": 80,
           "start": 1920,
@@ -52,9 +46,9 @@
           "duration": 1920
         },
         {
-          "pitch": 60,
+          "pitch": 71,
           "velocity": 80,
-          "start": 3840,
+          "start": 1920,
           "duration": 1920
         },
         {
@@ -70,9 +64,9 @@
           "duration": 1920
         },
         {
-          "pitch": 60,
+          "pitch": 72,
           "velocity": 80,
-          "start": 5760,
+          "start": 3840,
           "duration": 1920
         },
         {
@@ -83,6 +77,12 @@
         },
         {
           "pitch": 69,
+          "velocity": 80,
+          "start": 5760,
+          "duration": 1920
+        },
+        {
+          "pitch": 72,
           "velocity": 80,
           "start": 5760,
           "duration": 1920

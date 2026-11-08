@@ -345,11 +345,6 @@ func (c Candidate) validateGrid(ts music.TimeSignature) []error {
 	if c.Drums != "" {
 		errs = append(errs, errors.New("write drums or drumGrid, not both"))
 	}
-	if g.BasedOn != "" {
-		if d, err := pattern.FindDrums(g.BasedOn); err != nil || !d.Fits(ts) {
-			errs = append(errs, fmt.Errorf("drumGrid.basedOn must be one of %v in %d/%d, got %q", DrumIDsFor(ts), ts.Numerator, ts.Denominator, g.BasedOn))
-		}
-	}
 	grid, err := g.Grid()
 	if err != nil {
 		return append(errs, err)

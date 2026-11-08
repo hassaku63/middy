@@ -78,6 +78,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   // Same example, another key: the engine re-renders it, the LLM is not asked (BL-078).
   const changeKey = async (tonic: PitchClass) => {
     if (!timeline) return;
+    regroove.clear(); // its before → after note was about this timeline
     const next = await keyChange.change(timeline, tonic);
     if (next) show(next);
   };

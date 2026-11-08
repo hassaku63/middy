@@ -507,7 +507,7 @@ func TestDrumGrids(t *testing.T) {
 			g := *backbeat
 			g.BasedOn = "polka"
 			c.DrumGrid = &g
-		}, `drumGrid.basedOn must be one of`},
+		}, `drumGrid: pattern: grid basedOn "polka" is not drums written for 4/4`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

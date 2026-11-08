@@ -68,7 +68,7 @@ func TestFromProgressionCMajorPopProgression(t *testing.T) {
 		}
 	}
 	// The second chord starts at bar 2, voiced from the first (BL-086):
-	// G under C E G is B3 D4 G4, the inversion that moves least.
+	// G after C E G is D4 G4 B4, the inversion from C4 up that moves least.
 	var second []Pitch
 	for _, n := range tr.Notes[3:6] {
 		if n.Start != 4*DefaultPPQ {
@@ -76,8 +76,8 @@ func TestFromProgressionCMajorPopProgression(t *testing.T) {
 		}
 		second = append(second, n.Pitch)
 	}
-	if !slices.Equal(second, []Pitch{59, 62, 67}) {
-		t.Errorf("second chord = %v, want B3 D4 G4", second)
+	if !slices.Equal(second, []Pitch{62, 67, 71}) {
+		t.Errorf("second chord = %v, want D4 G4 B4", second)
 	}
 }
 

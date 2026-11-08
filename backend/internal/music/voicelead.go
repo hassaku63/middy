@@ -2,10 +2,11 @@ package music
 
 import "slices"
 
-// The range the led chords keep their lowest tone in (E3..G4), so a long
-// progression does not drift up or down the keyboard (BL-086).
+// The range the led chords keep their lowest tone in (C4..G4), so a long
+// progression does not drift up or down the keyboard (BL-086), and the
+// bass in octave 3 (a slash chord's, a pattern's) stays under the chord.
 const (
-	leadLow  Pitch = 52
+	leadLow  Pitch = 60
 	leadHigh Pitch = 67
 )
 
