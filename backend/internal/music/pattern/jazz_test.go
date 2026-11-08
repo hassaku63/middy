@@ -74,3 +74,39 @@ func TestCompPlaysTheCharleston(t *testing.T) {
 		}
 	}
 }
+
+// TestJazzWaltzRide (jazz waltz): in 3/4 the ride plays 1, 2, and-of-2
+// and 3, the hi-hat pedal closes on 2, the kick feathers beat 1.
+func TestJazzWaltzRide(t *testing.T) {
+	tl := waltzTimeline(t, 3, 1, 5)
+	d, err := FindDrums("jazz-waltz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := Apply(tl, mustAcc(t, "waltz"), &d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ride, pedal := map[music.Tick]bool{}, map[music.Tick]bool{}
+	for _, n := range notesIn(got, "drums") {
+		switch n.Pitch {
+		case Ride:
+			ride[n.Start%1440] = true
+		case PedalHat:
+			pedal[n.Start%1440] = true
+		case Snare:
+			t.Errorf("no snare in the jazz waltz ride: %+v", n)
+		}
+	}
+	for _, s := range []music.Tick{0, 480, 720, 960} {
+		if !ride[s] {
+			t.Errorf("ride should play at %d: %v", s, ride)
+		}
+	}
+	if len(pedal) != 1 || !pedal[480] {
+		t.Errorf("hi-hat pedal on 2: %v", pedal)
+	}
+	if _, err := Apply(progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1), mustAcc(t, "block"), &d); err == nil {
+		t.Error("the jazz waltz ride is a 3/4 pattern")
+	}
+}
