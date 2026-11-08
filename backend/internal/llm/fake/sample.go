@@ -97,14 +97,17 @@ func sampleIntent(req llm.Request) string {
 	return string(b)
 }
 
-// meterSample answers images whose meter is typical of them (ADR-0017):
-// three-beat images in 3/4, rocking ones in 6/8; nil for any other.
+// meterSample answers images with a typical shape of their own: three-beat
+// images in 3/4 and rocking ones in 6/8 (ADR-0017), a graduation song with
+// a falling slash-chord bass (ADR-0020); nil for any other.
 func meterSample(text string) map[string]any {
 	switch {
 	case hasAny(text, "ワルツ", "3拍子", "三拍子", "舞踏会", "waltz"):
 		return waltzSample
 	case hasAny(text, "ゆりかご", "子守唄", "舟歌", "ジグ", "6/8", "lullaby", "jig"):
 		return sixEightSample
+	case hasAny(text, "卒業", "graduation"):
+		return graduationSample
 	}
 	return nil
 }
@@ -151,5 +154,21 @@ var sixEightSample = map[string]any{
 			"meter": "6/8", "progression": []string{"I", "V", "I", "IV", "I", "V", "I", "I"}, "beatsPerChord": 1,
 			"reason":        "半小節ごとに和音を替え、「タタタ・タタタ」と回るジグの推進力を、拍の 3 つめから次の拍へ跳ねるドラムで出します。",
 			"accompaniment": "arpeggio-6", "drums": "jig"},
+	},
+}
+
+// graduationSample answers a graduation song with a bass that walks down a
+// step at a time under the chords (slash chords, ADR-0020), and a minor
+// line cliché.
+var graduationSample = map[string]any{
+	"summary": "卒業式の合唱の情景。ベースが一歩ずつ下がっていき、別れの寂しさと前向きさが重なる感じを作ります。",
+	"mood":    []string{"感動", "前向き"},
+	"candidates": []map[string]any{
+		{"title": "一歩ずつ下がるベース", "key": map[string]any{"tonic": 0, "mode": "major"}, "tempoBpm": 76,
+			"progression": []string{"I", "I/7", "vi", "vi/5", "IV", "I/3", "ii7", "V7"}, "beatsPerChord": 4,
+			"reason": "ベースが C から D まで一歩ずつ下がる分数コードの進行。和音を替えながらベースだけが滑らかに下り、卒業ソングらしい胸の高まりを作ります。"},
+		{"title": "短調のライン・クリシェ", "key": map[string]any{"tonic": 9, "mode": "minor"}, "tempoBpm": 72,
+			"progression": []string{"i", "i/#7", "i/7", "i/#6"}, "beatsPerChord": 4,
+			"reason": "Am を保ったまま、ベースだけが A から F# へ半音ずつ下がるライン・クリシェ。動かない和音の下で時間が流れていく切なさを出します。"},
 	},
 }
