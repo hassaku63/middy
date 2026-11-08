@@ -73,7 +73,7 @@ src/test       Vitest セットアップ
 - `src/app/App.tsx` が画面 1 枚の結線: 候補または保存したプロジェクトから開いた `Timeline` を 1 つの状態に持ち、再生位置と固定中のコードを player / timeline / explanation に配る。
 - キーの変更は `features/key-change`: `shared/lib/rebuildRequest` の `rebuildRequest` が開いているタイムライン（ローマ数字・拍数・押し・テンポ・モード・リズムの id かドラムの格子とノリ）から `POST /api/v1/timelines/from-progression` のリクエストを組み立て、主音だけを替える。LLM は呼ばない。ローマ数字が同じ和音に読み戻せることは `music` のテストが保証する。
 - キーとスタイルの変更は `app/useExampleChanges` がまとめる。変更が返る前に別の例を開いたら、その結果は捨てる（古い例で新しい例を上書きしない）。
-- スタイルの選び直しは `features/regroove`: 型のカタログが各スタイルの拍子ごとのグルーヴ（`pattern.Style.Groove`。その拍子で使える最初の伴奏・ドラム・ノリ）を返し、`regrooveRequest` が和声をそのままにそのグルーヴでリクエストを組み立てる。`grooveChanges` が前後で変わった部分（伴奏・ドラム・ノリ）だけを述べる。LLM は呼ばない。
+- スタイルの選び直しは `features/regroove`: 型のカタログが各スタイルの拍子ごとのグルーヴ（`pattern.Style.Groove`。その拍子で使える最初の伴奏・ドラム・ノリ）を返し、`regrooveRequest` が和声をそのままにそのグルーヴでリクエストを組み立てる。`grooveChanges` が前後で変わった部分（伴奏・ドラム・ノリ・楽器）だけを述べる。LLM は呼ばない。
 - 保存は `features/projects`: `useProjects` が `shared/lib/storage/projects` の `ProjectStore`（ブラウザに IndexedDB があればそれ、なければメモリ）を使い、開いている例があるときだけ結果のツールバーに `SaveProjectForm` が出て、タイムラインとその出どころ（イメージと候補名。以前の版で保存したものは進行の入力）を名前つきで保存する。`ProjectList` は保存したものを折りたたんで一覧し、開く・削除を受け持つ。サーバーには何も保存しない。
 - 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
 - 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示し、`timeline.rhythm` があれば `RhythmNotes` が伴奏・ドラムの説明と打点の分析を出す。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。
@@ -99,7 +99,7 @@ src/test       Vitest セットアップ
 | 関心事 | 方針 |
 | --- | --- |
 | エラー | API は常に `{"error":{"code","message"}}`。Go 側は `errors.Join` で検証エラーをまとめる |
-| ログ | `log/slog` JSON。リクエストログはミドルウェアで 1 行 |
+| ログ | `log/slog` JSON。リクエストログはミドルウェアで 1 行（状態と所要時間）。ハンドラの panic は同じミドルウェアがエラーの封筒（500 `internal_error`）に変えて記録する |
 | 設定 | 環境変数のみ。`config.Load(getenv)` で全部読む。既定値で起動できる |
 | 秘密情報 | `ANTHROPIC_API_KEY` は環境変数。ログに出さない |
 | 認証 | なし（アカウントは Ideas）。導入時は httpapi のミドルウェアとして追加 |
