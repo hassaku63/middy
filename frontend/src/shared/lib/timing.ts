@@ -56,6 +56,8 @@ export type ScheduledNote = {
   velocity: number;
   /** MIDI channel of the source track; 9 is GM percussion. */
   channel: number;
+  /** GM program of the source track: which instrument family to voice (BL-110). */
+  program: number;
   /** seconds from the start of the timeline */
   startSec: number;
   durationSec: number;
@@ -71,6 +73,7 @@ export function scheduleNotes(tl: Timeline): ScheduledNote[] {
         pitch: n.pitch,
         velocity: n.velocity,
         channel: track.channel,
+        program: track.program,
         startSec: ticksToSeconds(n.start, tl.ppq, bpm),
         durationSec: ticksToSeconds(n.duration, tl.ppq, bpm),
       });

@@ -91,12 +91,33 @@ describe('scheduleNotes', () => {
 
   it('flattens tracks and orders by start time in seconds', () => {
     expect(scheduleNotes(tl)).toEqual([
-      { pitch: 60, velocity: 80, channel: 1, startSec: 0, durationSec: 2 },
-      { pitch: 64, velocity: 80, channel: 0, startSec: 1, durationSec: 0.5 },
+      { pitch: 60, velocity: 80, channel: 1, program: 0, startSec: 0, durationSec: 2 },
+      { pitch: 64, velocity: 80, channel: 0, program: 0, startSec: 1, durationSec: 0.5 },
     ]);
   });
 
   it('length covers harmony annotations too', () => {
     expect(timelineLengthTicks(tl)).toBe(3840);
+  });
+});
+
+describe('scheduleNotes carries the instrument (BL-110)', () => {
+  it('gives each note its track program', () => {
+    const tl: Timeline = {
+      ppq: 480,
+      tempoBpm: 120,
+      timeSignature: sig,
+      key: { tonic: 0, mode: 'major' },
+      harmony: [],
+      tracks: [
+        {
+          name: 'chords',
+          channel: 0,
+          program: 25,
+          notes: [{ pitch: 60, velocity: 80, start: 0, duration: 480 }],
+        },
+      ],
+    };
+    expect(scheduleNotes(tl)[0]?.program).toBe(25);
   });
 });
