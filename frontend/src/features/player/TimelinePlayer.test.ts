@@ -137,4 +137,12 @@ describe('TimelinePlayer', () => {
     expect(p.isPlaying).toBe(false);
     expect(synth.allOffCalls).toBe(1);
   });
+
+  it('an empty timeline finishes at once without leaving a timer running (review)', () => {
+    const p = new TimelinePlayer({ synth: fakeSynth(), clock, lookAheadSec: 0.1, intervalMs: 25 });
+    p.load({ ...fourBars, tracks: [], harmony: [] });
+    p.play();
+    expect(p.isPlaying).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });

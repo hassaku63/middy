@@ -7,5 +7,7 @@ export function saveBlobAsFile(blob: Blob, fileName: string): void {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  // Some browsers start the download after this tick; revoking at once
+  // can cancel it.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

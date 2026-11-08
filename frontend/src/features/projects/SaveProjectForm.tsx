@@ -18,8 +18,8 @@ export function SaveProjectForm({ projects, current }: Props) {
   const save = async () => {
     setSaving(true);
     try {
-      await projects.save(name, current.timeline, current.source);
-      setName('');
+      // Keep the name when the store refused, so the user can try again.
+      if (await projects.save(name, current.timeline, current.source)) setName('');
     } finally {
       setSaving(false);
     }
