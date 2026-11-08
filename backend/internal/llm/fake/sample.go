@@ -59,6 +59,17 @@ func sampleIntent(req llm.Request) string {
 			break
 		}
 	}
+	// A "long" word repeats the first candidate's progression four times
+	// (16 chords), so long-timeline layouts can be tried without a key.
+	for _, kw := range []string{"長い", "long"} {
+		if strings.Contains(text, kw) {
+			first := in["candidates"].([]map[string]any)[0]
+			prog := first["progression"].([]string)
+			first["progression"] = append(append(append(append([]string{}, prog...), prog...), prog...), prog...)
+			first["title"] = first["title"].(string) + "（長め）"
+			break
+		}
+	}
 	b, _ := json.Marshal(in)
 	return string(b)
 }

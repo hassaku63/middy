@@ -105,3 +105,10 @@
     fill: #e2e8f0;
   }
 }
+
+.timeline__highlight {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 3;
+  pointer-events: none;
+}
