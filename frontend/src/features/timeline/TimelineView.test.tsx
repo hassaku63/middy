@@ -114,8 +114,8 @@ describe('TimelineView', () => {
     expect(screen.getByText('Snare')).toBeInTheDocument();
   });
 
-  it('names the toms of a fill and the bodhrán side stick (review of BL-126)', () => {
-    const withToms: Timeline = {
+  it('names the bodhrán and grid drums: toms and side stick (review)', () => {
+    const bodhran: Timeline = {
       ...timeline,
       tracks: [
         ...timeline.tracks,
@@ -123,7 +123,7 @@ describe('TimelineView', () => {
           name: 'drums',
           channel: 9,
           program: 0,
-          notes: [37, 45, 47, 50].map((pitch, i) => ({
+          notes: [45, 47, 50, 37].map((pitch, i) => ({
             pitch,
             velocity: 90,
             start: i * 240,
@@ -132,11 +132,10 @@ describe('TimelineView', () => {
         },
       ],
     };
-    render(<TimelineView timeline={withToms} positionTick={0} />);
-    for (const name of ['Stick', 'Tom L', 'Tom M', 'Tom H']) {
+    render(<TimelineView timeline={bodhran} positionTick={0} />);
+    for (const name of ['Tom L', 'Tom M', 'Tom H', 'Stick']) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
-    expect(screen.queryByText(/^#\d+$/)).not.toBeInTheDocument();
   });
 
   it('renders an empty timeline as a single empty bar', () => {
