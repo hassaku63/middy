@@ -10,7 +10,7 @@ export type Ideas = {
   turns: ChatTurn[];
   busy: boolean;
   error: string | null;
-  /** Sends the user's text with the whole history; resolves when the reply is in. */
+  /** Sends the user's text with the recent history (recentHistory); resolves when the reply is in. */
   send: (text: string) => Promise<void>;
   reset: () => void;
 };
@@ -20,7 +20,8 @@ export type Answer = { image: string; candidates: IdeaCandidate[] };
 
 /**
  * Owns the conversation of scenario S2. The server is stateless, so the
- * full history (user texts and assistant replies) goes with every turn.
+ * history (user texts and assistant replies) goes with every turn, cut to
+ * the latest MAX_MESSAGES by recentHistory.
  * `onAnswer` runs once per reply, so the caller can open the first example
  * at once (docs/product/experience.md: an example arrives ready to hear).
  */

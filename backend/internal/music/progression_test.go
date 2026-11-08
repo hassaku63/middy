@@ -130,6 +130,8 @@ func TestFromProgressionRejectsInvalidInput(t *testing.T) {
 		{"zero beats", Key{C, Major}, Progression{{Degree: 1, Beats: 0}}, 120, "beats must be >= 1"},
 		{"second bad step", Key{C, Major}, Progression{{Degree: 1, Beats: 4}, {Degree: 2, Beats: -1}}, 120, "steps[1]"},
 		{"zero tempo", Key{C, Major}, Progression{{Degree: 1, Beats: 4}}, 0, "tempoBpm"},
+		{"tempo below the timeline's range", Key{C, Major}, Progression{{Degree: 1, Beats: 4}}, 5, "tempoBpm must be 10..1000"},
+		{"tempo above the timeline's range", Key{C, Major}, Progression{{Degree: 1, Beats: 4}}, 5000, "tempoBpm must be 10..1000"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
