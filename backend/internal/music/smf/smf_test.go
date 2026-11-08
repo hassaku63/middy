@@ -65,8 +65,13 @@ func TestKeySignatures(t *testing.T) {
 	}{
 		{music.Key{Tonic: music.C, Mode: music.Major}, []byte{0, 0}},
 		{music.Key{Tonic: music.G, Mode: music.Major}, []byte{1, 0}},
-		{music.Key{Tonic: music.F, Mode: music.Major}, []byte{0xFF, 0}}, // -1
-		{music.Key{Tonic: music.Fs, Mode: music.Major}, []byte{6, 0}},
+		{music.Key{Tonic: music.F, Mode: music.Major}, []byte{0xFF, 0}},  // -1
+		{music.Key{Tonic: music.Fs, Mode: music.Major}, []byte{0xFA, 0}}, // spelled Gb major, -6
+		{music.Key{Tonic: music.Ds, Mode: music.Minor}, []byte{0xFA, 1}}, // Eb minor, -6
+		{music.Key{Tonic: music.D, Mode: music.Dorian}, []byte{0, 0}},    // C major's signature
+		{music.Key{Tonic: music.G, Mode: music.Mixolydian}, []byte{0, 0}},
+		{music.Key{Tonic: music.E, Mode: music.Dorian}, []byte{2, 0}}, // D major's
+		{music.Key{Tonic: music.A, Mode: music.Mixolydian}, []byte{2, 0}},
 		{music.Key{Tonic: music.Cs, Mode: music.Major}, []byte{0xFB, 0}}, // Db major, -5
 		{music.Key{Tonic: music.A, Mode: music.Minor}, []byte{0, 1}},
 		{music.Key{Tonic: music.E, Mode: music.Minor}, []byte{1, 1}},
