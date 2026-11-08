@@ -39,7 +39,7 @@ test-report: ## Slowest tests, totals and time budgets for both suites (scripts/
 	bash scripts/test-report.sh
 
 eval: ## Run the prompt evaluation set against the real API (needs ANTHROPIC_API_KEY; prints a Markdown table)
-	cd $(BACKEND) && go test -tags eval -run TestLiveEval -v ./internal/ideas/evals/
+	cd $(BACKEND) && go test -count=1 -tags eval -run TestLiveEval -v ./internal/ideas/evals/
 
 e2e: ## Playwright scenarios against a running server (E2E_BASE_URL, default http://localhost:8080; see `make run` / `make up`)
 	cd $(FRONTEND) && npx playwright test
