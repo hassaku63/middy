@@ -15,9 +15,6 @@ import (
 // is a safety limit, not a product limit.
 const maxRequestBody = 64 << 10
 
-// defaultBeatsPerChord is used when a progression step omits "beats".
-const defaultBeatsPerChord = 4
-
 // Request/response shapes for POST /api/v1/timelines/from-progression.
 // They are the contract in docs/api/openapi.yaml; change both together.
 type fromProgressionRequest struct {
@@ -30,6 +27,8 @@ type fromProgressionRequest struct {
 	Drums         string `json:"drums,omitempty"`
 	// Feel is "straight" (default) or "swing"; it needs a pattern to act on.
 	Feel string `json:"feel,omitempty"`
+	// TimeSignature is 4/4 (default) or 3/4; beats count in its beats (ADR-0017).
+	TimeSignature *music.TimeSignature `json:"timeSignature,omitempty"`
 }
 
 type progressionLabel struct {
@@ -51,12 +50,16 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prog, err := toProgression(req.Key, req.Progression)
+	ts := music.FourFour
+	if req.TimeSignature != nil {
+		ts = *req.TimeSignature
+	}
+	prog, err := toProgression(req.Key, req.Progression, ts.Numerator)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	tl, err := music.FromProgression(req.Key, prog, req.TempoBPM)
+	tl, err := music.FromProgressionIn(ts, req.Key, prog, req.TempoBPM)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
@@ -93,14 +96,16 @@ func handlePatterns(w http.ResponseWriter, _ *http.Request) {
 // toProgression converts request labels into domain steps, reporting
 // every bad label at once. The key decides what an uppercase V means in
 // minor (music.StepFromLabel).
-func toProgression(key music.Key, labels []progressionLabel) (music.Progression, error) {
+// toProgression reads the labels; a label without beats lasts one bar of
+// barBeats beats.
+func toProgression(key music.Key, labels []progressionLabel, barBeats int) (music.Progression, error) {
 	if len(labels) == 0 {
 		return nil, errors.New("progression must contain at least one chord")
 	}
 	var errs []error
 	prog := make(music.Progression, 0, len(labels))
 	for i, l := range labels {
-		beats := defaultBeatsPerChord
+		beats := barBeats
 		if l.Beats != nil {
 			beats = *l.Beats
 		}

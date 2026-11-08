@@ -55,10 +55,11 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "items": { "type": "string" },
             "description": "%d 個までのコード。ダイアトニックなローマ数字と、長調では同主短調からの借用（iv, ivm6, ii°, bVI, bVII とその七の和音。♭ は b と書く）と、セカンダリードミナント V/x・V7/x（x は主和音以外の長・短三和音。調の中の和音と同じになるものは不可）。ダイアトニック: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
           },
-          "beatsPerChord": { "type": "integer", "enum": [1, 2, 4, 8], "description": "1 コードの長さ（四分音符単位）" },
+          "meter": { "type": "string", "enum": ["4/4", "3/4"], "description": "拍子。省略すると 4/4。ワルツ、メヌエット、ジャズ・ワルツのように 3 拍子が典型のイメージでは 3/4" },
+          "beatsPerChord": { "type": "integer", "enum": [1, 2, 3, 4, 6, 8], "description": "1 コードの長さ（拍子の拍の数）。4/4 では 1・2・4・8、3/4 では 3（1 小節）か 6（2 小節）" },
           "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で" },
-          "accompaniment": { "type": "string", "enum": [%s], "description": "伴奏の型。省略するとブロックコード" },
-          "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。省略するとドラムなし" },
+          "accompaniment": { "type": "string", "enum": [%s], "description": "伴奏の型。例の拍子の型から選ぶ。省略するとブロックコード" },
+          "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。例の拍子の型から選ぶ。省略するとドラムなし" },
           "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる。伴奏かドラムがあるときに効く。省略するとストレート" }
         }
       }
@@ -87,6 +88,7 @@ func Parse(data []byte) (Intent, error) {
 		in.Candidates[i].Accompaniment = strings.ToLower(in.Candidates[i].Accompaniment)
 		in.Candidates[i].Drums = strings.ToLower(in.Candidates[i].Drums)
 		in.Candidates[i].Feel = strings.ToLower(in.Candidates[i].Feel)
+		in.Candidates[i].Meter = strings.TrimSpace(in.Candidates[i].Meter)
 	}
 	if err := in.Validate(); err != nil {
 		return Intent{}, fmt.Errorf("intent: invalid: %w", err)

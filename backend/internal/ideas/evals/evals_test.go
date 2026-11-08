@@ -240,3 +240,18 @@ func TestJudgeFindsWantsInLaterCandidates(t *testing.T) {
 		t.Fatalf("bVII sounds in the second candidate: hit=%v in=%d", v.WantsHit, v.WantsIn)
 	}
 }
+
+func TestJudgeMeter(t *testing.T) {
+	res := result()
+	res.Candidates[0].Key = music.Key{Tonic: music.F, Mode: music.Major}
+	if v := Judge(Case{Mode: "either", Meter: "3/4"}, res); v.Pass {
+		t.Fatal("an omitted meter is 4/4, not 3/4")
+	}
+	res.Candidates[0].Meter = "3/4"
+	if v := Judge(Case{Mode: "either", Meter: "3/4"}, res); !v.Pass {
+		t.Fatalf("3/4 expected and given: %v", v.Problems)
+	}
+	if !strings.Contains(Report([]Verdict{Judge(Case{ID: "w", Mode: "either"}, res)}), "BPM, 3/4)") {
+		t.Error("the report marks a 3/4 first candidate")
+	}
+}

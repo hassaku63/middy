@@ -135,6 +135,8 @@ export interface components {
       /** @description ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし */
       drums?: string;
       feel?: components['schemas']['Feel'];
+      /** @description 拍子。4/4 か 3/4。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017） */
+      timeSignature?: components['schemas']['TimeSignature'];
     };
     /**
      * @description 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。省略時は straight
@@ -187,21 +189,21 @@ export interface components {
     };
     ProgressionLabel: {
       /**
-       * @description ローマ数字のコード名。度数（I..VII、大文字小文字は問わない）と、
-       *     任意の七の和音指定（7, maj7, ø7, m7b5）。°, +, dim, aug は受理するが無視され、
-       *     コードの質は調から決まる。例外は短調の大文字 V / V7 で、和声的短音階のドミナント
-       *     （長三和音・属七）になる。小文字 v は自然短音階の短三和音
+       * @description ローマ数字のコード名。度数（I..VII）と、任意の七の和音指定（7, maj7, ø7, m7b5）。
+       *     大文字・小文字と七の和音の種類は、調から決まる和音と一致しなければならない
+       *     （D minor の IV は「iv として鳴る」として 400。ADR-0013）。例外は短調の大文字 V / V7 で、
+       *     和声的短音階のドミナントになる。長調では同主短調からの借用（iv, ivm6, ♭VI, ♭VII など）、
+       *     どの調でもセカンダリードミナント（V/x, V7/x）を書ける（`docs/architecture/domain-model.md`）
        * @example I
        * @example ii
        * @example V7
        * @example IVmaj7
        * @example vii°
+       * @example bVII
+       * @example V7/V
        */
       numeral: string;
-      /**
-       * @description 四分音符単位の長さ。省略時 4
-       * @default 4
-       */
+      /** @description 拍子の拍の数で数えた長さ（4/4・3/4 では四分音符）。省略時は 1 小節 */
       beats?: number;
     };
     TimelineResponse: {
@@ -231,6 +233,11 @@ export interface components {
       /** @description ドラムテンプレートの id。省略時はドラムなし */
       drums?: string;
       feel?: components['schemas']['Feel'];
+      /**
+       * @description 拍子。省略時は 4/4（ADR-0017）
+       * @enum {string}
+       */
+      meter?: '4/4' | '3/4';
       timeline: components['schemas']['Timeline'];
     };
     IdeasResponse: {

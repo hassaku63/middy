@@ -133,3 +133,22 @@ test('a secondary dominant names the chord it pulls towards (BL-074)', async ({ 
   await expect(text).toContainText('vi（Am）へ向かうセカンダリードミナント');
   await expect(text).toContainText('次の vi へ解決する');
 });
+
+test('a waltz image gets a 3/4 example that stays in 3/4 when the key changes (BL-101)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { card, result } = await openExample(page, 'ウィーンの舞踏会のワルツ', 'ウィーンの円舞曲');
+  await expect(card).toContainText('拍子: 3/4');
+  await expect(card).toContainText('伴奏: ワルツ');
+  const overview = result.getByLabel('全体と流れ');
+  await expect(overview).toContainText('3 拍子（3/4）で、1 拍目が強く 2・3 拍目が弱い');
+  await expect(overview).toContainText('4 個の和音で 4 小節');
+  // The waltz accompaniment names three beats.
+  await expect(result.getByLabel('リズム')).toContainText('拍の頭（1・2・3）');
+  // F major to D major: the numerals and the meter stay.
+  await result.getByLabel('キー').selectOption('2');
+  await expect(result.getByLabel('キー')).toHaveValue('2');
+  await expect(overview).toContainText('3 拍子（3/4）');
+  await expect(overview).toContainText('D major');
+});
