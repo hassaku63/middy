@@ -203,6 +203,9 @@ func render(in intent.Intent) (Result, error) {
 		if err != nil {
 			return Result{}, fmt.Errorf("ideas: candidates[%d]: %w", i, err)
 		}
+		if tl.Rhythm == nil || tl.Rhythm.Feel == nil {
+			c.Feel = "" // a swing with no pattern to act on is not heard; do not show it
+		}
 		out.Candidates = append(out.Candidates, Candidate{Candidate: c, Timeline: tl})
 	}
 	return out, nil

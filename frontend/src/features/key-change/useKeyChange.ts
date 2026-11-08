@@ -12,6 +12,8 @@ export type KeyChange = {
   error: string | null;
   /** Renders `timeline` in `tonic`; resolves to the new timeline, or null on failure. */
   change: (timeline: Timeline, tonic: PitchClass) => Promise<Timeline | null>;
+  /** Forgets the last error, e.g. when another example opens. */
+  clear: () => void;
 };
 
 /** Re-renders the open example in another key through the engine, never the LLM. */
@@ -32,5 +34,7 @@ export function useKeyChange(): KeyChange {
     }
   }, []);
 
-  return { busy, error, change };
+  const clear = useCallback(() => setError(null), []);
+
+  return { busy, error, change, clear };
 }
