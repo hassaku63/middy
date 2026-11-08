@@ -95,6 +95,35 @@ describe('useIdeas', () => {
     expect(onAnswer).not.toHaveBeenCalled();
   });
 
+  it('says what went wrong in Japanese for any other failure (review)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        json(500, {
+          error: { code: 'internal_error', message: 'the examples could not be built' },
+        }),
+      ),
+    );
+    const { result } = renderHook(() => useIdeas());
+    await act(() => result.current.send('雨'));
+    expect(result.current.error).toBe(
+      'AI の答えから例を作れませんでした。もう一度送ってください。',
+    );
+  });
+
+  it('does not report a fault in the answer handler as a network failure (review)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, reply)));
+    const { result } = renderHook(() =>
+      useIdeas(() => {
+        throw new Error('handler');
+      }),
+    );
+    await act(() => result.current.send('雨').catch(() => undefined));
+    expect(result.current.error).toBeNull();
+    expect(result.current.turns).toHaveLength(2);
+    expect(result.current.busy).toBe(false);
+  });
+
   it('ignores blank input', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

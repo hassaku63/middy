@@ -43,14 +43,14 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   /** Where the loaded timeline came from; what "保存" stores alongside it. */
   const [origin, setOrigin] = useState<ProjectSource | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
-  const patterns = usePatterns();
-  const player = usePlayer(createEngine);
-  const projects = useProjects(projectStore);
   const pwa = usePwa();
-  const timelineLayout = useTimelineLayout();
-  const degreeMap = useDegreeMapTrial();
   // Normal is silent; only an unreachable backend is worth a word (BL-065).
   const backend = useBackendHealth(pwa.online);
+  const patterns = usePatterns(backend !== 'down');
+  const player = usePlayer(createEngine);
+  const projects = useProjects(projectStore);
+  const timelineLayout = useTimelineLayout();
+  const degreeMap = useDegreeMapTrial();
 
   const show = (tl: Timeline) => {
     player.stop();
