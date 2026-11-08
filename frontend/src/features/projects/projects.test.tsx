@@ -73,4 +73,16 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     render(<Empty />);
     expect(screen.queryByRole('region', { name: '保存した例' })).not.toBeInTheDocument();
   });
+
+  it('says so and keeps the name when the store refuses a save (review)', async () => {
+    const store = new MemoryProjectStore();
+    store.save = () => Promise.reject(new Error('QuotaExceededError'));
+    const user = userEvent.setup();
+    render(<Harness store={store} onOpen={vi.fn()} />);
+    const input = screen.getByRole('textbox');
+    await user.type(input, '雨の例');
+    await user.click(screen.getByRole('button', { name: '保存' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('保存できませんでした');
+    expect(input).toHaveValue('雨の例');
+  });
 });

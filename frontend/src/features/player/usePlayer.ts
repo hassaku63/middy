@@ -3,7 +3,13 @@ import type { Timeline } from '@/shared/api/client';
 import { TimelinePlayer, type Clock, type PlayerState, type Synth } from './TimelinePlayer';
 import { WebAudioSynth } from './WebAudioSynth';
 
-export type AudioEngine = { synth: Synth; clock: Clock; resume(): Promise<void> };
+export type AudioEngine = {
+  synth: Synth;
+  clock: Clock;
+  resume(): Promise<void>;
+  /** Releases the audio device (optional: test engines have none). */
+  close?(): Promise<void>;
+};
 
 /**
  * Builds the Web Audio engine. Called lazily from a user gesture (the play
@@ -15,6 +21,7 @@ export function createWebAudioEngine(): AudioEngine {
     synth: new WebAudioSynth(ctx),
     clock: { now: () => ctx.currentTime },
     resume: () => ctx.resume(),
+    close: () => ctx.close(),
   };
 }
 
@@ -65,7 +72,17 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
     playerRef.current?.stop();
   }, []);
 
-  useEffect(() => () => playerRef.current?.stop(), []);
+  // Unmounting stops the sound and releases the AudioContext: browsers
+  // cap how many may be open at once.
+  useEffect(
+    () => () => {
+      playerRef.current?.stop();
+      void engineRef.current?.close?.();
+      engineRef.current = null;
+      playerRef.current = null;
+    },
+    [],
+  );
 
   return { state, positionTick, play, stop };
 }

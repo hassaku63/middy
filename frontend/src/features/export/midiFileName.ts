@@ -3,13 +3,20 @@ import { keyName } from '@/shared/lib/notation';
 
 /**
  * e.g. "middy-C-major-I-V-vi-IV.mid". Sharps become "s", "♭VII" becomes
- * "bVII" and "V7/V" becomes "V7ofV", so the name is filesystem-safe.
+ * "bVII", "III+" becomes "IIIaug" and "V7/V" becomes "V7ofV" (every
+ * occurrence, so "V7/V/#4" keeps its bass), so the name is filesystem-safe.
  */
 export function midiFileName(tl: Timeline): string {
   const key = keyName(tl.key).replace('#', 's').replace(' ', '-');
   const numerals = tl.harmony
     .map((h) =>
-      h.romanNumeral.replace('°', 'dim').replace('ø', 'hd').replace('♭', 'b').replace('/', 'of'),
+      h.romanNumeral
+        .replaceAll('°', 'dim')
+        .replaceAll('ø', 'hd')
+        .replaceAll('+', 'aug')
+        .replaceAll('♭', 'b')
+        .replaceAll('#', 's')
+        .replaceAll('/', 'of'),
     )
     .filter((n) => /^[A-Za-z0-9]+$/.test(n))
     .join('-');
