@@ -16,7 +16,7 @@
 | [0010](0010-ux-decisions-follow-product-intent.md) | UI の判断は、プロダクトの意思を根拠に共通の原則と手順で行う | Accepted |
 | [0011](0011-settings-only-from-launch-environment.md) | ローカル実行の設定と秘密情報は、起動時の環境変数だけで渡す | Accepted |
 | [0012](0012-harmony-groove-style.md) | 例を「和声 × グルーヴ」に分け、「スタイル」で結ぶ（付録: [和声](0012/harmony.md)、[リズム](0012/rhythm.md)、[結びつき](0012/combination.md)、[類似アプリ](0012/apps.md)） | Proposed |
-| [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Proposed |
+| [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Accepted |
 
 ## いつ ADR を書くか
 
