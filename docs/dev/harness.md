@@ -78,6 +78,8 @@
 
 ジョブはこれらをキャッシュから取り、ないときだけ取得元へ行く。すべてのジョブに `timeout-minutes` がある。
 
+PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`docs` と `pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックはまだないので、飛ばしたジョブは何も塞がない。必須チェックを入れるときの手順は `.github/workflows/ci.yml` の `changes` ジョブのコメントにある。
+
 | 取得するもの | 取得元 | キャッシュ | 取得元が不調のとき |
 | --- | --- | --- | --- |
 | Go 本体（`.tool-versions` の版） | GitHub の `actions/go-versions` のリリース | ランナーのツールキャッシュを `actions/cache` で版ごとに | `setup-go` が go.dev から取る |
