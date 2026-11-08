@@ -148,6 +148,18 @@ export interface components {
       accompaniments: components['schemas']['Accompaniment'][];
       drums: components['schemas']['DrumPattern'][];
       feels: components['schemas']['FeelInfo'][];
+      styles: components['schemas']['Style'][];
+    };
+    /** @description スタイル（BL-082）。合う伴奏・ドラム・ノリの一覧を持つ。ブロックの和音とドラムなしはどのスタイルでも使える */
+    Style: {
+      /** @example celtic */
+      id: string;
+      /** @example ケルト */
+      name: string;
+      description: string;
+      accompaniments: string[];
+      drums: string[];
+      feels: components['schemas']['Feel'][];
     };
     FeelInfo: {
       id: components['schemas']['Feel'];
