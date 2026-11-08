@@ -19,6 +19,7 @@
 | [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Accepted |
 | [0014](0014-issues-in-the-loop.md) | 観察と企画を GitHub Issue に置き、backlog と ADR はそのまま正典に保つ | Accepted |
 | [0015](0015-modes.md) | モードを調の属性として足し、特徴音で解説する | Accepted |
+| [0016](0016-ci-speed.md) | CI は、アプリと同じ版をキャッシュで速く取り、検査を 1 回ずつ走らせ、差分でジョブを選ぶ | Accepted |
 
 ## いつ ADR を書くか
 
