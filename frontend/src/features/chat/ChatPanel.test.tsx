@@ -83,7 +83,13 @@ describe('ChatPanel', () => {
           content: 'x',
           mood: [],
           candidates: [
-            { ...candidate, accompaniment: 'arpeggio', drums: 'mystery', feel: 'swing' },
+            {
+              ...candidate,
+              accompaniment: 'arpeggio',
+              drums: 'mystery',
+              feel: 'swing',
+              meter: '3/4',
+            },
           ],
         },
       ],
@@ -105,6 +111,7 @@ describe('ChatPanel', () => {
     expect(within(card).getByText('伴奏: アルペジオ')).toBeInTheDocument();
     expect(within(card).getByText('ドラム: mystery')).toBeInTheDocument();
     expect(within(card).getByText('ノリ: スウィング')).toBeInTheDocument();
+    expect(within(card).getByText('拍子: 3/4')).toBeInTheDocument();
   });
 
   it('marks the open candidate and shows busy and error states', () => {

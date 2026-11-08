@@ -27,8 +27,20 @@ const (
 	MaxReasonRunes  = 300
 )
 
-// AllowedBeats are the per-chord lengths (quarter notes) a candidate may use.
-var AllowedBeats = []int{1, 2, 4, 8}
+// AllowedBeats are the per-chord lengths a candidate may use, in beats of
+// its meter (ADR-0017): in 4/4 a beat, half a bar, a bar or two; in 3/4 a
+// bar or two, since a chord on two of three beats would cross the beat
+// pattern (a hemiola, a special effect left out for now).
+var AllowedBeats = map[music.TimeSignature][]int{
+	music.FourFour:  {1, 2, 4, 8},
+	music.ThreeFour: {3, 6},
+}
+
+// Meters are the time signatures a candidate may ask for; omitted is 4/4.
+var Meters = map[string]music.TimeSignature{"4/4": music.FourFour, "3/4": music.ThreeFour}
+
+// MeterIDs lists Meters in a stable order.
+func MeterIDs() []string { return []string{"4/4", "3/4"} }
 
 // Intent is the LLM's whole answer for one turn of the conversation.
 type Intent struct {
@@ -59,6 +71,17 @@ type Candidate struct {
 	Drums         string `json:"drums,omitempty"`
 	// Feel is how the eighths are played (pattern.Feels); empty means straight.
 	Feel string `json:"feel,omitempty"`
+	// Meter is "4/4" or "3/4" (ADR-0017); empty means 4/4.
+	Meter string `json:"meter,omitempty"`
+}
+
+// TimeSignature is the candidate's meter, 4/4 when omitted or unknown
+// (Validate rejects unknown ones).
+func (c Candidate) TimeSignature() music.TimeSignature {
+	if ts, ok := Meters[c.Meter]; ok {
+		return ts
+	}
+	return music.FourFour
 }
 
 // Validate reports every problem at once so the caller can feed them back
@@ -134,23 +157,28 @@ func (c Candidate) validateProgression() []error {
 			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
 		}
 	}
-	if !allowedBeats(c.BeatsPerChord) {
-		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v, got %d", AllowedBeats, c.BeatsPerChord))
+	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
+		errs = append(errs, fmt.Errorf("meter must be one of %v, got %q", MeterIDs(), c.Meter))
+	}
+	ts := c.TimeSignature()
+	if allowed := AllowedBeats[ts]; !slices.Contains(allowed, c.BeatsPerChord) {
+		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v in %d/%d, got %d", allowed, ts.Numerator, ts.Denominator, c.BeatsPerChord))
 	}
 	return errs
 }
 
 func (c Candidate) validatePatterns() []error {
 	var errs []error
-	// Candidates are 4/4 until the intent carries a meter (BL-101).
+	// Patterns must be written for the candidate's meter (ADR-0017).
+	ts := c.TimeSignature()
 	if c.Accompaniment != "" {
-		if a, err := pattern.FindAccompaniment(c.Accompaniment); err != nil || !a.Fits(music.FourFour) {
-			errs = append(errs, fmt.Errorf("accompaniment must be one of %v, got %q", AccompanimentIDs(), c.Accompaniment))
+		if a, err := pattern.FindAccompaniment(c.Accompaniment); err != nil || !a.Fits(ts) {
+			errs = append(errs, fmt.Errorf("accompaniment must be one of %v in %d/%d, got %q", AccompanimentIDsFor(ts), ts.Numerator, ts.Denominator, c.Accompaniment))
 		}
 	}
 	if c.Drums != "" {
-		if d, err := pattern.FindDrums(c.Drums); err != nil || !d.Fits(music.FourFour) {
-			errs = append(errs, fmt.Errorf("drums must be one of %v, got %q", DrumIDs(), c.Drums))
+		if d, err := pattern.FindDrums(c.Drums); err != nil || !d.Fits(ts) {
+			errs = append(errs, fmt.Errorf("drums must be one of %v in %d/%d, got %q", DrumIDsFor(ts), ts.Numerator, ts.Denominator, c.Drums))
 		}
 	}
 	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {
@@ -159,10 +187,19 @@ func (c Candidate) validatePatterns() []error {
 	return errs
 }
 
-// AccompanimentIDs lists the catalogue ids the model may use.
+// AccompanimentIDs lists every catalogue id, in any meter (the schema's enum).
 func AccompanimentIDs() []string {
 	var ids []string
-	for _, a := range pattern.AccompanimentsFor(music.FourFour) {
+	for _, a := range pattern.Accompaniments() {
+		ids = append(ids, a.ID)
+	}
+	return ids
+}
+
+// AccompanimentIDsFor lists the ids that can play in ts.
+func AccompanimentIDsFor(ts music.TimeSignature) []string {
+	var ids []string
+	for _, a := range pattern.AccompanimentsFor(ts) {
 		ids = append(ids, a.ID)
 	}
 	return ids
@@ -177,22 +214,22 @@ func FeelIDs() []string {
 	return ids
 }
 
-// DrumIDs lists the catalogue ids the model may use.
+// DrumIDs lists every drum id, in any meter (the schema's enum).
 func DrumIDs() []string {
 	var ids []string
-	for _, d := range pattern.DrumPatternsFor(music.FourFour) {
+	for _, d := range pattern.DrumPatterns() {
 		ids = append(ids, d.ID)
 	}
 	return ids
 }
 
-func allowedBeats(b int) bool {
-	for _, a := range AllowedBeats {
-		if a == b {
-			return true
-		}
+// DrumIDsFor lists the drum ids that can play in ts.
+func DrumIDsFor(ts music.TimeSignature) []string {
+	var ids []string
+	for _, d := range pattern.DrumPatternsFor(ts) {
+		ids = append(ids, d.ID)
 	}
-	return false
+	return ids
 }
 
 // ToProgression converts the candidate's labels into the engine's type.

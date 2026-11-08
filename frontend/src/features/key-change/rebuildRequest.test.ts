@@ -15,15 +15,21 @@ const base: Timeline = {
 };
 
 describe('rebuildRequest', () => {
-  it('keeps numerals, lengths, tempo and mode, and changes only the tonic', () => {
+  it('keeps numerals, lengths, tempo, meter and mode, and changes only the tonic', () => {
     expect(rebuildRequest(base, 0)).toEqual({
       key: { tonic: 0, mode: 'minor' },
       tempoBpm: 72,
+      timeSignature: { numerator: 4, denominator: 4 },
       progression: [
         { numeral: 'i', beats: 4 },
         { numeral: 'V7', beats: 2 },
       ],
     });
+  });
+
+  it('keeps a waltz in 3/4 (ADR-0017)', () => {
+    const waltz: Timeline = { ...base, timeSignature: { numerator: 3, denominator: 4 } };
+    expect(rebuildRequest(waltz, 5).timeSignature).toEqual({ numerator: 3, denominator: 4 });
   });
 
   it('carries the patterns and the feel the timeline was rendered with', () => {

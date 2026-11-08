@@ -39,7 +39,7 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
 
 /**
  * Names for the candidate's patterns, from the catalogue when it is loaded.
- * Straight is the default feel and goes unsaid.
+ * Straight feel and 4/4 are the defaults and go unsaid.
  */
 function patternLabels(c: IdeaCandidate, patterns: PatternsResponse | undefined): string[] {
   const name = (list: { id: string; name: string }[] | undefined, id: string) =>
@@ -48,5 +48,6 @@ function patternLabels(c: IdeaCandidate, patterns: PatternsResponse | undefined)
   if (c.accompaniment) labels.push(`伴奏: ${name(patterns?.accompaniments, c.accompaniment)}`);
   if (c.drums) labels.push(`ドラム: ${name(patterns?.drums, c.drums)}`);
   if (c.feel && c.feel !== 'straight') labels.push(`ノリ: ${name(patterns?.feels, c.feel)}`);
+  if (c.meter && c.meter !== '4/4') labels.push(`拍子: ${c.meter}`);
   return labels;
 }
