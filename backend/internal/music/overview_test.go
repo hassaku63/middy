@@ -41,7 +41,9 @@ func TestOverviewExplainsTheModeAndTheFlow(t *testing.T) {
 			[]string{"4 個の和音で 4 小節", "最後は VII（C）で、主和音に戻らずに終わる", "繰り返すと、VII から頭の i へのモーダル終止になる"}},
 		{"dorian without the characteristic tone sounds like minor",
 			Key{D, Dorian}, 4, []string{"i", "v", "i"},
-			[]string{"特徴音（B）を含まないので、響きは短調とほとんど変わらない"}, nil},
+			[]string{"特徴音（B）を含まないので、響きは短調とほとんど変わらない"},
+			// v has no leading tone, so v - i is not called an authentic cadence (BL-103).
+			[]string{"最後は主和音に戻って落ち着く"}},
 		{"mixolydian names VII and the major key's vii°",
 			Key{G, Mixolydian}, 4, []string{"I", "VII", "IV", "I"},
 			[]string{"この例では VII（F）が特徴音 F を含む", "長調なら、ここは vii°（F#dim）になる"},

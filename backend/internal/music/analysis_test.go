@@ -54,7 +54,12 @@ func TestAnalyzeDetectsCadences(t *testing.T) {
 		{"plagal IV-I", Key{C, Major}, []int{4, 1}, []Cadence{NoCadence, Plagal}},
 		{"half ends on V", Key{C, Major}, []int{1, 4, 5}, []Cadence{NoCadence, NoCadence, Half}},
 		{"deceptive V-vi", Key{C, Major}, []int{5, 6}, []Cadence{NoCadence, Deceptive}},
-		{"minor deceptive v-VI", Key{A, Minor}, []int{5, 6}, []Cadence{NoCadence, Deceptive}},
+		// A minor v has no leading tone, so it makes no deceptive, authentic
+		// or half cadence (ADR-0012, decision 2); the harmonic-minor V does.
+		{"minor v-VI is not deceptive", Key{A, Minor}, []int{5, 6}, []Cadence{NoCadence, NoCadence}},
+		{"minor v-i is not authentic", Key{A, Minor}, []int{5, 1}, []Cadence{NoCadence, NoCadence}},
+		{"minor i-v is not a half cadence", Key{A, Minor}, []int{1, 5}, []Cadence{NoCadence, NoCadence}},
+		{"dorian v-i is not authentic", Key{D, Dorian}, []int{5, 1}, []Cadence{NoCadence, NoCadence}},
 		{"I-V-vi-IV pop", Key{C, Major}, []int{1, 5, 6, 4}, []Cadence{NoCadence, Half, Deceptive, NoCadence}},
 		{"V-V is not a half cadence twice", Key{C, Major}, []int{5, 5, 1}, []Cadence{NoCadence, NoCadence, Authentic}},
 		{"ii-V-I jazz", Key{C, Major}, []int{2, 5, 1}, []Cadence{NoCadence, Half, Authentic}},
@@ -118,5 +123,42 @@ func TestAnalyzeEmptyHarmony(t *testing.T) {
 	out, err := Analyze(tl)
 	if err != nil || len(out.Harmony) != 0 {
 		t.Fatalf("empty harmony should analyse to empty, got %v %v", out.Harmony, err)
+	}
+}
+
+func TestHarmonicMinorDominantStillCadences(t *testing.T) {
+	tl := analysed(t, Key{A, Minor}, 4, "i", "V", "VI", "iv", "V7", "i")
+	got := []Cadence{}
+	for _, h := range tl.Harmony {
+		got = append(got, h.Analysis.Cadence)
+	}
+	want := []Cadence{NoCadence, Half, Deceptive, NoCadence, Half, Authentic}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("harmony[%d] %s: cadence %q, want %q", i, tl.Harmony[i].RomanNumeral, got[i], want[i])
+		}
+	}
+}
+
+func TestMinorSubtonicTakesItsFunctionFromTheNextChord(t *testing.T) {
+	tests := []struct {
+		labels []string
+		at     int
+		want   string
+	}{
+		{[]string{"i", "VII", "III", "VI"}, 1, "V/III の働き"},
+		{[]string{"i", "iv", "VII", "i"}, 2, "弱いドミナント"},
+		{[]string{"i", "VII", "VI", "V"}, 1, "下りていく線の途中（経過）"},
+	}
+	for _, tt := range tests {
+		tl := analysed(t, Key{A, Minor}, 4, tt.labels...)
+		if e := tl.Harmony[tt.at].Analysis.Explanation; !strings.Contains(e, tt.want) {
+			t.Errorf("%v: VII explanation lacks %q: %s", tt.labels, tt.want, e)
+		}
+	}
+	// Only in minor: dorian's VII keeps its modal reading.
+	tl := analysed(t, Key{D, Dorian}, 4, "i", "VII", "i")
+	if strings.Contains(tl.Harmony[1].Analysis.Explanation, "弱いドミナント") {
+		t.Errorf("dorian VII: %s", tl.Harmony[1].Analysis.Explanation)
 	}
 }

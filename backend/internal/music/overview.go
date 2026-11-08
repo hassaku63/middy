@@ -115,7 +115,7 @@ func flow(tl Timeline) string {
 		s += fmt.Sprintf("最後は %sで、主和音に戻らずに終わる。", chordName(last))
 	}
 	// A loop closes again when it repeats: say what the turn-around makes.
-	if wrap := cadenceBetween(tl.Key.Mode, degreeOfEvent(last), degreeOfEvent(first)); wrap != NoCadence && degreeOfEvent(first) == 1 {
+	if wrap := cadenceBetween(tl.Key.Mode, placedOf(last), placedOf(first)); wrap != NoCadence && degreeOfEvent(first) == 1 {
 		s += fmt.Sprintf("繰り返すと、%s から頭の %s への%sになる。", last.RomanNumeral, first.RomanNumeral, cadenceName[wrap])
 	}
 	return s
@@ -188,4 +188,14 @@ func joinChords(hs []HarmonyEvent) string {
 		names[i] = fmt.Sprintf("%s（%s）", h.RomanNumeral, h.Symbol)
 	}
 	return strings.Join(names, "と ")
+}
+
+// placedOf rebuilds a chord's place in the key from its analysis.
+func placedOf(h HarmonyEvent) placed {
+	if h.Analysis == nil {
+		return placed{}
+	}
+	a := h.Analysis
+	return placed{degree: a.Degree, borrowed: a.Borrowed, applied: a.AppliedTo,
+		leading: a.AppliedTo == 0 && hasLeadingTone(a.Degree, h.Chord)}
 }
