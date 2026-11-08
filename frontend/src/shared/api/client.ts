@@ -51,6 +51,20 @@ export class ApiError extends Error {
 
 type ErrorEnvelope = { error: { code: string; message: string } };
 
+/** True for the API's error body; a proxy's or server's own error page is not one. */
+function isErrorEnvelope(body: unknown): body is ErrorEnvelope {
+  if (typeof body !== 'object' || body === null || !('error' in body)) return false;
+  const error: unknown = body.error;
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  );
+}
+
 /**
  * `fetch` must be called with the global as `this`; passing the bare
  * function around and invoking it as a property throws "Illegal invocation"
@@ -145,8 +159,8 @@ async function request(path: string, opts: RequestOptions): Promise<Response> {
     let code = 'http_error';
     let message = `${res.status} ${res.statusText}`;
     try {
-      const body = (await res.json()) as Partial<ErrorEnvelope>;
-      if (body.error) {
+      const body: unknown = await res.json();
+      if (isErrorEnvelope(body)) {
         code = body.error.code;
         message = body.error.message;
       }
