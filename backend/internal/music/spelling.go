@@ -9,7 +9,7 @@ package music
 
 // parentOffset is where each mode's tonic sits inside its parent major
 // scale, in semitones (ionian 0, dorian 2, ..., aeolian 9).
-var parentOffset = map[Mode]int{Major: 0, Minor: 9}
+var parentOffset = map[Mode]int{Major: 0, Minor: 9, Dorian: 2, Mixolydian: 7}
 
 // majorTonicNames spells the tonic of every major key with the fewer
 // accidentals; a tie (F#/Gb, six each) goes to flats, as does Db over C#.

@@ -5,20 +5,37 @@ import (
 	"strings"
 )
 
-// Mode is a scale type. Only the two most common modes exist today; others
-// (dorian, mixolydian, ...) are a backlog item and slot in here.
+// Mode is a scale type: which note of a diatonic scale is heard as the
+// centre. Major (ionian) and Minor (aeolian) came first; Dorian and
+// Mixolydian were added for Celtic, rock and modal jazz (ADR-0015).
+// Phrygian and Lydian slot in with three lines: intervals, parent offset,
+// characteristic degree.
 type Mode int
 
 // Supported modes.
 const (
-	Major Mode = iota
-	Minor      // natural minor (aeolian)
+	Major      Mode = iota
+	Minor           // natural minor (aeolian)
+	Dorian          // minor with a major sixth
+	Mixolydian      // major with a minor seventh
 )
 
-var modeNames = map[Mode]string{Major: "major", Minor: "minor"}
+var modeNames = map[Mode]string{Major: "major", Minor: "minor", Dorian: "dorian", Mixolydian: "mixolydian"}
 var modeIntervals = map[Mode][7]int{
-	Major: {0, 2, 4, 5, 7, 9, 11},
-	Minor: {0, 2, 3, 5, 7, 8, 10},
+	Major:      {0, 2, 4, 5, 7, 9, 11},
+	Minor:      {0, 2, 3, 5, 7, 8, 10},
+	Dorian:     {0, 2, 3, 5, 7, 9, 10},
+	Mixolydian: {0, 2, 4, 5, 7, 9, 10},
+}
+
+// characteristicDegree is the scale degree that tells the mode apart from
+// the major or minor key it resembles: dorian's major sixth, mixolydian's
+// minor seventh. Zero for major and minor.
+var characteristicDegree = map[Mode]int{Dorian: 6, Mixolydian: 7}
+
+// Characteristic returns the mode's characteristic scale degree, or 0.
+func (m Mode) Characteristic() int {
+	return characteristicDegree[m]
 }
 
 // String returns the lowercase mode name used in JSON and display.
