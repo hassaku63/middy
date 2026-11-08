@@ -119,7 +119,7 @@ docs-check: ## Verify links, paths, index and backlog ids in Markdown (scripts/c
 fixtures: ## Regenerate the cross-language fixtures the frontend tests check against (then commit them)
 	cd $(BACKEND) && go run ./cmd/fixtures -out ../$(FRONTEND)/src/shared/api/fixtures
 
-deps-check: ## go.mod tidy check + npm audit of production deps (needs network; CI `deps` job runs this)
+deps-check: ## go.mod tidy check + npm audit of production deps (needs network; CI runs them in the backend and frontend jobs)
 	cd $(BACKEND) && go mod tidy -diff
 	cd $(FRONTEND) && npm audit --omit=dev --audit-level=high
 

@@ -16,41 +16,70 @@ jobs:
   backend:
     name: backend (Go)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v7
+      - name: Toolchain versions from .tool-versions
+        id: tv
+        working-directory: .
+        run: |
+          echo "go=$(awk '$1 == "golang" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
+          echo "lint=v$(awk '$1 == "golangci-lint" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
+      # CI uses the Go the application is built with, not the runner's (ADR-0016).
+      # The runner image ships other patches, so keep the pinned one in the
+      # tool cache; setup-go then finds it locally instead of downloading it.
+      - name: Go toolchain cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.tool_cache }}/go/${{ steps.tv.outputs.go }}
+          key: go-toolchain-${{ runner.os }}-${{ runner.arch }}-${{ steps.tv.outputs.go }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: .tool-versions
-          # Enable the module cache (cache-dependency-path: backend/go.sum)
-          # once the first dependency creates backend/go.sum.
-          cache: false
-      - name: golangci-lint version from .tool-versions
-        id: lint
-        run: echo "version=v$(awk '$1 == "golangci-lint" { print $2 }' ../.tool-versions)" >> "$GITHUB_OUTPUT"
+          cache-dependency-path: backend/go.sum # module and build cache
+      - name: golangci-lint binary cache
+        id: lint-bin
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/golangci-lint
+          key: golangci-lint-${{ runner.os }}-${{ runner.arch }}-${{ steps.tv.outputs.lint }}
+      - name: Install golangci-lint (cache miss only)
+        if: steps.lint-bin.outputs.cache-hit != 'true'
+        run: bash ../scripts/install-golangci-lint.sh "${{ steps.tv.outputs.lint }}" "$HOME/.local/golangci-lint"
+      - run: echo "$HOME/.local/golangci-lint" >> "$GITHUB_PATH"
       - name: gofmt
         run: |
           out=$(gofmt -l .)
           if [ -n "$out" ]; then echo "gofmt needed:"; echo "$out"; exit 1; fi
+      - name: go.mod / go.sum are tidy
+        run: go mod tidy -diff
       - name: go vet
         run: go vet ./...
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: ${{ steps.lint.outputs.version }}
+          install-mode: none # the binary on PATH, installed above
           working-directory: backend
+      # One run feeds both the log and the timing report (the report used to
+      # run the suite a second time).
       - name: test
-        run: go test -race -cover ./...
+        run: |
+          set -o pipefail
+          go test -race -cover -json ./... | tee "$RUNNER_TEMP/go-test.json" \
+            | jq -rj 'select(.Action == "output" or .Action == "build-output") | .Output'
       - name: test timing report
-        run: bash ../scripts/test-report.sh backend
+        if: ${{ !cancelled() }}
+        run: GO_TEST_JSON="$RUNNER_TEMP/go-test.json" bash ../scripts/test-report.sh backend
       - name: build
         run: go build -o bin/server ./cmd/server
 
   frontend:
     name: frontend (React)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -62,6 +91,8 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: production npm dependencies have no high vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
       - name: generated API types are current
         run: bash ../scripts/check-api-types.sh
       - run: npm run typecheck
@@ -69,9 +100,11 @@ jobs:
       - name: Unused exports, files and dependencies (knip, ADR-0007)
         run: npm run knip
       - run: npm run format:check
-      - run: npm test
+      - name: test
+        run: npm test -- --reporter=default --reporter=json --outputFile="$RUNNER_TEMP/vitest.json"
       - name: test timing report
-        run: bash ../scripts/test-report.sh frontend
+        if: ${{ !cancelled() }}
+        run: VITEST_JSON="$RUNNER_TEMP/vitest.json" bash ../scripts/test-report.sh frontend
       - run: npm run build
       - name: bundle size budget
         run: bash ../scripts/check-bundle-size.sh dist
@@ -79,6 +112,7 @@ jobs:
   docs:
     name: docs (links, paths, index)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - run: bash scripts/check-docs.sh
@@ -86,6 +120,7 @@ jobs:
   image:
     name: image (Docker build + smoke)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
@@ -133,32 +168,10 @@ jobs:
   pr-size:
     name: pr size budget
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - run: bash scripts/check-pr-size.sh origin/${{ github.base_ref }}
-
-  deps:
-    name: dependency hygiene
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: .tool-versions
-          cache: false
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .tool-versions
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: go.mod / go.sum are tidy
-        working-directory: backend
-        run: go mod tidy -diff
-      - name: production npm dependencies have no high vulnerabilities
-        working-directory: frontend
-        run: |
-          npm ci --ignore-scripts
-          npm audit --omit=dev --audit-level=high
