@@ -32,7 +32,7 @@ type Client interface {
 - 拒否・打ち切り: `stop_reason` が `refusal` なら `llm.ErrRefused`（アダプタが包んで返す）、`max_tokens` なら `ErrTruncated`（構造化出力の途中切れは使えないためエラー扱い）。
 - 拒否への対応: 安全分類器は確率的に判定し、無害な音楽の相談でも誤検出がある（評価セットで `reasoning_extraction` を 1 件観測）。`ideas.Service` は拒否されたら同じ要求で 1 回だけ再試行し、2 回とも拒否なら `ErrDeclined` を返す。HTTP では 422 `llm_declined` になり、UI は言い回しを変えるよう促す。公式ドキュメントは、出力の項目でモデルの推論や思考過程を求めるとこの拒否が起きやすいとしているので、`reason` は「短い解説」として求める。サーバー側 fallback（別モデルへの切り替え）は SDK の beta API が必要なので導入していない。再試行しても拒否が残るようなら検討する。
 - enum の大文字小文字: 構造化出力は enum の値の大文字小文字を保証しない。`music.Mode` は大文字小文字を区別せずに読み、`intent.Parse` はパターン id を小文字にそろえる。ローマ数字は大文字小文字に意味があるので触らない。
-- タイムアウト: 30 秒（`Config.Timeout`）。SDK の既定リトライ（2 回）は 429 / 5xx / 接続エラーに効く。
+- タイムアウト: 60 秒（`Config.Timeout`。考える時間を含め、`MaxTokens` まで書き切れる長さ。評価と同じ）。SDK の既定リトライ（2 回）は 429 / 5xx / 接続エラーに効く。
 - プロンプトキャッシュ: システムプロンプトを 1 ブロックで送り、`cache_control: ephemeral` を付ける。可変部分（会話）は後ろ。
 - エラー: `*anthropic.Error` はステータスとリクエスト ID を含めて包み直す。`ideas.Service` はすべて `ErrLLMUnavailable` として扱い、HTTP は 502 にする。
 - テスト: `httptest.Server` が録画相当の Messages API 応答を返し、送信した本文（system のキャッシュ指定、messages の役割、`output_config`）を検証する。実 API を叩くテストは置かない（評価セット BL-015 が手動実行で担う）。
