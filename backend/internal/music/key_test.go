@@ -2,6 +2,7 @@ package music
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -62,7 +63,12 @@ func TestKeyJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(`{"tonic":9,"mode":"Minor"}`), &back); err != nil || back != k {
 		t.Fatalf("mode must be read case-insensitively: %+v, %v", back, err)
 	}
-	if err := json.Unmarshal([]byte(`{"tonic":0,"mode":"lydian"}`), &back); err == nil {
+	err = json.Unmarshal([]byte(`{"tonic":0,"mode":"lydian"}`), &back)
+	if err == nil {
 		t.Fatal("unknown mode must fail to unmarshal")
+	}
+	// The error names what to write instead, so a retry can fix it (review).
+	if !strings.Contains(err.Error(), "use one of [major minor dorian mixolydian]") {
+		t.Errorf("error lacks the supported modes: %v", err)
 	}
 }

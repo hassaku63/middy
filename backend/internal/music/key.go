@@ -77,7 +77,12 @@ func (m *Mode) UnmarshalText(text []byte) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("music: unknown mode %q", string(text))
+	names := make([]string, 0, len(modeNames))
+	for _, m := range Modes() {
+		names = append(names, modeNames[m])
+	}
+	// The list lets a caller (or the model's retry) fix the value at once.
+	return fmt.Errorf("music: unknown mode %q; use one of %v", string(text), names)
 }
 
 // Intervals returns the semitone offsets of the seven scale degrees.
