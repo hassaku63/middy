@@ -69,14 +69,9 @@ type notationFixture struct {
 	RomanNumerals []romanFixture      `json:"romanNumerals"`
 }
 
-var allQualities = []music.ChordQuality{
-	music.MajorTriad, music.MinorTriad, music.DiminishedTriad, music.AugmentedTriad,
-	music.Major7, music.Minor7, music.Dominant7, music.HalfDiminished7, music.MinorSixth,
-}
-
 func notation() (notationFixture, error) {
 	var f notationFixture
-	for _, mode := range []music.Mode{music.Major, music.Minor, music.Dorian, music.Mixolydian} {
+	for _, mode := range music.Modes() {
 		for pc := music.PitchClass(0); pc < 12; pc++ {
 			k := music.Key{Tonic: pc, Mode: mode}
 			f.KeyNames = append(f.KeyNames, keyNameFixture{k, k.String()})
@@ -84,7 +79,7 @@ func notation() (notationFixture, error) {
 	}
 	for pc := music.PitchClass(0); pc < 12; pc++ {
 		f.PitchClasses = append(f.PitchClasses, pitchClassFixture{pc, pc.String()})
-		for _, q := range allQualities {
+		for _, q := range music.Qualities() {
 			c := music.Chord{Root: pc, Quality: q}
 			f.Chords = append(f.Chords, chordFixture{c, c.String()})
 		}

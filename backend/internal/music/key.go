@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -21,6 +22,17 @@ const (
 )
 
 var modeNames = map[Mode]string{Major: "major", Minor: "minor", Dorian: "dorian", Mixolydian: "mixolydian"}
+
+// Modes lists every supported mode in declaration order.
+func Modes() []Mode {
+	out := make([]Mode, 0, len(modeNames))
+	for m := range modeNames {
+		out = append(out, m)
+	}
+	slices.Sort(out)
+	return out
+}
+
 var modeIntervals = map[Mode][7]int{
 	Major:      {0, 2, 4, 5, 7, 9, 11},
 	Minor:      {0, 2, 3, 5, 7, 8, 10},
