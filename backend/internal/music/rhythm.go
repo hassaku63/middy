@@ -7,6 +7,15 @@ package music
 type Rhythm struct {
 	Accompaniment *RhythmPart `json:"accompaniment,omitempty"`
 	Drums         *RhythmPart `json:"drums,omitempty"`
+	// Feel is present when the eighths are not straight (e.g. swing).
+	Feel *RhythmFeel `json:"feel,omitempty"`
+}
+
+// RhythmFeel explains how the eighths are played.
+type RhythmFeel struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Explanation string `json:"explanation"`
 }
 
 // RhythmPart describes one bar of a pattern in beginner terms.

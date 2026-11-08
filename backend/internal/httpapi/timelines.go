@@ -28,6 +28,8 @@ type fromProgressionRequest struct {
 	// block chords and no drums, exactly what FromProgression produces.
 	Accompaniment string `json:"accompaniment,omitempty"`
 	Drums         string `json:"drums,omitempty"`
+	// Feel is "straight" (default) or "swing"; it needs a pattern to act on.
+	Feel string `json:"feel,omitempty"`
 }
 
 type progressionLabel struct {
@@ -59,7 +61,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	tl, err = applyPatterns(tl, req.Accompaniment, req.Drums)
+	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Feel: pattern.Feel(req.Feel)})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
@@ -73,40 +75,18 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, timelineResponse{Timeline: tl})
 }
 
-// applyPatterns layers the requested templates on a block-chord timeline.
-// No ids means the timeline is returned unchanged.
-func applyPatterns(tl music.Timeline, accID, drumsID string) (music.Timeline, error) {
-	if accID == "" && drumsID == "" {
-		return tl, nil
-	}
-	if accID == "" {
-		accID = "block"
-	}
-	acc, err := pattern.FindAccompaniment(accID)
-	if err != nil {
-		return music.Timeline{}, err
-	}
-	var drums *pattern.Drums
-	if drumsID != "" {
-		d, err := pattern.FindDrums(drumsID)
-		if err != nil {
-			return music.Timeline{}, err
-		}
-		drums = &d
-	}
-	return pattern.Apply(tl, acc, drums)
-}
-
 // patternsResponse is the catalogue for GET /patterns.
 type patternsResponse struct {
 	Accompaniments []pattern.Accompaniment `json:"accompaniments"`
 	Drums          []pattern.Drums         `json:"drums"`
+	Feels          []pattern.FeelInfo      `json:"feels"`
 }
 
 func handlePatterns(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, patternsResponse{
 		Accompaniments: pattern.Accompaniments(),
 		Drums:          pattern.DrumPatterns(),
+		Feels:          pattern.Feels(),
 	})
 }
 

@@ -51,6 +51,14 @@ func sampleIntent(req llm.Request) string {
 			},
 		}
 	}
+	// A swing word swings the first candidate (BL-076), so the whole chain
+	// can be exercised without a key.
+	for _, kw := range []string{"スウィング", "ジャズ", "跳ね", "swing", "jazz"} {
+		if strings.Contains(text, kw) {
+			in["candidates"].([]map[string]any)[0]["feel"] = "swing"
+			break
+		}
+	}
 	b, _ := json.Marshal(in)
 	return string(b)
 }

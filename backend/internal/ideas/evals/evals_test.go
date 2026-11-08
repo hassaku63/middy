@@ -102,3 +102,17 @@ func TestRunnerAgainstTheFake(t *testing.T) {
 }
 
 var _ llm.Client = (*fake.Client)(nil)
+
+func TestJudgeFeel(t *testing.T) {
+	tests := []struct{ want, got, problem string }{
+		{"", "", ""},
+		{"swing", "swing", ""},
+		{"straight", "", ""},
+		{"swing", "", "expected feel swing, got straight"},
+	}
+	for _, tt := range tests {
+		if got := judgeFeel(tt.want, tt.got); got != tt.problem {
+			t.Errorf("judgeFeel(%q, %q) = %q, want %q", tt.want, tt.got, got, tt.problem)
+		}
+	}
+}

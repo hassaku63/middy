@@ -123,6 +123,20 @@ func TestFromProgressionWithPatterns(t *testing.T) {
 		t.Fatal("patterns must keep the analysis")
 	}
 
+	// The same request swung: the "and" of beat 1 moves from 240 to 320.
+	swung := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
+		"progression": [{"numeral": "I"}, {"numeral": "V"}],
+		"accompaniment": "arpeggio", "drums": "eight-beat", "feel": "swing"
+	}`)
+	var sw timelineResponse
+	if err := json.NewDecoder(swung.Body).Decode(&sw); err != nil {
+		t.Fatal(err)
+	}
+	if sw.Timeline.Tracks[0].Notes[1].Start != 320 || sw.Timeline.Rhythm.Feel == nil {
+		t.Fatalf("swing not applied: second note at %d, feel %+v", sw.Timeline.Tracks[0].Notes[1].Start, sw.Timeline.Rhythm.Feel)
+	}
+
 	// Unknown ids are the caller's mistake.
 	bad := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
 		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
@@ -150,6 +164,9 @@ func TestPatternsCatalogue(t *testing.T) {
 	}
 	if len(body.Accompaniments) < 5 || len(body.Drums) < 3 || body.Accompaniments[0].ID != "block" {
 		t.Fatalf("unexpected catalogue: %d accompaniments, %d drums", len(body.Accompaniments), len(body.Drums))
+	}
+	if len(body.Feels) != 2 || body.Feels[0].ID != "straight" {
+		t.Fatalf("feels missing from the catalogue: %+v", body.Feels)
 	}
 	for _, a := range body.Accompaniments {
 		if a.Name == "" || a.Description == "" {

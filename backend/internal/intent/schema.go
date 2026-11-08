@@ -56,13 +56,14 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
           "beatsPerChord": { "type": "integer", "enum": [1, 2, 4, 8], "description": "1 コードの長さ（四分音符単位）" },
           "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で" },
           "accompaniment": { "type": "string", "enum": [%s], "description": "伴奏の型。省略するとブロックコード" },
-          "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。省略するとドラムなし" }
+          "drums": { "type": "string", "enum": [%s], "description": "ドラムの型。省略するとドラムなし" },
+          "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる。伴奏かドラムがあるときに効く。省略するとストレート" }
         }
       }
     }
   }
 }`, MaxMoodTags, MinCandidates, MaxCandidates, MinTempoBPM, MaxTempoBPM, MaxChords,
-	quoted(AccompanimentIDs()), quoted(DrumIDs())))
+	quoted(AccompanimentIDs()), quoted(DrumIDs()), quoted(FeelIDs())))
 
 func quoted(ids []string) string {
 	out := make([]string, len(ids))
@@ -83,6 +84,7 @@ func Parse(data []byte) (Intent, error) {
 	for i := range in.Candidates {
 		in.Candidates[i].Accompaniment = strings.ToLower(in.Candidates[i].Accompaniment)
 		in.Candidates[i].Drums = strings.ToLower(in.Candidates[i].Drums)
+		in.Candidates[i].Feel = strings.ToLower(in.Candidates[i].Feel)
 	}
 	if err := in.Validate(); err != nil {
 		return Intent{}, fmt.Errorf("intent: invalid: %w", err)

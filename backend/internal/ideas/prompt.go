@@ -25,7 +25,11 @@ func SystemPrompt() string {
 		for _, d := range pattern.DrumPatterns() {
 			fmt.Fprintf(&b, "- %s: %s %s\n", d.ID, d.Name, d.Description)
 		}
-		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。")
+		b.WriteString("8 分音符のノリ（feel）:\n")
+		for _, f := range pattern.Feels() {
+			fmt.Fprintf(&b, "- %s: %s %s\n", f.ID, f.Name, f.Description)
+		}
+		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。ジャズやシャッフルのように跳ねるイメージなら feel を swing にする。")
 		prompt = b.String()
 	})
 	return prompt

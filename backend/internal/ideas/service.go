@@ -172,28 +172,10 @@ func render(in intent.Intent) (Result, error) {
 	return out, nil
 }
 
-// applyPatterns layers the candidate's patterns, if any, on the block chords.
+// applyPatterns layers the candidate's patterns and feel, if any, on the
+// block chords.
 func applyPatterns(tl music.Timeline, c intent.Candidate) (music.Timeline, error) {
-	if c.Accompaniment == "" && c.Drums == "" {
-		return tl, nil
-	}
-	accID := c.Accompaniment
-	if accID == "" {
-		accID = "block"
-	}
-	acc, err := pattern.FindAccompaniment(accID)
-	if err != nil {
-		return music.Timeline{}, err
-	}
-	var drums *pattern.Drums
-	if c.Drums != "" {
-		d, err := pattern.FindDrums(c.Drums)
-		if err != nil {
-			return music.Timeline{}, err
-		}
-		drums = &d
-	}
-	return pattern.Apply(tl, acc, drums)
+	return pattern.Render(tl, pattern.Choice{Accompaniment: c.Accompaniment, Drums: c.Drums, Feel: pattern.Feel(c.Feel)})
 }
 
 func validateMessages(messages []Message) error {

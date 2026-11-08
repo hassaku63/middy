@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchPatterns, type PatternsResponse } from '@/shared/api/client';
 
-const EMPTY: PatternsResponse = { accompaniments: [], drums: [] };
+const EMPTY: PatternsResponse = { accompaniments: [], drums: [], feels: [] };
 
 /** Loads the pattern catalogue once; an unreachable backend leaves the lists empty. */
 export function usePatterns(): PatternsResponse {

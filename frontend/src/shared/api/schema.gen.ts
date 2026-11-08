@@ -134,10 +134,23 @@ export interface components {
       accompaniment?: string;
       /** @description ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし */
       drums?: string;
+      feel?: components['schemas']['Feel'];
     };
+    /**
+     * @description 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。省略時は straight
+     * @enum {string}
+     */
+    Feel: 'straight' | 'swing';
     PatternsResponse: {
       accompaniments: components['schemas']['Accompaniment'][];
       drums: components['schemas']['DrumPattern'][];
+      feels: components['schemas']['FeelInfo'][];
+    };
+    FeelInfo: {
+      id: components['schemas']['Feel'];
+      name: string;
+      /** @description 学習者向けの説明（日本語） */
+      description: string;
     };
     Accompaniment: {
       id: string;
@@ -206,12 +219,13 @@ export interface components {
       progression: string[];
       /** @enum {integer} */
       beatsPerChord: 1 | 2 | 4 | 8;
-      /** @description なぜ合うかの 1〜2 文（日本語） */
+      /** @description 聴きどころの短い解説（1〜2 文の日本語） */
       reason: string;
       /** @description 伴奏テンプレートの id（`GET /patterns`）。省略時はブロックコード */
       accompaniment?: string;
       /** @description ドラムテンプレートの id。省略時はドラムなし */
       drums?: string;
+      feel?: components['schemas']['Feel'];
       timeline: components['schemas']['Timeline'];
     };
     IdeasResponse: {
@@ -302,6 +316,13 @@ export interface components {
     Rhythm: {
       accompaniment?: components['schemas']['RhythmPart'];
       drums?: components['schemas']['RhythmPart'];
+      feel?: components['schemas']['RhythmFeel'];
+    };
+    /** @description ストレートでないときのノリの説明。決定論的に生成される */
+    RhythmFeel: {
+      id: components['schemas']['Feel'];
+      name: string;
+      explanation: string;
     };
     /** @description 1 小節のパターンを初学者向けに説明したもの。決定論的に生成される */
     RhythmPart: {

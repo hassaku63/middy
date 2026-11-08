@@ -128,6 +128,7 @@ describe('RhythmNotes inside the panel', () => {
           syncopated: false,
           explanation: '1 小節にキックとスネアが 4 回。',
         },
+        feel: { id: 'swing', name: 'スウィング', explanation: '裏拍を少し遅らせている。' },
       },
     };
     render(<ExplanationPanel timeline={withRhythm} positionTick={0} selectedHarmony={null} />);
@@ -139,6 +140,9 @@ describe('RhythmNotes inside the panel', () => {
       'シンコペーション',
     );
     expect(within(rhythm).getByText('1 小節にキックとスネアが 4 回。')).toBeInTheDocument();
+    expect(within(rhythm).getByRole('region', { name: 'ノリ: スウィング' })).toHaveTextContent(
+      '裏拍を少し遅らせている。',
+    );
   });
 
   it('shows nothing about rhythm for a block-chord timeline', () => {
