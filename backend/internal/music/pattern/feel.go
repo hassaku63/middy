@@ -148,7 +148,19 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	return applyStyle(applyFeel(out, info), st, acc), nil
+	return withGrid(applyStyle(applyFeel(out, info), st, acc), c.Grid), nil
+}
+
+// withGrid records the grid the drums were written as (BL-123), so a
+// rebuild can send it back.
+func withGrid(tl music.Timeline, g *music.DrumGrid) music.Timeline {
+	if g == nil || tl.Rhythm == nil {
+		return tl
+	}
+	rhythm := *tl.Rhythm
+	rhythm.DrumGrid = g
+	tl.Rhythm = &rhythm
+	return tl
 }
 
 // choiceDrums finds the named drums or renders the grid; nil for none.

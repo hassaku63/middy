@@ -146,3 +146,29 @@ describe('pushes survive a rebuild (BL-085)', () => {
     ]);
   });
 });
+
+describe('a drum grid survives a rebuild (BL-123)', () => {
+  it('sends the grid back instead of the drums id', () => {
+    const drumGrid = { division: 2 as const, voices: { kick: 'x... x...', snare: '..x. ..x.' } };
+    const gridded: Timeline = {
+      ...base,
+      rhythm: {
+        drums: {
+          id: 'grid',
+          name: '格子で書いたグルーヴ',
+          description: '',
+          hits: 4,
+          onBeat: 4,
+          offBeat: 0,
+          finer: 0,
+          syncopated: false,
+          explanation: '',
+        },
+        drumGrid,
+      },
+    };
+    const req = rebuildRequest(gridded, 2);
+    expect(req.drumGrid).toEqual(drumGrid);
+    expect(req).not.toHaveProperty('drums');
+  });
+});
