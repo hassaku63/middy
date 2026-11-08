@@ -23,7 +23,8 @@ const DRUM_NAMES: Record<number, string> = {
 /** One row per percussion sound; hits are short ticks so the groove reads at a glance. */
 export function DrumLane({ notes, layout, positionTick }: Props) {
   if (layout.drumNotes.length === 0) return null;
-  const rowY = (note: number) => layout.drumTop + layout.drumNotes.indexOf(note) * DRUM_ROW_HEIGHT;
+  const rows = new Map(layout.drumNotes.map((note, i) => [note, i])); // not indexOf per hit
+  const rowY = (note: number) => layout.drumTop + (rows.get(note) ?? 0) * DRUM_ROW_HEIGHT;
   return (
     <g aria-label="ドラム" data-testid="drum-lane">
       {layout.drumNotes.map((note) => (

@@ -29,7 +29,10 @@ export function ChordLane({ harmony, layout, activeIndex, selectedIndex, onSelec
             onClick={() => onSelect?.(i)}
             tabIndex={onSelect ? 0 : undefined}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') onSelect?.(i);
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); // Space would also scroll the page
+                onSelect?.(i);
+              }
             }}
           >
             <rect

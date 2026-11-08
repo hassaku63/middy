@@ -105,3 +105,13 @@ type refusing struct{}
 func (refusing) Complete(context.Context, llm.Request) (llm.Response, error) {
 	return llm.Response{}, llm.ErrRefused
 }
+
+// TestIdeasStatusReview: an invalid conversation is the caller's 400; an
+// answer that could not be built is the server's 500, not a 400.
+func TestIdeasStatusReview(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/ideas", `{"messages": []}`)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("an empty conversation is a 400, got %d", resp.StatusCode)
+	}
+}
