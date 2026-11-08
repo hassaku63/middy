@@ -15,7 +15,11 @@ if ! npx --no-install openapi-typescript ../docs/api/openapi.yaml --default-non-
   echo "api-types: docs/api/openapi.yaml could not be turned into types (invalid document?)" >&2
   exit 1
 fi
-npx --no-install prettier --stdin-filepath src/shared/api/schema.gen.ts < "$out" > "$tmp/formatted.ts"
+if ! npx --no-install prettier --stdin-filepath src/shared/api/schema.gen.ts < "$out" > "$tmp/formatted.ts" 2>"$tmp/prettier.log"; then
+  cat "$tmp/prettier.log" >&2
+  echo "api-types: prettier could not format the generated types (is node_modules installed?)" >&2
+  exit 1
+fi
 
 if ! diff -q "$tmp/formatted.ts" src/shared/api/schema.gen.ts >/dev/null; then
   diff -u src/shared/api/schema.gen.ts "$tmp/formatted.ts" | head -40 >&2
