@@ -370,6 +370,12 @@ func FindDrums(id string) (Drums, error) {
 // input is not modified. The timeline must be in 4/4, 3/4 or 6/8 at
 // DefaultPPQ, and the templates must be written for its meter (ADR-0017).
 func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, error) {
+	return apply(tl, acc, dr, nil)
+}
+
+// apply is Apply with the style's tensions (BL-125), which colour the
+// chord voice of every pattern.
+func apply(tl music.Timeline, acc Accompaniment, dr *Drums, tensions *Tensions) (music.Timeline, error) {
 	ts := tl.TimeSignature
 	if (ts != fourFour && ts != threeFour && ts != sixEight) || tl.PPQ != music.DefaultPPQ {
 		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for 4/4, 3/4 and 6/8 at %d ppq, got %d/%d at %d",
@@ -388,7 +394,7 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 	}
 
 	out := tl
-	out.Tracks = []music.Track{chordTrack(tl, acc)}
+	out.Tracks = []music.Track{chordTrack(tl, acc, tensions)}
 	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc, ts)}
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
@@ -401,12 +407,13 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 }
 
 // chordTrack realises the accompaniment over every harmony event.
-func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
+func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.Track {
 	track := music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	led := music.LeadVoicings(chordsOf(tl.Harmony)) // BL-086
 	for i := range tl.Harmony {
-		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], bar)...)
+		chord := colour(led[i], tensionsOf(tensions, tl.Key, tl.Harmony[i].Chord))
+		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, bar)...)
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
 	sortNotes(track.Notes)
@@ -416,7 +423,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 // chordNotes realises the accompaniment over chord i, a bar of the
 // template at a time from the chord's start; the led voicing plays the
 // chord, and the walking bass is filled in once its hits are known.
-func chordNotes(tl music.Timeline, acc Accompaniment, i int, led []music.Pitch, bar music.Tick) []music.NoteEvent {
+func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, bar music.Tick) []music.NoteEvent {
 	h := tl.Harmony[i]
 	voicing := h.Chord.Voicing(music.ChordOctave)
 	end := h.Start + h.Duration
@@ -436,7 +443,11 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led []music.Pitch, 
 				walks = append(walks, n)
 				continue
 			}
-			for _, p := range pitches(tl.Key, voicing, led, h.Bass, hit.Voice) {
+			ps := pitches(tl.Key, voicing, led, h.Bass, hit.Voice)
+			if hit.Voice == VoiceChord {
+				ps = chord // with the style's tensions (BL-125)
+			}
+			for _, p := range ps {
 				n.Pitch = p
 				notes = append(notes, n)
 			}

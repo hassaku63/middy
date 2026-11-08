@@ -14,6 +14,7 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
           {rhythm.style.name}のスタイルなので、和音は{rhythm.style.instrument}で鳴らす。
         </p>
       )}
+      {rhythm.style?.tensions && <p className="explanation__text">{rhythm.style.tensions}</p>}
       {parts.map(([label, part]) =>
         part ? (
           <section key={label} aria-label={`${label}: ${part.name}`} className="explanation__part">

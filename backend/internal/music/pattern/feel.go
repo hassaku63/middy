@@ -210,7 +210,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		ts := tl.TimeSignature
 		return music.Timeline{}, fmt.Errorf("pattern: swing is for simple meters; %d/%d already divides each beat in three", ts.Numerator, ts.Denominator)
 	}
-	out, err := Apply(tl, acc, drums)
+	out, err := apply(tl, acc, drums, st.tensions())
 	if err != nil {
 		return music.Timeline{}, err
 	}
@@ -271,6 +271,9 @@ func applyStyle(tl music.Timeline, st *Style, acc Accompaniment) music.Timeline 
 		return tl
 	}
 	rs := &music.RhythmStyle{ID: st.ID, Name: st.Name}
+	if st.Tensions != nil && coloured(tl, st.Tensions, acc) {
+		rs.Tensions = st.Name + "のスタイルなので、" + st.Tensions.Text + "（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。"
+	}
 	if st.Program != nil && acc.Program == 0 && len(tl.Tracks) > 0 {
 		tracks := slices.Clone(tl.Tracks)
 		tracks[0].Program = *st.Program
@@ -296,4 +299,13 @@ func swingText(sw Swing, beatBPM float64) string {
 		text += "遅いテンポほど深く、速いほど浅く跳ねるのがジャズの傾向で、この比はテンポに合わせている。"
 	}
 	return text
+}
+
+// coloured is true when the style's tensions sound: the pattern plays the
+// chord voice and some chord takes a tension.
+func coloured(tl music.Timeline, t *Tensions, acc Accompaniment) bool {
+	if !slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceChord }) {
+		return false
+	}
+	return slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool { return len(tensionsOf(t, tl.Key, h.Chord)) > 0 })
 }

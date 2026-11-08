@@ -168,6 +168,16 @@ export interface components {
       program?: number;
       /** @description その楽器の名前 */
       instrument?: string;
+      /** @description スタイルの和音の色付け（BL-125、ADR-0012 の決定 4）。エンジンが足し、ローマ数字は 7 度まで */
+      tensions?: {
+        /** @description 長七・短七・属七に 9 度 */
+        ninths?: boolean;
+        /** @description 属七に 13 度 */
+        thirteenths?: boolean;
+        /** @description 長三和音に 9 度 */
+        add9?: boolean;
+        text: string;
+      };
       /** @description 拍子ごとのこのスタイルのグルーヴ（BL-087）。例のスタイルを選び直すと、和声はそのままでこれで作り直す */
       grooves: components['schemas']['Groove'][];
     };
@@ -460,6 +470,8 @@ export interface components {
       name: string;
       /** @description スタイルが和音に与えた楽器の名前。型が自分の楽器を持つときは省略 */
       instrument?: string;
+      /** @description スタイルが和音に足したテンションの説明（BL-125）。鳴ったときだけ */
+      tensions?: string;
     };
     /** @description ストレートでないときのノリの説明。決定論的に生成される */
     RhythmFeel: {
