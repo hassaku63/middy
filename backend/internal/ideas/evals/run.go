@@ -49,8 +49,12 @@ func runAll(ctx context.Context, cases []Case, limit int, one func(Case) Verdict
 	}
 	out[0] = one(cases[0])
 	if out[0].Errored {
+		why := "the first case could not reach the model; the rest would fail the same way"
+		if ctx.Err() != nil { // the budget ran out, which says nothing about the model
+			why = "the evaluation ran out of time during the first case"
+		}
 		for i := 1; i < len(cases); i++ {
-			out[i] = notRun(cases[i], "the first case could not reach the model; the rest would fail the same way")
+			out[i] = notRun(cases[i], why)
 		}
 		return out
 	}

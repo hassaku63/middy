@@ -133,3 +133,18 @@ func TestRunGoesOnAfterAModelFailure(t *testing.T) {
 		t.Errorf("a failed answer must not stop the run: sent %d", sent)
 	}
 }
+
+// TestRunAllBlamesTheBudgetNotTheModel (review): when the first case fails
+// because the time ran out, the rest say so, not that the model is
+// unreachable.
+func TestRunAllBlamesTheBudgetNotTheModel(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cases := []Case{{ID: "a"}, {ID: "b"}}
+	got := runAll(ctx, cases, 2, func(c Case) Verdict {
+		cancel()
+		return Verdict{Case: c, Problems: []string{"context canceled"}, Errored: true}
+	})
+	if p := got[1].Problems[0]; !strings.Contains(p, "ran out of time") {
+		t.Errorf("second case: %q, want the time budget named", p)
+	}
+}
