@@ -120,3 +120,49 @@ func TestWalkingBass(t *testing.T) {
 		}
 	}
 }
+
+// TestEverySlashBassSounds (review of BL-113): a slash chord's bass sounds
+// as the chord's lowest note whatever the pattern: a bass voice plays it,
+// an arpeggio starts on it, and a pattern with neither (block, strum,
+// drone) puts it under the chord, as the plain block chords do.
+func TestEverySlashBassSounds(t *testing.T) {
+	prog := music.Progression{
+		{Degree: 1, Beats: 4},
+		{Degree: 5, Beats: 4, Bass: &music.Bass{Degree: 7}}, // G/B in C
+	}
+	tl, err := music.FromProgression(music.Key{Tonic: music.C, Mode: music.Major}, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bar := music.Tick(4 * music.DefaultPPQ)
+	for _, acc := range AccompanimentsFor(music.FourFour) {
+		out, err := Render(tl, Choice{Accompaniment: acc.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+		lowest, hasB := music.Pitch(127), false
+		for _, n := range out.Tracks[0].Notes {
+			if n.Start >= bar && n.Start < 2*bar {
+				lowest = min(lowest, n.Pitch)
+				hasB = hasB || n.Pitch == 59
+			}
+		}
+		if acc.ID == "drone" { // the drone's tonic is the pedal under everything
+			if !hasB {
+				t.Errorf("drone: G/B has no B3")
+			}
+			continue
+		}
+		if lowest.Class() != music.B {
+			t.Errorf("%s: G/B's lowest note is %v, want the B", acc.ID, lowest)
+		}
+	}
+	// Drums alone keep block chords, and the bass with them.
+	out, err := Render(tl, Choice{Drums: "eight-beat"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := notesIn(out, music.ChordTrackName), tl.Tracks[0].Notes; len(got) != len(want) {
+		t.Errorf("block chords under drums have %d notes, the plain timeline %d", len(got), len(want))
+	}
+}
