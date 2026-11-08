@@ -69,7 +69,7 @@ paths:
         '400':
           description: |
             `invalid_json`（本文が JSON として読めない、未知のフィールド、未知の mode）
-            または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm <= 0）。
+            または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm が 10〜1000 の外）。
             不正なローマ数字は全件まとめて message に列挙される
           content:
             application/json:
@@ -197,7 +197,7 @@ components:
               description: snake_case の安定した識別子（例 invalid_request）
             message:
               type: string
-              description: 人間向けの説明。UI にそのまま出してよい
+              description: 開発者向けの英語の説明。UI には出さず、画面の文言は code から選ぶ
 
     FromProgressionRequest:
       type: object
@@ -507,9 +507,11 @@ components:
         numerator:
           type: integer
           minimum: 1
+          maximum: 32
         denominator:
           type: integer
-          description: 2 のべき乗
+          description: 2 のべき乗（32 まで）
+          maximum: 32
     NoteEvent:
       type: object
       required: [pitch, velocity, start, duration]
@@ -613,6 +615,7 @@ components:
         ppq:
           type: integer
           minimum: 1
+          maximum: 32767
           description: 四分音符あたりの tick 数（既定 480）
         tempoBpm:
           type: number
@@ -730,7 +733,7 @@ components:
         id: { type: string }
         name: { type: string }
         description: { type: string }
-        hits: { type: integer, description: 1 小節あたりの打点数（ドラムは骨格の打音だけ。キットならキックとスネア、ボーランのような手で叩く太鼓なら低いタムとサイドスティック） }
+        hits: { type: integer, description: 1 小節あたりの打点数（ドラムは骨格の打音だけ。キットならキックとスネア、ボーランのような手で叩く太鼓なら低いタムとサイドスティック。どちらもない格子ではすべての打） }
         onBeat: { type: integer, description: 拍の頭に乗る打点 }
         offBeat: { type: integer, description: 8 分の裏に乗る打点 }
         finer: { type: integer, description: それより細かい位置の打点 }

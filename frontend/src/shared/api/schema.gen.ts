@@ -122,7 +122,7 @@ export interface components {
       error: {
         /** @description snake_case の安定した識別子（例 invalid_request） */
         code: string;
-        /** @description 人間向けの説明。UI にそのまま出してよい */
+        /** @description 開発者向けの英語の説明。UI には出さず、画面の文言は code から選ぶ */
         message: string;
       };
     };
@@ -329,7 +329,7 @@ export interface components {
     };
     TimeSignature: {
       numerator: number;
-      /** @description 2 のべき乗 */
+      /** @description 2 のべき乗（32 まで） */
       denominator: number;
     };
     NoteEvent: {
@@ -491,7 +491,7 @@ export interface components {
       id: string;
       name: string;
       description: string;
-      /** @description 1 小節あたりの打点数（ドラムは骨格の打音だけ。キットならキックとスネア、ボーランのような手で叩く太鼓なら低いタムとサイドスティック） */
+      /** @description 1 小節あたりの打点数（ドラムは骨格の打音だけ。キットならキックとスネア、ボーランのような手で叩く太鼓なら低いタムとサイドスティック。どちらもない格子ではすべての打） */
       hits: number;
       /** @description 拍の頭に乗る打点 */
       onBeat: number;
@@ -588,7 +588,7 @@ export interface operations {
       };
       /**
        * @description `invalid_json`（本文が JSON として読めない、未知のフィールド、未知の mode）
-       *     または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm <= 0）。
+       *     または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm が 10〜1000 の外）。
        *     不正なローマ数字は全件まとめて message に列挙される
        */
       400: {
