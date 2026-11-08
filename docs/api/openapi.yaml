@@ -214,9 +214,15 @@ components:
         drums:
           type: string
           description: ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし
+        feel:
+          $ref: '#/components/schemas/Feel'
+    Feel:
+      type: string
+      enum: [straight, swing]
+      description: 8 分音符のノリ。swing は裏拍を 3 連符の 3 つ目まで遅らせる。伴奏かドラムがあるときに効く。省略時は straight
     PatternsResponse:
       type: object
-      required: [accompaniments, drums]
+      required: [accompaniments, drums, feels]
       properties:
         accompaniments:
           type: array
@@ -226,6 +232,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DrumPattern'
+        feels:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeelInfo'
+    FeelInfo:
+      type: object
+      required: [id, name, description]
+      properties:
+        id:
+          $ref: '#/components/schemas/Feel'
+        name: { type: string }
+        description: { type: string, description: 学習者向けの説明（日本語） }
     Accompaniment:
       type: object
       required: [id, name, description, program, hits]
@@ -331,13 +349,15 @@ components:
           enum: [1, 2, 4, 8]
         reason:
           type: string
-          description: なぜ合うかの 1〜2 文（日本語）
+          description: 聴きどころの短い解説（1〜2 文の日本語）
         accompaniment:
           type: string
           description: 伴奏テンプレートの id（`GET /patterns`）。省略時はブロックコード
         drums:
           type: string
           description: ドラムテンプレートの id。省略時はドラムなし
+        feel:
+          $ref: '#/components/schemas/Feel'
         timeline:
           $ref: '#/components/schemas/Timeline'
     IdeasResponse:
@@ -511,6 +531,17 @@ components:
           $ref: '#/components/schemas/RhythmPart'
         drums:
           $ref: '#/components/schemas/RhythmPart'
+        feel:
+          $ref: '#/components/schemas/RhythmFeel'
+    RhythmFeel:
+      description: ストレートでないときのノリの説明。決定論的に生成される
+      type: object
+      required: [id, name, explanation]
+      properties:
+        id:
+          $ref: '#/components/schemas/Feel'
+        name: { type: string }
+        explanation: { type: string }
     RhythmPart:
       description: 1 小節のパターンを初学者向けに説明したもの。決定論的に生成される
       type: object

@@ -47,3 +47,13 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(result).toContainText('候補: 朝の光');
   await expect(result.getByRole('option')).toHaveText([/I.*C/, /V.*G/, /vi.*Am/, /IV.*F/]);
 });
+
+test('a swing image swings the example and says so (BL-076)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('イメージ', { exact: true }).fill('夜のジャズバーでスウィングする感じ');
+  await page.getByRole('button', { name: '送る' }).click();
+  const card = page.getByRole('article', { name: '窓辺の雨' });
+  await expect(card).toContainText('ノリ: スウィング');
+  const result = page.getByRole('region', { name: '結果' });
+  await expect(result.getByRole('region', { name: 'ノリ: スウィング' })).toBeVisible();
+});

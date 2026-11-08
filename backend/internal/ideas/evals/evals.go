@@ -25,6 +25,9 @@ type Case struct {
 	Mode     string  `json:"mode"`
 	TempoMin float64 `json:"tempoMin,omitempty"`
 	TempoMax float64 `json:"tempoMax,omitempty"`
+	// Feel, when set, is the feel the first candidate must have ("straight"
+	// also matches an omitted feel).
+	Feel string `json:"feel,omitempty"`
 }
 
 // Load returns the embedded cases.
@@ -83,6 +86,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 	if c.TempoMax > 0 && first.TempoBPM > c.TempoMax {
 		v.Problems = append(v.Problems, fmt.Sprintf("tempo %.0f above %.0f", first.TempoBPM, c.TempoMax))
 	}
+	if problem := judgeFeel(c.Feel, first.Feel); problem != "" {
+		v.Problems = append(v.Problems, problem)
+	}
 	if strings.TrimSpace(res.Reply) == "" {
 		v.Problems = append(v.Problems, "empty reply")
 	}
@@ -107,4 +113,14 @@ func Report(verdicts []Verdict) string {
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
 	return b.String()
+}
+
+func judgeFeel(want, got string) string {
+	if got == "" {
+		got = "straight"
+	}
+	if want == "" || want == got {
+		return ""
+	}
+	return "expected feel " + want + ", got " + got
 }

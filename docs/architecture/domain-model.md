@@ -70,7 +70,7 @@ Timeline
 ### 音楽的意図（`internal/intent`）
 
 - `intent.Intent{Summary, Mood, Candidates}` — LLM が 1 ターンで返す構造化の答え。`Summary` は返答文、`Mood` はタグ、`Candidates` は 1〜3 個の提案
-- `intent.Candidate{Title, Key, TempoBPM, Progression, BeatsPerChord, Reason, Accompaniment?, Drums?}` — エンジンが描画できる具体案。`Progression` はローマ数字の文字列（`ParseRomanNumeral` の語彙）、`BeatsPerChord` は 1 / 2 / 4 / 8、`Accompaniment` / `Drums` はパターンカタログの id（`Schema` の enum とシステムプロンプトの一覧はカタログから生成される）
+- `intent.Candidate{Title, Key, TempoBPM, Progression, BeatsPerChord, Reason, Accompaniment?, Drums?, Feel?}` — エンジンが描画できる具体案。`Progression` はローマ数字の文字列（`ParseRomanNumeral` の語彙）、`BeatsPerChord` は 1 / 2 / 4 / 8、`Accompaniment` / `Drums` はパターンカタログの id、`Feel` は 8 分音符のノリ（`straight` / `swing`。`Schema` の enum とシステムプロンプトの一覧はカタログから生成される）
 - `Validate()` が全問題をまとめて返す（テンポ 40〜220、進行 1〜16 個、ローマ数字の妥当性など）。`Schema` は同じ制約を LLM に伝えるが、構造化出力が受け付ける JSON Schema のサブセット（`maxItems` や `minimum` / `maximum` は不可）で書けない上限は説明文で伝え、`Validate` が最終判定する（サブセットの遵守は `TestSchemaUsesOnlySupportedKeywords` が検査）。`Parse(data)` は復号と検証
 - `Candidate.ToProgression()` で `music.Progression` に変換し、`FromProgression` → `Analyze` の既存経路に乗せる
 
@@ -78,10 +78,12 @@ Timeline
 
 - `pattern.Accompaniment{ID, Name, Description, Program, Hits}` — 1 小節（4/4、`DefaultPPQ`）の伴奏テンプレート。`Hit{Start, Duration, Voice, Velocity}` の `Voice` はコードの密集ボイシングに対する相対指定（`chord` / `bass` / `root` / `third` / `fifth` / `top` / `octave`）
 - `pattern.Drums{ID, Name, Description, Hits}` — 1 小節のドラムテンプレート。`DrumHit.Note` は GM ドラムマップ（36 キック、38 スネア、42 クローズドハイハット…）
-- カタログ: 伴奏 `block` / `pulse` / `ballad` / `arpeggio` / `strum`、ドラム `eight-beat` / `ballad` / `bossa`。`Accompaniments()` / `DrumPatterns()` / `FindAccompaniment(id)` / `FindDrums(id)`
+- カタログ: 伴奏 `block` / `pulse` / `ballad` / `arpeggio` / `strum`、ドラム `eight-beat` / `ballad` / `bossa`、ノリ `straight` / `swing`。`Accompaniments()` / `DrumPatterns()` / `Feels()` / `FindAccompaniment(id)` / `FindDrums(id)`
 - `pattern.Apply(tl, acc, drums)` — `Harmony` を元にトラックを作り直す。コードごとに小節単位でテンプレートを繰り返し、小節より短いコードは先頭部分だけ鳴らす。ドラムは ch.9 にタイムライン長ぶん繰り返す。入力は変更しない。4/4 以外はエラー
+- `pattern.Render(tl, Choice{Accompaniment, Drums, Feel})` — id で選んで `Apply` し、ノリを掛ける。HTTP と `ideas` の入口。伴奏もドラムもなければそのまま返し、ドラムだけならブロックコードを使う
+- ノリ（`Feel`）: `swing` は、拍の頭の 8 分を拍の 3 分の 2 まで伸ばし、裏拍（8 分の 2 つ目）で始まる音を 3 連符の 3 つ目まで遅らせる（終わりの位置は保つ）。4 分音符や 16 分音符は動かさない。拍の位置の分析はテンプレートの位置で行うので、スウィングしても裏拍は裏拍として数える
 - 説明文（`Description`）は解説レイヤーと LLM がそのまま使う前提で、日本語で「何が起きるか」を書く
-- `music.Rhythm{Accompaniment, Drums *RhythmPart}` — `Apply` が `Timeline.Rhythm` に入れる解説データ。`RhythmPart` は 1 小節の打点を拍の頭 / 8 分の裏 / それより細かい位置に分類し（ドラムはキックとスネアのみ）、裏拍が 4 分の 1 以上なら `Syncopated`。`Explanation` は決定論的な日本語
+- `music.Rhythm{Accompaniment, Drums *RhythmPart, Feel *RhythmFeel}` — `Apply` が `Timeline.Rhythm` に入れる解説データ。`RhythmPart` は 1 小節の打点を拍の頭 / 8 分の裏 / それより細かい位置に分類し（ドラムはキックとスネアのみ）、裏拍が 4 分の 1 以上なら `Syncopated`。`Explanation` は決定論的な日本語
 
 ### 未実装の語彙
 

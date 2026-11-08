@@ -193,3 +193,18 @@ func TestSystemPromptListsTheCatalogue(t *testing.T) {
 		t.Error("prompt must be stable across calls (caching)")
 	}
 }
+
+func TestImagineSwingsWhenTheCandidateAsks(t *testing.T) {
+	// The unscripted fake swings its first candidate on a swing word.
+	res, err := New(fake.New()).Imagine(context.Background(), []Message{user("ジャズっぽく")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	first := res.Candidates[0]
+	if first.Feel != "swing" || first.Timeline.Rhythm == nil || first.Timeline.Rhythm.Feel == nil {
+		t.Fatalf("swing not applied: feel=%q rhythm=%+v", first.Feel, first.Timeline.Rhythm)
+	}
+	if !strings.Contains(SystemPrompt(), "swing") {
+		t.Fatal("the prompt must offer the feels")
+	}
+}

@@ -21,6 +21,12 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
           </section>
         ) : null,
       )}
+      {rhythm.feel && (
+        <section aria-label={`ノリ: ${rhythm.feel.name}`} className="explanation__part">
+          <h4 className="explanation__part-title">ノリ: {rhythm.feel.name}</h4>
+          <p className="explanation__text">{rhythm.feel.explanation}</p>
+        </section>
+      )}
     </div>
   );
 }

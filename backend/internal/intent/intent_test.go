@@ -181,3 +181,22 @@ func TestParseIgnoresTheCaseOfEnumValues(t *testing.T) {
 		t.Fatalf("roman numerals carry meaning in their case and must stay as written: %v", c.Progression)
 	}
 }
+
+func TestFeelIsValidatedAndInTheSchema(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Feel = "swing"
+	if err := in.Validate(); err != nil {
+		t.Fatalf("swing is allowed: %v", err)
+	}
+	in.Candidates[0].Feel = "shuffle"
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "feel must be one of") {
+		t.Fatalf("unknown feel must be reported, got %v", err)
+	}
+	if !strings.Contains(string(Schema), `"swing"`) {
+		t.Fatal("the schema must offer the feels")
+	}
+	parsed, err := Parse([]byte(`{"summary":"s","mood":[],"candidates":[{"title":"t","key":{"tonic":0,"mode":"major"},"tempoBpm":120,"progression":["I","V"],"beatsPerChord":4,"reason":"r","accompaniment":"pulse","feel":"Swing"}]}`))
+	if err != nil || parsed.Candidates[0].Feel != "swing" {
+		t.Fatalf("feel case is normalised: %+v %v", parsed, err)
+	}
+}

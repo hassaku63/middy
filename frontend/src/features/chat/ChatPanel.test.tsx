@@ -82,7 +82,9 @@ describe('ChatPanel', () => {
           role: 'assistant',
           content: 'x',
           mood: [],
-          candidates: [{ ...candidate, accompaniment: 'arpeggio', drums: 'mystery' }],
+          candidates: [
+            { ...candidate, accompaniment: 'arpeggio', drums: 'mystery', feel: 'swing' },
+          ],
         },
       ],
     });
@@ -95,12 +97,14 @@ describe('ChatPanel', () => {
             { id: 'arpeggio', name: 'アルペジオ', description: '', program: 0, hits: [] },
           ],
           drums: [],
+          feels: [{ id: 'swing', name: 'スウィング', description: '跳ねる' }],
         }}
       />,
     );
     const card = screen.getByRole('article', { name: '窓辺の雨' });
     expect(within(card).getByText('伴奏: アルペジオ')).toBeInTheDocument();
     expect(within(card).getByText('ドラム: mystery')).toBeInTheDocument();
+    expect(within(card).getByText('ノリ: スウィング')).toBeInTheDocument();
   });
 
   it('marks the open candidate and shows busy and error states', () => {

@@ -20,6 +20,8 @@
     {"id": "picnic", "image": "家族でピクニック、子どもが走り回る", "mode": "major", "tempoMin": 100},
     {"id": "late-night-study", "image": "深夜に一人で勉強している集中した時間", "mode": "either", "tempoMax": 110},
     {"id": "reunion", "image": "久しぶりの再会、懐かしくて温かい", "mode": "major", "tempoMax": 120},
+    {"id": "jazz-bar", "image": "夜のジャズバーで、ピアノが軽くスウィングしている", "mode": "either", "feel": "swing"},
+    {"id": "shuffle-walk", "image": "スキップしたくなるような、跳ねるリズムの散歩", "mode": "either", "feel": "swing"},
     {"id": "autumn-leaves", "image": "紅葉が散っていく静かな公園", "mode": "either", "tempoMax": 100}
   ]
 }

@@ -76,7 +76,7 @@ function stubBackend() {
         url.endsWith('/health')
           ? json(200, { status: 'ok', version: 'dev' })
           : url.endsWith('/patterns')
-            ? json(200, { accompaniments: [], drums: [] })
+            ? json(200, { accompaniments: [], drums: [], feels: [] })
             : json(200, ideasReply),
       ),
     ),

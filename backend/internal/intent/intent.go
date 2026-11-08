@@ -7,6 +7,7 @@ package intent
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -52,6 +53,8 @@ type Candidate struct {
 	// (internal/music/pattern); empty means block chords / no drums.
 	Accompaniment string `json:"accompaniment,omitempty"`
 	Drums         string `json:"drums,omitempty"`
+	// Feel is how the eighths are played (pattern.Feels); empty means straight.
+	Feel string `json:"feel,omitempty"`
 }
 
 // Validate reports every problem at once so the caller can feed them back
@@ -142,6 +145,9 @@ func (c Candidate) validatePatterns() []error {
 			errs = append(errs, fmt.Errorf("drums must be one of %v, got %q", DrumIDs(), c.Drums))
 		}
 	}
+	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {
+		errs = append(errs, fmt.Errorf("feel must be one of %v, got %q", FeelIDs(), c.Feel))
+	}
 	return errs
 }
 
@@ -150,6 +156,15 @@ func AccompanimentIDs() []string {
 	var ids []string
 	for _, a := range pattern.Accompaniments() {
 		ids = append(ids, a.ID)
+	}
+	return ids
+}
+
+// FeelIDs lists the feels the model may use.
+func FeelIDs() []string {
+	var ids []string
+	for _, f := range pattern.Feels() {
+		ids = append(ids, string(f.ID))
 	}
 	return ids
 }
