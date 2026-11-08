@@ -360,4 +360,13 @@ func TestRetryHints(t *testing.T) {
 	if err := in.Validate(); err == nil || strings.Contains(err.Error(), "did you mean") {
 		t.Errorf("no suggestion when no label is one deletion away: %v", err)
 	}
+	// A label that reads but names another chord already says what to
+	// write; a deletion ("VImaj7") would point at a different chord.
+	in = valid()
+	in.Candidates[0].Key = music.Key{Tonic: music.D, Mode: music.Minor}
+	in.Candidates[0].Progression = []string{"i", "VIImaj7"}
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), `write "VII7"`) || strings.Contains(err.Error(), "did you mean") {
+		t.Errorf("a label that reads keeps only the engine's correction: %v", err)
+	}
 }

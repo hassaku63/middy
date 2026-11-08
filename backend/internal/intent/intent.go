@@ -175,7 +175,13 @@ func (c Candidate) validateProgression() []error {
 
 // suggestLabel offers the label one deletion away from a misspelt one
 // ("Imaxj7" → "Imaj7"), so a retry can fix it (#133); "" when none reads.
+// A label that already reads ("VIImaj7" in minor) gets no suggestion: the
+// engine's error names the right spelling, and a deletion would point at
+// another chord.
 func (c Candidate) suggestLabel(label string) string {
+	if _, _, err := music.ParseRomanNumeral(label); err == nil {
+		return ""
+	}
 	r := []rune(label)
 	for i := range r {
 		try := string(r[:i]) + string(r[i+1:])
