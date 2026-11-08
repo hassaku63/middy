@@ -103,7 +103,7 @@ var styles = []Style{
 	},
 	{
 		ID: "jazz", Name: "ジャズ", Description: "ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。",
-		Accompaniments: []string{"comp", "arpeggio", "ballad", "waltz", "arpeggio-3"},
+		Accompaniments: []string{"comp", "walking", "arpeggio", "ballad", "waltz", "arpeggio-3"},
 		Drums:          []string{"jazz-ride", "jazz-waltz"},
 		Feels:          []Feel{FeelSwing, FeelStraight},
 	},
