@@ -41,14 +41,20 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   const playerRef = useRef<TimelinePlayer | null>(null);
   const [state, setState] = useState<PlayerState>('stopped');
   const [positionTick, setPositionTick] = useState(0);
+  // Counts play requests; stop() and unmounting count too, so a play()
+  // still waiting for the audio device does not start once it is outdated.
+  const requests = useRef(0);
 
+  /** The player, or null when the hook unmounted while the device resumed. */
   const ensurePlayer = useCallback(async () => {
     if (!engineRef.current) engineRef.current = createEngine();
-    await engineRef.current.resume();
+    const engine = engineRef.current;
+    await engine.resume();
+    if (engineRef.current !== engine) return null; // closed while resuming
     if (!playerRef.current) {
       const player = new TimelinePlayer({
-        synth: engineRef.current.synth,
-        clock: engineRef.current.clock,
+        synth: engine.synth,
+        clock: engine.clock,
       });
       player.subscribe((tick, s) => {
         setPositionTick(tick);
@@ -61,7 +67,9 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
 
   const play = useCallback(
     async (timeline: Timeline) => {
+      const request = ++requests.current;
       const player = await ensurePlayer();
+      if (!player || request !== requests.current) return; // stopped or replaced meanwhile
       player.load(timeline);
       player.play();
     },
@@ -69,6 +77,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   );
 
   const stop = useCallback(() => {
+    requests.current += 1;
     playerRef.current?.stop();
   }, []);
 
@@ -76,6 +85,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   // cap how many may be open at once.
   useEffect(
     () => () => {
+      requests.current += 1;
       playerRef.current?.stop();
       void engineRef.current?.close?.();
       engineRef.current = null;
