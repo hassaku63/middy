@@ -497,11 +497,15 @@ components:
           $ref: '#/components/schemas/Chord'
         romanNumeral:
           type: string
-          examples: [I, ii, V7, 'vii°']
+          examples: [I, ii, V7, 'vii°', 'I/3']
+          description: ローマ数字。分数コードは `/` のあとにベースの度数（調の音階に対して。♭・♯ は b・#）を付ける（`I/3`、`i/#7`。ADR-0020）
         symbol:
           type: string
           description: 調に合わせて綴った和音記号（B♭ major では `Bbmaj7`。`chord` から機械的に作ると `A#maj7` になる）。エンジンが付ける。以前に保存したタイムラインにはない
-          examples: [Bbmaj7, Gm7, 'A7']
+          examples: [Bbmaj7, Gm7, 'A7', 'C/E']
+        bass:
+          $ref: '#/components/schemas/PitchClass'
+          description: 分数コードのベース音（ADR-0020）。省略時は和音の根音がベース
         analysis:
           $ref: '#/components/schemas/HarmonyAnalysis'
           description: 解説データ。分析前のタイムラインでは省略される

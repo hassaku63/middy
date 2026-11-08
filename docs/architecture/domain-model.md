@@ -54,7 +54,7 @@ Timeline
 
 ### 進行
 
-- `Step{Degree, Seventh, Beats, Quality?}` — 度数（1..7）を何拍鳴らすか。拍は拍子の拍（ADR-0017。`BeatTicks`）。`Quality` は根音を保ったまま質を上書きする（今は短調の V のためだけに使う）
+- `Step{Degree, Seventh, Beats, Quality?, Bass?}` — 度数（1..7）を何拍鳴らすか。拍は拍子の拍（ADR-0017。`BeatTicks`）。`Bass{Degree, Accidental}` は分数コードのベース（ADR-0020）で、ラベルでは `/` のあとに調の度数を数字で書く（`I/3`、`IV/1`、`i/#7`。`/` のあとがローマ数字ならセカンダリードミナント）。ベースは和音の下（オクターブ 3）で鳴り、`HarmonyEvent.Bass` に入り、和音名は「C/E」と綴る。伴奏の型の `bass` 声部はそのベースを弾く。`Quality` は根音を保ったまま質を上書きする（今は短調の V のためだけに使う）
 - `StepFromLabel(key, label, beats)` — ローマ数字の文字列から `Step` を作る唯一の入口（API と intent が使う）。短調の大文字 `V` / `V7` を和声的短音階のドミナントにする規則はここにある
 - `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
 - `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordOctave`=4 の基本形, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）

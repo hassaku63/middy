@@ -26,6 +26,23 @@ func ParseRomanNumeral(s string) (degree int, seventh bool, err error) {
 // (the raised leading tone), which is what learners and textbooks mean by
 // "V in minor"; lowercase "v" keeps the natural-minor triad.
 func StepFromLabel(key Key, label string, beats int) (Step, error) {
+	head, bass, err := splitBass(label)
+	if err != nil {
+		return Step{}, err
+	}
+	if bass != nil {
+		step, err := StepFromLabel(key, head, beats)
+		if err != nil {
+			return Step{}, err
+		}
+		step.Bass = bass
+		return step, nil
+	}
+	return chordStep(key, label, beats)
+}
+
+// chordStep reads a label without a slash bass.
+func chordStep(key Key, label string, beats int) (Step, error) {
 	if step, ok, err := appliedStep(key, label, beats); ok {
 		return step, err
 	}
@@ -168,6 +185,17 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 // key gives that degree, the label is rejected with what it would have
 // sounded like, instead of being changed in silence (ADR-0013).
 func CanonicalLabel(key Key, label string) (string, error) {
+	head, bass, err := splitBass(label)
+	if err != nil {
+		return "", err
+	}
+	if bass != nil {
+		canonical, err := CanonicalLabel(key, head)
+		if err != nil {
+			return "", err
+		}
+		return canonical + bass.suffix(), nil
+	}
 	if step, ok, err := appliedStep(key, label, 1); ok {
 		if err != nil {
 			return "", err

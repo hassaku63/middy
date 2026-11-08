@@ -105,3 +105,31 @@ func TestDroneHoldsTheTonicUnderChangingChords(t *testing.T) {
 		t.Errorf("the drone fits any meter: %v", err)
 	}
 }
+
+// TestBassVoiceFollowsTheSlashBass (BL-113): a pattern's bass voice plays
+// the slash chord's bass (E under C/E), not the root.
+func TestBassVoiceFollowsTheSlashBass(t *testing.T) {
+	key := music.Key{Tonic: music.C, Mode: music.Major}
+	step, err := music.StepFromLabel(key, "I/3", 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tl, err := music.FromProgression(key, music.Progression{step}, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := Apply(tl, mustAcc(t, "ballad"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bass []music.Pitch
+	for _, n := range notesIn(got, music.ChordTrackName) {
+		if n.Pitch < music.NewPitch(music.C, music.ChordOctave) {
+			bass = append(bass, n.Pitch)
+		}
+	}
+	want := music.NewPitch(music.E, music.ChordOctave-1)
+	if len(bass) != 2 || bass[0] != want || bass[1] != want {
+		t.Errorf("ballad's bass on 1 and 3 should be E3 under C/E: %v", bass)
+	}
+}

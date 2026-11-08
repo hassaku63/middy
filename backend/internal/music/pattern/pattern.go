@@ -398,7 +398,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 					dur = bar - hit.Start // to the end of the bar
 				}
 				dur = min(dur, end-start)
-				for _, p := range pitches(tl.Key, voicing, hit.Voice) {
+				for _, p := range pitches(tl.Key, voicing, h.Bass, hit.Voice) {
 					track.Notes = append(track.Notes, music.NoteEvent{Pitch: p, Velocity: hit.Velocity, Start: start, Duration: dur})
 				}
 			}
@@ -426,7 +426,7 @@ func drumTrack(tl music.Timeline, dr Drums) music.Track {
 }
 
 // pitches resolves a voice against a close voicing (root first).
-func pitches(key music.Key, voicing []music.Pitch, v Voice) []music.Pitch {
+func pitches(key music.Key, voicing []music.Pitch, bass *music.PitchClass, v Voice) []music.Pitch {
 	root := voicing[0]
 	at := func(i int) music.Pitch {
 		if i < len(voicing) {
@@ -438,6 +438,9 @@ func pitches(key music.Key, voicing []music.Pitch, v Voice) []music.Pitch {
 	case VoiceChord:
 		return voicing
 	case VoiceBass:
+		if bass != nil { // a slash chord's own bass (ADR-0020)
+			return []music.Pitch{music.NewPitch(*bass, music.ChordOctave-1)}
+		}
 		return []music.Pitch{root.Transpose(-12)}
 	case VoiceRoot:
 		return []music.Pitch{root}
