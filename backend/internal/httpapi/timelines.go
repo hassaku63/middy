@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
 	"github.com/hassaku63/middy/backend/internal/music/pattern"
@@ -74,7 +75,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Grid: req.DrumGrid, Feel: pattern.Feel(req.Feel), Style: req.Style})
+	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Grid: req.DrumGrid, Feel: pattern.Feel(strings.ToLower(req.Feel)), Style: req.Style})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return

@@ -363,3 +363,16 @@ func TestPromptListsTheStyles(t *testing.T) {
 		}
 	}
 }
+
+// TestSwingWithoutAPatternIsNotShown (review of BL-076): a swing feel on
+// block chords has nothing to act on, so the candidate does not claim it.
+func TestSwingWithoutAPatternIsNotShown(t *testing.T) {
+	in := `{"summary": "s", "mood": [], "candidates": [{"title": "t", "style": "jazz", "key": {"tonic": 0, "mode": "major"}, "tempoBpm": 120, "progression": ["ii7", "V7", "Imaj7"], "beatsPerChord": 4, "reason": "r", "feel": "swing"}]}`
+	res, err := New(fake.New(llm.Response{Text: in})).Imagine(context.Background(), []Message{{Role: llm.RoleUser, Content: "jazz"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Candidates[0].Feel; got != "" {
+		t.Errorf("no pattern swings, yet the candidate says %q", got)
+	}
+}
