@@ -83,11 +83,7 @@ func run() error {
 		logger.Warn("frontend not embedded; UI routes answer 503 (run `make build`)")
 	}
 
-	srv := &http.Server{
-		Addr:              cfg.Addr(),
-		Handler:           httpapi.NewHandler(deps),
-		ReadHeaderTimeout: 5 * time.Second,
-	}
+	srv := newServer(cfg.Addr(), httpapi.NewHandler(deps))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -105,10 +101,47 @@ func run() error {
 		}
 		return err
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		return srv.Shutdown(shutdownCtx)
+		stop() // a second Ctrl-C or SIGTERM now ends the process at once
+		return shutdown(srv, logger, shutdownTimeout)
 	}
+}
+
+// Server timeouts. A turn of POST /ideas may call the model twice (one
+// retry), each call bounded by anthropic.DefaultTimeout, so the response
+// gets longer than that; reading a request (at most a few MiB of JSON)
+// never needs long. Idle keep-alive connections are reaped.
+const (
+	readTimeout     = 30 * time.Second
+	writeTimeout    = 2*anthropic.DefaultTimeout + 30*time.Second
+	idleTimeout     = 2 * time.Minute
+	shutdownTimeout = 10 * time.Second
+)
+
+func newServer(addr string, h http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           h,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+	}
+}
+
+// shutdown lets in-flight requests finish for budget (shutdownTimeout: a
+// container stop waits about as long before it kills), then closes what is
+// left. A
+// request cut off that way is logged, but stopping on a signal is not a
+// failure of the server.
+func shutdown(srv *http.Server, logger *slog.Logger, budget time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
+	defer cancel()
+	err := srv.Shutdown(ctx)
+	if errors.Is(err, context.DeadlineExceeded) {
+		logger.Warn("requests still running at shutdown were cut off", "after", budget.String())
+		return srv.Close()
+	}
+	return err
 }
 
 // newLLMClient selects the LLM provider from configuration.
