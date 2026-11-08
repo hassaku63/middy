@@ -37,7 +37,7 @@ describe('DownloadMidiButton', () => {
     expect(screen.getByRole('button', { name: 'MIDI を保存' })).toBeEnabled();
   });
 
-  it('shows the API error and does not save', async () => {
+  it('says the export failed, in Japanese, and does not save', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -55,7 +55,7 @@ describe('DownloadMidiButton', () => {
 
     await user.click(screen.getByRole('button', { name: 'MIDI を保存' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('ppq must be positive');
+    expect(await screen.findByRole('alert')).toHaveTextContent('MIDI の書き出しに失敗しました');
     expect(saveFile).not.toHaveBeenCalled();
   });
 });

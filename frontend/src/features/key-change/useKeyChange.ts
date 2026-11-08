@@ -1,10 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
-  ApiError,
-  createTimelineFromProgression,
-  type PitchClass,
-  type Timeline,
-} from '@/shared/api/client';
+import { createTimelineFromProgression, type PitchClass, type Timeline } from '@/shared/api/client';
 import { rebuildRequest } from '@/shared/lib/rebuildRequest';
 
 export type KeyChange = {
@@ -26,8 +21,8 @@ export function useKeyChange(): KeyChange {
     setError(null);
     try {
       return await createTimelineFromProgression(rebuildRequest(timeline, tonic));
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'キーを変えられませんでした');
+    } catch {
+      setError('キーを変えられませんでした');
       return null;
     } finally {
       setBusy(false);
