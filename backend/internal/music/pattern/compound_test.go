@@ -29,7 +29,7 @@ func TestSixEightCatalogue(t *testing.T) {
 	for _, d := range DrumPatternsFor(music.SixEight) {
 		drs = append(drs, d.ID)
 	}
-	if got := strings.Join(accs, ","); got != "block,rocking-6,arpeggio-6" {
+	if got := strings.Join(accs, ","); got != "block,drone,rocking-6,arpeggio-6" {
 		t.Errorf("6/8 accompaniments = %s", got)
 	}
 	if got := strings.Join(drs, ","); got != "six-eight,jig" {

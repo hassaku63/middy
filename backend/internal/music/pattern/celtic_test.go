@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -70,5 +71,37 @@ func TestBodhranKeepsSnareAndHatsOut(t *testing.T) {
 	}
 	if !strings.Contains(eight.Rhythm.Drums.Explanation, "キックとスネア") {
 		t.Errorf("a kit keeps its wording: %s", eight.Rhythm.Drums.Explanation)
+	}
+}
+
+// TestDroneHoldsTheTonicUnderChangingChords (BL-108): the drone voice plays
+// the key's tonic and fifth below the chords, the same notes under I and
+// under VII, in any meter.
+func TestDroneHoldsTheTonicUnderChangingChords(t *testing.T) {
+	key := music.Key{Tonic: music.D, Mode: music.Dorian}
+	tl := progression(t, key, 4, 1, 7) // i (Dm) then VII (C)
+	got, err := Apply(tl, mustAcc(t, "drone"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	drone := map[music.Tick][]music.Pitch{}
+	for _, n := range notesIn(got, music.ChordTrackName) {
+		if n.Pitch < music.NewPitch(music.C, music.ChordOctave) {
+			drone[n.Start] = append(drone[n.Start], n.Pitch)
+		}
+	}
+	want := []music.Pitch{music.NewPitch(music.D, 3), music.NewPitch(music.A, 3)} // D3 and A3
+	for _, start := range []music.Tick{0, 1920} {
+		ps := drone[start]
+		slices.Sort(ps)
+		if !slices.Equal(ps, want) {
+			t.Errorf("drone at %d = %v, want %v (D and A under both chords)", start, ps, want)
+		}
+	}
+	if !strings.Contains(got.Rhythm.Accompaniment.Description, "和音が動いても主音が鳴り続ける") {
+		t.Errorf("the description should say the tonic keeps sounding: %s", got.Rhythm.Accompaniment.Description)
+	}
+	if _, err := Apply(sixEightTimeline(t, 2, 1, 5), mustAcc(t, "drone"), nil); err != nil {
+		t.Errorf("the drone fits any meter: %v", err)
 	}
 }

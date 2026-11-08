@@ -267,7 +267,7 @@ components:
             properties:
               start: { type: integer, description: 小節内の tick }
               duration: { type: integer, description: 0 は小節の終わりまで }
-              voice: { type: string, enum: [chord, bass, root, third, fifth, top, octave] }
+              voice: { type: string, enum: [chord, bass, root, third, fifth, top, octave, drone] }
               velocity: { type: integer, minimum: 1, maximum: 127 }
     DrumPattern:
       type: object

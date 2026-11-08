@@ -286,7 +286,7 @@ func TestReasonSpeaksOnlyOfWhatSounds(t *testing.T) {
 // the reel and bodhrán patterns and keeps the eight-beat kit off Celtic examples.
 func TestPromptSteersCelticAwayFromPopGrooves(t *testing.T) {
 	p := SystemPrompt()
-	for _, want := range []string{"- reel:", "- bodhran:", "drums を bodhran", "ケルトの例には使わない"} {
+	for _, want := range []string{"- reel:", "- bodhran:", "drums を bodhran", "ケルトの例には使わない", "- drone:", "accompaniment を drone"} {
 		if !strings.Contains(p, want) {
 			t.Errorf("prompt lacks %q", want)
 		}

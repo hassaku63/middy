@@ -30,6 +30,9 @@ const (
 	VoiceFifth  Voice = "fifth"  // the third chord tone
 	VoiceTop    Voice = "top"    // the highest chord tone (seventh when present)
 	VoiceOctave Voice = "octave" // the root one octave above the voicing
+	// VoiceDrone is the key's tonic and fifth below the chords: it does
+	// not follow the chord, so it keeps sounding as the harmony moves.
+	VoiceDrone Voice = "drone"
 )
 
 // Hit is one event of an accompaniment template, positioned within a bar.
@@ -158,6 +161,11 @@ var accompaniments = []Accompaniment{
 			{2 * quarter, quarter, VoiceBass, 80}, {2*quarter + eighth, eighth * 3 / 4, VoiceChord, 62},
 			{3*quarter + eighth, eighth * 3 / 4, VoiceChord, 58},
 		},
+	},
+	{
+		ID: "drone", Name: "ドローン", Program: 20,
+		Description: "主音と 5 度を低く保ち、その上で和音を伸ばす（リードオルガン）。和音が動いても主音が鳴り続けるので、バグパイプやフィドルの開放弦のような、ケルトや民謡の土台になる。",
+		Hits:        []Hit{{0, 0, VoiceDrone, 70}, {0, 0, VoiceChord, 62}}, // any meter: to the end of the bar
 	},
 	{
 		ID: "waltz", Meter: &threeFour, Name: "ワルツ", Program: 0,
@@ -369,7 +377,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 					dur = bar - hit.Start // to the end of the bar
 				}
 				dur = min(dur, end-start)
-				for _, p := range pitches(voicing, hit.Voice) {
+				for _, p := range pitches(tl.Key, voicing, hit.Voice) {
 					track.Notes = append(track.Notes, music.NoteEvent{Pitch: p, Velocity: hit.Velocity, Start: start, Duration: dur})
 				}
 			}
@@ -397,7 +405,7 @@ func drumTrack(tl music.Timeline, dr Drums) music.Track {
 }
 
 // pitches resolves a voice against a close voicing (root first).
-func pitches(voicing []music.Pitch, v Voice) []music.Pitch {
+func pitches(key music.Key, voicing []music.Pitch, v Voice) []music.Pitch {
 	root := voicing[0]
 	at := func(i int) music.Pitch {
 		if i < len(voicing) {
@@ -420,6 +428,9 @@ func pitches(voicing []music.Pitch, v Voice) []music.Pitch {
 		return []music.Pitch{voicing[len(voicing)-1]}
 	case VoiceOctave:
 		return []music.Pitch{root.Transpose(12)}
+	case VoiceDrone:
+		tonic := music.NewPitch(key.Tonic, music.ChordOctave-1)
+		return []music.Pitch{tonic, tonic.Transpose(7)}
 	default:
 		return nil
 	}

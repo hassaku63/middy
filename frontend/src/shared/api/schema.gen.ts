@@ -170,7 +170,7 @@ export interface components {
         /** @description 0 は小節の終わりまで */
         duration: number;
         /** @enum {string} */
-        voice: 'chord' | 'bass' | 'root' | 'third' | 'fifth' | 'top' | 'octave';
+        voice: 'chord' | 'bass' | 'root' | 'third' | 'fifth' | 'top' | 'octave' | 'drone';
         velocity: number;
       }[];
     };
