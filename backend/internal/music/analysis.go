@@ -76,6 +76,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		}
 		prevDegree = degree
 	}
+	out.Overview = overview(out)
 	return out, nil
 }
 

@@ -1,6 +1,7 @@
 import type { Timeline } from '@/shared/api/client';
 import { ChordNotes } from './ChordNotes';
 import { explainedIndex } from './explainedIndex';
+import { OverviewNotes } from './OverviewNotes';
 import { RhythmNotes } from './RhythmNotes';
 import './ExplanationPanel.css';
 
@@ -14,8 +15,8 @@ export type ExplanationPanelProps = {
 };
 
 /**
- * Shows the analysis of one chord and, when patterns were applied, the
- * rhythm notes. All text comes from the backend's deterministic analysis
+ * Shows the example as a whole (mode and flow), then the analysis of one
+ * chord and, when patterns were applied, the rhythm notes. All text comes from the backend's deterministic analysis
  * (ADR-0003); this component only lays it out.
  */
 export function ExplanationPanel({
@@ -31,6 +32,7 @@ export function ExplanationPanel({
 
   return (
     <section className="explanation" aria-label="解説" aria-live="polite">
+      {timeline?.overview && <OverviewNotes overview={timeline.overview} />}
       {event ? (
         <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
       ) : (
