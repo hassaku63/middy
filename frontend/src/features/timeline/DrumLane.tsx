@@ -10,12 +10,16 @@ type Props = {
 const DRUM_NAMES: Record<number, string> = {
   35: 'Kick',
   36: 'Kick',
+  37: 'Stick',
   38: 'Snare',
   40: 'Snare',
   42: 'HH',
   44: 'HH',
+  45: 'Tom L',
   46: 'HH open',
+  47: 'Tom M',
   49: 'Crash',
+  50: 'Tom H',
   51: 'Ride',
   53: 'Bell',
 };

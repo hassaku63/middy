@@ -148,3 +148,51 @@ func TestFillsFollowTheKit(t *testing.T) {
 		}
 	}
 }
+
+// TestFillsFitTheirKitAndMeter (review of BL-126): the bossa's ride bell
+// keeps time like the jazz ride, so it gets the light fill over a running
+// cymbal; a short 3/4 fill still ends on the low tom; and the text says
+// where the fill sits and promises a crash only where one sounds.
+func TestFillsFitTheirKitAndMeter(t *testing.T) {
+	render := func(ts music.TimeSignature, bars int, drums string) music.Timeline {
+		t.Helper()
+		out, err := Render(barsTimeline(t, ts, bars), Choice{Drums: drums})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	bar := music.Tick(4 * music.DefaultPPQ)
+	for _, drums := range []string{"bossa", "jazz-ride"} {
+		tl := render(music.FourFour, 4, drums)
+		cymbalLate := false
+		for _, n := range tl.Tracks[1].Notes {
+			if n.Pitch == HighTom || n.Pitch == MidTom || n.Pitch == LowTom {
+				t.Errorf("%s: a tom fill on a ride kit: %+v", drums, n)
+			}
+			if n.Start >= 3*bar+bar/2 && (n.Pitch == Ride || n.Pitch == RideBell) {
+				cymbalLate = true
+			}
+		}
+		if !cymbalLate {
+			t.Errorf("%s: the cymbal stops under the fill", drums)
+		}
+	}
+
+	waltz := render(music.TimeSignature{Numerator: 3, Denominator: 4}, 4, "waltz")
+	var last music.NoteEvent
+	for _, n := range waltz.Tracks[1].Notes {
+		if (n.Pitch == Snare || n.Pitch == HighTom || n.Pitch == MidTom || n.Pitch == LowTom) && n.Start >= last.Start {
+			last = n
+		}
+	}
+	if last.Pitch != LowTom {
+		t.Errorf("the 3/4 fill ends on %d, want the low tom", last.Pitch)
+	}
+	if e := waltz.Rhythm.Drums.Explanation; !strings.Contains(e, "最後の拍") || strings.Contains(e, "後半") {
+		t.Errorf("a 3/4 fill sits in the last beat: %s", e)
+	}
+	if e := waltz.Rhythm.Drums.Explanation; strings.Contains(e, "クラッシュ") {
+		t.Errorf("four bars end with the fill, so no crash follows: %s", e)
+	}
+}

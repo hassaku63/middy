@@ -114,6 +114,31 @@ describe('TimelineView', () => {
     expect(screen.getByText('Snare')).toBeInTheDocument();
   });
 
+  it('names the toms of a fill and the bodhrán side stick (review of BL-126)', () => {
+    const withToms: Timeline = {
+      ...timeline,
+      tracks: [
+        ...timeline.tracks,
+        {
+          name: 'drums',
+          channel: 9,
+          program: 0,
+          notes: [37, 45, 47, 50].map((pitch, i) => ({
+            pitch,
+            velocity: 90,
+            start: i * 240,
+            duration: 240,
+          })),
+        },
+      ],
+    };
+    render(<TimelineView timeline={withToms} positionTick={0} />);
+    for (const name of ['Stick', 'Tom L', 'Tom M', 'Tom H']) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/^#\d+$/)).not.toBeInTheDocument();
+  });
+
   it('renders an empty timeline as a single empty bar', () => {
     const empty: Timeline = { ...timeline, tracks: [], harmony: [] };
     render(<TimelineView timeline={empty} positionTick={0} />);
