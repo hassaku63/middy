@@ -97,23 +97,22 @@ func Parse(data []byte) (Intent, error) {
 	if err := json.Unmarshal(data, &in); err != nil {
 		return Intent{}, fmt.Errorf("intent: not valid JSON: %w", err)
 	}
-	// Structured output does not guarantee the case of enum values, and
-	// catalogue ids are lowercase.
+	// Structured output does not guarantee the case of enum values, nor
+	// that they carry no stray spaces.
+	id := func(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
 	for i := range in.Candidates {
-		in.Candidates[i].Accompaniment = strings.ToLower(in.Candidates[i].Accompaniment)
-		in.Candidates[i].Drums = strings.ToLower(in.Candidates[i].Drums)
-		in.Candidates[i].Feel = strings.ToLower(in.Candidates[i].Feel)
-		in.Candidates[i].Style = strings.ToLower(in.Candidates[i].Style)
-		for j, p := range in.Candidates[i].Pushes {
-			in.Candidates[i].Pushes[j] = strings.ToLower(p)
+		c := &in.Candidates[i]
+		c.Accompaniment, c.Drums, c.Feel, c.Style = id(c.Accompaniment), id(c.Drums), id(c.Feel), id(c.Style)
+		for j, p := range c.Pushes {
+			c.Pushes[j] = id(p)
 		}
-		if g := in.Candidates[i].DrumGrid; g != nil {
-			g.BasedOn = strings.ToLower(g.BasedOn)
+		if g := c.DrumGrid; g != nil {
+			g.BasedOn = id(g.BasedOn)
 			for j := range g.Voices {
-				g.Voices[j].Voice = strings.ToLower(g.Voices[j].Voice)
+				g.Voices[j].Voice = id(g.Voices[j].Voice)
 			}
 		}
-		in.Candidates[i].Meter = strings.TrimSpace(in.Candidates[i].Meter)
+		c.Meter = strings.TrimSpace(c.Meter)
 	}
 	if err := in.Validate(); err != nil {
 		return Intent{}, fmt.Errorf("intent: invalid: %w", err)
