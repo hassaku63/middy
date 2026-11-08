@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drumVoice, envelope, instrumentVoice, midiToHz } from './WebAudioSynth';
+import { drumVoice, envelope, instrumentVoice, midiToHz, WebAudioSynth } from './WebAudioSynth';
 
 describe('midiToHz', () => {
   it('maps A4 to 440 Hz and C4 to 261.63 Hz', () => {
@@ -66,5 +66,79 @@ describe('envelope (review of BL-120)', () => {
   it('never cuts the attack short', () => {
     const strings = instrumentVoice(48);
     expect(envelope(strings, 0, 0.05, 0.5).release).toBeCloseTo(strings.attack);
+  });
+
+  it('releases a note that never decayed from its peak, without a step (review)', () => {
+    const strings = instrumentVoice(48);
+    const short = envelope(strings, 0, 0.005, 0.5);
+    expect(short.atRelease).toBe(0.5);
+    const long = envelope(strings, 0, 3, 0.5);
+    expect(long.atRelease).toBe(long.held);
+  });
+});
+
+/** Just enough of an AudioContext to record what allOff() schedules. */
+function fakeContext() {
+  const param = (value = 1) => ({
+    value,
+    events: [] as [string, number, number][],
+    setValueAtTime(v: number, t: number) {
+      this.events.push(['set', v, t]);
+    },
+    linearRampToValueAtTime(v: number, t: number) {
+      this.events.push(['linear', v, t]);
+    },
+    exponentialRampToValueAtTime(v: number, t: number) {
+      this.events.push(['exp', v, t]);
+    },
+    cancelScheduledValues(t: number) {
+      this.events.push(['cancel', 0, t]);
+    },
+  });
+  const node = () => ({ connect: (n: unknown) => n });
+  const oscs: { stops: number[] }[] = [];
+  const ctx = {
+    currentTime: 10,
+    sampleRate: 8000,
+    destination: node(),
+    createGain: () => ({ ...node(), gain: param() }),
+    createBiquadFilter: () => ({ ...node(), type: '', frequency: param() }),
+    createOscillator: () => {
+      const osc = {
+        ...node(),
+        type: '',
+        frequency: param(),
+        detune: param(),
+        stops: [] as number[],
+        start: () => undefined,
+        stop(t: number) {
+          this.stops.push(t);
+        },
+        addEventListener: () => undefined,
+      };
+      oscs.push(osc);
+      return osc;
+    },
+  };
+  return { ctx: ctx as unknown as AudioContext, oscs };
+}
+
+describe('WebAudioSynth.allOff (review)', () => {
+  it('silences a note scheduled ahead at once instead of ramping it down from full gain', () => {
+    const { ctx, oscs } = fakeContext();
+    const synth = new WebAudioSynth(ctx);
+    synth.play({
+      pitch: 60,
+      velocity: 100,
+      time: 10.02,
+      startSec: 0.02,
+      durationSec: 0.5,
+      channel: 0,
+      program: 0,
+    });
+    const before = oscs.length;
+    synth.allOff();
+    expect(before).toBeGreaterThan(0);
+    for (const osc of oscs) expect(osc.stops.at(-1)).toBe(10); // never starts
   });
 });

@@ -85,4 +85,23 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('保存できませんでした');
     expect(input).toHaveValue('雨の例');
   });
+
+  it('keeps a save that lands before a slow first load (review)', async () => {
+    const store = new MemoryProjectStore();
+    const list = store.list.bind(store);
+    let firstLoad: (projects: Project[]) => void = () => undefined;
+    let calls = 0;
+    store.list = () => {
+      calls += 1;
+      return calls === 1 ? new Promise<Project[]>((r) => (firstLoad = r)) : list();
+    };
+    const user = userEvent.setup();
+    render(<Harness store={store} onOpen={vi.fn()} />);
+    await user.type(screen.getByLabelText('例の名前'), '雨の曲');
+    await user.click(screen.getByRole('button', { name: '保存' }));
+    expect(await screen.findByText('保存した例（1）')).toBeInTheDocument();
+    firstLoad([]); // the first load answers last, with the list from before the save
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.getByText('保存した例（1）')).toBeInTheDocument();
+  });
 });

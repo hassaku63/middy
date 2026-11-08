@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import {
   defaultProjectStore,
@@ -20,26 +20,34 @@ export type Projects = {
 export function useProjects(store: ProjectStore = sharedStore()): Projects {
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // Numbers each list() so only the latest one lands: a slow first load
+  // must not put back a list from before a save or delete.
+  const reads = useRef(0);
 
   const refresh = useCallback(async () => {
+    const read = ++reads.current;
     try {
-      setProjects(await store.list());
+      const list = await store.list();
+      if (read !== reads.current) return;
+      setProjects(list);
       setError(null);
     } catch {
-      setError('保存した例を読み込めませんでした');
+      if (read === reads.current) setError('保存した例を読み込めませんでした');
     }
   }, [store]);
 
   // Initial load: setState only in the promise callbacks, never synchronously in the effect.
   useEffect(() => {
     let cancelled = false;
+    const read = ++reads.current;
+    const current = () => !cancelled && read === reads.current;
     store
       .list()
       .then((list) => {
-        if (!cancelled) setProjects(list);
+        if (current()) setProjects(list);
       })
       .catch(() => {
-        if (!cancelled) setError('保存した例を読み込めませんでした');
+        if (current()) setError('保存した例を読み込めませんでした');
       });
     return () => {
       cancelled = true;
