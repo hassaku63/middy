@@ -28,7 +28,7 @@ func TestCatalogueIsSplitByMeter(t *testing.T) {
 		}
 		return strings.Join(s, ",")
 	}
-	if got := ids(AccompanimentsFor(music.ThreeFour)); got != "block,waltz,arpeggio-3" {
+	if got := ids(AccompanimentsFor(music.ThreeFour)); got != "block,drone,waltz,arpeggio-3" {
 		t.Errorf("3/4 accompaniments = %s", got)
 	}
 	if got := ids(AccompanimentsFor(music.FourFour)); strings.Contains(got, "waltz") || !strings.Contains(got, "block") {
