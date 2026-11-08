@@ -429,3 +429,48 @@ func TestStyleBindsThePatterns(t *testing.T) {
 		t.Error("the schema should ask for a style from the catalogue")
 	}
 }
+
+// TestPushes (BL-085): a candidate may push chords, one entry per chord;
+// the first chord cannot push, and the steps carry the pushes.
+func TestPushes(t *testing.T) {
+	tests := []struct {
+		name   string
+		pushes []string
+		want   string // "" means valid
+	}{
+		{"push the last chord an eighth", []string{"none", "none", "none", "eighth"}, ""},
+		{"omitted pushes nothing", nil, ""},
+		{"length mismatch", []string{"none", "eighth"}, "pushes has 2 entries for 4 chords"},
+		{"unknown push", []string{"none", "quarter", "none", "none"}, `pushes[1] must be one of [none eighth sixteenth], got "quarter"`},
+		{"first chord", []string{"eighth", "none", "none", "none"}, "pushes[0]: the first chord has nothing to push into"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			in.Candidates[0].Pushes = tt.pushes
+			err := in.Validate()
+			switch {
+			case tt.want == "" && err != nil:
+				t.Fatalf("should be valid: %v", err)
+			case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+				t.Fatalf("error %v should mention %q", err, tt.want)
+			}
+		})
+	}
+	c := valid().Candidates[0]
+	c.Pushes = []string{"none", "sixteenth", "none", "eighth"}
+	prog, err := c.ToProgression()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []music.Push
+	for _, s := range prog {
+		got = append(got, s.Push)
+	}
+	if !slices.Equal(got, []music.Push{music.PushNone, music.PushSixteenth, music.PushNone, music.PushEighth}) {
+		t.Errorf("steps carry the pushes: %q", got)
+	}
+	if !strings.Contains(string(Schema), `"pushes"`) {
+		t.Error("the schema offers pushes")
+	}
+}
