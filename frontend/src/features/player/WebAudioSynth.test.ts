@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drumVoice, midiToHz } from './WebAudioSynth';
+import { drumVoice, instrumentVoice, midiToHz } from './WebAudioSynth';
 
 describe('midiToHz', () => {
   it('maps A4 to 440 Hz and C4 to 261.63 Hz', () => {
@@ -29,5 +29,25 @@ describe('drumVoice', () => {
     if (low.kind !== 'tom' || mid.kind !== 'tom') throw new Error('toms expected');
     expect(mid.startHz).toBeGreaterThan(low.startHz);
     expect(low.endHz).toBeLessThan(low.startHz);
+  });
+});
+
+describe('instrumentVoice (BL-110)', () => {
+  it('sorts GM programs into families the synth can tell apart', () => {
+    const family = (p: number) => instrumentVoice(p).family;
+    expect([0, 4].map(family)).toEqual(['keys', 'keys']);
+    expect([24, 25, 46].map(family)).toEqual(['plucked', 'plucked', 'plucked']); // guitars, harp
+    expect([19, 20, 21].map(family)).toEqual(['organ', 'organ', 'organ']); // organs, accordion
+    expect([48, 40].map(family)).toEqual(['strings', 'strings']);
+    expect([73, 78].map(family)).toEqual(['flute', 'flute']);
+    expect(family(120)).toBe('keys'); // anything else falls back to keys
+  });
+
+  it('gives each family its own shape: plucks die away, organs hold', () => {
+    const pluck = instrumentVoice(25);
+    const organ = instrumentVoice(20);
+    expect(pluck.sustain).toBeLessThan(organ.sustain);
+    expect(pluck.waves.map((w) => w.type)).not.toEqual(organ.waves.map((w) => w.type));
+    expect(instrumentVoice(48).attack).toBeGreaterThan(instrumentVoice(0).attack); // strings swell
   });
 });
