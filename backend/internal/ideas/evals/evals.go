@@ -262,14 +262,14 @@ func breadthReport(verdicts []Verdict) string {
 func wishesReport(verdicts []Verdict) string {
 	var rows []string
 	for _, v := range verdicts {
-		if v.Unconstrained != "" {
+		if w := strings.TrimSpace(v.Unconstrained); w != "" && w != "なし" {
 			rows = append(rows, fmt.Sprintf("| %s | %s |", v.Case.ID, oneLine(v.Unconstrained)))
 		}
 	}
 	if len(rows) == 0 {
 		return ""
 	}
-	return "\n### 制約がなければ書きたかったこと\n\n| case | unconstrained |\n| --- | --- |\n" + strings.Join(rows, "\n") + "\n"
+	return "\n### 表せないために使わなかったもの\n\n| case | unconstrained |\n| --- | --- |\n" + strings.Join(rows, "\n") + "\n"
 }
 
 // diatonicVocabulary counts the labels the engine can express in one key:

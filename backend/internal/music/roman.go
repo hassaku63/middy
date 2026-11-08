@@ -47,21 +47,49 @@ func StepFromLabel(key Key, label string, beats int) (Step, error) {
 			return step, nil // plainly diatonic
 		}
 	}
-	// Not the key's own chord: in a major key it may be borrowed from the
-	// parallel minor (BL-094). Anything else is left for CanonicalLabel to
-	// report; it needs the diatonic step to say what would have sounded.
+	return outsideStep(key, label, step, seventh, suffix, accidental)
+}
+
+// outsideStep handles a label that is not plainly the key's own chord: a
+// chord borrowed from the parallel minor in a major key (BL-094), or a
+// flat that names one of the key's own chords by its distance from the
+// tonic, as lead sheets do (mixolydian's bVII is its VII, minor's bVI its
+// VI; #109). The latter is the same sound, so it is accepted and
+// respelled, not changed. Anything else without an accidental is left for
+// CanonicalLabel to report; it needs the diatonic step to say what would
+// have sounded.
+func outsideStep(key Key, label string, step Step, seventh bool, suffix string, accidental int) (Step, error) {
 	if key.Mode == Major {
-		if q, ok := borrowedQuality(key, degree, seventh, suffix, accidental); ok {
+		if q, ok := borrowedQuality(key, step.Degree, seventh, suffix, accidental); ok {
 			step.Quality = &q
 			step.Accidental = accidental
 			step.Borrowed = true
 			return step, nil
 		}
 	}
-	if accidental != 0 {
-		return Step{}, fmt.Errorf("music: %q is not available in %s", strings.TrimSpace(label), key)
+	if accidental == 0 {
+		return step, nil
 	}
-	return step, nil
+	if same, ok := literalDiatonic(key, label, step.Beats); ok {
+		return same, nil
+	}
+	return Step{}, fmt.Errorf("music: %q is not available in %s", strings.TrimSpace(label), key)
+}
+
+// literalDiatonic finds the key's own chord that a label names when read
+// literally against the tonic (LiteralChord).
+func literalDiatonic(key Key, label string, beats int) (Step, bool) {
+	c, err := LiteralChord(key.Tonic, label)
+	if err != nil {
+		return Step{}, false
+	}
+	seventh := len(c.Quality.Intervals()) == 4
+	for d := 1; d <= 7; d++ {
+		if dia, err := key.Diatonic(d, seventh); err == nil && dia == c {
+			return Step{Degree: d, Seventh: seventh, Beats: beats}, true
+		}
+	}
+	return Step{}, false
 }
 
 // borrowedQuality resolves a label against the parallel minor: the root
@@ -123,7 +151,7 @@ func CanonicalLabel(key Key, label string) (string, error) {
 		}
 		return key.appliedNumeral(step.Degree, step.Seventh)
 	}
-	degree, seventh, upper, suffix, _, err := parseLabel(label)
+	_, seventh, upper, suffix, _, err := parseLabel(label)
 	if err != nil {
 		return "", err
 	}
@@ -135,12 +163,12 @@ func CanonicalLabel(key Key, label string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	canonical, err := RomanNumeralAlt(degree, step.Accidental, quality)
+	canonical, err := RomanNumeralAlt(step.Degree, step.Accidental, quality)
 	if err != nil {
 		return "", err
 	}
 	if upper != quality.isUpper() || !suffixAllows(suffix, seventh, quality) {
-		symbol := key.spellDegree(degree, step.Accidental) + quality.Symbol()
+		symbol := key.spellDegree(step.Degree, step.Accidental) + quality.Symbol()
 		return "", fmt.Errorf("music: %q would sound as %s (%s) in %s; write %q", strings.TrimSpace(label), symbol, canonical, key, canonical)
 	}
 	return canonical, nil
