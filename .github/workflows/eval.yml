@@ -19,8 +19,11 @@ on:
 permissions:
   contents: read
 
+# Every label creates a run, and concurrency acts on runs, not jobs: keep the
+# runs of other labels (which skip every job) in their own group, or they
+# would cancel an evaluation in progress.
 concurrency:
-  group: eval-${{ github.event.pull_request.number }}
+  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'eval' }}
   cancel-in-progress: true
 
 jobs:
@@ -96,6 +99,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       pull-requests: write
+      issues: write # comments and labels of a pull request go through the issues API
     steps:
       - uses: actions/download-artifact@v8
         if: needs.eval.outputs.ran == 'true'
@@ -124,10 +128,20 @@ jobs:
               cat report/report.md 2>/dev/null || echo "評価の表を取得できませんでした。"
             fi
           } > body.md
-          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file body.md
+          # REST rather than `gh pr`, whose GraphQL calls can be refused for GITHUB_TOKEN.
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@body.md --silent
       - name: Remove the eval label
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
-        run: gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label eval || echo "the label was already gone"
+        run: |
+          # A label that is already gone is fine; any other failure must show.
+          if ! gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/eval" --silent 2> err.txt; then
+            if grep -q "Label does not exist" err.txt; then
+              echo "the label was already gone"
+            else
+              cat err.txt
+              exit 1
+            fi
+          fi
