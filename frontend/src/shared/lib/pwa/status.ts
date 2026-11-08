@@ -58,21 +58,30 @@ export class PwaStatus {
     this.set({ online });
   }
 
+  /** Activates the waiting version; if that fails, the offer stays so it can be tried again. */
   async applyUpdate(): Promise<void> {
     const apply = this.update;
     if (!apply) return;
     this.update = null;
     this.set({ updateReady: false });
-    await apply();
+    try {
+      await apply();
+    } catch {
+      this.needRefresh(apply);
+    }
   }
 
-  /** Shows the browser's install dialog; resolves true when accepted. */
+  /**
+   * Shows the browser's install dialog; resolves true when accepted. The
+   * offer is withdrawn before the dialog opens, because the browser shows
+   * it only once: a second click must not call prompt() again.
+   */
   async promptInstall(): Promise<boolean> {
     const install = this.install;
     if (!install) return false;
+    this.installed();
     await install.prompt();
     const { outcome } = await install.userChoice;
-    this.installed();
     return outcome === 'accepted';
   }
 
