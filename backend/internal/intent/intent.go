@@ -78,6 +78,9 @@ type Candidate struct {
 	// (internal/music/pattern); empty means block chords / no drums.
 	Accompaniment string `json:"accompaniment,omitempty"`
 	Drums         string `json:"drums,omitempty"`
+	// DrumGrid writes the drums out instead of naming them (BL-077); the
+	// engine checks it as it would any grid (pattern.GridDrums).
+	DrumGrid *GridSpec `json:"drumGrid,omitempty"`
 	// Feel is how the eighths are played (pattern.Feels); empty means straight.
 	Feel string `json:"feel,omitempty"`
 	// Style is the kind of music the candidate is (pattern.Styles, BL-082);
@@ -312,6 +315,7 @@ func (c Candidate) validatePatterns() []error {
 			errs = append(errs, fmt.Errorf("drums must be one of %v in %d/%d, got %q%s", DrumIDsFor(ts), ts.Numerator, ts.Denominator, c.Drums, patternHint(c.Drums, d.Meter)))
 		}
 	}
+	errs = append(errs, c.validateGrid(ts)...)
 	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {
 		errs = append(errs, fmt.Errorf("feel must be one of %v, got %q", FeelIDs(), c.Feel))
 	}
@@ -319,7 +323,7 @@ func (c Candidate) validatePatterns() []error {
 		if st, err := pattern.FindStyle(c.Style); err != nil {
 			errs = append(errs, fmt.Errorf("style must be one of %v, got %q", StyleIDs(), c.Style))
 		} else {
-			for _, m := range st.Misfits(c.Accompaniment, c.Drums, pattern.Feel(c.Feel)) {
+			for _, m := range st.Misfits(c.Accompaniment, c.styleDrums(), pattern.Feel(c.Feel)) {
 				errs = append(errs, errors.New(m))
 			}
 		}
@@ -328,6 +332,81 @@ func (c Candidate) validatePatterns() []error {
 		errs = append(errs, fmt.Errorf("feel swing is not used in %d/%d: its beat already divides in three", ts.Numerator, ts.Denominator))
 	}
 	return errs
+}
+
+// validateGrid checks a written-out drum grid (BL-077) with the engine's
+// rules, at the candidate's meter and tempo.
+func (c Candidate) validateGrid(ts music.TimeSignature) []error {
+	g := c.DrumGrid
+	if g == nil {
+		return nil
+	}
+	var errs []error
+	if c.Drums != "" {
+		errs = append(errs, errors.New("write drums or drumGrid, not both"))
+	}
+	if g.BasedOn != "" {
+		if d, err := pattern.FindDrums(g.BasedOn); err != nil || !d.Fits(ts) {
+			errs = append(errs, fmt.Errorf("drumGrid.basedOn must be one of %v in %d/%d, got %q", DrumIDsFor(ts), ts.Numerator, ts.Denominator, g.BasedOn))
+		}
+	}
+	grid, err := g.Grid()
+	if err != nil {
+		return append(errs, err)
+	}
+	if _, err := pattern.GridDrums(grid, ts, c.TempoBPM); err != nil {
+		errs = append(errs, fmt.Errorf("drumGrid: %w", err))
+	}
+	return errs
+}
+
+// GridSpec is a drum grid as the model writes it (BL-077): the voices are
+// a list of voice and steps, which keeps the output schema flat; Grid
+// turns it into the engine's music.DrumGrid.
+type GridSpec struct {
+	Division int        `json:"division"`
+	Voices   []GridLine `json:"voices"`
+	BasedOn  string     `json:"basedOn,omitempty"`
+}
+
+// GridLine is one voice of a grid: one character a step.
+type GridLine struct {
+	Voice string `json:"voice"`
+	Steps string `json:"steps"`
+}
+
+// Grid is the spec as the engine's grid; a voice written twice is an error.
+func (g GridSpec) Grid() (music.DrumGrid, error) {
+	out := music.DrumGrid{Division: g.Division, Voices: map[string]string{}, BasedOn: g.BasedOn}
+	for _, l := range g.Voices {
+		if _, dup := out.Voices[l.Voice]; dup {
+			return music.DrumGrid{}, fmt.Errorf("drumGrid: voice %q is written twice; write each voice once", l.Voice)
+		}
+		out.Voices[l.Voice] = l.Steps
+	}
+	return out, nil
+}
+
+// Grid is the candidate's drum grid for the engine, nil when it names
+// drums instead. It assumes Validate passed.
+func (c Candidate) Grid() *music.DrumGrid {
+	if c.DrumGrid == nil {
+		return nil
+	}
+	g, err := c.DrumGrid.Grid()
+	if err != nil {
+		return nil
+	}
+	return &g
+}
+
+// styleDrums is what the style check holds to the style: the drums id, or
+// the catalogue drums a grid is based on.
+func (c Candidate) styleDrums() string {
+	if c.DrumGrid != nil {
+		return c.DrumGrid.BasedOn
+	}
+	return c.Drums
 }
 
 // AccompanimentIDs lists every catalogue id, in any meter (the schema's enum).
