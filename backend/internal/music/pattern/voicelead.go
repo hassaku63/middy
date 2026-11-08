@@ -1,6 +1,10 @@
 package pattern
 
-import "github.com/hassaku63/middy/backend/internal/music"
+import (
+	"slices"
+
+	"github.com/hassaku63/middy/backend/internal/music"
+)
 
 // walkLow is the lowest root of the walking bass (E2): its roots lie in
 // E2..D#3 and its line stays under the chords, which start at C4.
@@ -19,10 +23,16 @@ func walkLine(harmony []music.HarmonyEvent, i, n int) []music.Pitch {
 		return walkLow + music.Pitch((int(pc)-int(walkLow.Class())+12)%12)
 	}
 	h := harmony[i]
-	tones := make([]music.Pitch, 0, 4) // the chord's tones upward from its root, in the walk's octave
-	for _, p := range h.Chord.Voicing(music.ChordOctave) {
-		tones = append(tones, root(h)+(p-h.Chord.Voicing(music.ChordOctave)[0]))
+	// The root (or the slash bass), then the chord's other tones upward
+	// above it.
+	low := root(h)
+	tones := []music.Pitch{low}
+	for _, pc := range h.Chord.PitchClasses() {
+		if pc != low.Class() {
+			tones = append(tones, low+music.Pitch((int(pc)-int(low.Class())+12)%12))
+		}
 	}
+	slices.Sort(tones)
 	line := make([]music.Pitch, n)
 	for k := range line {
 		switch k {

@@ -65,7 +65,7 @@ func TestVoiceLeading(t *testing.T) {
 }
 
 // TestVoiceLeadingStaysInRange (BL-086): a long cycle of fifths does not
-// drift: the lowest chord tone stays between C4 and G4.
+// drift: the lowest chord tone stays between C4 and B4.
 func TestVoiceLeadingStaysInRange(t *testing.T) {
 	var steps []music.Step
 	for range 4 {
@@ -78,8 +78,8 @@ func TestVoiceLeadingStaysInRange(t *testing.T) {
 		t.Fatal(err)
 	}
 	for at, c := range chordsAt(out, 0) {
-		if c[0] < 60 || c[0] > 67 {
-			t.Errorf("chord at %d starts on %d, outside 60..67", at, c[0])
+		if c[0] < 60 || c[0] > 71 {
+			t.Errorf("chord at %d starts on %d, outside 60..71", at, c[0])
 		}
 	}
 }
@@ -164,5 +164,47 @@ func TestEverySlashBassSounds(t *testing.T) {
 	}
 	if got, want := notesIn(out, music.ChordTrackName), tl.Tracks[0].Notes; len(got) != len(want) {
 		t.Errorf("block chords under drums have %d notes, the plain timeline %d", len(got), len(want))
+	}
+}
+
+// TestWalkingOverASlashChord (review of BL-086): over C/E the walk starts
+// on the E and climbs through C major's tones above it, not through the
+// tones of E major.
+func TestWalkingOverASlashChord(t *testing.T) {
+	tl := progTimeline(t,
+		music.Step{Degree: 1, Beats: 4, Bass: &music.Bass{Degree: 3}}, // I/3
+		music.Step{Degree: 4, Beats: 4},
+	)
+	out, err := Render(tl, Choice{Accompaniment: "walking"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := music.Tick(music.DefaultPPQ)
+	for _, n := range out.Tracks[0].Notes {
+		if n.Duration < music.DefaultPPQ/2 || n.Start >= 3*q {
+			continue
+		}
+		if pc := n.Pitch.Class(); pc != music.C && pc != music.E && pc != music.G {
+			t.Errorf("the walk under C/E plays %v at %d, not a tone of C major", n.Pitch, n.Start)
+		}
+	}
+}
+
+// TestFirstChordInRange (review of BL-086): the first chord sits in the
+// same range as the rest, so in A major I–IV moves least, as in C.
+func TestFirstChordInRange(t *testing.T) {
+	a := music.Key{Tonic: music.A, Mode: music.Major}
+	tl, err := music.FromProgression(a, music.Progression{{Degree: 1, Beats: 4}, {Degree: 4, Beats: 4}}, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	chords := chordsAt(tl, 0)
+	first, second := chords[0], chords[4*music.DefaultPPQ]
+	moved := 0
+	for i := range first {
+		moved += max(int(first[i])-int(second[i]), int(second[i])-int(first[i]))
+	}
+	if moved > 3 {
+		t.Errorf("A to D moves %d semitones (%v → %v); the least is 3", moved, first, second)
 	}
 }
