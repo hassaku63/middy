@@ -84,19 +84,18 @@ func TestDroneHoldsTheTonicUnderChangingChords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	drone := map[music.Tick][]music.Pitch{}
+	var drone []music.Pitch
 	for _, n := range notesIn(got, music.ChordTrackName) {
 		if n.Pitch < music.NewPitch(music.C, music.ChordOctave) {
-			drone[n.Start] = append(drone[n.Start], n.Pitch)
+			if n.Start != 0 || n.Duration != 2*1920 {
+				t.Errorf("the drone holds under both chords, got %v at %d for %d", n.Pitch, n.Start, n.Duration)
+			}
+			drone = append(drone, n.Pitch)
 		}
 	}
-	want := []music.Pitch{music.NewPitch(music.D, 3), music.NewPitch(music.A, 3)} // D3 and A3
-	for _, start := range []music.Tick{0, 1920} {
-		ps := drone[start]
-		slices.Sort(ps)
-		if !slices.Equal(ps, want) {
-			t.Errorf("drone at %d = %v, want %v (D and A under both chords)", start, ps, want)
-		}
+	slices.Sort(drone)
+	if want := []music.Pitch{music.NewPitch(music.D, 3), music.NewPitch(music.A, 3)}; !slices.Equal(drone, want) { // D3 and A3
+		t.Errorf("drone = %v, want %v", drone, want)
 	}
 	if !strings.Contains(got.Rhythm.Accompaniment.Description, "和音が動いても主音が鳴り続ける") {
 		t.Errorf("the description should say the tonic keeps sounding: %s", got.Rhythm.Accompaniment.Description)

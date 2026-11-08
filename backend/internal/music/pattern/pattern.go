@@ -411,6 +411,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], bar)...)
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
+	track.Notes = holdDrone(track.Notes, acc, tl.Key)              // after the pushes, which cut at each chord
 	sortNotes(track.Notes)
 	return track
 }
@@ -469,6 +470,30 @@ func slashed(acc Accompaniment, h music.HarmonyEvent, ps []music.Pitch, v Voice)
 	return ps
 }
 
+// holdDrone ties the drone across chord changes (BL-108): a drone note
+// that starts where the same drone note ends is the same note held on, so
+// the tonic keeps sounding instead of being struck on every chord.
+func holdDrone(notes []music.NoteEvent, acc Accompaniment, key music.Key) []music.NoteEvent {
+	if !slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceDrone }) {
+		return notes
+	}
+	drone := dronePitches(key)
+	sortNotes(notes)
+	out := make([]music.NoteEvent, 0, len(notes))
+	held := map[music.Pitch]int{} // pitch → index in out of the note being held
+	for _, n := range notes {
+		if slices.Contains(drone, n.Pitch) {
+			if i, ok := held[n.Pitch]; ok && out[i].Start+out[i].Duration == n.Start {
+				out[i].Duration += n.Duration
+				continue
+			}
+			held[n.Pitch] = len(out)
+		}
+		out = append(out, n)
+	}
+	return out
+}
+
 func chordsOf(harmony []music.HarmonyEvent) []music.Chord {
 	out := make([]music.Chord, len(harmony))
 	for i, h := range harmony {
@@ -508,6 +533,16 @@ func drumTrack(tl music.Timeline, dr Drums) music.Track {
 	return track
 }
 
+// droneLow is the lowest tonic of the drone (F2).
+const droneLow music.Pitch = 41
+
+// dronePitches are the key's tonic in F2..E3 and its fifth, which stays
+// under the chords (C4 up).
+func dronePitches(key music.Key) []music.Pitch {
+	tonic := droneLow + music.Pitch((int(key.Tonic)-int(droneLow.Class())+12)%12)
+	return []music.Pitch{tonic, tonic.Transpose(7)}
+}
+
 // pitches resolves a voice against a close voicing (root first).
 func pitches(key music.Key, voicing, led []music.Pitch, bass *music.PitchClass, v Voice) []music.Pitch {
 	root := voicing[0]
@@ -536,8 +571,7 @@ func pitches(key music.Key, voicing, led []music.Pitch, bass *music.PitchClass, 
 	case VoiceOctave:
 		return []music.Pitch{root.Transpose(12)}
 	case VoiceDrone:
-		tonic := music.NewPitch(key.Tonic, music.ChordOctave-1)
-		return []music.Pitch{tonic, tonic.Transpose(7)}
+		return dronePitches(key)
 	default:
 		return nil
 	}
