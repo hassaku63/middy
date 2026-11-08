@@ -21,6 +21,8 @@
     {"id": "late-night-study", "image": "深夜に一人で勉強している集中した時間", "mode": "either", "tempoMax": 110},
     {"id": "reunion", "image": "久しぶりの再会、懐かしくて温かい", "mode": "major", "tempoMax": 120, "wants": ["iv", "ivm6", "iv7"]},
     {"id": "jazz-bar", "image": "夜のジャズバーで、ピアノが軽くスウィングしている", "mode": "either", "feel": "swing", "wants": ["VI7", "II7"]},
+    {"id": "graduation-bass", "image": "卒業式で歌う合唱曲。ベースが一歩ずつゆっくり下がっていき、胸が熱くなる", "mode": "major", "tempoMax": 100, "wants": ["I/7", "vi/5", "I/3"]},
+    {"id": "minor-cliche", "image": "映画の切ない場面。短調の和音が鳴り続ける下で、ベースだけが半音ずつ下がっていく", "mode": "minor", "wants": ["i/7", "i/b7"]},
     {"id": "swing-jazz", "image": "夜のクラブのスウィング・ジャズ。ピアノトリオが 4 ビートで軽快に", "mode": "either", "feel": "swing", "drums": "jazz-ride"},
     {"id": "shuffle-walk", "image": "スキップしたくなるような、跳ねるリズムの散歩", "mode": "either", "feel": "swing", "wants": ["VI7", "III7"]},
     {"id": "celtic-reel", "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "major/dorian/mixolydian", "modeInAny": "dorian/mixolydian", "tempoMin": 100},

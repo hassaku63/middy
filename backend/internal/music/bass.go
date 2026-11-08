@@ -235,3 +235,19 @@ func hasSlash(harmony []HarmonyEvent) bool {
 	}
 	return false
 }
+
+// LiteralSlash is LiteralChord with an optional slash bass, read against
+// the tonic's major scale like the chord (BL-115): in A, "i/7" is Am over
+// G# and "i/b7" Am over G. The bass is nil without a slash.
+func LiteralSlash(tonic PitchClass, label string) (Chord, *PitchClass, error) {
+	head, bass, err := splitBass(label)
+	if err != nil {
+		return Chord{}, nil, err
+	}
+	chord, err := LiteralChord(tonic, head)
+	if err != nil || bass == nil {
+		return chord, nil, err
+	}
+	pc := bass.pitchClass(Key{Tonic: tonic, Mode: Major})
+	return chord, &pc, nil
+}

@@ -128,3 +128,25 @@ func TestSlashBassIsNotASecondaryDominant(t *testing.T) {
 		t.Errorf("V7/V/#4 is still the dominant of V: %+v", a)
 	}
 }
+
+// TestLiteralSlash reads a wanted slash chord literally against the
+// tonic's major scale, like LiteralChord (BL-115): "i/7" in A is Am over
+// G#, "i/b7" Am over G.
+func TestLiteralSlash(t *testing.T) {
+	c, b, err := LiteralSlash(C, "I/7")
+	if err != nil || c != (Chord{C, MajorTriad}) || b == nil || *b != B {
+		t.Errorf("I/7 in C: %v %v %v", c, b, err)
+	}
+	c, b, err = LiteralSlash(C, "I")
+	if err != nil || c != (Chord{C, MajorTriad}) || b != nil {
+		t.Errorf("I in C: %v %v %v", c, b, err)
+	}
+	c, b, err = LiteralSlash(A, "i/b7")
+	if err != nil || c != (Chord{A, MinorTriad}) || b == nil || *b != G {
+		t.Errorf("i/b7 in A: %v %v %v", c, b, err)
+	}
+	c, b, err = LiteralSlash(A, "i/7")
+	if err != nil || c != (Chord{A, MinorTriad}) || b == nil || *b != Gs {
+		t.Errorf("i/7 in A: %v %v %v", c, b, err)
+	}
+}
