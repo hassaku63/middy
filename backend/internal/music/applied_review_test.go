@@ -51,3 +51,23 @@ func TestAppliedChordsAreNotWhatTheirRootSays(t *testing.T) {
 		t.Errorf("an applied chord is no stand-in for the minor VI: %s", s)
 	}
 }
+
+// TestAppliedChordsNextToVAndVII (review): V/V – V arrives on V, a half
+// cadence; a minor key's VII before V7/VI does not head to III, and VII
+// after V/iv does not come from i, whatever their roots' degrees say.
+func TestAppliedChordsNextToVAndVII(t *testing.T) {
+	c := Key{Tonic: C, Mode: Major}
+	half := analysedLabels(t, c, "I", "IV", "V/V", "V")
+	if got := half.Harmony[3].Analysis.Cadence; got != Half {
+		t.Errorf("V/V – V cadence = %v, want half", got)
+	}
+	cm := Key{Tonic: C, Mode: Minor}
+	toVI := analysedLabels(t, cm, "i", "VII", "V7/VI", "VI")
+	if e := toVI.Harmony[1].Analysis.Explanation; strings.Contains(e, "III へ向かう") {
+		t.Errorf("VII before V7/VI read as heading to III: %s", e)
+	}
+	fromIV := analysedLabels(t, cm, "V/iv", "VII", "VI", "V")
+	if e := fromIV.Harmony[1].Analysis.Explanation; strings.Contains(e, "i から VI") {
+		t.Errorf("VII after V/iv read as coming from i: %s", e)
+	}
+}
