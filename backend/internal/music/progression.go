@@ -19,6 +19,9 @@ type Step struct {
 	// Accidental lowers the root by one semitone from the scale degree
 	// (-1 for the borrowed ♭VI, ♭VII). Zero for diatonic roots.
 	Accidental int `json:"accidental,omitempty"`
+	// Bass, when set, puts that note under the chord (a slash chord,
+	// ADR-0020); the chord itself is unchanged.
+	Bass *Bass `json:"bass,omitempty"`
 	// Borrowed marks a chord taken from the parallel minor (BL-094); the
 	// analysis says so.
 	Borrowed bool `json:"borrowed,omitempty"`
@@ -107,7 +110,14 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 		}
 		duration := Tick(s.Beats) * beat
 
-		for _, p := range chord.Voicing(ChordOctave) {
+		pitches := chord.Voicing(ChordOctave)
+		var bass *PitchClass
+		if s.Bass != nil {
+			pc := s.Bass.pitchClass(key)
+			bass = &pc
+			pitches = append([]Pitch{NewPitch(pc, ChordOctave-1)}, pitches...) // under the chord
+		}
+		for _, p := range pitches {
 			track.Notes = append(track.Notes, NoteEvent{
 				Pitch:    p,
 				Velocity: ChordVelocity,
@@ -121,6 +131,7 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 			Chord:        chord,
 			RomanNumeral: numeral,
 			Symbol:       symbol,
+			Bass:         bass,
 		})
 		cursor += duration
 	}
@@ -131,6 +142,15 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 
 // stepChord resolves a step to its chord, roman numeral and spelled symbol.
 func stepChord(key Key, s Step) (Chord, string, string, error) {
+	chord, numeral, symbol, err := chordOfStep(key, s)
+	if err != nil || s.Bass == nil {
+		return chord, numeral, symbol, err
+	}
+	return chord, numeral + s.Bass.suffix(), symbol + "/" + key.spellDegree(s.Bass.Degree, s.Bass.Accidental), nil
+}
+
+// chordOfStep resolves the chord, numeral and symbol without the bass.
+func chordOfStep(key Key, s Step) (Chord, string, string, error) {
 	if s.Applied {
 		chord, err := key.appliedChord(s.Degree, s.Seventh)
 		if err != nil {

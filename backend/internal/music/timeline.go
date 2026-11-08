@@ -102,8 +102,11 @@ type HarmonyEvent struct {
 	RomanNumeral string `json:"romanNumeral"`
 	// Symbol is the chord spelled as the key wants it ("Bbmaj7"); the UI
 	// shows it instead of deriving a sharp-only name from Chord.Root.
-	Symbol   string    `json:"symbol,omitempty"`
-	Analysis *Analysis `json:"analysis,omitempty"`
+	Symbol string `json:"symbol,omitempty"`
+	// Bass is the note under the chord when it is a slash chord (ADR-0020);
+	// nil means the chord's root.
+	Bass     *PitchClass `json:"bass,omitempty"`
+	Analysis *Analysis   `json:"analysis,omitempty"`
 }
 
 // Timeline is the central artifact of middy: everything the player, the

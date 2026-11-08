@@ -301,10 +301,12 @@ export interface components {
       duration: number;
       chord: components['schemas']['Chord'];
       /**
+       * @description ローマ数字。分数コードは `/` のあとにベースの度数（調の音階に対して。♭・♯ は b・#）を付ける（`I/3`、`i/#7`。ADR-0020）
        * @example I
        * @example ii
        * @example V7
        * @example vii°
+       * @example I/3
        */
       romanNumeral: string;
       /**
@@ -312,8 +314,11 @@ export interface components {
        * @example Bbmaj7
        * @example Gm7
        * @example A7
+       * @example C/E
        */
       symbol?: string;
+      /** @description 分数コードのベース音（ADR-0020）。省略時は和音の根音がベース */
+      bass?: components['schemas']['PitchClass'];
       /** @description 解説データ。分析前のタイムラインでは省略される */
       analysis?: components['schemas']['HarmonyAnalysis'];
     };
