@@ -579,3 +579,52 @@ func TestDominantHint(t *testing.T) {
 		t.Errorf("want the V7/V hint, got %v", err)
 	}
 }
+
+// TestEachPatternMistakeIsReportedOnce (review): a bad feel or a bad grid
+// basedOn gets its own error with the ids to use, not a second one as a
+// style misfit; drums written beside a grid are still held to the style;
+// an out-of-range tempo does not also ask for a coarser grid.
+func TestEachPatternMistakeIsReportedOnce(t *testing.T) {
+	grid := func(basedOn string, division int) *GridSpec {
+		steps := strings.Repeat("x", division*4)
+		return &GridSpec{Division: division, BasedOn: basedOn, Voices: []GridLine{{Voice: "hat", Steps: steps}}}
+	}
+	cases := []struct {
+		name    string
+		edit    func(c *Candidate)
+		want    string
+		wantNot string
+	}{
+		{"unknown feel", func(c *Candidate) { c.Style, c.Feel = "jazz", "shuffle" }, "feel must be one of", "does not fit the jazz style"},
+		{"basedOn for another meter", func(c *Candidate) { c.Style, c.DrumGrid = "jazz", grid("waltz", 2) }, "basedOn", "does not fit the jazz style"},
+		{"drums beside a grid", func(c *Candidate) { c.Style, c.Drums, c.DrumGrid = "jazz", "eight-beat", grid("", 2) }, "does not fit the jazz style", ""},
+		{"tempo out of range", func(c *Candidate) { c.TempoBPM, c.DrumGrid = 300, grid("", 4) }, "tempoBpm must be", "coarser"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := valid()
+			tc.edit(&in.Candidates[0])
+			err := in.Validate()
+			if err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("want %q, got %v", tc.want, err)
+			}
+			if tc.wantNot != "" && strings.Contains(err.Error(), tc.wantNot) {
+				t.Errorf("reported twice (%q): %v", tc.wantNot, err)
+			}
+		})
+	}
+}
+
+// TestParseTrimsEnums (review): " arpeggio" or "swing " is the id, not a retry.
+func TestParseTrimsEnums(t *testing.T) {
+	data := []byte(`{"summary":"s","mood":[],"candidates":[{"title":"t",
+	  "key":{"tonic":0,"mode":"major"},"tempoBpm":120,"progression":["I","V","vi","IV"],
+	  "beatsPerChord":4,"reason":"r","accompaniment":" arpeggio","feel":"swing "}]}`)
+	in, err := Parse(data)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if c := in.Candidates[0]; c.Accompaniment != "arpeggio" || c.Feel != "swing" {
+		t.Errorf("enums not trimmed: %q %q", c.Accompaniment, c.Feel)
+	}
+}
