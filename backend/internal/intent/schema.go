@@ -119,7 +119,7 @@ func diagnosticSchema() json.RawMessage {
 	props := root["properties"].(map[string]any)
 	props["unconstrained"] = map[string]any{
 		"type":        "string",
-		"description": "評価のための欄。エンジンの制約（ダイアトニックの和音だけ、長調・短調だけ、伴奏とドラムの型のカタログ）がなければ、このイメージに本当は何を書きたかったか。和音名、音階やモード、リズムを自由に 1〜3 文で。音には使われない",
+		"description": "評価のための欄。このイメージのために使いたかったが、指示された語彙やカタログで表せないために使わなかったもの（和音、音階やモード、リズム、拍子など）を 1〜3 文で。表せる語彙で書けたものは含めない。なければ「なし」。音には使われない",
 	}
 	out, err := json.Marshal(root)
 	if err != nil {
