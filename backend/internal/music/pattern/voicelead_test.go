@@ -43,7 +43,7 @@ func TestVoiceLeading(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	chords := chordsAt(out, 52)
+	chords := chordsAt(out, 60)
 	bar := music.Tick(4 * music.DefaultPPQ)
 	first := chords[0]
 	if !slices.Equal(first, []music.Pitch{62, 65, 69, 72}) {
@@ -65,7 +65,7 @@ func TestVoiceLeading(t *testing.T) {
 }
 
 // TestVoiceLeadingStaysInRange (BL-086): a long cycle of fifths does not
-// drift: the lowest chord tone stays between E3 and G4.
+// drift: the lowest chord tone stays between C4 and G4.
 func TestVoiceLeadingStaysInRange(t *testing.T) {
 	var steps []music.Step
 	for range 4 {
@@ -77,9 +77,9 @@ func TestVoiceLeadingStaysInRange(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for at, c := range chordsAt(out, 52) {
-		if c[0] < 52 || c[0] > 67 {
-			t.Errorf("chord at %d starts on %d, outside 52..67", at, c[0])
+	for at, c := range chordsAt(out, 0) {
+		if c[0] < 60 || c[0] > 67 {
+			t.Errorf("chord at %d starts on %d, outside 60..67", at, c[0])
 		}
 	}
 }
@@ -105,13 +105,64 @@ func TestWalkingBass(t *testing.T) {
 	}
 	q := music.Tick(music.DefaultPPQ)
 	want := map[music.Tick]music.Pitch{
-		0: 50, q: 54, // D, then F# into G
-		2 * q: 55, 3 * q: 47, // G, then B into C
+		0: 50, q: 42, // D, then F# into G
+		2 * q: 43, 3 * q: 47, // G, then B into C
 		4 * q: 48, 5 * q: 52, 6 * q: 55, 7 * q: 49, // C E G, then C# into the D it loops back to
+	}
+	for at, p := range bass {
+		if p >= 60 {
+			t.Errorf("the walk at %d is on %d, not under middle C where the chords are", at, p)
+		}
 	}
 	for at, p := range want {
 		if bass[at] != p {
 			t.Errorf("bass at %d = %d, want %d (all: %v)", at, bass[at], p, bass)
 		}
+	}
+}
+
+// TestEverySlashBassSounds (review of BL-113): a slash chord's bass sounds
+// as the chord's lowest note whatever the pattern: a bass voice plays it,
+// an arpeggio starts on it, and a pattern with neither (block, strum,
+// drone) puts it under the chord, as the plain block chords do.
+func TestEverySlashBassSounds(t *testing.T) {
+	prog := music.Progression{
+		{Degree: 1, Beats: 4},
+		{Degree: 5, Beats: 4, Bass: &music.Bass{Degree: 7}}, // G/B in C
+	}
+	tl, err := music.FromProgression(music.Key{Tonic: music.C, Mode: music.Major}, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bar := music.Tick(4 * music.DefaultPPQ)
+	for _, acc := range AccompanimentsFor(music.FourFour) {
+		out, err := Render(tl, Choice{Accompaniment: acc.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+		lowest, hasB := music.Pitch(127), false
+		for _, n := range out.Tracks[0].Notes {
+			if n.Start >= bar && n.Start < 2*bar {
+				lowest = min(lowest, n.Pitch)
+				hasB = hasB || n.Pitch == 59
+			}
+		}
+		if acc.ID == "drone" { // the drone's tonic is the pedal under everything
+			if !hasB {
+				t.Errorf("drone: G/B has no B3")
+			}
+			continue
+		}
+		if lowest.Class() != music.B {
+			t.Errorf("%s: G/B's lowest note is %v, want the B", acc.ID, lowest)
+		}
+	}
+	// Drums alone keep block chords, and the bass with them.
+	out, err := Render(tl, Choice{Drums: "eight-beat"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := notesIn(out, music.ChordTrackName), tl.Tracks[0].Notes; len(got) != len(want) {
+		t.Errorf("block chords under drums have %d notes, the plain timeline %d", len(got), len(want))
 	}
 }

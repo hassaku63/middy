@@ -12,6 +12,7 @@ package pattern
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -438,7 +439,7 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led []music.Pitch, 
 				walks = append(walks, n)
 				continue
 			}
-			for _, p := range pitches(tl.Key, voicing, led, h.Bass, hit.Voice) {
+			for _, p := range slashed(acc, h, pitches(tl.Key, voicing, led, h.Bass, hit.Voice), hit.Voice) {
 				n.Pitch = p
 				notes = append(notes, n)
 			}
@@ -448,6 +449,25 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led []music.Pitch, 
 		walks[k].Pitch = p
 	}
 	return append(notes, walks...)
+}
+
+// slashed makes a slash chord's bass sound in a pattern with no bass
+// voice of its own (BL-113): an arpeggio starts on it in place of the
+// root, and a pattern with neither (block, strum, drone) plays it under
+// the chord, as the plain block chords do.
+func slashed(acc Accompaniment, h music.HarmonyEvent, ps []music.Pitch, v Voice) []music.Pitch {
+	if h.Bass == nil || slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceBass || x.Voice == VoiceWalk }) {
+		return ps
+	}
+	bass := music.NewPitch(*h.Bass, music.ChordOctave-1)
+	hasRoot := slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceRoot })
+	switch {
+	case v == VoiceRoot:
+		return []music.Pitch{bass}
+	case v == VoiceChord && !hasRoot:
+		return append([]music.Pitch{bass}, ps...)
+	}
+	return ps
 }
 
 func chordsOf(harmony []music.HarmonyEvent) []music.Chord {
