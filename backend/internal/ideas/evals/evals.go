@@ -33,6 +33,9 @@ type Case struct {
 	// Drums, when set, lists the drums the first candidate may use, joined
 	// with "/"; "none" allows no drums (BL-081).
 	Drums string `json:"drums,omitempty"`
+	// Style, when set, is the style the first candidate must have (BL-082,
+	// #129): the engine then holds its patterns to the style.
+	Style string `json:"style,omitempty"`
 	// Meter, when set, is the meter the first candidate must have ("4/4"
 	// also matches an omitted meter; ADR-0017).
 	Meter string `json:"meter,omitempty"`
@@ -127,6 +130,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
 	v.Progression = withBeats(first.Progression, first.Beats)
 	v.Patterns = patternsOf(first.Accompaniment, first.Drums)
+	if first.Style != "" {
+		v.Patterns = strings.TrimSuffix(first.Style+": "+v.Patterns, ": ")
+	}
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
 	modes := make([]music.Mode, 0, len(res.Candidates))
@@ -171,6 +177,9 @@ func judgeFirst(c Case, first ideas.Candidate) []string {
 	}
 	add(judgeFeel(c.Feel, first.Feel))
 	add(judgeDrums(c.Drums, first.Drums))
+	if c.Style != "" && c.Style != first.Style {
+		add("expected style " + c.Style + ", got " + first.Style)
+	}
 	if c.Meter != "" && c.Meter != meterOf(first.Meter) {
 		add("expected meter " + c.Meter + ", got " + meterOf(first.Meter))
 	}

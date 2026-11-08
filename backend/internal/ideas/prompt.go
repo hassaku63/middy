@@ -35,6 +35,11 @@ func SystemPrompt() string {
 		for _, f := range pattern.Feels() {
 			fmt.Fprintf(&b, "- %s: %s %s\n", f.ID, f.Name, f.Description)
 		}
+		b.WriteString("スタイル（style）。候補ごとに最初にスタイルを選び、伴奏・ドラム・ノリはそのスタイルに挙げたものから選ぶ（ブロックの和音とドラムなしはどのスタイルでも使える）:\n")
+		for _, st := range pattern.Styles() {
+			fmt.Fprintf(&b, "- %s: %s。%s（伴奏: %s。ドラム: %s。ノリ: %s）\n", st.ID, st.Name, st.Description,
+				strings.Join(st.Accompaniments, ", "), strings.Join(st.Drums, ", "), joinFeels(st.Feels))
+		}
 		b.WriteString("拍子（meter）は 4/4 が既定。ワルツ、メヌエット、ジャズ・ワルツ、3 拍子のバラードのように 3 拍子が典型のイメージでは 3/4 にし、beatsPerChord は 3（1 小節）か 6（2 小節）、伴奏とドラムは 3/4 の型から選ぶ。")
 		b.WriteString("ゆりかごの子守唄、舟歌、ジグ、6/8 のバラードのように、付点 4 分の 2 拍で揺れ、各拍が 3 つに分かれるイメージでは 6/8 にする。6/8 の拍は付点 4 分で、beatsPerChord は 1（半小節）・2（1 小節）・4（2 小節）、tempoBpm も付点 4 分の速さで書く（ゆったりした子守唄なら 50〜70、ジグなら 100〜130）。伴奏とドラムは 6/8 の型から選び、feel は使わない（拍がすでに 3 つに分かれている）。")
 		b.WriteString("ケルト（アイルランド、スコットランド）の舞曲なら、リールは 4/4 で accompaniment を reel、drums を bodhran に、ジグは 6/8 で jig の型にする。8 ビートやストロークはポップスやフォークロックに聞こえるので、ケルトの例には使わない。ゆったりしたケルトの曲（エア）や民謡風の静かな曲で、主音を持続させたいときは accompaniment を drone にする（どの拍子でも使える）。")
@@ -63,3 +68,11 @@ const promptBody = `あなたは作曲を学ぶ人のための、音楽理論の
 - summary はユーザーのイメージを 1〜2 文の日本語で言い換える。reason はこの候補の聴きどころの短い解説で、調・テンポ・進行がイメージのどこに合うかを理論の言葉で 1〜2 文にまとめる。
 - reason は、この例で実際に鳴るもの（調・テンポ・拍子・進行・選んだ伴奏とドラムの型・ノリ）だけを語る。この例で鳴らない楽器（フィドル、ホイッスル、ストリングスなど）やメロディ、型にない奏法は、イメージに似合うとしても書かない。学ぶ人は reason を「この例で聴けること」として読む。
 - 会話が続いている場合は、これまでのやり取り（assistant の発言は前回の summary）を踏まえて候補を更新する。`
+
+func joinFeels(fs []pattern.Feel) string {
+	out := make([]string, len(fs))
+	for i, f := range fs {
+		out[i] = string(f)
+	}
+	return strings.Join(out, ", ")
+}

@@ -341,3 +341,19 @@ func TestJudgeDrums(t *testing.T) {
 		}
 	}
 }
+
+// TestJudgeStyle (BL-082, #129): a case can name the style its first
+// candidate must have, and the report shows the style with the patterns.
+func TestJudgeStyle(t *testing.T) {
+	res := result()
+	res.Candidates[0].Style, res.Candidates[0].Accompaniment, res.Candidates[0].Drums = "celtic", "reel", "bodhran"
+	if v := Judge(Case{ID: "c", Mode: "either", Style: "celtic"}, res); !v.Pass {
+		t.Errorf("celtic expected and given: %v", v.Problems)
+	}
+	if v := Judge(Case{ID: "c", Mode: "either", Style: "jazz"}, res); v.Pass || !strings.Contains(strings.Join(v.Problems, ";"), "expected style jazz, got celtic") {
+		t.Errorf("jazz expected, celtic given: %v", v.Problems)
+	}
+	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); !strings.Contains(got, "BPM, celtic: reel/bodhran)") {
+		t.Errorf("report should name the style and patterns:\n%s", got)
+	}
+}
