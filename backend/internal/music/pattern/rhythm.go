@@ -50,15 +50,24 @@ func describeAccompaniment(a Accompaniment, ts music.TimeSignature) *music.Rhyth
 	return part(a.ID, a.Name, a.Description, starts, "伴奏", ts)
 }
 
+// describeDrums counts the strokes that carry the groove: the kick and
+// snare of a kit, or the low tom and side stick of a hand drum such as the
+// bodhrán. Hats and the light mid-tom eighths only mark time.
 func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
-	// Hats mark time; the groove is in the kick and snare, so count only those.
-	starts := make([]music.Tick, 0, len(d.Hits))
+	kit := make([]music.Tick, 0, len(d.Hits))
+	hand := make([]music.Tick, 0, len(d.Hits))
 	for _, h := range d.Hits {
-		if h.Note == Kick || h.Note == Snare {
-			starts = append(starts, h.Start)
+		switch h.Note {
+		case Kick, Snare:
+			kit = append(kit, h.Start)
+		case LowTom, SideStick:
+			hand = append(hand, h.Start)
 		}
 	}
-	return part(d.ID, d.Name, d.Description, starts, "キックとスネア", ts)
+	if len(kit) == 0 && len(hand) > 0 {
+		return part(d.ID, d.Name, d.Description, hand, "低いタムとサイドスティック", ts)
+	}
+	return part(d.ID, d.Name, d.Description, kit, "キックとスネア", ts)
 }
 
 func part(id, name, desc string, starts []music.Tick, subject string, ts music.TimeSignature) *music.RhythmPart {

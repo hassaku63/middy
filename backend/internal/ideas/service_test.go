@@ -281,3 +281,21 @@ func TestReasonSpeaksOnlyOfWhatSounds(t *testing.T) {
 		t.Error("the schema's reason should say it speaks only of what the example plays")
 	}
 }
+
+// TestPromptSteersCelticAwayFromPopGrooves (BL-107, #131): the prompt lists
+// the reel and bodhrán patterns and keeps the eight-beat kit off Celtic examples.
+func TestPromptSteersCelticAwayFromPopGrooves(t *testing.T) {
+	p := SystemPrompt()
+	for _, want := range []string{"- reel:", "- bodhran:", "drums を bodhran", "ケルトの例には使わない"} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q", want)
+		}
+	}
+	res, err := New(fake.New()).Imagine(context.Background(), []Message{user("アイルランドのパブのケルト音楽")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c := res.Candidates[0]; c.Accompaniment != "reel" || c.Drums != "bodhran" {
+		t.Errorf("the fake's Celtic reel should use the Celtic patterns: %s / %s", c.Accompaniment, c.Drums)
+	}
+}

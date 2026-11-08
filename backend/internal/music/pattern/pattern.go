@@ -93,9 +93,12 @@ var (
 // GM drum map notes used by the templates.
 const (
 	Kick      music.Pitch = 36
+	SideStick music.Pitch = 37
 	Snare     music.Pitch = 38
 	ClosedHat music.Pitch = 42
+	LowTom    music.Pitch = 45
 	OpenHat   music.Pitch = 46
+	MidTom    music.Pitch = 47
 	RideBell  music.Pitch = 53
 )
 
@@ -144,6 +147,16 @@ var accompaniments = []Accompaniment{
 			{0, quarter, VoiceChord, 86}, {quarter + eighth, eighth, VoiceChord, 66},
 			{2 * quarter, quarter, VoiceChord, 80}, {3 * quarter, eighth, VoiceChord, 70},
 			{3*quarter + eighth, eighth, VoiceChord, 64},
+		},
+	},
+	{
+		ID: "reel", Meter: &fourFour, Name: "リールの裏打ち", Program: 25,
+		Description: "1・3 拍にベース、各拍の裏に短い和音。ギターがリールの細かな 8 分を後ろから押し、ケルトの舞曲の推進力を作る。",
+		Hits: []Hit{
+			{0, quarter, VoiceBass, 86}, {eighth, eighth * 3 / 4, VoiceChord, 64},
+			{quarter + eighth, eighth * 3 / 4, VoiceChord, 60},
+			{2 * quarter, quarter, VoiceBass, 80}, {2*quarter + eighth, eighth * 3 / 4, VoiceChord, 62},
+			{3*quarter + eighth, eighth * 3 / 4, VoiceChord, 58},
 		},
 	},
 	{
@@ -203,6 +216,17 @@ var drums = []Drums{
 			DrumHit{2 * quarter, eighth, Kick, 92}, DrumHit{3*quarter + eighth, eighth, Kick, 84},
 			DrumHit{quarter, eighth, RideBell, 70}, DrumHit{3 * quarter, eighth, RideBell, 70},
 		),
+	},
+	{
+		ID: "bodhran", Meter: &fourFour, Name: "ボーラン風",
+		Description: "低いタムが 1・3 拍、サイドスティックが 2・4 拍、中くらいのタムが残りの 8 分を軽く刻む。スネアもハイハットも使わず、アイルランドの片面太鼓（ボーラン）のように控えめに転がる。",
+		Hits: []DrumHit{
+			{0, eighth, LowTom, 90}, {eighth, eighth, MidTom, 48}, {quarter, eighth, MidTom, 60},
+			{quarter, eighth, SideStick, 56}, {quarter + eighth, eighth, MidTom, 48},
+			{2 * quarter, eighth, LowTom, 84}, {2*quarter + eighth, eighth, MidTom, 48},
+			{3 * quarter, eighth, MidTom, 60}, {3 * quarter, eighth, SideStick, 52},
+			{3*quarter + eighth, eighth, MidTom, 48},
+		},
 	},
 	{
 		ID: "waltz", Meter: &threeFour, Name: "ワルツ",
