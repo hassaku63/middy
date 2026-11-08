@@ -104,10 +104,12 @@ func (s Swing) resolved(beatBPM float64) Swing {
 	return s
 }
 
-// move swings one note: a unit on the first of a pair stretches to the
-// long note, a note starting on the second of a pair starts there instead
-// (keeping its end), and a longer note ending on the second of a pair ends
-// there. Anything else is untouched.
+// move swings one note by warping time within each pair of units: the
+// first half of the pair stretches to the long note and the second half
+// shrinks to the short one. A unit on the first of a pair becomes the long
+// note, a note starting on the second starts late, a held note ending on
+// the second (the chord before a push) ends there too, and finer notes
+// (sixteenths under eighth swing) keep their order and spacing.
 func (s Swing) move(start, dur music.Tick) (music.Tick, music.Tick) {
 	unit := eighth
 	if s.Unit == UnitSixteenth {
@@ -115,25 +117,15 @@ func (s Swing) move(start, dur music.Tick) (music.Tick, music.Tick) {
 	}
 	pair := 2 * unit
 	long := music.Tick(math.Round(float64(pair) * s.Ratio / (s.Ratio + 1)))
-	shift := long - unit
-	end := start + dur
-	switch start % pair {
-	case 0:
-		if dur == unit {
-			return start, long
+	warp := func(t music.Tick) music.Tick {
+		pos := t % pair
+		if pos <= unit {
+			return t - pos + pos*long/unit
 		}
-	case unit:
-		if dur <= shift {
-			return start, dur
-		}
-		start += shift
+		return t - pos + long + (pos-unit)*(pair-long)/unit
 	}
-	// A longer note that ends on the second of a pair ends where that
-	// note now starts, so a chord held into a pushed one stays tied.
-	if dur > unit && end%pair == unit {
-		end += shift
-	}
-	return start, end - start
+	from, to := warp(start), warp(start+dur)
+	return from, to - from
 }
 
 // applyFeel swings every track and adds the feel to the explanation. The

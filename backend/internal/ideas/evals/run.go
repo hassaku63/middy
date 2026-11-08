@@ -2,6 +2,7 @@ package evals
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
@@ -29,7 +30,10 @@ func Run(ctx context.Context, svc *ideas.Service, cases []Case) []Verdict {
 	return runAll(ctx, cases, Concurrency, func(c Case) Verdict {
 		res, err := svc.Imagine(ctx, []ideas.Message{{Role: llm.RoleUser, Content: c.Image}})
 		if err != nil {
-			return Verdict{Case: c, Problems: []string{err.Error()}, Errored: true}
+			// Only a model that could not be reached stops the run; a
+			// refused or invalid answer is a result to report.
+			unreachable := errors.Is(err, ideas.ErrLLMUnavailable) || ctx.Err() != nil
+			return Verdict{Case: c, Problems: []string{err.Error()}, Errored: unreachable}
 		}
 		return Judge(c, res)
 	})
