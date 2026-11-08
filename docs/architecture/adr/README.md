@@ -17,6 +17,7 @@
 | [0011](0011-settings-only-from-launch-environment.md) | ローカル実行の設定と秘密情報は、起動時の環境変数だけで渡す | Accepted |
 | [0012](0012-harmony-groove-style.md) | 例を「和声 × グルーヴ」に分け、「スタイル」で結ぶ（付録: [和声](0012/harmony.md)、[リズム](0012/rhythm.md)、[結びつき](0012/combination.md)、[類似アプリ](0012/apps.md)） | Proposed |
 | [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Proposed |
+| [0014](0014-issues-in-the-loop.md) | 観察と企画を GitHub Issue に置き、backlog と ADR はそのまま正典に保つ | Accepted |
 
 ## いつ ADR を書くか
 

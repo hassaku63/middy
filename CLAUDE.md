@@ -8,3 +8,4 @@
 - 作業開始時は `docs/product/backlog.md` の「Now」を読み、1 項目だけ選ぶ。完了時に同ファイルのステータスを更新する。
 - `make check` が通るまで「完了」と報告しない。失敗したら出力をそのまま示す。
 - 新しい設計判断をしたら `docs/architecture/adr/` にテンプレート（`0000-template.md`）から 1 枚追加する。
+- 観察を検討して企画にまとめるときは `/propose`（`.claude/skills/propose`）。実装はせず、Issue にして所有者の判断を待つ。
