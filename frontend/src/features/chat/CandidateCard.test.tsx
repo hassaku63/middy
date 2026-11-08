@@ -67,3 +67,19 @@ describe('CandidateCard style (BL-119)', () => {
     expect(screen.getByText('スタイル: jazz')).toBeInTheDocument();
   });
 });
+
+describe('CandidateCard order (BL-073)', () => {
+  it('puts the switch before the reason: title, progression, switch, reason', () => {
+    const { container } = render(
+      <CandidateCard candidate={{ ...base, reason: '理由の文' }} open={false} onOpen={vi.fn()} />,
+    );
+    const article = container.querySelector('article');
+    const order = Array.from(article?.children ?? []).map((el) =>
+      el.tagName === 'BUTTON' ? 'switch' : el.className,
+    );
+    expect(order.indexOf('candidate__title')).toBeLessThan(order.indexOf('candidate__progression'));
+    expect(order.indexOf('candidate__progression')).toBeLessThan(order.indexOf('switch'));
+    expect(order.indexOf('switch')).toBeLessThan(order.indexOf('candidate__reason'));
+    expect(screen.getByText('理由の文')).toBeInTheDocument();
+  });
+});

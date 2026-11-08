@@ -29,10 +29,11 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
           ))}
         </p>
       )}
-      <p className="candidate__reason">{reason}</p>
+      {/* Hear first, then read why (intent 4, BL-073): the reason follows the button. */}
       <button type="button" onClick={onOpen} aria-pressed={open}>
         {open ? '開いています' : 'この候補を開く'}
       </button>
+      <p className="candidate__reason">{reason}</p>
     </article>
   );
 }
