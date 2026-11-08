@@ -175,6 +175,8 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 	}
 	verdicts[2].Key = "D minor"
 	verdicts[2].Case.Wants = []string{"IV"}
+	verdicts[0].Case.Wants = []string{"bVII"}
+	verdicts[0].WantsIn = 2
 	verdicts[2].Unconstrained = "ドリアンの IV を\n使いたい | 本当は"
 	verdicts[1].Retry = "music: \"IV\" would sound as Gm (iv) in D minor; write \"iv\""
 	report := Report(verdicts)
@@ -185,7 +187,8 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 		"最も多い進行: `i VI III VII`（2 回）",
 		"調の種類: 2",
 		"使った語彙（度数 × 七の和音の有無）: 6 / 14", // i VI III VII iv V7 → 1,6,3,7,4 triads + 5 seventh
-		"期待した語彙（wants）の命中: 0 / 1",
+		"期待した語彙（wants）の命中: 最初の候補で 0 / 2、どれかの候補で 1 / 2",
+		"wants ✓ in candidate 2",
 		"wants ✗ (IV)",
 		"| c | ドリアンの IV を 使いたい / 本当は |",
 		"retry: music: \"IV\" would sound as Gm (iv) in D minor",
@@ -206,5 +209,34 @@ func TestJudgeModeAcceptsAlternatives(t *testing.T) {
 	}
 	if !strings.Contains(judgeMode("lydian", music.Major), "unknown mode") {
 		t.Error("unsupported modes are reported")
+	}
+}
+
+func TestJudgeFindsWantsInLaterCandidates(t *testing.T) {
+	render := func(key music.Key, labels ...string) ideas.Candidate {
+		var prog music.Progression
+		for _, l := range labels {
+			step, err := music.StepFromLabel(key, l, 4)
+			if err != nil {
+				t.Fatal(err)
+			}
+			prog = append(prog, step)
+		}
+		tl, err := music.FromProgression(key, prog, 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var c ideas.Candidate
+		c.Key, c.Progression, c.Timeline = key, labels, tl
+		return c
+	}
+	e := music.Key{Tonic: music.E, Mode: music.Major}
+	res := ideas.Result{Reply: "ok", Candidates: []ideas.Candidate{
+		render(e, "I", "V", "vi", "IV"),
+		render(e, "I", "bVII", "IV", "I"),
+	}}
+	v := Judge(Case{Mode: "major", Wants: []string{"bVII"}}, res)
+	if v.WantsHit || v.WantsIn != 2 {
+		t.Fatalf("bVII sounds in the second candidate: hit=%v in=%d", v.WantsHit, v.WantsIn)
 	}
 }

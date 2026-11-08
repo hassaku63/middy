@@ -69,9 +69,12 @@ type Verdict struct {
 	Progression []string
 	// Labels of every candidate, for the vocabulary metric.
 	Labels []string
-	// WantsHit is true when a wanted label appears; meaningful only when
-	// the case has Wants.
+	// WantsHit is true when a wanted chord sounds in the first candidate;
+	// WantsIn is the 1-based candidate where one first sounds (0: none).
+	// Both are meaningful only when the case has Wants. They separate "the
+	// model never offers it" from "it offers it, but not first".
 	WantsHit bool
+	WantsIn  int
 	// Unconstrained is the model's free-text wish (diagnostic runs only).
 	Unconstrained string
 	// Retry is why the first answer was not used, when there was a retry.
@@ -93,11 +96,14 @@ func Judge(c Case, res ideas.Result) Verdict {
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
 	modes := make([]music.Mode, 0, len(res.Candidates))
-	for _, cand := range res.Candidates {
+	for i, cand := range res.Candidates {
 		v.Labels = append(v.Labels, cand.Progression...)
 		modes = append(modes, cand.Key.Mode)
+		if v.WantsIn == 0 && wantsHit(c.Wants, cand.Key.Tonic, chordsOf(cand.Timeline)) {
+			v.WantsIn = i + 1
+		}
 	}
-	v.WantsHit = wantsHit(c.Wants, first.Key.Tonic, chordsOf(first.Timeline))
+	v.WantsHit = v.WantsIn == 1
 
 	if problem := judgeMode(c.Mode, first.Key.Mode); problem != "" {
 		v.Problems = append(v.Problems, problem)
@@ -135,9 +141,12 @@ func Report(verdicts []Verdict) string {
 			pass++
 		}
 		if len(v.Case.Wants) > 0 {
-			if v.WantsHit {
+			switch {
+			case v.WantsHit:
 				status += " · wants ✓"
-			} else {
+			case v.WantsIn > 0:
+				status += fmt.Sprintf(" · wants ✓ in candidate %d", v.WantsIn)
+			default:
 				status += " · wants ✗ (" + strings.Join(v.Case.Wants, "/") + ")"
 			}
 		}
@@ -194,6 +203,7 @@ type breadth struct {
 	vocab        map[string]bool
 	wantsTotal   int
 	wantsHits    int
+	wantsAny     int
 	retries      int
 }
 
@@ -214,6 +224,9 @@ func measureBreadth(verdicts []Verdict) breadth {
 			m.wantsTotal++
 			if v.WantsHit {
 				m.wantsHits++
+			}
+			if v.WantsIn > 0 {
+				m.wantsAny++
 			}
 		}
 		if v.Retry != "" {
@@ -250,7 +263,7 @@ func breadthReport(verdicts []Verdict) string {
 	fmt.Fprintf(&b, "- 調の種類: %d\n", len(m.keys))
 	fmt.Fprintf(&b, "- 使った語彙（度数 × 七の和音の有無）: %d / %d\n", len(m.vocab), diatonicVocabulary)
 	if m.wantsTotal > 0 {
-		fmt.Fprintf(&b, "- 期待した語彙（wants）の命中: %d / %d\n", m.wantsHits, m.wantsTotal)
+		fmt.Fprintf(&b, "- 期待した語彙（wants）の命中: 最初の候補で %d / %d、どれかの候補で %d / %d\n", m.wantsHits, m.wantsTotal, m.wantsAny, m.wantsTotal)
 	}
 	fmt.Fprintf(&b, "- 再試行が要った件数: %d（理由は表の retry）\n", m.retries)
 	b.WriteString(wishesReport(verdicts))
