@@ -14,8 +14,6 @@ export type InstallPrompt = {
 export type PwaState = {
   /** A new version is waiting; call applyUpdate() to switch to it. */
   updateReady: boolean;
-  /** The app shell is cached and the app works offline. */
-  offlineReady: boolean;
   /** The browser offered to install the app. */
   installable: boolean;
   online: boolean;
@@ -30,7 +28,7 @@ export class PwaStatus {
   private install: InstallPrompt | null = null;
 
   constructor(online = true) {
-    this.state = { updateReady: false, offlineReady: false, installable: false, online };
+    this.state = { updateReady: false, installable: false, online };
   }
 
   getSnapshot = (): PwaState => this.state;
@@ -44,14 +42,6 @@ export class PwaStatus {
   needRefresh(apply: () => Promise<void>): void {
     this.update = apply;
     this.set({ updateReady: true });
-  }
-
-  offlineIsReady(): void {
-    this.set({ offlineReady: true });
-  }
-
-  dismissOfflineReady(): void {
-    this.set({ offlineReady: false });
   }
 
   installAvailable(prompt: InstallPrompt): void {
