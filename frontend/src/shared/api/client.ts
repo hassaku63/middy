@@ -30,6 +30,7 @@ export type HarmonyEvent = Schemas['HarmonyEvent'];
 export type RhythmPart = Schemas['RhythmPart'];
 export type Rhythm = Schemas['Rhythm'];
 export type Overview = Schemas['Overview'];
+export type DegreeChord = Schemas['DegreeChord'];
 export type Timeline = Schemas['Timeline'];
 
 // --- POST /timelines/from-progression (changing an example's key; older projects) --
