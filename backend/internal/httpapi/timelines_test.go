@@ -125,7 +125,8 @@ func TestFromProgressionWithPatterns(t *testing.T) {
 		t.Fatal("patterns must keep the analysis")
 	}
 
-	// The same request swung: the "and" of beat 1 moves from 240 to 320.
+	// The same request swung: at 100 BPM the default ratio is 2.6 : 1
+	// (BL-084), so the "and" of beat 1 moves from 240 to 347.
 	swung := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
 		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
 		"progression": [{"numeral": "I"}, {"numeral": "V"}],
@@ -135,7 +136,7 @@ func TestFromProgressionWithPatterns(t *testing.T) {
 	if err := json.NewDecoder(swung.Body).Decode(&sw); err != nil {
 		t.Fatal(err)
 	}
-	if sw.Timeline.Tracks[0].Notes[1].Start != 320 || sw.Timeline.Rhythm.Feel == nil {
+	if sw.Timeline.Tracks[0].Notes[1].Start != 347 || sw.Timeline.Rhythm.Feel == nil || sw.Timeline.Rhythm.Feel.Ratio != 2.6 {
 		t.Fatalf("swing not applied: second note at %d, feel %+v", sw.Timeline.Tracks[0].Notes[1].Start, sw.Timeline.Rhythm.Feel)
 	}
 

@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -24,7 +25,7 @@ func TestSwingDelaysOffBeatEighths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			start, dur := swing(tt.start, tt.dur)
+			start, dur := Swing{Ratio: 2}.move(tt.start, tt.dur)
 			if start != tt.wantStart || dur != tt.want {
 				t.Fatalf("swing(%d, %d) = (%d, %d), want (%d, %d)", tt.start, tt.dur, start, dur, tt.wantStart, tt.want)
 			}
@@ -94,4 +95,51 @@ func TestRenderChoices(t *testing.T) {
 func fourBars(t *testing.T) music.Timeline {
 	t.Helper()
 	return progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1, 4, 5, 1)
+}
+
+// TestSwingRatio (BL-084): swing is a ratio of long to short, 1.0 to 3.0,
+// on eighths or sixteenths; the "and" moves with the ratio.
+func TestSwingRatio(t *testing.T) {
+	tests := []struct {
+		name      string
+		s         Swing
+		start     music.Tick
+		wantStart music.Tick
+	}{
+		{"3:1 puts the and at three quarters of the beat", Swing{Ratio: 3}, eighth, 360},
+		{"1.5:1 puts it at three fifths", Swing{Ratio: 1.5}, eighth, 288},
+		{"1:1 is straight", Swing{Ratio: 1}, eighth, eighth},
+		{"sixteenth swing at 2:1 moves the second sixteenth", Swing{Ratio: 2, Unit: UnitSixteenth}, quarter / 4, 160},
+		{"sixteenth swing leaves the eighths on the beat grid", Swing{Ratio: 2, Unit: UnitSixteenth}, eighth, eighth},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, _ := tt.s.move(tt.start, eighth); got != tt.wantStart {
+				t.Errorf("start %d → %d, want %d", tt.start, got, tt.wantStart)
+			}
+		})
+	}
+	for _, bad := range []Swing{{Ratio: 0.5}, {Ratio: 3.5}, {Ratio: 2, Unit: "quarter"}} {
+		if err := bad.validate(); err == nil {
+			t.Errorf("%+v should be rejected", bad)
+		}
+	}
+}
+
+// TestSwingFollowsTheTempo (BL-084): with no ratio given, swing is deeper
+// when slow and shallower when fast, the tendency of jazz players.
+func TestSwingFollowsTheTempo(t *testing.T) {
+	for bpm, want := range map[float64]float64{60: 3, 120: 2.4, 160: 2, 240: 1.5} {
+		if got := DefaultSwingRatio(bpm); got < want-1e-9 || got > want+1e-9 {
+			t.Errorf("DefaultSwingRatio(%g) = %g, want %g", bpm, got, want)
+		}
+	}
+	tl := blockTimeline(t, music.FourFour) // 100 BPM
+	out, err := Render(tl, Choice{Accompaniment: "arpeggio", Feel: FeelSwing})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f := out.Rhythm.Feel; f.Ratio != 2.6 || f.Unit != string(UnitEighth) || !strings.Contains(f.Explanation, "2.6 : 1") {
+		t.Errorf("the feel reports its ratio: %+v", f)
+	}
 }

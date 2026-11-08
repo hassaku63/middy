@@ -28,6 +28,7 @@
 | ライン・クリシェ (Line cliché) | 同じ和音を保ったまま、1 つの声部（middy ではベース）が半音ずつ動く書き方。Am → Am/G# → Am/G → Am/F# | `lineText` |
 | バックビート (Backbeat) | 4/4 の 2・4 拍目に強いスネアを置くこと。ロックやポップの土台 | `pattern.backbeatText` |
 | ハーフタイム (Half time) | スネアを 3 拍目だけに置き、テンポの半分の速さで揺れて聞こえるようにすること | `pattern.backbeatText` |
+| スウィング比 (Swing ratio) | スウィングで組にした 2 音の長さの比。2 : 1 は 3 連符、3 : 1 は付点と短い音。遅いテンポほど深く、速いほど浅くなる傾向がある | `pattern.Swing`, `DefaultSwingRatio` |
 | ボイスリーディング (Voice leading) | 和音が替わるとき、各声部をなるべく近い音へ動かすこと。middy は前の和音から動きが最小の転回形を選ぶ | `music.LeadVoicings` |
 | ウォーキング・ベース (Walking bass) | ベースが 4 分音符で歩き、和音の最後の拍で次の和音の根音へ半音で入る弾き方。ジャズの 4 ビート | `pattern.VoiceWalk`, `walkLine` |
 | 押し (Push, anticipation) | 和音を拍の頭より 8 分か 16 分早く弾き、そのまま次の小節へつなぐこと。和音は元の拍に属したまま、音だけが前に出る | `music.Push`, `PushNotes`, `HarmonyEvent.Push` |
