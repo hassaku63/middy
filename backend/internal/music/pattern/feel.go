@@ -193,7 +193,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		return music.Timeline{}, err
 	}
 	if plain(c, st) {
-		return tl, nil // block chords on the piano: nothing to render
+		return styleOnly(tl, st), nil // block chords on the piano: nothing to render
 	}
 	accID := c.Accompaniment
 	if accID == "" {
@@ -258,6 +258,21 @@ func plain(c Choice, st *Style) bool {
 		return false
 	}
 	return st == nil || (st.Program == nil && st.Tensions == nil)
+}
+
+// styleOnly records the style on a timeline it does not otherwise change,
+// so a rebuild in another key keeps it.
+func styleOnly(tl music.Timeline, st *Style) music.Timeline {
+	if st == nil {
+		return tl
+	}
+	rhythm := music.Rhythm{}
+	if tl.Rhythm != nil {
+		rhythm = *tl.Rhythm
+	}
+	rhythm.Style = &music.RhythmStyle{ID: st.ID, Name: st.Name}
+	tl.Rhythm = &rhythm
+	return tl
 }
 
 // styleOf finds the choice's style; nil when it names none.

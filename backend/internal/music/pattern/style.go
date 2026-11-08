@@ -139,7 +139,13 @@ func (s *Style) tensions() *Tensions {
 // Styles lists the style catalogue, each with its grooves.
 func Styles() []Style {
 	out := slices.Clone(styles)
-	for i := range out {
+	for i := range out { // callers must not change the catalogue
+		out[i].Accompaniments = slices.Clone(out[i].Accompaniments)
+		out[i].Drums = slices.Clone(out[i].Drums)
+		out[i].Feels = slices.Clone(out[i].Feels)
+		if p := out[i].Program; p != nil {
+			out[i].Program = program(*p)
+		}
 		if t := out[i].Tensions; t != nil {
 			copied := *t // callers must not change the catalogue's rule
 			out[i].Tensions = &copied

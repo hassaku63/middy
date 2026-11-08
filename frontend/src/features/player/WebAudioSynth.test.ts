@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drumVoice, instrumentVoice, midiToHz } from './WebAudioSynth';
+import { drumVoice, envelope, instrumentVoice, midiToHz } from './WebAudioSynth';
 
 describe('midiToHz', () => {
   it('maps A4 to 440 Hz and C4 to 261.63 Hz', () => {
@@ -49,5 +49,22 @@ describe('instrumentVoice (BL-110)', () => {
     expect(pluck.sustain).toBeLessThan(organ.sustain);
     expect(pluck.waves.map((w) => w.type)).not.toEqual(organ.waves.map((w) => w.type));
     expect(instrumentVoice(48).attack).toBeGreaterThan(instrumentVoice(0).attack); // strings swell
+  });
+});
+
+describe('envelope (review of BL-120)', () => {
+  it('releases a short stab at its end instead of holding it through the decay', () => {
+    const keys = instrumentVoice(0);
+    const stab = envelope(keys, 1, 0.12, 0.5);
+    expect(stab.release).toBeCloseTo(1.12);
+    expect(stab.decayEnd).toBeCloseTo(1.12);
+    const long = envelope(keys, 1, 2, 0.5);
+    expect(long.decayEnd).toBeCloseTo(1 + keys.attack + keys.decay);
+    expect(long.release).toBeCloseTo(3);
+  });
+
+  it('never cuts the attack short', () => {
+    const strings = instrumentVoice(48);
+    expect(envelope(strings, 0, 0.05, 0.5).release).toBeCloseTo(strings.attack);
   });
 });

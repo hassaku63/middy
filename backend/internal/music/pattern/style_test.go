@@ -168,3 +168,16 @@ func blockTimeline(t *testing.T, ts music.TimeSignature) music.Timeline {
 	}
 	return tl
 }
+
+// TestStyleIsKeptWithoutPatterns (review): a style with block chords and
+// no instrument still records itself, so a key change sends it back.
+func TestStyleIsKeptWithoutPatterns(t *testing.T) {
+	tl := blockTimeline(t, music.FourFour)
+	out, err := Render(tl, Choice{Style: "pop"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Rhythm == nil || out.Rhythm.Style == nil || out.Rhythm.Style.ID != "pop" || len(out.Tracks[0].Notes) != len(tl.Tracks[0].Notes) {
+		t.Errorf("pop on block chords: %+v", out.Rhythm)
+	}
+}

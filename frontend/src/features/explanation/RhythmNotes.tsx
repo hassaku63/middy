@@ -6,6 +6,16 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
     ['伴奏', rhythm.accompaniment],
     ['ドラム', rhythm.drums],
   ];
+  // A style recorded on plain block chords has nothing to explain here.
+  const style = rhythm.style;
+  if (
+    !rhythm.accompaniment &&
+    !rhythm.drums &&
+    !rhythm.feel &&
+    !style?.instrument &&
+    !style?.tensions
+  )
+    return null;
   return (
     <div className="explanation__rhythm" aria-label="リズム">
       <h3 className="explanation__subtitle">リズム</h3>
