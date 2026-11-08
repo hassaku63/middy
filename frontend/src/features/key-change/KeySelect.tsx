@@ -1,10 +1,10 @@
-import type { PitchClass } from '@/shared/api/client';
-import { pitchClassName } from '@/shared/lib/notation';
+import type { Key, PitchClass } from '@/shared/api/client';
+import { keyName } from '@/shared/lib/notation';
 import './KeySelect.css';
 
 type Props = {
   tonic: PitchClass;
-  mode: string;
+  mode: Key['mode'];
   busy: boolean;
   error: string | null;
   onChange: (tonic: PitchClass) => void;
@@ -20,7 +20,7 @@ export function KeySelect({ tonic, mode, busy, error, onChange }: Props) {
       <select value={tonic} disabled={busy} onChange={(e) => onChange(Number(e.target.value))}>
         {TONICS.map((t) => (
           <option key={t} value={t}>
-            {pitchClassName(t)} {mode}
+            {keyName({ tonic: t, mode })}
           </option>
         ))}
       </select>

@@ -62,9 +62,9 @@ type Key struct {
 	Mode  Mode       `json:"mode"`
 }
 
-// String renders the key as "C major" / "A minor".
+// String renders the key as notation spells it: "Bb major", "C# minor".
 func (k Key) String() string {
-	return fmt.Sprintf("%s %s", k.Tonic, k.Mode)
+	return fmt.Sprintf("%s %s", k.TonicName(), k.Mode)
 }
 
 // Scale returns the seven pitch classes of the key, tonic first.

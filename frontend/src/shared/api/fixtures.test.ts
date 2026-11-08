@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Chord, Key, Timeline } from './client';
 import notation from './fixtures/notation.json';
 import timelineFixture from './fixtures/timeline.json';
-import { chordSymbol, pitchClassName } from '@/shared/lib/notation';
+import { chordSymbol, keyName, pitchClassName } from '@/shared/lib/notation';
 
 /**
  * Cross-language parity (ADR-0007): the backend generates these fixtures
@@ -16,6 +16,13 @@ describe('fixtures from backend/internal/fixtures', () => {
       expect(pitchClassName(pitchClass)).toBe(name);
     }
     expect(notation.pitchClasses).toHaveLength(12);
+  });
+
+  it('key names match for every tonic and mode', () => {
+    for (const { key, name } of notation.keyNames) {
+      expect(keyName(key as Key)).toBe(name);
+    }
+    expect(notation.keyNames).toHaveLength(24);
   });
 
   it('chord symbols match for every root and quality', () => {
