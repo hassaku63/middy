@@ -123,6 +123,12 @@ func toProgression(key music.Key, labels []progressionLabel, barBeats int) (musi
 		if l.Beats != nil {
 			beats = *l.Beats
 		}
+		// A label the key would change is refused, as for the AI (ADR-0013):
+		// "I7" in C major names C7 and would otherwise sound as Cmaj7.
+		if _, err := music.CanonicalLabel(key, l.Numeral); err != nil {
+			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
+			continue
+		}
 		step, err := music.StepFromLabel(key, l.Numeral, beats)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))

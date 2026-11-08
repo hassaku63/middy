@@ -169,7 +169,7 @@ func (c Candidate) validateProgression() []error {
 		// minor, I7 in major) is an error the model can act on, not
 		// something to fix quietly (ADR-0013).
 		if _, err := music.CanonicalLabel(c.Key, label); err != nil {
-			errs = append(errs, fmt.Errorf("progression[%d]: %w%s", i, err, c.suggestLabel(label)))
+			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s", i, err, c.suggestLabel(label), c.dominantHint(label)))
 		}
 	}
 	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
@@ -229,6 +229,48 @@ func (c Candidate) suggestLabel(label string) string {
 		try := string(r[:i]) + string(r[i+1:])
 		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
 			return fmt.Sprintf(`; did you mean %q?`, try)
+		}
+	}
+	return ""
+}
+
+// dominantHint offers the secondary dominant an uppercase label most likely
+// meant (review): "II7" in C major names D7, which the key writes "V7/V",
+// not the borrowed iiø7 the key would otherwise make of it. "" when the
+// label is not an uppercase major triad or seventh on a degree, or the
+// key has no such secondary dominant.
+func (c Candidate) dominantHint(label string) string {
+	head, seventh := strings.CutSuffix(label, "7")
+	if strings.ContainsAny(head, "/°ø+m") || head == "" || head != strings.ToUpper(head) {
+		return ""
+	}
+	step, err := music.StepFromLabel(c.Key, head, 4)
+	if err != nil || step.Accidental != 0 {
+		return ""
+	}
+	root, err := c.Key.Degree(step.Degree)
+	if err != nil {
+		return ""
+	}
+	for d := 1; d <= 7; d++ {
+		pc, err := c.Key.Degree(d)
+		if err != nil || pc != root.Add(5) {
+			continue
+		}
+		target, err := c.Key.Diatonic(d, false)
+		if err != nil {
+			return ""
+		}
+		rn, err := music.RomanNumeral(d, target.Quality)
+		if err != nil {
+			return ""
+		}
+		try := "V/" + rn
+		if seventh {
+			try = "V7/" + rn
+		}
+		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
+			return fmt.Sprintf(`; if you meant the dominant on that root, write %q`, try)
 		}
 	}
 	return ""
