@@ -5,6 +5,7 @@
 package evals
 
 import (
+	"bytes"
 	_ "embed"
 	"encoding/json"
 	"fmt"
@@ -56,9 +57,13 @@ type Case struct {
 // Load returns the embedded cases.
 func Load() ([]Case, error) {
 	var file struct {
+		Doc   string `json:"_doc"` // the file's own note for whoever edits it
 		Cases []Case `json:"cases"`
 	}
-	if err := json.Unmarshal(casesJSON, &file); err != nil {
+	// A misspelt field would drop its expectation and pass vacuously.
+	dec := json.NewDecoder(bytes.NewReader(casesJSON))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&file); err != nil {
 		return nil, fmt.Errorf("evals: cases.json: %w", err)
 	}
 	if len(file.Cases) == 0 {
@@ -203,7 +208,7 @@ func Report(verdicts []Verdict) string {
 	for _, v := range verdicts {
 		status := "✅"
 		if !v.Pass {
-			status = "❌ " + strings.Join(v.Problems, "; ")
+			status = "❌ " + oneLine(strings.Join(v.Problems, "; "))
 		} else {
 			pass++
 		}
@@ -223,7 +228,7 @@ func Report(verdicts []Verdict) string {
 		if v.Retry != "" {
 			status += " · retry: " + shorten(oneLine(v.Retry), 120)
 		}
-		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, v.Title, v.Key, v.TempoBPM, meterNote(v.Meter)+patternsNote(v.Patterns), strings.Join(v.Progression, " "), status)
+		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, oneLine(v.Title), v.Key, v.TempoBPM, meterNote(v.Meter)+patternsNote(v.Patterns), strings.Join(v.Progression, " "), status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
 	b.WriteString(breadthReport(verdicts))
@@ -465,9 +470,13 @@ func drumsOf(c intent.Candidate) string {
 	}
 }
 
-// gridBase is the drums a case judges: the id, or what a grid is based on.
+// gridBase is the drums a case judges: the id, what a grid is based on,
+// or "grid" for a grid of its own (it plays drums, so it is not "none").
 func gridBase(c intent.Candidate) string {
 	if c.DrumGrid != nil {
+		if c.DrumGrid.BasedOn == "" {
+			return "grid"
+		}
 		return c.DrumGrid.BasedOn
 	}
 	return c.Drums
