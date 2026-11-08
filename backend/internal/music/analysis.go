@@ -61,37 +61,94 @@ func Analyze(tl Timeline) (Timeline, error) {
 	out.Harmony = make([]HarmonyEvent, len(tl.Harmony))
 	copy(out.Harmony, tl.Harmony)
 
-	prevDegree := 0
+	ps, err := place(tl.Key, tl.Harmony)
+	if err != nil {
+		return Timeline{}, err
+	}
 	for i := range out.Harmony {
 		h := &out.Harmony[i]
-		if target, ok := locateApplied(tl.Key, h.Chord); ok {
-			degree, _ := degreeOf(tl.Key, h.Chord.Root)
+		p := ps[i]
+		if p.applied != 0 {
 			h.Analysis = &Analysis{
-				Degree:      degree,
+				Degree:      p.degree,
 				Function:    Dominant,
-				AppliedTo:   target,
-				Explanation: explainApplied(tl.Key, *h, target, next(tl.Harmony, i)),
+				AppliedTo:   p.applied,
+				Explanation: explainApplied(tl.Key, *h, p.applied, next(tl.Harmony, i)),
 			}
-			prevDegree = degree
 			continue
 		}
-		degree, borrowed, ok := locate(tl.Key, h.Chord)
-		if !ok {
-			return Timeline{}, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, tl.Key.ChordSymbol(h.Chord), tl.Key)
+		var prev, following placed // the zero value means "none"
+		if i > 0 {
+			prev = ps[i-1]
 		}
-		fn := functionByDegree[degree]
-		cad := cadenceBetween(tl.Key.Mode, prevDegree, degree)
+		if i+1 < len(ps) {
+			following = ps[i+1]
+		}
+		fn := functionByDegree[p.degree]
+		cad := cadenceBetween(tl.Key.Mode, prev, p)
 		h.Analysis = &Analysis{
-			Degree:      degree,
+			Degree:      p.degree,
 			Function:    fn,
 			Cadence:     cad,
-			Borrowed:    borrowed,
-			Explanation: explain(tl.Key, *h, fn, cad, borrowed),
+			Borrowed:    p.borrowed,
+			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following),
 		}
-		prevDegree = degree
 	}
 	out.Overview = overview(out)
 	return out, nil
+}
+
+// placed is a chord's position in the key, found for every chord before
+// the analysis so that each can look at its neighbours.
+type placed struct {
+	degree   int
+	borrowed bool
+	applied  int  // the target degree of a secondary dominant, else 0
+	leading  bool // a V that carries the leading tone (major triad or dominant seventh)
+}
+
+func place(k Key, hs []HarmonyEvent) ([]placed, error) {
+	out := make([]placed, len(hs))
+	for i, h := range hs {
+		if target, ok := locateApplied(k, h.Chord); ok {
+			d, _ := degreeOf(k, h.Chord.Root)
+			out[i] = placed{degree: d, applied: target}
+			continue
+		}
+		d, borrowed, ok := locate(k, h.Chord)
+		if !ok {
+			return nil, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, k.ChordSymbol(h.Chord), k)
+		}
+		out[i] = placed{degree: d, borrowed: borrowed, leading: hasLeadingTone(d, h.Chord)}
+	}
+	return out, nil
+}
+
+// hasLeadingTone reports a V that carries the leading tone, the major
+// triad or dominant seventh on degree 5. The minor v of natural minor,
+// dorian and mixolydian has none, so it makes no authentic, deceptive or
+// half cadence (ADR-0012, decision 2).
+func hasLeadingTone(degree int, c Chord) bool {
+	return degree == 5 && (c.Quality == MajorTriad || c.Quality == Dominant7)
+}
+
+// subtonicText says what a minor key's VII does, from its neighbours
+// (ADR-0012, decision 2): heading to III it acts as III's dominant, going
+// back to i it is a weak dominant without a leading tone, and between i
+// and VI it passes on the way down to V.
+func subtonicText(k Key, p, prev, following placed) string {
+	if k.Mode != Minor || p.degree != 7 || p.borrowed {
+		return ""
+	}
+	switch {
+	case prev.degree == 1 && following.degree == 6:
+		return " ここでは機能というより、i から VI、V へ下りていく線の途中（経過）。"
+	case following.degree == 3:
+		return " ここでは次の III へ向かう。III を一時的な主音とみれば、その V にあたる（V/III の働き）。"
+	case following.degree == 1:
+		return " ここでは導音を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
+	}
+	return ""
 }
 
 // locate finds the chord's scale degree in the key, or, in a major key, in
@@ -146,21 +203,22 @@ func degreeOf(k Key, pc PitchClass) (int, bool) {
 	return 0, false
 }
 
-// cadenceBetween classifies the motion from the previous degree (0 when
-// there is none) into the current one.
-func cadenceBetween(mode Mode, prev, cur int) Cadence {
+// cadenceBetween classifies the motion from the previous chord (degree 0
+// when there is none) into the current one. Authentic, deceptive and half
+// cadences need a V with the leading tone (hasLeadingTone).
+func cadenceBetween(mode Mode, prev, cur placed) Cadence {
 	switch {
-	case prev == 0:
+	case prev.degree == 0:
 		return NoCadence
-	case prev == 7 && cur == 1 && mode.Characteristic() != 0:
+	case prev.degree == 7 && cur.degree == 1 && mode.Characteristic() != 0:
 		return Modal
-	case prev == 5 && cur == 1:
+	case prev.leading && cur.degree == 1:
 		return Authentic
-	case prev == 4 && cur == 1:
+	case prev.degree == 4 && cur.degree == 1:
 		return Plagal
-	case prev == 5 && cur == 6:
+	case prev.leading && cur.degree == 6:
 		return Deceptive
-	case prev != 5 && cur == 5:
+	case prev.degree != 5 && cur.leading:
 		return Half
 	default:
 		return NoCadence
