@@ -1,5 +1,5 @@
 # Real-API evaluation of a pull request (ADR-0018). Runs `make eval` on the
-# pull request's branch when someone with write access adds the `eval`
+# pull request's branch when someone with write access adds the `needs-eval`
 # label, posts the table as a comment and removes the label, so the label
 # can be added again after the next fix.
 #
@@ -23,14 +23,14 @@ permissions:
 # runs of other labels (which skip every job) in their own group, or they
 # would cancel an evaluation in progress.
 concurrency:
-  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'eval' }}
+  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'needs-eval' }}
   cancel-in-progress: true
 
 jobs:
   eval:
     name: eval (real API)
     if: >-
-      github.event.label.name == 'eval' &&
+      github.event.label.name == 'needs-eval' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -93,7 +93,7 @@ jobs:
     needs: eval
     if: >-
       always() &&
-      github.event.label.name == 'eval' &&
+      github.event.label.name == 'needs-eval' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -130,14 +130,14 @@ jobs:
           } > body.md
           # REST rather than `gh pr`, whose GraphQL calls can be refused for GITHUB_TOKEN.
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@body.md --silent
-      - name: Remove the eval label
+      - name: Remove the needs-eval label
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
           # A label that is already gone is fine; any other failure must show.
-          if ! gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/eval" --silent 2> err.txt; then
+          if ! gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/needs-eval" --silent 2> err.txt; then
             if grep -q "Label does not exist" err.txt; then
               echo "the label was already gone"
             else
