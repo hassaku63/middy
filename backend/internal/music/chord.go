@@ -18,6 +18,7 @@ const (
 	Minor7
 	Dominant7
 	HalfDiminished7
+	MinorSixth // minor triad with a major sixth; the borrowed ivm6 (BL-094)
 )
 
 type qualityInfo struct {
@@ -36,6 +37,7 @@ var qualities = map[ChordQuality]qualityInfo{
 	Minor7:          {"min7", "m7", []int{0, 3, 7, 10}, false},
 	Dominant7:       {"dom7", "7", []int{0, 4, 7, 10}, true},
 	HalfDiminished7: {"m7b5", "m7b5", []int{0, 3, 6, 10}, false},
+	MinorSixth:      {"min6", "m6", []int{0, 3, 7, 9}, false},
 }
 
 func (q ChordQuality) info() (qualityInfo, error) {
@@ -172,8 +174,18 @@ var romanBase = [7]string{"I", "II", "III", "IV", "V", "VI", "VII"}
 // quality on a 1-based degree: uppercase for major/augmented, lowercase for
 // minor/diminished, with "°", "+", "7", "ø7" decorations.
 func RomanNumeral(degree int, q ChordQuality) (string, error) {
+	return RomanNumeralAlt(degree, 0, q)
+}
+
+// RomanNumeralAlt is RomanNumeral for a root altered by accidental
+// semitones relative to the scale degree: -1 writes "♭" before the numeral
+// (the borrowed ♭VI, ♭VII). Only -1 and 0 are supported.
+func RomanNumeralAlt(degree, accidental int, q ChordQuality) (string, error) {
 	if degree < 1 || degree > 7 {
 		return "", fmt.Errorf("music: scale degree must be 1..7, got %d", degree)
+	}
+	if accidental != 0 && accidental != -1 {
+		return "", fmt.Errorf("music: unsupported accidental %d", accidental)
 	}
 	i, err := q.info()
 	if err != nil {
@@ -182,6 +194,9 @@ func RomanNumeral(degree int, q ChordQuality) (string, error) {
 	base := romanBase[degree-1]
 	if !i.major {
 		base = toLowerASCII(base)
+	}
+	if accidental == -1 {
+		base = "♭" + base
 	}
 	switch q {
 	case DiminishedTriad:
@@ -194,6 +209,8 @@ func RomanNumeral(degree int, q ChordQuality) (string, error) {
 		return base + "7", nil
 	case HalfDiminished7:
 		return base + "ø7", nil
+	case MinorSixth:
+		return base + "m6", nil
 	default:
 		return base, nil
 	}

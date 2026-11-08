@@ -23,6 +23,7 @@ const QUALITY_SUFFIX: Record<ChordQuality, string> = {
   min7: 'm7',
   dom7: '7',
   m7b5: 'm7b5',
+  min6: 'm6',
 };
 
 /**

@@ -247,8 +247,11 @@ export interface components {
       tonic: components['schemas']['PitchClass'];
       mode: components['schemas']['Mode'];
     };
-    /** @enum {string} */
-    ChordQuality: 'maj' | 'min' | 'dim' | 'aug' | 'maj7' | 'min7' | 'dom7' | 'm7b5';
+    /**
+     * @description min6 は短三和音に長 6 度を足した和音（長調で借用する ivm6）
+     * @enum {string}
+     */
+    ChordQuality: 'maj' | 'min' | 'dim' | 'aug' | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'min6';
     Chord: {
       root: components['schemas']['PitchClass'];
       quality: components['schemas']['ChordQuality'];
@@ -304,10 +307,12 @@ export interface components {
        */
       function: 'T' | 'S' | 'D';
       /**
-       * @description 直前のコードからこのコードへの進行が作る終止。該当なしのときは省略
+       * @description 直前のコードからこのコードへの進行が作る終止。modal はドリアン・ミクソリディアンの VII → I。該当なしのときは省略
        * @enum {string}
        */
-      cadence?: 'authentic' | 'plagal' | 'half' | 'deceptive';
+      cadence?: 'authentic' | 'plagal' | 'half' | 'deceptive' | 'modal';
+      /** @description 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false */
+      borrowed?: boolean;
       /** @description UI にそのまま表示できる 1〜2 文の日本語 */
       explanation: string;
     };

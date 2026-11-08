@@ -32,7 +32,7 @@ func TestParseRomanNumeral(t *testing.T) {
 }
 
 func TestParseRomanNumeralRejectsGarbage(t *testing.T) {
-	for _, in := range []string{"", "VIII", "C", "1", "I-V", "7", "iiii", "V9", "bVII"} {
+	for _, in := range []string{"", "VIII", "C", "1", "I-V", "7", "iiii", "V9", "bb", "b"} {
 		t.Run(in, func(t *testing.T) {
 			if _, _, err := ParseRomanNumeral(in); err == nil {
 				t.Fatalf("%q should not parse", in)
@@ -173,7 +173,8 @@ func TestCanonicalLabelRejectsWhatTheKeyWouldSilentlyChange(t *testing.T) {
 		{bbMajor, "I7", "", `"I7" would sound as Bbmaj7 (Imaj7) in Bb major`}, // the blues I7
 		{bbMajor, "Imaj7", "Imaj7", ""},
 		{bbMajor, "ii7", "ii7", ""},
-		{bbMajor, "bVII", "", "is not a roman numeral"},
+		{bbMajor, "bVII", "♭VII", ""}, // borrowed from Bb minor (BL-094)
+		{bbMajor, "#iv", "", "is not available"},
 	}
 	for _, tt := range tests {
 		got, err := CanonicalLabel(tt.key, tt.label)

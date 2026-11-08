@@ -71,7 +71,7 @@ type notationFixture struct {
 
 var allQualities = []music.ChordQuality{
 	music.MajorTriad, music.MinorTriad, music.DiminishedTriad, music.AugmentedTriad,
-	music.Major7, music.Minor7, music.Dominant7, music.HalfDiminished7,
+	music.Major7, music.Minor7, music.Dominant7, music.HalfDiminished7, music.MinorSixth,
 }
 
 func notation() (notationFixture, error) {
