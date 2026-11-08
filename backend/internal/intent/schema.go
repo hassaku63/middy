@@ -53,7 +53,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "type": "array",
             "minItems": 1,
             "items": { "type": "string" },
-            "description": "%d 個までのコード。ダイアトニックなローマ数字と、長調では同主短調からの借用（iv, ivm6, ii°, bVI, bVII とその七の和音。♭ は b と書く）。ダイアトニック: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
+            "description": "%d 個までのコード。ダイアトニックなローマ数字と、長調では同主短調からの借用（iv, ivm6, ii°, bVI, bVII とその七の和音。♭ は b と書く）と、セカンダリードミナント V/x・V7/x（x は主和音以外の長・短三和音。調の中の和音と同じになるものは不可）。ダイアトニック: I, ii, iii, IV, V, vi, vii° と 7 / maj7 / ø7 の七の和音（例: ii7, V7, IVmaj7）。コードの質は調から決まる。例外は短調の V / V7（大文字）で、和声的短音階のドミナント（長三和音・属七）になる。自然短音階の v が欲しければ小文字で書く"
           },
           "beatsPerChord": { "type": "integer", "enum": [1, 2, 4, 8], "description": "1 コードの長さ（四分音符単位）" },
           "reason": { "type": "string", "description": "この候補の聴きどころの短い解説。調・テンポ・進行がイメージのどこに合うかを 1〜2 文の日本語で" },
