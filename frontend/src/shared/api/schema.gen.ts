@@ -353,6 +353,23 @@ export interface components {
       whole: string;
       /** @description 進行の長さ、始まり、終わりの終止、繰り返したときの戻り方。UI にそのまま出せる日本語 */
       flow: string;
+      /** @description 調のモードのダイアトニックな三和音 7 つを、度数の順に（度数の地図。BL-099） */
+      degrees: components['schemas']['DegreeChord'][];
+    };
+    /** @description 度数の地図の 1 つの和音 */
+    DegreeChord: {
+      degree: number;
+      /** @description このモードでの三和音のローマ数字（例 ドリアンの IV） */
+      romanNumeral: string;
+      /** @description 調に合わせて綴った和音名（例 G） */
+      symbol: string;
+      /**
+       * @description トニック / サブドミナント / ドミナント（個別の解説と同じ割り当て）
+       * @enum {string}
+       */
+      function: 'T' | 'S' | 'D';
+      /** @description 例がこの度数の和音を調の和音として鳴らすとき true（七の和音や短調の V を含む。借用和音とセカンダリードミナントは含まない）。省略時 false */
+      used?: boolean;
     };
     Rhythm: {
       accompaniment?: components['schemas']['RhythmPart'];

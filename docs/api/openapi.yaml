@@ -560,7 +560,7 @@ components:
     Overview:
       description: 例全体の解説（全体と流れ）。決定論的に生成される
       type: object
-      required: [whole, flow]
+      required: [whole, flow, degrees]
       properties:
         whole:
           type: string
@@ -568,6 +568,33 @@ components:
         flow:
           type: string
           description: 進行の長さ、始まり、終わりの終止、繰り返したときの戻り方。UI にそのまま出せる日本語
+        degrees:
+          type: array
+          description: 調のモードのダイアトニックな三和音 7 つを、度数の順に（度数の地図。BL-099）
+          items:
+            $ref: '#/components/schemas/DegreeChord'
+    DegreeChord:
+      description: 度数の地図の 1 つの和音
+      type: object
+      required: [degree, romanNumeral, symbol, function]
+      properties:
+        degree:
+          type: integer
+          minimum: 1
+          maximum: 7
+        romanNumeral:
+          type: string
+          description: このモードでの三和音のローマ数字（例 ドリアンの IV）
+        symbol:
+          type: string
+          description: 調に合わせて綴った和音名（例 G）
+        function:
+          type: string
+          enum: [T, S, D]
+          description: トニック / サブドミナント / ドミナント（個別の解説と同じ割り当て）
+        used:
+          type: boolean
+          description: 例がこの度数の和音を調の和音として鳴らすとき true（七の和音や短調の V を含む。借用和音とセカンダリードミナントは含まない）。省略時 false
     Rhythm:
       type: object
       properties:

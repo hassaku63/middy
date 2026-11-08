@@ -195,3 +195,47 @@ func TestTempoCountsTheBeat(t *testing.T) {
 		}
 	}
 }
+
+// TestDegreeMapListsTheModesSevenChords checks the degree map (BL-099):
+// the seven triads of the mode with their function, and which the example
+// plays as part of the key (a borrowed iv or an applied V/vi does not mark
+// iv or V; a seventh chord marks its degree).
+func TestDegreeMapListsTheModesSevenChords(t *testing.T) {
+	tests := []struct {
+		key      Key
+		labels   []string
+		numerals string
+		symbols  string
+		used     string
+	}{
+		{Key{C, Major}, []string{"I", "V7/vi", "vi", "iv", "V7", "I"},
+			"I ii iii IV V vi vii°", "C Dm Em F G Am Bdim", "1 5 6"},
+		{Key{D, Dorian}, []string{"i", "IV", "i", "VII"},
+			"i ii III IV v vi° VII", "Dm Em F G Am Bdim C", "1 4 7"},
+		{Key{A, Minor}, []string{"i", "VI", "III", "VII", "iv", "V7", "i"},
+			"i ii° III iv v VI VII", "Am Bdim C Dm Em F G", "1 3 4 5 6 7"},
+	}
+	for _, tt := range tests {
+		tl := analysed(t, tt.key, 4, tt.labels...)
+		var numerals, symbols, used []string
+		for _, d := range tl.Overview.Degrees {
+			numerals = append(numerals, d.RomanNumeral)
+			symbols = append(symbols, d.Symbol)
+			if d.Used {
+				used = append(used, fmt.Sprint(d.Degree))
+			}
+		}
+		if got := strings.Join(numerals, " "); got != tt.numerals {
+			t.Errorf("%s numerals = %s, want %s", tt.key, got, tt.numerals)
+		}
+		if got := strings.Join(symbols, " "); got != tt.symbols {
+			t.Errorf("%s symbols = %s, want %s", tt.key, got, tt.symbols)
+		}
+		if got := strings.Join(used, " "); got != tt.used {
+			t.Errorf("%s used = %s, want %s", tt.key, got, tt.used)
+		}
+		if f := tl.Overview.Degrees[4].Function; f != Dominant {
+			t.Errorf("%s: degree 5 should be dominant, got %s", tt.key, f)
+		}
+	}
+}
