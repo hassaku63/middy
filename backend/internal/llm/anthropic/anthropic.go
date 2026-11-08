@@ -23,7 +23,7 @@ import (
 // Defaults when Config leaves a field empty.
 const (
 	DefaultModel     = "claude-opus-5-5"
-	DefaultTimeout   = 30 * time.Second
+	DefaultTimeout   = 60 * time.Second // room for thinking within MaxTokens, as the eval uses
 	DefaultMaxTokens = 16000
 )
 
@@ -101,21 +101,24 @@ func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, e
 	if err != nil {
 		return llm.Response{}, classify(err)
 	}
+	// Token accounting per call: the prerequisite for judging cost and for
+	// seeing whether the cached system prompt is actually read from cache.
+	// Logged before the stop reason, so a truncated (and costliest) call
+	// is counted too.
+	slog.InfoContext(ctx, "llm usage",
+		"model", c.model,
+		"stop_reason", msg.StopReason,
+		"input_tokens", msg.Usage.InputTokens,
+		"output_tokens", msg.Usage.OutputTokens,
+		"cache_read_input_tokens", msg.Usage.CacheReadInputTokens,
+		"cache_creation_input_tokens", msg.Usage.CacheCreationInputTokens,
+	)
 	switch msg.StopReason {
 	case sdk.StopReasonRefusal:
 		return llm.Response{}, fmt.Errorf("anthropic: %w (%s)", ErrRefused, msg.StopDetails.Category)
 	case sdk.StopReasonMaxTokens:
 		return llm.Response{}, ErrTruncated
 	}
-	// Token accounting per call: the prerequisite for judging cost and for
-	// seeing whether the cached system prompt is actually read from cache.
-	slog.InfoContext(ctx, "llm usage",
-		"model", c.model,
-		"input_tokens", msg.Usage.InputTokens,
-		"output_tokens", msg.Usage.OutputTokens,
-		"cache_read_input_tokens", msg.Usage.CacheReadInputTokens,
-		"cache_creation_input_tokens", msg.Usage.CacheCreationInputTokens,
-	)
 	var text strings.Builder
 	for _, block := range msg.Content {
 		if tb, ok := block.AsAny().(sdk.TextBlock); ok {

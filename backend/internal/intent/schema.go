@@ -103,6 +103,16 @@ func Parse(data []byte) (Intent, error) {
 		in.Candidates[i].Accompaniment = strings.ToLower(in.Candidates[i].Accompaniment)
 		in.Candidates[i].Drums = strings.ToLower(in.Candidates[i].Drums)
 		in.Candidates[i].Feel = strings.ToLower(in.Candidates[i].Feel)
+		in.Candidates[i].Style = strings.ToLower(in.Candidates[i].Style)
+		for j, p := range in.Candidates[i].Pushes {
+			in.Candidates[i].Pushes[j] = strings.ToLower(p)
+		}
+		if g := in.Candidates[i].DrumGrid; g != nil {
+			g.BasedOn = strings.ToLower(g.BasedOn)
+			for j := range g.Voices {
+				g.Voices[j].Voice = strings.ToLower(g.Voices[j].Voice)
+			}
+		}
 		in.Candidates[i].Meter = strings.TrimSpace(in.Candidates[i].Meter)
 	}
 	if err := in.Validate(); err != nil {
