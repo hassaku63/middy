@@ -57,8 +57,9 @@ func TestRhythmDescriptions(t *testing.T) {
 			if d == nil || d.ID != tt.drums || d.OnBeat != tt.wantDrumOn || d.Syncopated != tt.wantDrumSy {
 				t.Errorf("drums = %+v", d)
 			}
-			if !strings.Contains(d.Explanation, "キックとスネア") {
-				t.Errorf("drum explanation should talk about kick and snare: %q", d.Explanation)
+			// Every kit here has a kick; bossa has no snare, so only the kick is named.
+			if !strings.Contains(d.Explanation, "1 小節にキック") {
+				t.Errorf("drum explanation should name the kick: %q", d.Explanation)
 			}
 		})
 	}

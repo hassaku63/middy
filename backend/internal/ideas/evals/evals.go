@@ -30,6 +30,9 @@ type Case struct {
 	// Feel, when set, is the feel the first candidate must have ("straight"
 	// also matches an omitted feel).
 	Feel string `json:"feel,omitempty"`
+	// Drums, when set, lists the drums the first candidate may use, joined
+	// with "/"; "none" allows no drums (BL-081).
+	Drums string `json:"drums,omitempty"`
 	// Meter, when set, is the meter the first candidate must have ("4/4"
 	// also matches an omitted meter; ADR-0017).
 	Meter string `json:"meter,omitempty"`
@@ -139,29 +142,39 @@ func Judge(c Case, res ideas.Result) Verdict {
 	v.WantsHit = v.WantsIn == 1
 	v.Silent = silentWords(reasons)
 
-	if problem := judgeMode(c.Mode, first.Key.Mode); problem != "" {
-		v.Problems = append(v.Problems, problem)
-	}
+	v.Problems = append(v.Problems, judgeFirst(c, first)...)
 	if problem := judgeModeInAny(c.ModeInAny, modes); problem != "" {
 		v.Problems = append(v.Problems, problem)
-	}
-	if c.TempoMin > 0 && first.TempoBPM < c.TempoMin {
-		v.Problems = append(v.Problems, fmt.Sprintf("tempo %.0f below %.0f", first.TempoBPM, c.TempoMin))
-	}
-	if c.TempoMax > 0 && first.TempoBPM > c.TempoMax {
-		v.Problems = append(v.Problems, fmt.Sprintf("tempo %.0f above %.0f", first.TempoBPM, c.TempoMax))
-	}
-	if problem := judgeFeel(c.Feel, first.Feel); problem != "" {
-		v.Problems = append(v.Problems, problem)
-	}
-	if c.Meter != "" && c.Meter != meterOf(first.Meter) {
-		v.Problems = append(v.Problems, "expected meter "+c.Meter+", got "+meterOf(first.Meter))
 	}
 	if strings.TrimSpace(res.Reply) == "" {
 		v.Problems = append(v.Problems, "empty reply")
 	}
 	v.Pass = len(v.Problems) == 0
 	return v
+}
+
+// judgeFirst checks the first candidate against the case: mode, tempo
+// band, and, when the case names them, feel, drums and meter.
+func judgeFirst(c Case, first ideas.Candidate) []string {
+	var problems []string
+	add := func(p string) {
+		if p != "" {
+			problems = append(problems, p)
+		}
+	}
+	add(judgeMode(c.Mode, first.Key.Mode))
+	if c.TempoMin > 0 && first.TempoBPM < c.TempoMin {
+		add(fmt.Sprintf("tempo %.0f below %.0f", first.TempoBPM, c.TempoMin))
+	}
+	if c.TempoMax > 0 && first.TempoBPM > c.TempoMax {
+		add(fmt.Sprintf("tempo %.0f above %.0f", first.TempoBPM, c.TempoMax))
+	}
+	add(judgeFeel(c.Feel, first.Feel))
+	add(judgeDrums(c.Drums, first.Drums))
+	if c.Meter != "" && c.Meter != meterOf(first.Meter) {
+		add("expected meter " + c.Meter + ", got " + meterOf(first.Meter))
+	}
+	return problems
 }
 
 // Report renders verdicts as a Markdown table to paste into the PR that
@@ -336,6 +349,21 @@ const diatonicVocabulary = 14
 
 func oneLine(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(s), "\n", " "), "|", "/")
+}
+
+// judgeDrums accepts any drums when want is empty, else one of the ids
+// joined with "/" ("none" for no drums).
+func judgeDrums(want, got string) string {
+	if want == "" {
+		return ""
+	}
+	if got == "" {
+		got = "none"
+	}
+	if slices.Contains(strings.Split(want, "/"), got) {
+		return ""
+	}
+	return "expected drums " + want + ", got " + got
 }
 
 func judgeFeel(want, got string) string {
