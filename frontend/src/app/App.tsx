@@ -4,6 +4,8 @@ import { useIdeas } from '@/features/chat/useIdeas';
 import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
 import { KeySelect } from '@/features/key-change/KeySelect';
 import { useKeyChange } from '@/features/key-change/useKeyChange';
+import { StyleSelect } from '@/features/regroove/StyleSelect';
+import { useRegroove } from '@/features/regroove/useRegroove';
 import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
@@ -46,6 +48,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const projects = useProjects(projectStore);
   const pwa = usePwa();
   const keyChange = useKeyChange();
+  const regroove = useRegroove();
   const timelineLayout = useTimelineLayout();
   const degreeMap = useDegreeMapTrial();
   // Normal is silent; only an unreachable backend is worth a word (BL-065).
@@ -59,6 +62,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
 
   const openCandidate = (c: IdeaCandidate, image: string) => {
     show(c.timeline);
+    regroove.clear();
     setOpenExample(c);
     setProjectName(null);
     setOrigin({ kind: 'idea', image, candidateTitle: c.title });
@@ -78,8 +82,17 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     if (next) show(next);
   };
 
+  // Same harmony, another style's groove: also the engine alone (BL-087).
+  const changeStyle = async (id: string) => {
+    const style = patterns.styles.find((s) => s.id === id);
+    if (!timeline || !style) return;
+    const next = await regroove.change(timeline, style);
+    if (next) show(next);
+  };
+
   const openProject = (p: Project) => {
     show(p.timeline);
+    regroove.clear();
     setOpenExample(null);
     setProjectName(p.name);
     setOrigin(p.source);
@@ -116,6 +129,14 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
               busy={keyChange.busy}
               error={keyChange.error}
               onChange={(t) => void changeKey(t)}
+            />
+            <StyleSelect
+              styles={patterns.styles}
+              current={timeline.rhythm?.style?.id}
+              busy={regroove.busy}
+              error={regroove.error}
+              note={regroove.note}
+              onChange={(id) => void changeStyle(id)}
             />
             <DownloadMidiButton timeline={timeline} />
             {origin && (

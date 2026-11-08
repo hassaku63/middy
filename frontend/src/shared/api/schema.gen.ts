@@ -166,6 +166,17 @@ export interface components {
       program?: number;
       /** @description その楽器の名前 */
       instrument?: string;
+      /** @description 拍子ごとのこのスタイルのグルーヴ（BL-087）。例のスタイルを選び直すと、和声はそのままでこれで作り直す */
+      grooves: components['schemas']['Groove'][];
+    };
+    /** @description あるスタイルがある拍子で鳴らす型。そのスタイルの一覧のうち、その拍子で使える最初の伴奏・ドラム・ノリ（拍子のために書かれた伴奏を優先） */
+    Groove: {
+      meter: components['schemas']['TimeSignature'];
+      /** @description その拍子の伴奏がなければ block */
+      accompaniment: string;
+      /** @description その拍子のドラムがなければ省略 */
+      drums?: string;
+      feel: components['schemas']['Feel'];
     };
     FeelInfo: {
       id: components['schemas']['Feel'];

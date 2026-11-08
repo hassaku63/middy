@@ -49,6 +49,7 @@ describe('CandidateCard style (BL-119)', () => {
           accompaniments: ['reel'],
           drums: ['bodhran'],
           feels: ['straight' as const],
+          grooves: [],
         },
       ],
     };

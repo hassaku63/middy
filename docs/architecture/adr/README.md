@@ -24,6 +24,7 @@
 | [0018](0018-eval-in-ci.md) | 実 API の評価を、PR のラベルで CI に走らせる | Accepted |
 | [0019](0019-tempo-counts-the-beat.md) | テンポは拍子の拍で数える | Accepted |
 | [0020](0020-slash-bass.md) | 分数コードのベースは和声に置き、度数で書く | Accepted |
+| [0021](0021-style-groove.md) | スタイルを選び直したときのグルーヴはエンジンが決める | Accepted |
 
 ## いつ ADR を書くか
 
