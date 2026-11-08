@@ -5,6 +5,11 @@
 #   backend unit tests: 60 s   frontend unit tests: 30 s
 #
 # Usage: scripts/test-report.sh [backend|frontend|all]   (default: all)
+#
+# CI already runs each suite once with a JSON reporter and passes the file
+# in, so the report does not run the tests a second time (ADR-0016):
+#   GO_TEST_JSON=<go test -json output>   VITEST_JSON=<vitest json report>
+# The step that produced the file owns pass / fail; the report only reads it.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -17,7 +22,11 @@ which="${1:-all}"
 report_backend() {
 echo "## backend (go test -json)"
 go_json=$(mktemp); trap 'rm -f "$go_json"' EXIT
-(cd backend && go test -json ./... > "$go_json"); go_status=$?
+if [ -n "${GO_TEST_JSON:-}" ]; then
+  cp "$GO_TEST_JSON" "$go_json"; go_status=0
+else
+  (cd backend && go test -json ./... > "$go_json"); go_status=$?
+fi
 # One line per finished test: "<seconds> <package>.<Test>"
 awk -F'"' '
   /"Action":"(pass|fail)"/ && /"Test":"/ {
@@ -50,7 +59,11 @@ awk -v t="$go_total" -v b="$backend_budget" 'BEGIN { exit !(t > b) }' && { echo 
 report_frontend() {
 echo "## frontend (vitest json reporter)"
 vt_json=$(mktemp)
-(cd frontend && npx vitest run --reporter=json --outputFile="$vt_json" > /dev/null 2>&1); vt_status=$?
+if [ -n "${VITEST_JSON:-}" ]; then
+  cp "$VITEST_JSON" "$vt_json"; vt_status=0
+else
+  (cd frontend && npx vitest run --reporter=json --outputFile="$vt_json" > /dev/null 2>&1); vt_status=$?
+fi
 python3 - "$vt_json" "$top" "$frontend_budget" <<'PY'
 import json, sys
 path, top, budget = sys.argv[1], int(sys.argv[2]), float(sys.argv[3])

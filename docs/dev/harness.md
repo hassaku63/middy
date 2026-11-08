@@ -19,7 +19,7 @@
 
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
-| テスト所要時間レポート（上位 10 件、合計、パッケージ別。予算: backend 60 秒 / frontend 30 秒超で警告） | 気づかないうちに遅くなるスイート、価値に見合わない重いテスト | `make test-report` | CI `backend` / `frontend` の各ステップ |
+| テスト所要時間レポート（上位 10 件、合計、パッケージ別。予算: backend 60 秒 / frontend 30 秒超で警告） | 気づかないうちに遅くなるスイート、価値に見合わない重いテスト | `make test-report` | CI `backend` / `frontend` の各ステップ（同じテストの実行が書いた JSON から作る。再実行しない。ADR-0016） |
 | バンドルサイズ予算（gzip: 最大 JS チャンク 120 kB、JS 合計 160 kB、CSS 20 kB） | PWA の初回ダウンロードの肥大 | `bash scripts/check-bundle-size.sh`（`make frontend-build` が実行） | `make check`, CI `frontend` |
 | 1,000 ノート描画の予算テスト（緩い上限 3 秒。実測は `make test-report` に出る） | タイムライン表示の計算量の退行 | `cd frontend && npx vitest run src/features/timeline/TimelineView.perf.test.tsx` | `make check`, CI `frontend` |
 
@@ -60,8 +60,8 @@
 
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
-| `go mod tidy -diff` | `go.mod` / `go.sum` の不整合、不要な依存 | `make deps-check` | CI `deps` |
-| `npm audit --omit=dev --audit-level=high` | 本番依存の既知脆弱性 | `make deps-check` | CI `deps` |
+| `go mod tidy -diff` | `go.mod` / `go.sum` の不整合、不要な依存 | `make deps-check` | CI `backend` |
+| `npm audit --omit=dev --audit-level=high` | 本番依存の既知脆弱性 | `make deps-check` | CI `frontend` |
 | `govulncheck` + `npm audit`（全依存） | 新たに公開された脆弱性 | （CI のみ） | 週次 `security audit` |
 | Dependabot（週次、minor/patch と major を別グループ） | 依存の陳腐化 | — | GitHub |
 
@@ -73,6 +73,18 @@
 | --- | --- | --- | --- |
 | `.tool-versions` を CI の setup-go / setup-node / golangci-lint-action と Docker のビルド引数が読む | CI と手元・コンテナの版ズレ | — | CI、`make image` / `make up` |
 | `make doctor` | 手元の Go / Node / golangci-lint の major.minor ズレ | `make doctor` | セッション開始時（`docs/dev/workflow.md`） |
+
+## CI が外部から取得するもの（ADR-0016）
+
+ジョブはこれらをキャッシュから取り、ないときだけ取得元へ行く。すべてのジョブに `timeout-minutes` がある。
+
+| 取得するもの | 取得元 | キャッシュ | 取得元が不調のとき |
+| --- | --- | --- | --- |
+| Go 本体（`.tool-versions` の版） | GitHub の `actions/go-versions` のリリース | ランナーのツールキャッシュを `actions/cache` で版ごとに | `setup-go` が go.dev から取る |
+| Go のモジュールとビルド | proxy.golang.org | `setup-go`（キーは `backend/go.sum`） | — |
+| golangci-lint | GitHub のリリース（チェックサムを検証、再試行あり） | `actions/cache` で版ごとに | `scripts/install-golangci-lint.sh` がモジュールプロキシからビルドする |
+| npm パッケージ | npm レジストリ | `setup-node`（キーは `frontend/package-lock.json`） | — |
+| Docker のベースイメージと層 | Docker Hub、gcr.io | buildx の `type=gha` | — |
 
 ## 手順（機械化されていない）
 
