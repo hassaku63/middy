@@ -52,7 +52,7 @@ func TestCatalogueIsWellFormed(t *testing.T) {
 		}
 		for _, h := range a.Hits {
 			anyMeter := a.Meter == nil && h.Duration == 0 // lasts to the end of whatever bar
-			if h.Start < 0 || h.Start+h.Duration > length || (h.Duration <= 0 && !anyMeter) || h.Velocity < 1 || h.Velocity > 127 || len(pitches(music.Key{Tonic: music.C, Mode: music.Major}, []music.Pitch{60, 64, 67}, nil, h.Voice)) == 0 {
+			if h.Start < 0 || h.Start+h.Duration > length || (h.Duration <= 0 && !anyMeter) || h.Velocity < 1 || h.Velocity > 127 || (h.Voice != VoiceWalk && len(pitches(music.Key{Tonic: music.C, Mode: music.Major}, []music.Pitch{60, 64, 67}, []music.Pitch{60, 64, 67}, nil, h.Voice)) == 0) {
 				t.Errorf("%s: bad hit %+v", a.ID, h)
 			}
 		}

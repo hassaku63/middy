@@ -1,6 +1,7 @@
 package music
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -66,8 +67,17 @@ func TestFromProgressionCMajorPopProgression(t *testing.T) {
 			t.Errorf("note[%d] = %+v, want pitch %d start 0 duration %d", i, n, wantPitches[i], 4*DefaultPPQ)
 		}
 	}
-	if n := tr.Notes[3]; n.Start != 4*DefaultPPQ || n.Pitch != NewPitch(G, 4) {
-		t.Errorf("second chord should start at bar 2 on G4, got %+v", n)
+	// The second chord starts at bar 2, voiced from the first (BL-086):
+	// G under C E G is B3 D4 G4, the inversion that moves least.
+	var second []Pitch
+	for _, n := range tr.Notes[3:6] {
+		if n.Start != 4*DefaultPPQ {
+			t.Errorf("second chord should start at bar 2, got %+v", n)
+		}
+		second = append(second, n.Pitch)
+	}
+	if !slices.Equal(second, []Pitch{59, 62, 67}) {
+		t.Errorf("second chord = %v, want B3 D4 G4", second)
 	}
 }
 
