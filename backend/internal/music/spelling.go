@@ -103,3 +103,13 @@ func (k Key) PitchClassName(pc PitchClass) string {
 func (k Key) ChordSymbol(c Chord) string {
 	return k.PitchClassName(c.Root) + c.Quality.Symbol()
 }
+
+// spellDegree names the root on a scale degree's letter, with the
+// accidental applied: C major degree 6 lowered is "Ab", E major degree 6
+// lowered is "C" (not B#), because the letter stays A / C.
+func (k Key) spellDegree(degree, accidental int) string {
+	name := k.scaleNames()[degree-1]
+	letter := name[0]
+	pc := k.Scale()[degree-1].Add(accidental)
+	return spell(letter, pc)
+}

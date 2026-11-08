@@ -36,7 +36,7 @@ func TestNotationCoversEveryQualityAndKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(f.PitchClasses) != 12 || len(f.Chords) != 12*8 || len(f.RomanNumerals) != 2*7*2 {
+	if len(f.PitchClasses) != 12 || len(f.Chords) != 12*9 || len(f.RomanNumerals) != 2*7*2 {
 		t.Fatalf("unexpected sizes: %d %d %d", len(f.PitchClasses), len(f.Chords), len(f.RomanNumerals))
 	}
 }

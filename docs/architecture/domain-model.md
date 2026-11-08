@@ -27,12 +27,12 @@
 
 ### コード
 
-- `ChordQuality` — 三和音 4 種（maj, min, dim, aug）と七の和音 4 種（maj7, min7, dom7, m7b5）。JSON は識別子文字列（`"dom7"`）
+- `ChordQuality` — 三和音 4 種（maj, min, dim, aug）、七の和音 4 種（maj7, min7, dom7, m7b5）、六の和音 1 種（min6。長調で借用する ivm6 のため）。JSON は識別子文字列（`"dom7"`）
 - `Chord{Root, Quality}` — `PitchClasses()`, `Voicing(octave)`（密集・基本形）, `String()`（`"G7"`）
-- `RomanNumeral(degree, quality)` — `I`, `ii`, `vii°`, `V7`, `iiø7`, `IVmaj7` など。大文字 = 長/増、小文字 = 短/減
+- `RomanNumeral(degree, quality)` — `I`, `ii`, `vii°`, `V7`, `iiø7`, `IVmaj7` など。大文字 = 長/増、小文字 = 短/減。`RomanNumeralAlt(degree, accidental, quality)` は根音を半音下げた `♭VI`, `♭VII7` も書く
 - `ParseRomanNumeral(s)` — 上記の表記（と `dim`, `aug`, `+`, `m7b5`）を度数と七の和音の有無に戻す。`RomanNumeral` の出力は必ず往復する。大文字・小文字の違いは `StepFromLabel` だけが（短調の V で）使う
 
-**未対応（backlog）**: 転回形、分数コード、テンション、借用和音、セカンダリドミナント。
+**未対応（backlog）**: 転回形、分数コード、テンション、長調の承認済みセット以外の借用和音（短調側の借用、♭II、♭III など）、セカンダリドミナント。
 
 ### タイムライン
 
@@ -58,10 +58,10 @@ Timeline
 
 ### 分析（解説データ）
 
-- `Function` — `T` / `S` / `D`。度数で決まる: I, III, VI = T、II, IV = S、V, VII = D。長調・自然短音階とも同じ割り当て（短調の v と VII は「弱いドミナント」扱い。和声的短音階の V や借用和音の扱いは未実装）
+- `Function` — `T` / `S` / `D`。度数で決まる: I, III, VI = T、II, IV = S、V, VII = D。長調・自然短音階とも同じ割り当て（短調の v と VII は「弱いドミナント」扱い。借用和音は、その度数の機能をそのまま使う: iv は S、♭VI は T、♭VII は D）
 - `Cadence` — 直前のコードからの進行の分類: `authentic`（V→I）、`plagal`（IV→I）、`half`（V 以外→V）、`deceptive`（V→vi）、`modal`（ドリアン・ミクソリディアンの VII→I。導音を使わない）。該当なしは空
 - `Analysis{Degree, Function, Cadence, Explanation}` — `HarmonyEvent.Analysis` に付く。`Explanation` は UI にそのまま出せる日本語で、決定論的に組み立てる（LLM は使わない）。機能（T/S/D）は全モードで度数から付ける初学者向けの単純化。モードの特徴音を含む和音には、その音を名指しして「なぜそう聞こえるか」の一文を足す（ADR-0015）
-- `Analyze(Timeline) (Timeline, error)` — 入力を変更せず、`Harmony` に `Analysis` を付けた複製を返す。非ダイアトニックなコードがあればエラー
+- `Analyze(Timeline) (Timeline, error)` — 入力を変更せず、`Harmony` に `Analysis` を付けた複製を返す。ダイアトニックでも長調の借用和音でもないコードがあればエラー。借用和音には `Borrowed: true` を付け、解説に「同主短調（C minor）から借りた和音」の一文を足す
 
 ### 書き出し
 
@@ -94,4 +94,5 @@ Timeline
 
 - **質はスケールから導出する。** `Key.Diatonic` は三度堆積の音程から質を判定するため、モードを追加してもコードの表が不要。
 - **ローマ数字の文字列は境界でだけ扱う。** 内部の分析は `degree + quality` で行い、文字列は入力（API、将来は LLM の出力）を `ParseRomanNumeral` で度数と七の和音の有無に変換するときにだけ現れる。コードの質は常に調から導出され、文字列の大文字小文字や `°` は結果に影響しない。
-- **自然短音階 + 和声的短音階のドミナント。** 短調で `V` / `V7`（大文字）と書くと `StepFromLabel` が `Step.Quality` を長三和音・属七に上書きし、導音（第 7 音の半音上げ）が鳴る。根音は自然短音階上にあるので `Analyze` はそのまま度数を求め、解説に和声的短音階の一文を足す。小文字 `v` は自然短音階の短三和音。ドリアンとミクソリディアンにはこの例外がなく、`V` と書けば `CanonicalLabel` が落とす。借用和音、セカンダリドミナント、その他の非ダイアトニックなコードは未対応で、`Analyze` は拒否する。
+- **自然短音階 + 和声的短音階のドミナント。** 短調で `V` / `V7`（大文字）と書くと `StepFromLabel` が `Step.Quality` を長三和音・属七に上書きし、導音（第 7 音の半音上げ）が鳴る。根音は自然短音階上にあるので `Analyze` はそのまま度数を求め、解説に和声的短音階の一文を足す。小文字 `v` は自然短音階の短三和音。ドリアンとミクソリディアンにはこの例外がなく、`V` と書けば `CanonicalLabel` が落とす。
+- **長調の借用和音（BL-094）。** 長調では、同主短調から借りた `iv`（`iv7`、`ivm6` も）、`ii°`（`iiø7`）、`bVI`（`bVImaj7`）、`bVII`（`bVII7`）を書ける。`Step.Accidental`（0 か -1）が根音を半音下げ、`Step.Borrowed` が印になる。ラベルの ♭ は `♭` でも `b` でもよく、`CanonicalLabel` が `♭` にそろえる。和音の質は同主短調のその度数と一致しなければならず（長調の `IV7` や `bVI7` は落ちる）、綴りは調の文字から決める（C major の `bVI` は Ab、E major の `bVII` は D）。このセット以外の借用、短調側の借用、セカンダリドミナント、その他の非ダイアトニックなコードは未対応で、`Analyze` は拒否する。

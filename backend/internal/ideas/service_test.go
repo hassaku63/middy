@@ -23,7 +23,7 @@ const goodIntent = `{
 }`
 
 const badIntent = `{"summary": "x", "mood": [], "candidates": [
-  {"title": "t", "key": {"tonic": 0, "mode": "major"}, "tempoBpm": 500, "progression": ["bVII"], "beatsPerChord": 4, "reason": "r"}
+  {"title": "t", "key": {"tonic": 0, "mode": "major"}, "tempoBpm": 500, "progression": ["bIII"], "beatsPerChord": 4, "reason": "r"}
 ]}`
 
 func user(text string) Message { return Message{Role: llm.RoleUser, Content: text} }
@@ -76,7 +76,7 @@ func TestImagineRetriesOnceWithTheValidationErrors(t *testing.T) {
 	if len(retry) != 3 || retry[1].Role != llm.RoleAssistant || retry[1].Content != badIntent {
 		t.Fatalf("retry must quote the bad answer as the assistant turn: %+v", retry)
 	}
-	if !strings.Contains(retry[2].Content, "tempoBpm") || !strings.Contains(retry[2].Content, "bVII") {
+	if !strings.Contains(retry[2].Content, "tempoBpm") || !strings.Contains(retry[2].Content, "bIII") {
 		t.Fatalf("retry must carry the validation errors: %q", retry[2].Content)
 	}
 }

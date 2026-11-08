@@ -41,10 +41,12 @@ const (
 // raw material for the explanation panel (features/explanation); the prose is
 // deterministic so that the UI can rely on it without an LLM.
 type Analysis struct {
-	Degree      int      `json:"degree"`
-	Function    Function `json:"function"`
-	Cadence     Cadence  `json:"cadence,omitempty"`
-	Explanation string   `json:"explanation"`
+	Degree   int      `json:"degree"`
+	Function Function `json:"function"`
+	Cadence  Cadence  `json:"cadence,omitempty"`
+	// Borrowed is true for a chord taken from the parallel minor (BL-094).
+	Borrowed    bool   `json:"borrowed,omitempty"`
+	Explanation string `json:"explanation"`
 }
 
 // Analyze returns a copy of the timeline whose Harmony events carry an
@@ -59,7 +61,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 	prevDegree := 0
 	for i := range out.Harmony {
 		h := &out.Harmony[i]
-		degree, ok := degreeOf(tl.Key, h.Chord.Root)
+		degree, borrowed, ok := locate(tl.Key, h.Chord)
 		if !ok {
 			return Timeline{}, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, tl.Key.ChordSymbol(h.Chord), tl.Key)
 		}
@@ -69,11 +71,53 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Degree:      degree,
 			Function:    fn,
 			Cadence:     cad,
-			Explanation: explain(tl.Key, *h, fn, cad),
+			Borrowed:    borrowed,
+			Explanation: explain(tl.Key, *h, fn, cad, borrowed),
 		}
 		prevDegree = degree
 	}
 	return out, nil
+}
+
+// locate finds the chord's scale degree in the key, or, in a major key, in
+// the parallel minor it was borrowed from (same degree, possibly a lowered
+// root). A diatonic root with the parallel minor's quality (Fm on IV in C
+// major) is borrowed too.
+func locate(k Key, c Chord) (degree int, borrowed bool, ok bool) {
+	if d, ok := degreeOf(k, c.Root); ok {
+		if dia, err := k.Diatonic(d, len(c.Quality.Intervals()) == 4); err == nil && dia.Quality == c.Quality {
+			return d, false, true
+		}
+		if isHarmonicMinorDominant(k, c) {
+			return d, false, true
+		}
+	}
+	if k.Mode != Major {
+		return 0, false, false
+	}
+	parallel := Key{Tonic: k.Tonic, Mode: Minor}
+	d, ok := degreeOf(parallel, c.Root)
+	if !ok || !borrowable(d, c.Quality) {
+		return 0, false, false
+	}
+	return d, true, true
+}
+
+// borrowable lists what a major key may take from its parallel minor today
+// (BL-094): iv (also iv7, ivm6), ii° (also iiø7), ♭VI (also ♭VImaj7), ♭VII
+// (also ♭VII7). The rest waits for BL-075.
+func borrowable(degree int, q ChordQuality) bool {
+	switch degree {
+	case 4:
+		return q == MinorTriad || q == Minor7 || q == MinorSixth
+	case 2:
+		return q == DiminishedTriad || q == HalfDiminished7
+	case 6:
+		return q == MajorTriad || q == Major7
+	case 7:
+		return q == MajorTriad || q == Dominant7
+	}
+	return false
 }
 
 // degreeOf returns the 1-based scale degree whose pitch class is pc.
@@ -131,8 +175,17 @@ var characteristicText = map[Mode]string{
 
 const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
 
-func explain(key Key, h HarmonyEvent, fn Function, cad Cadence) string {
-	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, key.ChordSymbol(h.Chord), functionText[fn])
+const borrowedText = "同主短調（%s）から借りた和音。長調の中に短調の陰りを一瞬差す。"
+
+func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) string {
+	symbol := h.Symbol
+	if symbol == "" {
+		symbol = key.ChordSymbol(h.Chord)
+	}
+	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, functionText[fn])
+	if borrowed {
+		s += " " + fmt.Sprintf(borrowedText, Key{Tonic: key.Tonic, Mode: Minor})
+	}
 	if isHarmonicMinorDominant(key, h.Chord) {
 		s += " " + harmonicMinorText
 	}

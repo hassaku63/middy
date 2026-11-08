@@ -26,27 +26,73 @@ func ParseRomanNumeral(s string) (degree int, seventh bool, err error) {
 // (the raised leading tone), which is what learners and textbooks mean by
 // "V in minor"; lowercase "v" keeps the natural-minor triad.
 func StepFromLabel(key Key, label string, beats int) (Step, error) {
-	degree, seventh, upper, err := parseRomanNumeral(label)
+	degree, seventh, upper, suffix, accidental, err := parseLabel(label)
 	if err != nil {
 		return Step{}, err
 	}
 	step := Step{Degree: degree, Seventh: seventh, Beats: beats}
-	if key.Mode == Minor && degree == 5 && upper {
+	if key.Mode == Minor && degree == 5 && upper && accidental == 0 {
 		q := MajorTriad
 		if seventh {
 			q = Dominant7
 		}
 		step.Quality = &q
+		return step, nil
+	}
+	if accidental == 0 {
+		if dia, err := key.Diatonic(degree, seventh); err == nil && dia.Quality.isUpper() == upper && suffixAllows(suffix, seventh, dia.Quality) {
+			return step, nil // plainly diatonic
+		}
+	}
+	// Not the key's own chord: in a major key it may be borrowed from the
+	// parallel minor (BL-094). Anything else is left for CanonicalLabel to
+	// report; it needs the diatonic step to say what would have sounded.
+	if key.Mode == Major {
+		if q, ok := borrowedQuality(key, degree, seventh, suffix, accidental); ok {
+			step.Quality = &q
+			step.Accidental = accidental
+			step.Borrowed = true
+			return step, nil
+		}
+	}
+	if accidental != 0 {
+		return Step{}, fmt.Errorf("music: %q is not available in %s", strings.TrimSpace(label), key)
 	}
 	return step, nil
 }
 
+// borrowedQuality resolves a label against the parallel minor: the root
+// must be that minor key's degree (a lowered root for ♭VI and ♭VII, the
+// same root for iv and ii°) and the written quality must be one the
+// borrowable set allows.
+func borrowedQuality(key Key, degree int, seventh bool, suffix string, accidental int) (ChordQuality, bool) {
+	parallel := Key{Tonic: key.Tonic, Mode: Minor}
+	root := key.Scale()[degree-1].Add(accidental)
+	if parallel.Scale()[degree-1] != root {
+		return 0, false
+	}
+	if suffix == "m6" {
+		return MinorSixth, borrowable(degree, MinorSixth)
+	}
+	c, err := parallel.Diatonic(degree, seventh)
+	if err != nil || !borrowable(degree, c.Quality) || !suffixAllows(suffix, seventh, c.Quality) {
+		return 0, false
+	}
+	return c.Quality, true
+}
+
 func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err error) {
 	label := strings.TrimSpace(s)
+	for _, acc := range []string{"♭", "b", "♯", "#"} {
+		if len(label) > 1 && strings.HasPrefix(label, acc) {
+			label = strings.TrimPrefix(label, acc)
+			break
+		}
+	}
 	lower := strings.ToLower(label)
 
 	// Longest suffixes first so that "maj7" is not read as "7".
-	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "7", "°", "dim", "+", "aug"} {
+	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "7", "°", "dim", "+", "aug"} {
 		if strings.HasSuffix(lower, suf) {
 			lower = strings.TrimSuffix(lower, suf)
 			seventh = strings.Contains(suf, "7")
@@ -68,7 +114,7 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 // key gives that degree, the label is rejected with what it would have
 // sounded like, instead of being changed in silence (ADR-0013).
 func CanonicalLabel(key Key, label string) (string, error) {
-	degree, seventh, upper, suffix, err := parseLabel(label)
+	degree, seventh, upper, suffix, _, err := parseLabel(label)
 	if err != nil {
 		return "", err
 	}
@@ -80,13 +126,12 @@ func CanonicalLabel(key Key, label string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	canonical, err := RomanNumeral(degree, quality)
+	canonical, err := RomanNumeralAlt(degree, step.Accidental, quality)
 	if err != nil {
 		return "", err
 	}
 	if upper != quality.isUpper() || !suffixAllows(suffix, seventh, quality) {
-		root := key.Scale()[degree-1]
-		symbol := key.ChordSymbol(Chord{Root: root, Quality: quality})
+		symbol := key.spellDegree(degree, step.Accidental) + quality.Symbol()
 		return "", fmt.Errorf("music: %q would sound as %s (%s) in %s; write %q", strings.TrimSpace(label), symbol, canonical, key, canonical)
 	}
 	return canonical, nil
@@ -131,6 +176,8 @@ func suffixAllows(suffix string, seventh bool, q ChordQuality) bool {
 		return q == Minor7
 	case "ø7", "m7b5":
 		return q == HalfDiminished7
+	case "m6":
+		return q == MinorSixth
 	case "°", "dim":
 		return q == DiminishedTriad
 	case "+", "aug":
@@ -139,15 +186,24 @@ func suffixAllows(suffix string, seventh bool, q ChordQuality) bool {
 	return false
 }
 
-// parseLabel is parseRomanNumeral plus the suffix it consumed.
-func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, err error) {
-	lower := strings.ToLower(strings.TrimSpace(s))
-	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "7", "°", "dim", "+", "aug"} {
+// parseLabel is parseRomanNumeral plus the suffix and the leading
+// accidental it consumed (-1 for ♭ or b; sharps are parsed but not
+// available anywhere yet, so they fail later as "not available").
+func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, accidental int, err error) {
+	trimmed := strings.TrimSpace(s)
+	switch {
+	case strings.HasPrefix(trimmed, "♭") || (strings.HasPrefix(trimmed, "b") && len(trimmed) > 1):
+		accidental = -1
+	case strings.HasPrefix(trimmed, "♯") || strings.HasPrefix(trimmed, "#"):
+		accidental = 1
+	}
+	lower := strings.ToLower(trimmed)
+	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "7", "°", "dim", "+", "aug"} {
 		if strings.HasSuffix(lower, suf) {
 			suffix = suf
 			break
 		}
 	}
 	degree, seventh, upper, err = parseRomanNumeral(s)
-	return degree, seventh, upper, suffix, err
+	return degree, seventh, upper, suffix, accidental, err
 }

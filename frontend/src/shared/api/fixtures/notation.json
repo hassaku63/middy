@@ -446,6 +446,13 @@
     },
     {
       "chord": {
+        "root": 0,
+        "quality": "min6"
+      },
+      "symbol": "Cm6"
+    },
+    {
+      "chord": {
         "root": 1,
         "quality": "maj"
       },
@@ -499,6 +506,13 @@
         "quality": "m7b5"
       },
       "symbol": "C#m7b5"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "min6"
+      },
+      "symbol": "C#m6"
     },
     {
       "chord": {
@@ -558,6 +572,13 @@
     },
     {
       "chord": {
+        "root": 2,
+        "quality": "min6"
+      },
+      "symbol": "Dm6"
+    },
+    {
+      "chord": {
         "root": 3,
         "quality": "maj"
       },
@@ -611,6 +632,13 @@
         "quality": "m7b5"
       },
       "symbol": "D#m7b5"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "min6"
+      },
+      "symbol": "D#m6"
     },
     {
       "chord": {
@@ -670,6 +698,13 @@
     },
     {
       "chord": {
+        "root": 4,
+        "quality": "min6"
+      },
+      "symbol": "Em6"
+    },
+    {
+      "chord": {
         "root": 5,
         "quality": "maj"
       },
@@ -723,6 +758,13 @@
         "quality": "m7b5"
       },
       "symbol": "Fm7b5"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "min6"
+      },
+      "symbol": "Fm6"
     },
     {
       "chord": {
@@ -782,6 +824,13 @@
     },
     {
       "chord": {
+        "root": 6,
+        "quality": "min6"
+      },
+      "symbol": "F#m6"
+    },
+    {
+      "chord": {
         "root": 7,
         "quality": "maj"
       },
@@ -835,6 +884,13 @@
         "quality": "m7b5"
       },
       "symbol": "Gm7b5"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "min6"
+      },
+      "symbol": "Gm6"
     },
     {
       "chord": {
@@ -894,6 +950,13 @@
     },
     {
       "chord": {
+        "root": 8,
+        "quality": "min6"
+      },
+      "symbol": "G#m6"
+    },
+    {
+      "chord": {
         "root": 9,
         "quality": "maj"
       },
@@ -947,6 +1010,13 @@
         "quality": "m7b5"
       },
       "symbol": "Am7b5"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "min6"
+      },
+      "symbol": "Am6"
     },
     {
       "chord": {
@@ -1006,6 +1076,13 @@
     },
     {
       "chord": {
+        "root": 10,
+        "quality": "min6"
+      },
+      "symbol": "A#m6"
+    },
+    {
+      "chord": {
         "root": 11,
         "quality": "maj"
       },
@@ -1059,6 +1136,13 @@
         "quality": "m7b5"
       },
       "symbol": "Bm7b5"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "min6"
+      },
+      "symbol": "Bm6"
     }
   ],
   "romanNumerals": [

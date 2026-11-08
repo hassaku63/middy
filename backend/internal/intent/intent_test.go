@@ -52,7 +52,7 @@ func TestValidateReportsEveryProblem(t *testing.T) {
 		{"tempo too fast", func(i *Intent) { i.Candidates[1].TempoBPM = 300 }, []string{"candidates[1]: tempoBpm"}},
 		{"empty progression", func(i *Intent) { i.Candidates[0].Progression = nil }, []string{"progression must have 1..16"}},
 		{"too long progression", func(i *Intent) { i.Candidates[0].Progression = make([]string, MaxChords+1) }, []string{"progression must have 1..16"}},
-		{"bad numeral", func(i *Intent) { i.Candidates[0].Progression = []string{"I", "bVII", "V"} }, []string{"progression[1]", "not a roman numeral"}},
+		{"bad numeral", func(i *Intent) { i.Candidates[0].Progression = []string{"i", "X", "V"} }, []string{"progression[1]", "not a roman numeral"}},
 		{"bad beats", func(i *Intent) { i.Candidates[0].BeatsPerChord = 3 }, []string{"beatsPerChord must be one of"}},
 		{"empty reason", func(i *Intent) { i.Candidates[0].Reason = "" }, []string{"reason is required"}},
 		{"two problems at once", func(i *Intent) { i.Summary = ""; i.Candidates[1].Reason = "" }, []string{"summary is required", "candidates[1]: reason is required"}},
