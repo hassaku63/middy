@@ -16,7 +16,9 @@ export function rebuildRequest(timeline: Timeline, tonic: PitchClass): FromProgr
   const req = sameHarmony(timeline, tonic);
   const rhythm = timeline.rhythm;
   if (rhythm?.accompaniment) req.accompaniment = rhythm.accompaniment.id;
-  if (rhythm?.drums) req.drums = rhythm.drums.id;
+  // A grid is sent back as written; its drums id ("grid") is not in the catalogue (BL-123).
+  if (rhythm?.drumGrid) req.drumGrid = rhythm.drumGrid;
+  else if (rhythm?.drums) req.drums = rhythm.drums.id;
   if (rhythm?.feel) req.feel = rhythm.feel.id;
   if (rhythm?.style) req.style = rhythm.style.id; // keeps the style's instrument (BL-110)
   return req;

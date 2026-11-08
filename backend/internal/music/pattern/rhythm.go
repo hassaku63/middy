@@ -85,7 +85,52 @@ func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 	case snare && !kick:
 		subject = "スネア"
 	}
-	return part(d.ID, d.Name, d.Description, kit, subject, ts)
+	rp := part(d.ID, d.Name, d.Description, kit, subject, ts)
+	rp.Explanation += backbeatText(d, ts) + densityText(d, ts)
+	return rp
+}
+
+// backbeatText names a 4/4 backbeat (the snare or the cross-stick on 2 and
+// 4) or half time (on 3 alone). Ghost and light strokes do not count.
+func backbeatText(d Drums, ts music.TimeSignature) string {
+	if ts != music.FourFour {
+		return ""
+	}
+	on := map[music.Pitch]map[int]bool{Snare: {}, SideStick: {}}
+	for _, h := range d.Hits {
+		if beats, ok := on[h.Note]; ok && h.Velocity >= 60 && h.Start%quarter == 0 {
+			beats[int(h.Start/quarter)+1] = true
+		}
+	}
+	for _, n := range []struct {
+		note music.Pitch
+		name string
+	}{{Snare, "スネア"}, {SideStick, "クロススティック"}} {
+		b := on[n.note]
+		switch {
+		case b[2] && b[4]:
+			return fmt.Sprintf("2・4 拍目の%sがバックビート。拍の裏側に重みが来て、体が前後に揺れる。", n.name)
+		case b[3] && !b[2] && !b[4]:
+			return fmt.Sprintf("%sが 3 拍目だけに来るハーフタイム。テンポの半分の速さで、ゆったり揺れて聞こえる。", n.name)
+		}
+	}
+	return ""
+}
+
+// densityText says how full a grid is (BL-122): how many of its steps
+// sound. Catalogue drums have no grid to count against.
+func densityText(d Drums, ts music.TimeSignature) string {
+	if d.ID != GridID || len(d.Hits) == 0 {
+		return ""
+	}
+	step := d.Hits[0].Duration
+	steps := int(music.BarTicks(ts, music.DefaultPPQ) / step)
+	sounding := map[music.Tick]bool{}
+	for _, h := range d.Hits {
+		sounding[h.Start] = true
+	}
+	division := steps / ts.BeatsPerBar()
+	return fmt.Sprintf("%sの格子 %d マスのうち %d マスで音が鳴る（密度 %d%%）。", divisionName(division, ts), steps, len(sounding), len(sounding)*100/steps)
 }
 
 func part(id, name, desc string, starts []music.Tick, subject string, ts music.TimeSignature) *music.RhythmPart {
