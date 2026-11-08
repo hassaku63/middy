@@ -8,7 +8,6 @@ export function usePwa(status: PwaStatus = pwaStatus) {
     ...state,
     applyUpdate: () => status.applyUpdate(),
     promptInstall: () => status.promptInstall(),
-    dismissOfflineReady: () => status.dismissOfflineReady(),
   };
 }
 

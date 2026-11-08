@@ -8,16 +8,16 @@ describe('PwaStatus', () => {
     const unsubscribe = s.subscribe(listener);
     const before = s.getSnapshot();
 
-    s.offlineIsReady();
     s.setOnline(false);
+    s.installAvailable({ prompt: vi.fn(), userChoice: Promise.resolve({ outcome: 'dismissed' }) });
 
     expect(listener).toHaveBeenCalledTimes(2);
-    expect(s.getSnapshot()).toMatchObject({ offlineReady: true, online: false });
-    expect(before.offlineReady).toBe(false);
+    expect(s.getSnapshot()).toMatchObject({ installable: true, online: false });
+    expect(before.online).toBe(true);
     unsubscribe();
-    s.dismissOfflineReady();
+    s.setOnline(true);
     expect(listener).toHaveBeenCalledTimes(2);
-    expect(s.getSnapshot().offlineReady).toBe(false);
+    expect(s.getSnapshot().online).toBe(true);
   });
 
   it('applies a waiting update once', async () => {

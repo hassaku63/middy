@@ -82,7 +82,7 @@ src/test       Vitest セットアップ
 
 - `vite-plugin-pwa` で manifest と Service Worker を生成。アプリシェルのみプリキャッシュし、`/api/*` はキャッシュしない。
 - Service Worker は `prompt` モード: 新しい版は待機し、ユーザーがバナーの「更新して再読み込み」を押したときだけ切り替わる（作業中の再読み込みを防ぐ）。
-- `shared/lib/pwa` の `PwaStatus` が SW の状態・インストールの申し出・オンライン状態を持つ小さな外部ストアで、`main.tsx` の `wirePwa` が SW 登録と `window` のイベントをつなぐ。`features/pwa` の `PwaBanner` が「オフラインです」「新しいバージョンがあります」「オフラインでも開けるようになりました」「インストール」を表示する。
+- `shared/lib/pwa` の `PwaStatus` が SW の状態・インストールの申し出・オンライン状態を持つ小さな外部ストアで、`main.tsx` の `wirePwa` が SW 登録と `window` のイベントをつなぐ。`features/pwa` の `PwaBanner` が「オフラインです」「新しいバージョンがあります」「インストール」を表示する。オフラインで使える準備ができたことは正常な状態なので、何も言わない（原則 7、BL-071）。
 - オフラインの価値は「保存済みプロジェクトの再生」。保存は IndexedDB（`features/projects`）、再生はブラウザ内で完結するので、ネットワークなしで開いて鳴らせる（E2E `offline.spec.ts` が検証）。生成と AI の提案はオンラインが必要。
 
 ## 配備形態（ADR-0008）
