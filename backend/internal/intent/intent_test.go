@@ -479,7 +479,7 @@ func TestPushes(t *testing.T) {
 // engine's checks become retry errors, a grid and a drums id do not mix,
 // and basedOn names catalogue drums that fit the meter and the style.
 func TestDrumGrids(t *testing.T) {
-	backbeat := &music.DrumGrid{Division: 2, Voices: map[string]string{"kick": "x... x.x.", "snare": "..x. ..x.", "hat": "xxxx xxxx"}}
+	backbeat := &GridSpec{Division: 2, Voices: []GridLine{{"kick", "x... x.x."}, {"snare", "..x. ..x."}, {"hat", "xxxx xxxx"}}}
 	tests := []struct {
 		name string
 		edit func(c *Candidate)
@@ -493,8 +493,11 @@ func TestDrumGrids(t *testing.T) {
 		}, ""},
 		{"grid and drums", func(c *Candidate) { c.DrumGrid, c.Drums = backbeat, "eight-beat" }, "write drums or drumGrid, not both"},
 		{"bad grid", func(c *Candidate) {
-			c.DrumGrid = &music.DrumGrid{Division: 2, Voices: map[string]string{"kick": "x..."}}
+			c.DrumGrid = &GridSpec{Division: 2, Voices: []GridLine{{"kick", "x..."}}}
 		}, `drumGrid: pattern: grid voices["kick"] has 4 steps, want 8`},
+		{"a voice twice", func(c *Candidate) {
+			c.DrumGrid = &GridSpec{Division: 2, Voices: []GridLine{{"kick", "x......."}, {"kick", "....x..."}}}
+		}, `voice "kick" is written twice`},
 		{"basedOn of another style", func(c *Candidate) {
 			g := *backbeat
 			g.BasedOn = "jazz-ride"

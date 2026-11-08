@@ -187,7 +187,7 @@ func applyKeywords(text string, in map[string]any) {
 			first := in["candidates"].([]map[string]any)[0]
 			delete(first, "drums")
 			first["drumGrid"] = map[string]any{"division": 2, "basedOn": "eight-beat",
-				"voices": map[string]string{"kick": "x... ....", "snare": ".... x...", "hat": "xxxx xxxx"}}
+				"voices": []map[string]string{{"voice": "kick", "steps": "x... ...."}, {"voice": "snare", "steps": ".... x..."}, {"voice": "hat", "steps": "xxxx xxxx"}}}
 			break
 		}
 	}

@@ -71,7 +71,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
             "description": "ドラムを型の代わりに 1 小節の格子で書く。drums とは同時に使わない。division は 1 拍のマスの数（4/4・3/4 では 2・3・4、6/8 では 3・6）。voices は声部ごとに 1 小節を 1 マス 1 文字で書き（X は強く、x は普通、o はゴースト、. は休み。拍の区切りに空白を入れてよい）、手で叩く声部は 1 マスに 2 つまで",
             "properties": {
               "division": { "type": "integer", "enum": [2, 3, 4, 6] },
-              "voices": { "type": "object", "additionalProperties": false, "properties": { %s } },
+              "voices": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["voice", "steps"], "properties": { "voice": { "type": "string", "enum": [%s] }, "steps": { "type": "string" } } } },
               "basedOn": { "type": "string", "enum": [%s], "description": "もとにしたドラムの型。スタイルの型から選ぶ" }
             }
           },
@@ -81,17 +81,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
     }
   }
 }`, MaxMoodTags, MinCandidates, MaxCandidates, quoted(StyleIDs()), MinTempoBPM, MaxTempoBPM, MaxChords,
-	quoted(AccompanimentIDs()), quoted(DrumIDs()), gridVoiceProperties(), quoted(DrumIDs()), quoted(FeelIDs())))
-
-// gridVoiceProperties lists the grid voices as string properties.
-func gridVoiceProperties() string {
-	voices := pattern.GridVoices()
-	out := make([]string, len(voices))
-	for i, v := range voices {
-		out[i] = fmt.Sprintf("%q: { \"type\": \"string\" }", v)
-	}
-	return strings.Join(out, ", ")
-}
+	quoted(AccompanimentIDs()), quoted(DrumIDs()), quoted(pattern.GridVoices()), quoted(DrumIDs()), quoted(FeelIDs())))
 
 func quoted(ids []string) string {
 	out := make([]string, len(ids))

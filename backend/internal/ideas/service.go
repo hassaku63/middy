@@ -211,7 +211,7 @@ func render(in intent.Intent) (Result, error) {
 // applyPatterns layers the candidate's patterns and feel, if any, on the
 // block chords.
 func applyPatterns(tl music.Timeline, c intent.Candidate) (music.Timeline, error) {
-	return pattern.Render(tl, pattern.Choice{Accompaniment: c.Accompaniment, Drums: c.Drums, Grid: c.DrumGrid, Feel: pattern.Feel(c.Feel), Style: c.Style})
+	return pattern.Render(tl, pattern.Choice{Accompaniment: c.Accompaniment, Drums: c.Drums, Grid: c.Grid(), Feel: pattern.Feel(c.Feel), Style: c.Style})
 }
 
 func validateMessages(messages []Message) error {

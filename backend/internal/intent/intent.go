@@ -80,7 +80,7 @@ type Candidate struct {
 	Drums         string `json:"drums,omitempty"`
 	// DrumGrid writes the drums out instead of naming them (BL-077); the
 	// engine checks it as it would any grid (pattern.GridDrums).
-	DrumGrid *music.DrumGrid `json:"drumGrid,omitempty"`
+	DrumGrid *GridSpec `json:"drumGrid,omitempty"`
 	// Feel is how the eighths are played (pattern.Feels); empty means straight.
 	Feel string `json:"feel,omitempty"`
 	// Style is the kind of music the candidate is (pattern.Styles, BL-082);
@@ -350,10 +350,54 @@ func (c Candidate) validateGrid(ts music.TimeSignature) []error {
 			errs = append(errs, fmt.Errorf("drumGrid.basedOn must be one of %v in %d/%d, got %q", DrumIDsFor(ts), ts.Numerator, ts.Denominator, g.BasedOn))
 		}
 	}
-	if _, err := pattern.GridDrums(*g, ts, c.TempoBPM); err != nil {
+	grid, err := g.Grid()
+	if err != nil {
+		return append(errs, err)
+	}
+	if _, err := pattern.GridDrums(grid, ts, c.TempoBPM); err != nil {
 		errs = append(errs, fmt.Errorf("drumGrid: %w", err))
 	}
 	return errs
+}
+
+// GridSpec is a drum grid as the model writes it (BL-077): the voices are
+// a list of voice and steps, which keeps the output schema flat; Grid
+// turns it into the engine's music.DrumGrid.
+type GridSpec struct {
+	Division int        `json:"division"`
+	Voices   []GridLine `json:"voices"`
+	BasedOn  string     `json:"basedOn,omitempty"`
+}
+
+// GridLine is one voice of a grid: one character a step.
+type GridLine struct {
+	Voice string `json:"voice"`
+	Steps string `json:"steps"`
+}
+
+// Grid is the spec as the engine's grid; a voice written twice is an error.
+func (g GridSpec) Grid() (music.DrumGrid, error) {
+	out := music.DrumGrid{Division: g.Division, Voices: map[string]string{}, BasedOn: g.BasedOn}
+	for _, l := range g.Voices {
+		if _, dup := out.Voices[l.Voice]; dup {
+			return music.DrumGrid{}, fmt.Errorf("drumGrid: voice %q is written twice; write each voice once", l.Voice)
+		}
+		out.Voices[l.Voice] = l.Steps
+	}
+	return out, nil
+}
+
+// Grid is the candidate's drum grid for the engine, nil when it names
+// drums instead. It assumes Validate passed.
+func (c Candidate) Grid() *music.DrumGrid {
+	if c.DrumGrid == nil {
+		return nil
+	}
+	g, err := c.DrumGrid.Grid()
+	if err != nil {
+		return nil
+	}
+	return &g
 }
 
 // styleDrums is what the style check holds to the style: the drums id, or
