@@ -349,7 +349,7 @@ func (c Candidate) validatePatterns() []error {
 	ts := c.TimeSignature()
 	// A pattern that is wrong for the meter is reported once, here; the
 	// style check below then leaves it out, so the retry gets one fix.
-	acc, drums := c.Accompaniment, c.styleDrums()
+	acc, drums, feel := c.Accompaniment, c.styleDrums(), c.Feel
 	if c.Accompaniment != "" {
 		if a, err := pattern.FindAccompaniment(c.Accompaniment); err != nil || !a.Fits(ts) {
 			errs = append(errs, fmt.Errorf("accompaniment must be one of %v in %d/%d, got %q%s", AccompanimentIDsFor(ts), ts.Numerator, ts.Denominator, c.Accompaniment, patternHint(c.Accompaniment, a.Meter)))
@@ -363,22 +363,45 @@ func (c Candidate) validatePatterns() []error {
 		}
 	}
 	errs = append(errs, c.validateGrid(ts)...)
+	if c.badBasedOn(ts) {
+		drums = "" // the grid check above already named the drums to base it on
+	}
 	if c.Feel != "" && !slices.Contains(FeelIDs(), c.Feel) {
 		errs = append(errs, fmt.Errorf("feel must be one of %v, got %q", FeelIDs(), c.Feel))
+		feel = ""
 	}
-	if c.Style != "" {
-		if st, err := pattern.FindStyle(c.Style); err != nil {
-			errs = append(errs, fmt.Errorf("style must be one of %v, got %q", StyleIDs(), c.Style))
-		} else {
-			for _, m := range st.Misfits(acc, drums, pattern.Feel(c.Feel)) {
-				errs = append(errs, errors.New(m))
-			}
-		}
-	}
+	errs = append(errs, c.styleErrs(acc, drums, feel)...)
 	if c.Feel == string(pattern.FeelSwing) && ts.Compound() {
 		errs = append(errs, fmt.Errorf("feel swing is not used in %d/%d: its beat already divides in three", ts.Numerator, ts.Denominator))
 	}
 	return errs
+}
+
+// styleErrs holds the patterns that passed their own checks to the style;
+// the ones that failed are passed in empty, so each mistake is one error.
+func (c Candidate) styleErrs(acc, drums, feel string) []error {
+	if c.Style == "" {
+		return nil
+	}
+	st, err := pattern.FindStyle(c.Style)
+	if err != nil {
+		return []error{fmt.Errorf("style must be one of %v, got %q", StyleIDs(), c.Style)}
+	}
+	var errs []error
+	for _, m := range st.Misfits(acc, drums, pattern.Feel(feel)) {
+		errs = append(errs, errors.New(m))
+	}
+	return errs
+}
+
+// badBasedOn reports a grid basedOn that is not catalogue drums for ts.
+func (c Candidate) badBasedOn(ts music.TimeSignature) bool {
+	g := c.DrumGrid
+	if g == nil || g.BasedOn == "" {
+		return false
+	}
+	d, err := pattern.FindDrums(g.BasedOn)
+	return err != nil || !d.Fits(ts)
 }
 
 // validateGrid checks a written-out drum grid (BL-077) with the engine's
@@ -396,7 +419,14 @@ func (c Candidate) validateGrid(ts music.TimeSignature) []error {
 	if err != nil {
 		return append(errs, err)
 	}
-	if _, err := pattern.GridDrums(grid, ts, c.TempoBPM); err != nil {
+	// An out-of-range tempo is reported on its own; timing the steps at it
+	// would ask for a coarser grid the fixed tempo may not need, so the grid
+	// is timed at the slowest tempo instead (the retry is checked again).
+	tempo := c.TempoBPM
+	if tempo < MinTempoBPM || tempo > MaxTempoBPM {
+		tempo = MinTempoBPM
+	}
+	if _, err := pattern.GridDrums(grid, ts, tempo); err != nil {
 		errs = append(errs, fmt.Errorf("drumGrid: %w", err))
 	}
 	return errs
@@ -442,10 +472,11 @@ func (c Candidate) Grid() *music.DrumGrid {
 	return &g
 }
 
-// styleDrums is what the style check holds to the style: the drums id, or
-// the catalogue drums a grid is based on.
+// styleDrums is what the style check holds to the style: the catalogue
+// drums a grid is based on, or else the drums id (also when both are
+// written, so the retry learns everything at once).
 func (c Candidate) styleDrums() string {
-	if c.DrumGrid != nil {
+	if c.DrumGrid != nil && c.DrumGrid.BasedOn != "" {
 		return c.DrumGrid.BasedOn
 	}
 	return c.Drums
