@@ -1,8 +1,9 @@
 // Package pattern turns a harmony-only timeline into something that
 // grooves: an accompaniment template (how the chord tones are played
 // across a bar) and a drum template (GM percussion on channel 10). Both
-// are one-bar figures in 4/4 at music.DefaultPPQ, repeated over every
-// harmony event; a chord shorter than a bar simply gets the first part.
+// are one-bar figures at music.DefaultPPQ in the meter they declare (4/4 or
+// 3/4, ADR-0017), repeated over every harmony event; a chord shorter than a
+// bar simply gets the first part.
 //
 // Templates are data so that the explanation layer (backlog BL-022) can
 // describe them and the LLM (BL-023) can pick them by id.
@@ -32,6 +33,8 @@ const (
 )
 
 // Hit is one event of an accompaniment template, positioned within a bar.
+// A zero Duration lasts to the end of the bar, so a template that fits any
+// meter (block) needs no bar length of its own.
 type Hit struct {
 	Start    music.Tick `json:"start"`
 	Duration music.Tick `json:"duration"`
@@ -45,8 +48,13 @@ type Accompaniment struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Program     int    `json:"program"` // GM program for the track
-	Hits        []Hit  `json:"hits"`
+	// Meter is the time signature the hits are written for; nil fits any.
+	Meter *music.TimeSignature `json:"meter,omitempty"`
+	Hits  []Hit                `json:"hits"`
 }
+
+// Fits reports whether the template can play in ts.
+func (a Accompaniment) Fits(ts music.TimeSignature) bool { return a.Meter == nil || *a.Meter == ts }
 
 // DrumHit is one percussion event within a bar. Note uses the GM drum map.
 type DrumHit struct {
@@ -58,17 +66,27 @@ type DrumHit struct {
 
 // Drums is a one-bar percussion figure.
 type Drums struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Hits        []DrumHit `json:"hits"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// Meter is the time signature the hits are written for.
+	Meter *music.TimeSignature `json:"meter,omitempty"`
+	Hits  []DrumHit            `json:"hits"`
 }
 
-// Durations in ticks for 4/4 at DefaultPPQ.
+// Fits reports whether the figure can play in ts.
+func (d Drums) Fits(ts music.TimeSignature) bool { return d.Meter == nil || *d.Meter == ts }
+
+// Durations in ticks at DefaultPPQ; bar is a 4/4 bar.
 const (
 	bar     = music.Tick(4 * music.DefaultPPQ)
 	quarter = music.Tick(music.DefaultPPQ)
 	eighth  = music.Tick(music.DefaultPPQ / 2)
+)
+
+var (
+	fourFour  = music.FourFour
+	threeFour = music.ThreeFour
 )
 
 // GM drum map notes used by the templates.
@@ -90,10 +108,10 @@ var accompaniments = []Accompaniment{
 	{
 		ID: "block", Name: "ブロック", Program: 0,
 		Description: "コードの構成音をまとめて、コードが変わるまで伸ばす。進行そのものを聴くための形。",
-		Hits:        []Hit{{0, bar, VoiceChord, 80}},
+		Hits:        []Hit{{0, 0, VoiceChord, 80}}, // any meter: to the end of the bar
 	},
 	{
-		ID: "pulse", Name: "4 分刻み", Program: 0,
+		ID: "pulse", Meter: &fourFour, Name: "4 分刻み", Program: 0,
 		Description: "毎拍にコードを打つ。拍の位置がはっきりし、テンポ感が出る。",
 		Hits: []Hit{
 			{0, quarter, VoiceChord, 84}, {quarter, quarter, VoiceChord, 72},
@@ -101,7 +119,7 @@ var accompaniments = []Accompaniment{
 		},
 	},
 	{
-		ID: "ballad", Name: "バラード", Program: 0,
+		ID: "ballad", Meter: &fourFour, Name: "バラード", Program: 0,
 		Description: "1 拍目と 3 拍目にベース、2 拍目と 4 拍目にコード。重心が交互に動き、ゆったり揺れる。",
 		Hits: []Hit{
 			{0, quarter, VoiceBass, 88}, {quarter, quarter, VoiceChord, 70},
@@ -109,7 +127,7 @@ var accompaniments = []Accompaniment{
 		},
 	},
 	{
-		ID: "arpeggio", Name: "アルペジオ", Program: 0,
+		ID: "arpeggio", Meter: &fourFour, Name: "アルペジオ", Program: 0,
 		Description: "構成音を 8 分音符で下から順に弾く。和音が線になって流れる。",
 		Hits: []Hit{
 			{0, eighth, VoiceRoot, 82}, {eighth, eighth, VoiceThird, 70},
@@ -119,7 +137,7 @@ var accompaniments = []Accompaniment{
 		},
 	},
 	{
-		ID: "strum", Name: "ストローク", Program: 24,
+		ID: "strum", Meter: &fourFour, Name: "ストローク", Program: 24,
 		Description: "ギターのストロークのように、表拍に長く、裏拍に短く刻む。8 ビートの基本。",
 		Hits: []Hit{
 			{0, quarter, VoiceChord, 86}, {quarter + eighth, eighth, VoiceChord, 66},
@@ -127,11 +145,26 @@ var accompaniments = []Accompaniment{
 			{3*quarter + eighth, eighth, VoiceChord, 64},
 		},
 	},
+	{
+		ID: "waltz", Meter: &threeFour, Name: "ワルツ", Program: 0,
+		Description: "1 拍目にベース、2・3 拍目にコード。「ズン・チャッ・チャッ」と 1 小節ごとに回る、3 拍子の基本。",
+		Hits: []Hit{
+			{0, quarter, VoiceBass, 90}, {quarter, quarter, VoiceChord, 68}, {2 * quarter, quarter, VoiceChord, 64},
+		},
+	},
+	{
+		ID: "arpeggio-3", Meter: &threeFour, Name: "3 拍のアルペジオ", Program: 0,
+		Description: "構成音を 8 分音符で上って下りる（根音・3 度・5 度・オクターブ・5 度・3 度）。3 拍子の揺れが線になって流れる。",
+		Hits: []Hit{
+			{0, eighth, VoiceRoot, 82}, {eighth, eighth, VoiceThird, 68}, {2 * eighth, eighth, VoiceFifth, 72},
+			{3 * eighth, eighth, VoiceOctave, 70}, {4 * eighth, eighth, VoiceFifth, 70}, {5 * eighth, eighth, VoiceThird, 66},
+		},
+	},
 }
 
 var drums = []Drums{
 	{
-		ID: "eight-beat", Name: "8 ビート",
+		ID: "eight-beat", Meter: &fourFour, Name: "8 ビート",
 		Description: "キックが 1・3 拍、スネアが 2・4 拍、ハイハットが 8 分で刻む。ポップスの土台。",
 		Hits: append(hats(eighth, 8, 60),
 			DrumHit{0, eighth, Kick, 100}, DrumHit{quarter, eighth, Snare, 96},
@@ -139,19 +172,26 @@ var drums = []Drums{
 		),
 	},
 	{
-		ID: "ballad", Name: "バラード",
+		ID: "ballad", Meter: &fourFour, Name: "バラード",
 		Description: "キックが 1 拍、スネアが 3 拍だけ。間が広く、ゆっくり揺れる。",
 		Hits: append(hats(quarter, 4, 48),
 			DrumHit{0, eighth, Kick, 96}, DrumHit{2 * quarter, eighth, Snare, 90},
 		),
 	},
 	{
-		ID: "bossa", Name: "ボサノバ風",
+		ID: "bossa", Meter: &fourFour, Name: "ボサノバ風",
 		Description: "キックが 1 拍と 2 拍裏、3 拍と 4 拍裏。表と裏が交互に来て、前に流れる。",
 		Hits: append(hats(eighth, 8, 56),
 			DrumHit{0, eighth, Kick, 96}, DrumHit{quarter + eighth, eighth, Kick, 84},
 			DrumHit{2 * quarter, eighth, Kick, 92}, DrumHit{3*quarter + eighth, eighth, Kick, 84},
 			DrumHit{quarter, eighth, RideBell, 70}, DrumHit{3 * quarter, eighth, RideBell, 70},
+		),
+	},
+	{
+		ID: "waltz", Meter: &threeFour, Name: "ワルツ",
+		Description: "キックが 1 拍目、スネアが 2・3 拍目を軽く打つ。1 拍目の重みで、3 拍ごとに回る。",
+		Hits: append(hats(quarter, 3, 44),
+			DrumHit{0, eighth, Kick, 96}, DrumHit{quarter, eighth, Snare, 60}, DrumHit{2 * quarter, eighth, Snare, 56},
 		),
 	},
 }
@@ -168,6 +208,28 @@ func hats(step music.Tick, count, velocity int) []DrumHit {
 func Accompaniments() []Accompaniment {
 	out := make([]Accompaniment, len(accompaniments))
 	copy(out, accompaniments)
+	return out
+}
+
+// AccompanimentsFor lists the templates that can play in ts.
+func AccompanimentsFor(ts music.TimeSignature) []Accompaniment {
+	var out []Accompaniment
+	for _, a := range accompaniments {
+		if a.Fits(ts) {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// DrumPatternsFor lists the figures that can play in ts.
+func DrumPatternsFor(ts music.TimeSignature) []Drums {
+	var out []Drums
+	for _, d := range drums {
+		if d.Fits(ts) {
+			out = append(out, d)
+		}
+	}
 	return out
 }
 
@@ -200,11 +262,21 @@ func FindDrums(id string) (Drums, error) {
 
 // Apply rebuilds the timeline's tracks from its Harmony: the chord track
 // follows acc, and a percussion track follows dr when it is not nil. The
-// input is not modified. Only 4/4 at DefaultPPQ is supported today.
+// input is not modified. The timeline must be in 4/4 or 3/4 at DefaultPPQ,
+// and the templates must be written for its meter (ADR-0017).
 func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, error) {
-	if tl.TimeSignature != (music.TimeSignature{Numerator: 4, Denominator: 4}) || tl.PPQ != music.DefaultPPQ {
-		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for 4/4 at %d ppq, got %d/%d at %d",
-			music.DefaultPPQ, tl.TimeSignature.Numerator, tl.TimeSignature.Denominator, tl.PPQ)
+	ts := tl.TimeSignature
+	if (ts != fourFour && ts != threeFour) || tl.PPQ != music.DefaultPPQ {
+		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for 4/4 and 3/4 at %d ppq, got %d/%d at %d",
+			music.DefaultPPQ, ts.Numerator, ts.Denominator, tl.PPQ)
+	}
+	if !acc.Fits(ts) {
+		return music.Timeline{}, fmt.Errorf("pattern: accompaniment %q is written for %d/%d, the timeline is in %d/%d",
+			acc.ID, acc.Meter.Numerator, acc.Meter.Denominator, ts.Numerator, ts.Denominator)
+	}
+	if dr != nil && !dr.Fits(ts) {
+		return music.Timeline{}, fmt.Errorf("pattern: drums %q are written for %d/%d, the timeline is in %d/%d",
+			dr.ID, dr.Meter.Numerator, dr.Meter.Denominator, ts.Numerator, ts.Denominator)
 	}
 	if len(tl.Harmony) == 0 {
 		return music.Timeline{}, errors.New("pattern: timeline has no harmony to play")
@@ -212,10 +284,10 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 
 	out := tl
 	out.Tracks = []music.Track{chordTrack(tl, acc)}
-	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc)}
+	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc, ts.Numerator)}
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
-		out.Rhythm.Drums = describeDrums(*dr)
+		out.Rhythm.Drums = describeDrums(*dr, ts.Numerator)
 	}
 	if err := out.Validate(); err != nil {
 		return music.Timeline{}, fmt.Errorf("pattern: %w", err)
@@ -226,6 +298,7 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 // chordTrack realises the accompaniment over every harmony event.
 func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 	track := music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
+	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	for _, h := range tl.Harmony {
 		voicing := h.Chord.Voicing(music.ChordOctave)
 		end := h.Start + h.Duration
@@ -235,7 +308,11 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 				if start >= end {
 					continue
 				}
-				dur := min(hit.Duration, end-start)
+				dur := hit.Duration
+				if dur == 0 {
+					dur = bar - hit.Start // to the end of the bar
+				}
+				dur = min(dur, end-start)
 				for _, p := range pitches(voicing, hit.Voice) {
 					track.Notes = append(track.Notes, music.NoteEvent{Pitch: p, Velocity: hit.Velocity, Start: start, Duration: dur})
 				}
@@ -250,6 +327,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment) music.Track {
 func drumTrack(tl music.Timeline, dr Drums) music.Track {
 	track := music.Track{Name: "drums", Channel: DrumChannel, Program: 0}
 	length := tl.LengthTicks()
+	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	for barStart := music.Tick(0); barStart < length; barStart += bar {
 		for _, hit := range dr.Hits {
 			if barStart+hit.Start >= length {

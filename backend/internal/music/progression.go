@@ -77,6 +77,15 @@ const (
 // This is deliberately the plainest possible realisation; rhythmic and
 // voicing patterns are layered on top of it later (BL-020, BL-021).
 func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, error) {
+	return FromProgressionIn(FourFour, key, prog, tempoBPM)
+}
+
+// FromProgressionIn is FromProgression in another meter (ADR-0017). Step
+// lengths are in beats of the meter: quarter notes in 4/4 and 3/4.
+func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM float64) (Timeline, error) {
+	if ts != FourFour && ts != ThreeFour {
+		return Timeline{}, fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4)", ts.Numerator, ts.Denominator)
+	}
 	if err := prog.Validate(); err != nil {
 		return Timeline{}, err
 	}
@@ -85,6 +94,7 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 	}
 
 	tl := NewTimeline(key, tempoBPM)
+	tl.TimeSignature = ts
 	track := Track{Name: ChordTrackName, Channel: 0, Program: 0}
 
 	var cursor Tick

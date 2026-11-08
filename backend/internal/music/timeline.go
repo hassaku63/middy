@@ -12,6 +12,20 @@ type Tick int
 // DefaultPPQ is the pulses-per-quarter-note resolution used by middy.
 const DefaultPPQ = 480
 
+// The meters the engine renders (ADR-0017): 4/4 and, for the waltz, 3/4.
+var (
+	FourFour  = TimeSignature{Numerator: 4, Denominator: 4}
+	ThreeFour = TimeSignature{Numerator: 3, Denominator: 4}
+)
+
+// BarTicks is the length of one bar of ts at ppq ticks per quarter note.
+func BarTicks(ts TimeSignature, ppq int) Tick {
+	if ts.Denominator <= 0 {
+		return 0
+	}
+	return Tick(ppq * 4 * ts.Numerator / ts.Denominator)
+}
+
 // TimeSignature is numerator/denominator, e.g. 4/4.
 type TimeSignature struct {
 	Numerator   int `json:"numerator"`

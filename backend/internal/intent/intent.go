@@ -142,13 +142,14 @@ func (c Candidate) validateProgression() []error {
 
 func (c Candidate) validatePatterns() []error {
 	var errs []error
+	// Candidates are 4/4 until the intent carries a meter (BL-101).
 	if c.Accompaniment != "" {
-		if _, err := pattern.FindAccompaniment(c.Accompaniment); err != nil {
+		if a, err := pattern.FindAccompaniment(c.Accompaniment); err != nil || !a.Fits(music.FourFour) {
 			errs = append(errs, fmt.Errorf("accompaniment must be one of %v, got %q", AccompanimentIDs(), c.Accompaniment))
 		}
 	}
 	if c.Drums != "" {
-		if _, err := pattern.FindDrums(c.Drums); err != nil {
+		if d, err := pattern.FindDrums(c.Drums); err != nil || !d.Fits(music.FourFour) {
 			errs = append(errs, fmt.Errorf("drums must be one of %v, got %q", DrumIDs(), c.Drums))
 		}
 	}
@@ -161,7 +162,7 @@ func (c Candidate) validatePatterns() []error {
 // AccompanimentIDs lists the catalogue ids the model may use.
 func AccompanimentIDs() []string {
 	var ids []string
-	for _, a := range pattern.Accompaniments() {
+	for _, a := range pattern.AccompanimentsFor(music.FourFour) {
 		ids = append(ids, a.ID)
 	}
 	return ids
@@ -179,7 +180,7 @@ func FeelIDs() []string {
 // DrumIDs lists the catalogue ids the model may use.
 func DrumIDs() []string {
 	var ids []string
-	for _, d := range pattern.DrumPatterns() {
+	for _, d := range pattern.DrumPatternsFor(music.FourFour) {
 		ids = append(ids, d.ID)
 	}
 	return ids

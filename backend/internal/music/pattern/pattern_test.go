@@ -46,8 +46,13 @@ func TestCatalogueIsWellFormed(t *testing.T) {
 			t.Errorf("bad accompaniment %+v", a)
 		}
 		ids[a.ID] = true
+		length := bar
+		if a.Meter != nil {
+			length = music.BarTicks(*a.Meter, music.DefaultPPQ)
+		}
 		for _, h := range a.Hits {
-			if h.Start < 0 || h.Start+h.Duration > bar || h.Duration <= 0 || h.Velocity < 1 || h.Velocity > 127 || len(pitches([]music.Pitch{60, 64, 67}, h.Voice)) == 0 {
+			anyMeter := a.Meter == nil && h.Duration == 0 // lasts to the end of whatever bar
+			if h.Start < 0 || h.Start+h.Duration > length || (h.Duration <= 0 && !anyMeter) || h.Velocity < 1 || h.Velocity > 127 || len(pitches([]music.Pitch{60, 64, 67}, h.Voice)) == 0 {
 				t.Errorf("%s: bad hit %+v", a.ID, h)
 			}
 		}
@@ -56,8 +61,12 @@ func TestCatalogueIsWellFormed(t *testing.T) {
 		if d.ID == "" || d.Name == "" || d.Description == "" || len(d.Hits) == 0 {
 			t.Errorf("bad drums %+v", d)
 		}
+		if d.Meter == nil {
+			t.Errorf("%s: drums must declare their meter", d.ID)
+			continue
+		}
 		for _, h := range d.Hits {
-			if h.Start < 0 || h.Start+h.Duration > bar || h.Duration <= 0 || !h.Note.Valid() {
+			if h.Start < 0 || h.Start+h.Duration > music.BarTicks(*d.Meter, music.DefaultPPQ) || h.Duration <= 0 || !h.Note.Valid() {
 				t.Errorf("%s: bad hit %+v", d.ID, h)
 			}
 		}
@@ -200,9 +209,9 @@ func TestDrumsRepeatPerBarOnChannelTen(t *testing.T) {
 
 func TestApplyRejectsUnsupportedInput(t *testing.T) {
 	tl := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1)
-	tl.TimeSignature = music.TimeSignature{Numerator: 3, Denominator: 4}
-	if _, err := Apply(tl, mustAcc(t, "block"), nil); err == nil || !strings.Contains(err.Error(), "4/4") {
-		t.Fatalf("3/4 should be rejected for now, got %v", err)
+	tl.TimeSignature = music.TimeSignature{Numerator: 6, Denominator: 8}
+	if _, err := Apply(tl, mustAcc(t, "block"), nil); err == nil || !strings.Contains(err.Error(), "4/4 and 3/4") {
+		t.Fatalf("6/8 should be rejected for now, got %v", err)
 	}
 	empty := music.NewTimeline(music.Key{Tonic: music.C, Mode: music.Major}, 100)
 	if _, err := Apply(empty, mustAcc(t, "block"), nil); err == nil || !strings.Contains(err.Error(), "no harmony") {

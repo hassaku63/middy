@@ -65,16 +65,16 @@ func TestRhythmDescriptions(t *testing.T) {
 }
 
 func TestExplainPlacementWording(t *testing.T) {
-	if got := explainPlacement("伴奏", placement{onBeat: 4}); !strings.Contains(got, "すべて拍の頭") {
+	if got := explainPlacement("伴奏", placement{onBeat: 4}, 4); !strings.Contains(got, "すべて拍の頭（1・2・3・4）") {
 		t.Errorf("all on beats: %q", got)
 	}
-	if got := explainPlacement("伴奏", placement{onBeat: 2, offBeat: 2}); !strings.Contains(got, "シンコペーション") {
+	if got := explainPlacement("伴奏", placement{onBeat: 2, offBeat: 2}, 4); !strings.Contains(got, "シンコペーション") {
 		t.Errorf("half off beats should be syncopated: %q", got)
 	}
-	if got := explainPlacement("伴奏", placement{onBeat: 7, offBeat: 1}); !strings.Contains(got, "軽い推進力") {
+	if got := explainPlacement("伴奏", placement{onBeat: 7, offBeat: 1}, 4); !strings.Contains(got, "軽い推進力") {
 		t.Errorf("mostly on beats: %q", got)
 	}
-	if got := explainPlacement("伴奏", placement{}); !strings.HasSuffix(got, "0 回。") {
+	if got := explainPlacement("伴奏", placement{}, 4); !strings.HasSuffix(got, "0 回。") {
 		t.Errorf("empty: %q", got)
 	}
 }

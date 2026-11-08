@@ -159,9 +159,12 @@ export interface components {
       description: string;
       /** @description GM プログラム番号 */
       program: number;
+      /** @description この型が書かれた拍子。省略時はどの拍子でも使える（block） */
+      meter?: components['schemas']['TimeSignature'];
       hits: {
         /** @description 小節内の tick */
         start: number;
+        /** @description 0 は小節の終わりまで */
         duration: number;
         /** @enum {string} */
         voice: 'chord' | 'bass' | 'root' | 'third' | 'fifth' | 'top' | 'octave';
@@ -172,6 +175,8 @@ export interface components {
       id: string;
       name: string;
       description: string;
+      /** @description この型が書かれた拍子 */
+      meter?: components['schemas']['TimeSignature'];
       hits: {
         start: number;
         duration: number;
