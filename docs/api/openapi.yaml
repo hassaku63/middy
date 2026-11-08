@@ -209,7 +209,8 @@ components:
         tempoBpm:
           type: number
           description: 拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019）
-          exclusiveMinimum: 0
+          minimum: 10
+          maximum: 1000
         progression:
           type: array
           minItems: 1
@@ -607,7 +608,8 @@ components:
         tempoBpm:
           type: number
           description: 拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019）
-          exclusiveMinimum: 0
+          minimum: 10
+          maximum: 1000
         timeSignature:
           $ref: '#/components/schemas/TimeSignature'
         key:

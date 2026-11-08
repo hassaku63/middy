@@ -168,20 +168,27 @@ func (t Timeline) Validate() error {
 	}
 	for hi, h := range t.Harmony {
 		errs = append(errs, h.validate(fmt.Sprintf("harmony[%d]", hi))...)
+		if h.Attack(t.PPQ) < 0 {
+			errs = append(errs, fmt.Errorf("harmony[%d]: a push before the start of the timeline", hi))
+		}
 	}
 	return errors.Join(errs...)
 }
 
 func (t Timeline) validateHeader() []error {
 	var errs []error
-	if t.PPQ <= 0 {
-		errs = append(errs, fmt.Errorf("ppq must be positive, got %d", t.PPQ))
+	// The bounds a Standard MIDI File can hold: a 15-bit division, a
+	// 24-bit tempo (at least about 4 quarters a minute) and one-byte meter
+	// fields; a timeline from outside (a MIDI export) is checked against them.
+	if t.PPQ <= 0 || t.PPQ > 0x7FFF {
+		errs = append(errs, fmt.Errorf("ppq must be 1..32767, got %d", t.PPQ))
 	}
-	if t.TempoBPM <= 0 {
-		errs = append(errs, fmt.Errorf("tempoBpm must be positive, got %v", t.TempoBPM))
+	if t.TempoBPM < minTempoBPM || t.TempoBPM > maxTempoBPM {
+		errs = append(errs, fmt.Errorf("tempoBpm must be %g..%g, got %v", minTempoBPM, maxTempoBPM, t.TempoBPM))
 	}
-	if t.TimeSignature.Numerator <= 0 || !isPowerOfTwo(t.TimeSignature.Denominator) {
-		errs = append(errs, fmt.Errorf("invalid time signature %d/%d", t.TimeSignature.Numerator, t.TimeSignature.Denominator))
+	ts := t.TimeSignature
+	if ts.Numerator <= 0 || ts.Numerator > 32 || !isPowerOfTwo(ts.Denominator) || ts.Denominator > 32 {
+		errs = append(errs, fmt.Errorf("invalid time signature %d/%d", ts.Numerator, ts.Denominator))
 	}
 	return errs
 }
@@ -225,8 +232,17 @@ func (h HarmonyEvent) validate(where string) []error {
 	if _, err := h.Chord.Quality.info(); err != nil {
 		errs = append(errs, fmt.Errorf("%s: %w", where, err))
 	}
+	if h.Push != PushNone && h.Push != PushEighth && h.Push != PushSixteenth {
+		errs = append(errs, fmt.Errorf("%s: unknown push %q", where, h.Push))
+	}
 	return errs
 }
+
+// The tempo range a timeline may have, in beats of its meter.
+const (
+	minTempoBPM = 10.0
+	maxTempoBPM = 1000.0
+)
 
 func isPowerOfTwo(n int) bool {
 	return n > 0 && n&(n-1) == 0
