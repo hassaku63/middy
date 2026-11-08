@@ -95,6 +95,9 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following),
 		}
 	}
+	for i := range out.Harmony {
+		out.Harmony[i].Analysis.Explanation += bassText(tl.Key, out.Harmony, i)
+	}
 	out.Overview = overview(out)
 	return out, nil
 }
@@ -114,7 +117,7 @@ func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 		// The same sound can be two chords: C major in C minor is the
 		// borrowed I (a Picardy third) or V/iv, the dominant of iv. The label
 		// says which the author meant.
-		if strings.Contains(h.RomanNumeral, "/") {
+		if chordLabel, _, _ := splitBass(h.RomanNumeral); strings.Contains(chordLabel, "/") {
 			if target, ok := appliedTargetOf(k, h.Chord); ok {
 				d, _ := degreeOf(k, h.Chord.Root)
 				out[i] = placed{degree: d, applied: target}
