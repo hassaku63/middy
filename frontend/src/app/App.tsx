@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { ChatPanel } from '@/features/chat/ChatPanel';
 import { useIdeas } from '@/features/chat/useIdeas';
 import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
+import { KeySelect } from '@/features/key-change/KeySelect';
+import { useKeyChange } from '@/features/key-change/useKeyChange';
 import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
@@ -12,7 +14,7 @@ import { PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import { TimelineView } from '@/features/timeline/TimelineView';
-import type { IdeaCandidate, Timeline } from '@/shared/api/client';
+import type { IdeaCandidate, PitchClass, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
 
@@ -40,6 +42,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
   const pwa = usePwa();
+  const keyChange = useKeyChange();
   // Normal is silent; only an unreachable backend is worth a word (BL-065).
   const backend = useBackendHealth(pwa.online);
 
@@ -62,6 +65,13 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     if (first) openCandidate(first, answer.image);
   });
   const lastImage = () => [...ideas.turns].reverse().find((t) => t.role === 'user')?.content ?? '';
+
+  // Same example, another key: the engine re-renders it, the LLM is not asked (BL-078).
+  const changeKey = async (tonic: PitchClass) => {
+    if (!timeline) return;
+    const next = await keyChange.change(timeline, tonic);
+    if (next) show(next);
+  };
 
   const openProject = (p: Project) => {
     show(p.timeline);
@@ -95,6 +105,13 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         <section className="app__timeline" aria-label="結果">
           <div className="app__toolbar">
             <PlayerControls timeline={timeline} player={player} />
+            <KeySelect
+              tonic={timeline.key.tonic}
+              mode={timeline.key.mode}
+              busy={keyChange.busy}
+              error={keyChange.error}
+              onChange={(t) => void changeKey(t)}
+            />
             <DownloadMidiButton timeline={timeline} />
             {origin && (
               <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />

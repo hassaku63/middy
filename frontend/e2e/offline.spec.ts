@@ -32,7 +32,12 @@ test('a saved project opens offline', async ({ page, context }) => {
   const item = page.getByRole('list', { name: 'プロジェクト一覧' }).getByRole('listitem');
   await item.getByRole('button', { name: '開く' }).click();
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result.getByRole('option')).toHaveText([/I.*C/, /V.*G/, /vi.*Am/, /IV.*F/]);
+  await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
+    /I.*C/,
+    /V.*G/,
+    /vi.*Am/,
+    /IV.*F/,
+  ]);
   await page.getByRole('button', { name: '再生' }).click();
   await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
   await page.getByRole('button', { name: '停止' }).click();

@@ -1,0 +1,9 @@
+.key-select {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.key-select__error {
+  color: #f87171;
+}

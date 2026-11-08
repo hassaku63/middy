@@ -15,7 +15,12 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
   // Patterns are applied server side: the drum lane appears and the roll holds eighth notes.
   await expect(result.getByTestId('drum-lane')).toBeVisible();
   await expect(result.locator('.timeline__note')).toHaveCount(4 * 8);
-  await expect(result.getByRole('option')).toHaveText([/i.*Am/, /VI.*F/, /III.*C/, /VII.*G/]);
+  await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
+    /i.*Am/,
+    /VI.*F/,
+    /III.*C/,
+    /VII.*G/,
+  ]);
   await expect(result.getByRole('heading', { level: 2 })).toContainText('i');
 
   // Play: at 72 BPM a bar lasts 3.3 s; the panel follows into bar 2.
@@ -63,4 +68,21 @@ test('deep links fall back to the app shell and the service worker installs', as
       { timeout: 10_000 },
     )
     .toBe('activated');
+});
+
+test('change the key of an example: the numerals stay, the chords move (BL-078)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨'); // A minor, arpeggio + ballad
+  await result.getByLabel('キー').selectOption('0'); // C minor
+  const chords = result.getByRole('listbox', { name: 'コード' }).getByRole('option');
+  await expect(chords).toHaveText([/i.*Cm/, /VI.*G#/, /III.*D#/, /VII.*A#/]);
+  // The patterns come along: the drum lane is still there.
+  await expect(result.getByTestId('drum-lane')).toBeVisible();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'MIDI を保存' }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('middy-C-minor-i-VI-III-VII.mid');
 });

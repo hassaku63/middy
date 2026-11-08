@@ -27,7 +27,12 @@ test('save a project, reload, reopen it, delete it', async ({ page }) => {
 
   await item.getByRole('button', { name: '開く' }).click();
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result.getByRole('option')).toHaveText([/I.*C/, /V.*G/, /vi.*Am/, /IV.*F/]);
+  await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
+    /I.*C/,
+    /V.*G/,
+    /vi.*Am/,
+    /IV.*F/,
+  ]);
   await expect(result).toContainText('プロジェクト: 朝の練習');
 
   await item.getByRole('button', { name: '朝の練習 を削除' }).click();

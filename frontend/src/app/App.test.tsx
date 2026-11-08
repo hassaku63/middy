@@ -115,7 +115,7 @@ describe('App (docs/product/experience.md)', () => {
 
     const { card, result } = await sendImage(user);
     expect(
-      within(result)
+      within(within(result).getByRole('listbox', { name: 'コード' }))
         .getAllByRole('option')
         .map((o) => o.getAttribute('aria-label')),
     ).toEqual(['I (C)', 'V (G)']);
@@ -162,5 +162,52 @@ describe('App (docs/product/experience.md)', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network')));
     render(<App createEngine={fakeEngine} />);
     expect(await screen.findByRole('status')).toHaveTextContent('バックエンドに接続できません');
+  });
+
+  it("changes the open example's key through the engine, keeping the numerals (BL-078)", async () => {
+    const inD: Timeline = {
+      ...analysed,
+      key: { tonic: 2, mode: 'major' },
+      harmony: analysed.harmony.map((h, i) => ({
+        ...h,
+        chord: { ...h.chord, root: i === 0 ? 2 : 9 },
+      })),
+    };
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>((url) =>
+      Promise.resolve(
+        url.endsWith('/health')
+          ? json(200, { status: 'ok', version: 'dev' })
+          : url.endsWith('/patterns')
+            ? json(200, { accompaniments: [], drums: [], feels: [] })
+            : url.endsWith('/timelines/from-progression')
+              ? json(200, { timeline: inD })
+              : json(200, ideasReply),
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<App createEngine={fakeEngine} />);
+    const { result } = await sendImage(user);
+
+    await user.selectOptions(within(result).getByLabelText('キー'), '2');
+    const chords = within(result).getByRole('listbox', { name: 'コード' });
+    await waitFor(() =>
+      expect(
+        within(chords)
+          .getAllByRole('option')
+          .map((o) => o.getAttribute('aria-label')),
+      ).toEqual(['I (D)', 'V (A)']),
+    );
+    const call = fetchMock.mock.calls.find(([u]) => u.endsWith('/timelines/from-progression'));
+    expect(JSON.parse(call?.[1]?.body as string)).toMatchObject({
+      key: { tonic: 2, mode: 'major' },
+      progression: [
+        { numeral: 'I', beats: 4 },
+        { numeral: 'V', beats: 4 },
+      ],
+    });
+    // Still the same example: the AI was not asked again.
+    expect(fetchMock.mock.calls.filter(([u]) => u.endsWith('/ideas'))).toHaveLength(1);
+    expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
   });
 });
