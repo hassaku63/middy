@@ -207,6 +207,9 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
+	if acc.ID == "block" && drums == nil && !slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool { return h.Push != music.PushNone }) {
+		info, _ = findFeel(FeelStraight) // held block chords, unpushed, have no eighths to swing
+	}
 	if info.ID == FeelSwing && tl.TimeSignature.Compound() {
 		ts := tl.TimeSignature
 		return music.Timeline{}, fmt.Errorf("pattern: swing is for simple meters; %d/%d already divides each beat in three", ts.Numerator, ts.Denominator)
