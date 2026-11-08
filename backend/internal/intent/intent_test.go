@@ -526,3 +526,26 @@ func TestDrumGrids(t *testing.T) {
 		t.Error("the schema offers the grid and its voices")
 	}
 }
+
+// TestNoSuggestionForSlashLabels (review): V/IV in C is rejected with the
+// engine's fix ("write I"); no one-deletion guess may contradict it.
+func TestNoSuggestionForSlashLabels(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Key = music.Key{Tonic: music.C, Mode: music.Major}
+	in.Candidates[0].Progression = []string{"I", "V/IV", "IV", "V"}
+	err := in.Validate()
+	if err == nil || strings.Contains(err.Error(), "did you mean") {
+		t.Errorf("want the engine's fix alone, got %v", err)
+	}
+}
+
+// TestOneErrorPerBadPattern (review): an unknown drums id is reported once
+// with the ids to use, not again as a style misfit.
+func TestOneErrorPerBadPattern(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Style, in.Candidates[0].Drums = "jazz", "jazz-ridee"
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), "drums must be one of") || strings.Contains(err.Error(), "does not fit the jazz style") {
+		t.Errorf("one error for the bad drums id, got %v", err)
+	}
+}

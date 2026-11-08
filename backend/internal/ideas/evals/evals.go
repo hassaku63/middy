@@ -84,6 +84,9 @@ type Verdict struct {
 	Progression []string
 	// Labels of every candidate, for the vocabulary metric.
 	Labels []string
+	// Chords is the first candidate's progression as written, without the
+	// lengths and pushes Progression marks, for the breadth metric.
+	Chords []string
 	// WantsHit is true when a wanted chord sounds in the first candidate;
 	// WantsIn is the 1-based candidate where one first sounds (0: none).
 	// Both are meaningful only when the case has Wants. They separate "the
@@ -132,6 +135,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	first := res.Candidates[0]
 	v.Title, v.Key, v.TempoBPM, v.Meter = first.Title, first.Key.String(), first.TempoBPM, first.Meter
+	v.Chords = first.Progression
 	v.Progression = withPushes(withBeats(first.Progression, first.Beats), first.Pushes)
 	v.Patterns = patternsOf(first.Accompaniment, drumsOf(first.Candidate))
 	if first.Style != "" {
@@ -277,7 +281,7 @@ func measureBreadth(verdicts []Verdict) breadth {
 		if len(v.Progression) == 0 {
 			continue
 		}
-		m.progressions[strings.Join(v.Progression, " ")]++
+		m.progressions[strings.Join(v.Chords, " ")]++ // the chords, not their lengths or pushes
 		m.keys[v.Key] = true
 		for _, label := range v.Labels {
 			if degree, seventh, err := music.ParseRomanNumeral(label); err == nil {
@@ -421,7 +425,6 @@ func judgeMode(want string, got music.Mode) string {
 	return "expected " + want + ", got " + got.String()
 }
 
-// meterNote marks a first candidate that is not in 4/4.
 // withBeats marks each label with its length ("i:8") when the candidate
 // gives per-chord beats (BL-109); otherwise it returns the labels as they are.
 func withBeats(labels []string, beats []int) []string {
@@ -491,6 +494,7 @@ func patternsNote(p string) string {
 	return ", " + p
 }
 
+// meterNote marks a first candidate that is not in 4/4.
 func meterNote(m string) string {
 	if m == "" || m == "4/4" {
 		return ""
