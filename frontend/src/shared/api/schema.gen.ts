@@ -313,6 +313,8 @@ export interface components {
       cadence?: 'authentic' | 'plagal' | 'half' | 'deceptive' | 'modal';
       /** @description 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false */
       borrowed?: boolean;
+      /** @description セカンダリードミナント（V/x、V7/x）が向かう先の度数。それ以外の和音では省略 */
+      appliedTo?: number;
       /** @description UI にそのまま表示できる 1〜2 文の日本語 */
       explanation: string;
     };

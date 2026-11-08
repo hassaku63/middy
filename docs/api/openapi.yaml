@@ -503,6 +503,11 @@ components:
         borrowed:
           type: boolean
           description: 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false
+        appliedTo:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: セカンダリードミナント（V/x、V7/x）が向かう先の度数。それ以外の和音では省略
         explanation:
           type: string
           description: UI にそのまま表示できる 1〜2 文の日本語

@@ -34,6 +34,12 @@ describe('midiFileName', () => {
     ).toBe('middy-Fs-minor-i-iidim-viihd7-V7.mid');
   });
 
+  it('keeps borrowed and secondary-dominant numerals in a safe form', () => {
+    expect(midiFileName({ ...base, harmony: ['I', 'V7/V', 'V', '♭VII'].map(h) })).toBe(
+      'middy-C-major-I-V7ofV-V-bVII.mid',
+    );
+  });
+
   it('omits the progression part when there is no harmony', () => {
     expect(midiFileName(base)).toBe('middy-C-major.mid');
   });

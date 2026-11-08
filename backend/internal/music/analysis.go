@@ -45,7 +45,10 @@ type Analysis struct {
 	Function Function `json:"function"`
 	Cadence  Cadence  `json:"cadence,omitempty"`
 	// Borrowed is true for a chord taken from the parallel minor (BL-094).
-	Borrowed    bool   `json:"borrowed,omitempty"`
+	Borrowed bool `json:"borrowed,omitempty"`
+	// AppliedTo is the degree a secondary dominant pulls towards (BL-074);
+	// zero for every other chord.
+	AppliedTo   int    `json:"appliedTo,omitempty"`
 	Explanation string `json:"explanation"`
 }
 
@@ -61,6 +64,17 @@ func Analyze(tl Timeline) (Timeline, error) {
 	prevDegree := 0
 	for i := range out.Harmony {
 		h := &out.Harmony[i]
+		if target, ok := locateApplied(tl.Key, h.Chord); ok {
+			degree, _ := degreeOf(tl.Key, h.Chord.Root)
+			h.Analysis = &Analysis{
+				Degree:      degree,
+				Function:    Dominant,
+				AppliedTo:   target,
+				Explanation: explainApplied(tl.Key, *h, target, next(tl.Harmony, i)),
+			}
+			prevDegree = degree
+			continue
+		}
 		degree, borrowed, ok := locate(tl.Key, h.Chord)
 		if !ok {
 			return Timeline{}, fmt.Errorf("music: harmony[%d]: chord %s is not diatonic to %s", i, tl.Key.ChordSymbol(h.Chord), tl.Key)
@@ -223,4 +237,44 @@ func characteristicTone(key Key, c Chord) (PitchClass, bool) {
 		}
 	}
 	return 0, false
+}
+
+// locateApplied reports a secondary dominant: a chord that the key, its
+// harmonic-minor V and its borrowing do not explain, a fifth above a major
+// or minor triad (appliedTargetOf). Applied chords mark no cadence of their
+// own: they depart, towards their target.
+func locateApplied(k Key, c Chord) (int, bool) {
+	if _, _, ok := locate(k, c); ok {
+		return 0, false
+	}
+	return appliedTargetOf(k, c)
+}
+
+// next returns the chord after i, if any.
+func next(hs []HarmonyEvent, i int) *Chord {
+	if i+1 >= len(hs) {
+		return nil
+	}
+	return &hs[i+1].Chord
+}
+
+const (
+	appliedText   = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主音のように聞かせて、そこへ強く引き寄せる。"
+	resolvesText  = "次の %s へ解決する。"
+	deflectedText = "ここでは %s へは進まず、引き寄せをかわす。"
+)
+
+func explainApplied(k Key, h HarmonyEvent, target int, following *Chord) string {
+	t, _ := k.Diatonic(target, false)
+	rn, _ := RomanNumeral(target, t.Quality)
+	symbol := k.ChordSymbol(t)
+	s := fmt.Sprintf(appliedText, h.RomanNumeral, h.Symbol, rn, symbol, symbol)
+	switch {
+	case following == nil:
+	case following.Root == t.Root:
+		s += " " + fmt.Sprintf(resolvesText, rn)
+	default:
+		s += " " + fmt.Sprintf(deflectedText, rn)
+	}
+	return s
 }
