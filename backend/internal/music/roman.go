@@ -60,3 +60,94 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 	upper = strings.HasPrefix(label, strings.ToUpper(lower[:1]))
 	return degree, seventh, upper, nil
 }
+
+// CanonicalLabel checks a label against the key and returns the engine's own
+// spelling of the chord it names. The written case and seventh type carry
+// meaning (an uppercase IV in minor asks for the dorian major chord; I7
+// asks for a dominant seventh), so when they disagree with the chord the
+// key gives that degree, the label is rejected with what it would have
+// sounded like, instead of being changed in silence (ADR-0013).
+func CanonicalLabel(key Key, label string) (string, error) {
+	degree, seventh, upper, suffix, err := parseLabel(label)
+	if err != nil {
+		return "", err
+	}
+	step, err := StepFromLabel(key, label, 1)
+	if err != nil {
+		return "", err
+	}
+	quality, err := qualityOf(key, step)
+	if err != nil {
+		return "", err
+	}
+	canonical, err := RomanNumeral(degree, quality)
+	if err != nil {
+		return "", err
+	}
+	if upper != quality.isUpper() || !suffixAllows(suffix, seventh, quality) {
+		root := key.Scale()[degree-1]
+		symbol := key.ChordSymbol(Chord{Root: root, Quality: quality})
+		return "", fmt.Errorf("music: %q would sound as %s (%s) in %s; write %q", strings.TrimSpace(label), symbol, canonical, key, canonical)
+	}
+	return canonical, nil
+}
+
+// qualityOf resolves the chord quality a step has in a key.
+func qualityOf(key Key, step Step) (ChordQuality, error) {
+	if step.Quality != nil {
+		return *step.Quality, nil
+	}
+	c, err := key.Diatonic(step.Degree, step.Seventh)
+	if err != nil {
+		return 0, err
+	}
+	return c.Quality, nil
+}
+
+// isUpper reports whether roman-numeral convention writes the quality in
+// uppercase (major-type chords) rather than lowercase (minor, diminished).
+func (q ChordQuality) isUpper() bool {
+	switch q {
+	case MajorTriad, Major7, Dominant7, AugmentedTriad:
+		return true
+	}
+	return false
+}
+
+// suffixAllows reports whether an explicit suffix agrees with the quality.
+// A bare numeral agrees with any triad of its case ("vii" for vii°); a
+// bare "7" means a dominant seventh in uppercase and a minor seventh in
+// lowercase, so it also accepts the half-diminished chord that lowercase
+// convention writes ø7.
+func suffixAllows(suffix string, seventh bool, q ChordQuality) bool {
+	switch suffix {
+	case "":
+		return !seventh && q != Major7 && q != Dominant7 && q != Minor7 && q != HalfDiminished7
+	case "maj7":
+		return q == Major7
+	case "7":
+		return q == Dominant7 || q == Minor7 || q == HalfDiminished7
+	case "m7":
+		return q == Minor7
+	case "ø7", "m7b5":
+		return q == HalfDiminished7
+	case "°", "dim":
+		return q == DiminishedTriad
+	case "+", "aug":
+		return q == AugmentedTriad
+	}
+	return false
+}
+
+// parseLabel is parseRomanNumeral plus the suffix it consumed.
+func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, err error) {
+	lower := strings.ToLower(strings.TrimSpace(s))
+	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "7", "°", "dim", "+", "aug"} {
+		if strings.HasSuffix(lower, suf) {
+			suffix = suf
+			break
+		}
+	}
+	degree, seventh, upper, err = parseRomanNumeral(s)
+	return degree, seventh, upper, suffix, err
+}

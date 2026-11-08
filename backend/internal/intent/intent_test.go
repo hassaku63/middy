@@ -200,3 +200,28 @@ func TestFeelIsValidatedAndInTheSchema(t *testing.T) {
 		t.Fatalf("feel case is normalised: %+v %v", parsed, err)
 	}
 }
+
+func TestLabelsThatTheKeyWouldChangeAreRejectedWithTheFix(t *testing.T) {
+	in := valid() // A minor
+	in.Candidates[0].Progression = []string{"i", "IV", "V"}
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), `"IV" would sound as Dm (iv) in A minor; write "iv"`) {
+		t.Fatalf("the dorian IV must be rejected with the engine's spelling, got %v", err)
+	}
+	in.Candidates[0].Progression = []string{"i", "iv", "V"}
+	if err := in.Validate(); err != nil {
+		t.Fatalf("iv and the harmonic V are fine: %v", err)
+	}
+}
+
+func TestParseSpellsLabelsAsTheEngineDoes(t *testing.T) {
+	data := []byte(`{"summary":"s","mood":[],"candidates":[{"title":"t","key":{"tonic":0,"mode":"major"},"tempoBpm":100,"progression":["I","vii","viim7b5","V7"],"beatsPerChord":4,"reason":"r"}]}`)
+	in, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := strings.Join(in.Candidates[0].Progression, " ")
+	if got != "I vii° viiø7 V7" {
+		t.Fatalf("labels not canonicalised: %q", got)
+	}
+}
