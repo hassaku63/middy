@@ -135,6 +135,8 @@ export interface components {
       accompaniment?: string;
       /** @description ドラムテンプレートの id（`GET /patterns`）。省略時はドラムなし */
       drums?: string;
+      /** @description 格子で書いたドラム（BL-123）。`drums` と同時には指定できない */
+      drumGrid?: components['schemas']['DrumGrid'];
       feel?: components['schemas']['Feel'];
       /** @description スタイルの id（`GET /patterns` の styles）。鍵盤を既定とする型の音色をスタイルの楽器にし、タイムラインに記録する（BL-110）。型がスタイルに合うかは検査しない */
       style?: string;
@@ -428,6 +430,29 @@ export interface components {
       drums?: components['schemas']['RhythmPart'];
       feel?: components['schemas']['RhythmFeel'];
       style?: components['schemas']['RhythmStyle'];
+      /** @description ドラムが格子で書かれたときの格子（BL-123）。調やスタイルを変えて作り直すときに送り返す。このとき `drums.id` は `grid` */
+      drumGrid?: components['schemas']['DrumGrid'];
+    };
+    /** @description 1 小節のドラムの格子（BL-122、ADR-0012 の決定 2）。エンジンが検証し、問題をまとめて 400 で返す */
+    DrumGrid: {
+      /**
+       * @description 1 拍のマスの数。4/4・3/4 では 2・3・4、6/8 では 3・6
+       * @enum {integer}
+       */
+      division: 2 | 3 | 4 | 6;
+      /**
+       * @description 声部ごとの 1 小節。1 マス 1 文字で、X は強く、x は普通、o はゴースト、. は休み。空白と | は無視する。声部は kick, snare, cross-stick, hat, open-hat, pedal-hat, ride, ride-bell, crash, low-tom, mid-tom, high-tom
+       * @example {
+       *       "kick": "x... x...",
+       *       "snare": "..x. ..x.",
+       *       "hat": "xxxx xxxx"
+       *     }
+       */
+      voices: {
+        [key: string]: string;
+      };
+      /** @description もとにしたカタログのドラムの id */
+      basedOn?: string;
     };
     /** @description 例を描画したスタイル（BL-110）。調を変えて作り直すときに送り返す */
     RhythmStyle: {

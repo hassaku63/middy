@@ -270,3 +270,43 @@ func TestFromProgressionPushes(t *testing.T) {
 		t.Errorf("V7 should keep its beat and its push and be explained: %+v", h)
 	}
 }
+
+// TestFromProgressionDrumGrid (BL-123): drums written as a grid render,
+// come back on the timeline so a key change can send them again, and a
+// bad grid is a bad request naming every problem.
+func TestFromProgressionDrumGrid(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 120,
+		"drumGrid": {"division": 2, "voices": {"kick": "x... x.x.", "snare": "..x. ..x."}},
+		"progression": [{"numeral": "I"}, {"numeral": "V"}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, b)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	r := body.Timeline.Rhythm
+	if r == nil || r.Drums == nil || r.Drums.ID != "grid" || r.DrumGrid == nil || r.DrumGrid.Voices["kick"] != "x... x.x." {
+		t.Fatalf("the timeline should keep the grid: %+v", r)
+	}
+	if !strings.Contains(r.Drums.Explanation, "バックビート") {
+		t.Errorf("the grid is explained: %s", r.Drums.Explanation)
+	}
+
+	bad := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 120,
+		"drumGrid": {"division": 2, "voices": {"kick": "x...", "cowbell": "x......."}},
+		"progression": [{"numeral": "I"}]
+	}`)
+	var e errorResponse
+	if err := json.NewDecoder(bad.Body).Decode(&e); err != nil {
+		t.Fatal(err)
+	}
+	if bad.StatusCode != http.StatusBadRequest || !strings.Contains(e.Error.Message, `voices["kick"]`) || !strings.Contains(e.Error.Message, "cowbell") {
+		t.Errorf("a bad grid should be a 400 naming both problems: %d %+v", bad.StatusCode, e)
+	}
+}
