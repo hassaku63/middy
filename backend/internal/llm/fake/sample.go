@@ -68,8 +68,8 @@ func sampleIntent(req llm.Request) string {
 					"reason":        "もっとも親しみやすいポップ進行で、明るさと懐かしさを両立します。",
 					"accompaniment": "strum", "drums": "eight-beat"},
 				{"title": "出発の朝", "key": map[string]any{"tonic": 7, "mode": "major"}, "tempoBpm": 120,
-					"progression": []string{"Imaj7", "ii7", "V7", "Imaj7"}, "beatsPerChord": 4,
-					"reason": "ii–V–I で前へ進む推進力を作り、七の和音で少し洗練させます。"},
+					"progression": []string{"I", "IV", "iv", "I"}, "beatsPerChord": 4,
+					"reason": "IV から同主短調の iv（Cm）へ落とす借用で、明るさの中に一瞬の切なさを差します。"},
 			},
 		}
 	}

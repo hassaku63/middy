@@ -403,7 +403,8 @@ components:
           $ref: '#/components/schemas/Mode'
     ChordQuality:
       type: string
-      enum: [maj, min, dim, aug, maj7, min7, dom7, m7b5]
+      enum: [maj, min, dim, aug, maj7, min7, dom7, m7b5, min6]
+      description: min6 は短三和音に長 6 度を足した和音（長調で借用する ivm6）
     Chord:
       type: object
       required: [root, quality]
@@ -497,8 +498,11 @@ components:
           description: トニック / サブドミナント / ドミナント
         cadence:
           type: string
-          enum: [authentic, plagal, half, deceptive]
-          description: 直前のコードからこのコードへの進行が作る終止。該当なしのときは省略
+          enum: [authentic, plagal, half, deceptive, modal]
+          description: 直前のコードからこのコードへの進行が作る終止。modal はドリアン・ミクソリディアンの VII → I。該当なしのときは省略
+        borrowed:
+          type: boolean
+          description: 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false
         explanation:
           type: string
           description: UI にそのまま表示できる 1〜2 文の日本語

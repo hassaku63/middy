@@ -16,6 +16,12 @@ type Step struct {
 	// diatonic root. Today it exists for one idiom: the harmonic-minor
 	// dominant (a major V / V7 in a minor key). See StepFromLabel.
 	Quality *ChordQuality `json:"quality,omitempty"`
+	// Accidental lowers the root by one semitone from the scale degree
+	// (-1 for the borrowed ♭VI, ♭VII). Zero for diatonic roots.
+	Accidental int `json:"accidental,omitempty"`
+	// Borrowed marks a chord taken from the parallel minor (BL-094); the
+	// analysis says so.
+	Borrowed bool `json:"borrowed,omitempty"`
 }
 
 // Progression is an ordered list of steps, e.g. I-V-vi-IV. It is key-agnostic:
@@ -34,6 +40,9 @@ func (p Progression) Validate() error {
 		}
 		if s.Beats < 1 {
 			errs = append(errs, fmt.Errorf("music: steps[%d]: beats must be >= 1, got %d", i, s.Beats))
+		}
+		if s.Accidental != 0 && s.Accidental != -1 {
+			errs = append(errs, fmt.Errorf("music: steps[%d]: accidental must be 0 or -1, got %d", i, s.Accidental))
 		}
 		if s.Quality != nil {
 			if _, err := s.Quality.info(); err != nil {
@@ -78,10 +87,11 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
 		}
+		chord.Root = chord.Root.Add(s.Accidental)
 		if s.Quality != nil {
 			chord.Quality = *s.Quality
 		}
-		numeral, err := RomanNumeral(s.Degree, chord.Quality)
+		numeral, err := RomanNumeralAlt(s.Degree, s.Accidental, chord.Quality)
 		if err != nil {
 			return Timeline{}, fmt.Errorf("music: steps[%d]: %w", i, err)
 		}
@@ -100,7 +110,7 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 			Duration:     duration,
 			Chord:        chord,
 			RomanNumeral: numeral,
-			Symbol:       key.ChordSymbol(chord),
+			Symbol:       key.spellDegree(s.Degree, s.Accidental) + chord.Quality.Symbol(),
 		})
 		cursor += duration
 	}

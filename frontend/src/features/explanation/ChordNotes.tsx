@@ -12,6 +12,7 @@ const CADENCE_LABEL: Record<Cadence, string> = {
   plagal: '変格終止',
   half: '半終止',
   deceptive: '偽終止',
+  modal: 'モーダル終止',
 };
 
 type Props = {

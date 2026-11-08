@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openExample } from './helpers';
 
 /**
  * Scenario S2 (docs/product/vision.md) against the server's default
@@ -96,4 +97,22 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   await expect(
     result.getByLabel('キー').locator('option', { hasText: 'G mixolydian' }),
   ).toHaveCount(1);
+});
+
+test('a borrowed iv in a major example is spelled for the key and explained (BL-094)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await openExample(page, '出発の朝、晴れ', '出発の朝');
+  const card = page.getByRole('article', { name: '出発の朝' });
+  await expect(card).toContainText('I - IV - iv - I');
+  const result = page.getByRole('region', { name: '結果' });
+  // G major's borrowed iv is Cm, taken from G minor.
+  await result
+    .getByRole('listbox', { name: 'コード' })
+    .getByRole('option', { name: 'iv (Cm)' })
+    .click();
+  await expect(result.locator('.explanation__text').first()).toContainText(
+    '同主短調（G minor）から借りた和音',
+  );
 });
