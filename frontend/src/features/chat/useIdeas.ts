@@ -44,18 +44,21 @@ export function useIdeas(onAnswer?: (answer: Answer) => void): Ideas {
       setTurns((prev) => [...prev, { role: 'user', content }]);
       setBusy(true);
       setError(null);
+      let res: Awaited<ReturnType<typeof imagine>>;
       try {
-        const res = await imagine(history);
-        setTurns((prev) => [
-          ...prev,
-          { role: 'assistant', content: res.reply, mood: res.mood, candidates: res.candidates },
-        ]);
-        onAnswerRef.current?.({ image: content, candidates: res.candidates });
+        res = await imagine(history);
       } catch (e) {
         setError(describe(e));
+        return;
       } finally {
         setBusy(false);
       }
+      setTurns((prev) => [
+        ...prev,
+        { role: 'assistant', content: res.reply, mood: res.mood, candidates: res.candidates },
+      ]);
+      // Outside the try: a fault in the caller's handler is not a network failure.
+      onAnswerRef.current?.({ image: content, candidates: res.candidates });
     },
     [turns, busy],
   );
@@ -77,8 +80,12 @@ function describe(e: unknown): string {
         return 'AI の答えをうまく読めませんでした。言い方を変えてもう一度送ってください。';
       case 'llm_declined':
         return 'AI がこの言い方には答えられませんでした。情景や気分を別の言葉で伝えてみてください。';
+      case 'internal_error':
+        return 'AI の答えから例を作れませんでした。もう一度送ってください。';
       default:
-        return e.message;
+        // The API's own messages are English and meant for developers, so
+        // the learner gets a sentence in the UI's language.
+        return 'うまく送れませんでした。もう一度送ってください。';
     }
   }
   return 'バックエンドに接続できません';

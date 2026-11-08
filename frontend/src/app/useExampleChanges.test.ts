@@ -95,7 +95,7 @@ describe('useExampleChanges (review)', () => {
       answer(failure());
       await pending;
     });
-    expect(hook.result.current.keyChange.error).toBe('作れません');
+    expect(hook.result.current.keyChange.error).toBe('キーを変えられませんでした');
     act(() => {
       pending = hook.result.current.changeStyle('rock');
     });

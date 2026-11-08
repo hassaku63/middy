@@ -33,6 +33,11 @@ describe('CandidateCard', () => {
     expect(screen.getByText('長さ: 8・4・2・2 拍')).toBeInTheDocument();
     expect(screen.queryByText('4 拍/コード')).not.toBeInTheDocument();
   });
+
+  it('reads empty beats as one length for every chord (review)', () => {
+    render(<CandidateCard candidate={{ ...base, beats: [] }} open={false} onOpen={vi.fn()} />);
+    expect(screen.getByText('4 拍/コード')).toBeInTheDocument();
+  });
 });
 
 describe('CandidateCard style (BL-119)', () => {

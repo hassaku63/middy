@@ -19,7 +19,7 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
       <p className="candidate__spec">
         <span>{keyName(key)}</span>
         <span>{tempoBpm} BPM</span>
-        <span>{beats ? `長さ: ${beats.join('・')} 拍` : `${beatsPerChord} 拍/コード`}</span>
+        <span>{beats?.length ? `長さ: ${beats.join('・')} 拍` : `${beatsPerChord} 拍/コード`}</span>
       </p>
       <p className="candidate__progression">{progression.join(' - ')}</p>
       {labels.length > 0 && (

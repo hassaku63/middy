@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ApiError, exportMidi, type Timeline } from '@/shared/api/client';
+import { exportMidi, type Timeline } from '@/shared/api/client';
 import { midiFileName } from './midiFileName';
 import { saveBlobAsFile } from './saveBlobAsFile';
 
@@ -20,8 +20,8 @@ export function useMidiDownload(saveFile: typeof saveBlobAsFile = saveBlobAsFile
       setError(null);
       try {
         saveFile(await exportMidi(timeline), midiFileName(timeline));
-      } catch (e) {
-        setError(e instanceof ApiError ? e.message : 'MIDI の書き出しに失敗しました');
+      } catch {
+        setError('MIDI の書き出しに失敗しました');
       } finally {
         setBusy(false);
       }
