@@ -143,6 +143,8 @@ func TestBreadthReportCountsVarietyAndWishes(t *testing.T) {
 	verdicts[2].Unconstrained = "ドリアンの IV を\n使いたい | 本当は"
 	report := Report(verdicts)
 	for _, want := range []string{
+		"| a | ", // every row carries its progression (BL-090)
+		"| i VI III VII |",
 		"進行の種類: 2（3 件中）",
 		"最も多い進行: `i VI III VII`（2 回）",
 		"調の種類: 2",
