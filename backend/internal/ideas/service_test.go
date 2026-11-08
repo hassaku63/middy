@@ -333,3 +333,22 @@ func TestPromptSteersJazzToTheRide(t *testing.T) {
 		}
 	}
 }
+
+// TestFakeGraduationUsesSlashChords (BL-116): the fake's graduation answer
+// renders its slash chords with the bass and the line explained.
+func TestFakeGraduationUsesSlashChords(t *testing.T) {
+	res, err := New(fake.New()).Imagine(context.Background(), []Message{user("卒業式の合唱曲")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	tl := res.Candidates[0].Timeline
+	if h := tl.Harmony[1]; h.Symbol != "C/B" || h.Bass == nil {
+		t.Errorf("second chord should be C/B with its bass: %+v", h)
+	}
+	if !strings.Contains(tl.Overview.Flow, "ベースが C → B → A → G → F → E → D と順に下がる") {
+		t.Errorf("the flow should name the falling bass: %s", tl.Overview.Flow)
+	}
+	if !strings.Contains(res.Candidates[1].Timeline.Overview.Flow, "ライン・クリシェ") {
+		t.Errorf("the second candidate is a line cliché: %s", res.Candidates[1].Timeline.Overview.Flow)
+	}
+}
