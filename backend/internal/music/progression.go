@@ -96,12 +96,20 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 	return FromProgressionIn(FourFour, key, prog, tempoBPM)
 }
 
+// SupportedMeter reports whether the engine renders ts (ADR-0017).
+func SupportedMeter(ts TimeSignature) error {
+	if ts != FourFour && ts != ThreeFour && ts != SixEight {
+		return fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4, 6/8)", ts.Numerator, ts.Denominator)
+	}
+	return nil
+}
+
 // FromProgressionIn is FromProgression in another meter (ADR-0017). Step
 // lengths are in beats of the meter: quarter notes in 4/4 and 3/4, dotted
 // quarters in 6/8.
 func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM float64) (Timeline, error) {
-	if ts != FourFour && ts != ThreeFour && ts != SixEight {
-		return Timeline{}, fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4, 6/8)", ts.Numerator, ts.Denominator)
+	if err := SupportedMeter(ts); err != nil {
+		return Timeline{}, err
 	}
 	if err := prog.Validate(); err != nil {
 		return Timeline{}, err

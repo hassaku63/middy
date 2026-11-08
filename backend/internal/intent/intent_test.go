@@ -48,7 +48,7 @@ func TestValidateReportsEveryProblem(t *testing.T) {
 		{"too many candidates", func(i *Intent) { i.Candidates = append(i.Candidates, i.Candidates[0], i.Candidates[0]) }, []string{"candidates must have 1..3"}},
 		{"empty title", func(i *Intent) { i.Candidates[0].Title = "" }, []string{"candidates[0]: title is required"}},
 		{"bad tonic", func(i *Intent) { i.Candidates[0].Key.Tonic = 12 }, []string{"key.tonic must be 0..11"}},
-		{"bad mode", func(i *Intent) { i.Candidates[0].Key.Mode = music.Mode(9) }, []string{"key.mode must be major or minor"}},
+		{"bad mode", func(i *Intent) { i.Candidates[0].Key.Mode = music.Mode(9) }, []string{"key.mode must be major, minor, dorian or mixolydian"}},
 		{"tempo too slow", func(i *Intent) { i.Candidates[0].TempoBPM = 20 }, []string{"tempoBpm must be 40..220"}},
 		{"tempo too fast", func(i *Intent) { i.Candidates[1].TempoBPM = 300 }, []string{"candidates[1]: tempoBpm"}},
 		{"empty progression", func(i *Intent) { i.Candidates[0].Progression = nil }, []string{"progression must have 1..16"}},
