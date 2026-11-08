@@ -66,7 +66,11 @@ type Candidate struct {
 	TempoBPM      float64   `json:"tempoBpm"`
 	Progression   []string  `json:"progression"`   // roman numerals, see music.ParseRomanNumeral
 	BeatsPerChord int       `json:"beatsPerChord"` // one of AllowedBeats
-	Reason        string    `json:"reason"`        // why this fits the image, Japanese
+	// Beats, when set, gives each chord its own length in beats of the
+	// meter (BL-109), one per progression entry; BeatsPerChord is then
+	// only the default the model also states.
+	Beats  []int  `json:"beats,omitempty"`
+	Reason string `json:"reason"` // why this fits the image, Japanese
 	// Accompaniment and Drums are pattern ids from the catalogue
 	// (internal/music/pattern); empty means block chords / no drums.
 	Accompaniment string `json:"accompaniment,omitempty"`
@@ -166,7 +170,50 @@ func (c Candidate) validateProgression() []error {
 	if allowed := AllowedBeats[ts]; !slices.Contains(allowed, c.BeatsPerChord) {
 		errs = append(errs, fmt.Errorf("beatsPerChord must be one of %v in %d/%d, got %d", allowed, ts.Numerator, ts.Denominator, c.BeatsPerChord))
 	}
+	return append(errs, c.validateBeats(ts)...)
+}
+
+// validateBeats checks per-chord lengths (BL-109) against the rule of
+// ADR-0017: chords change on a bar line or at an equal division of the
+// bar. A chord shorter than a bar starts at a multiple of its own length
+// within the bar, so it never crosses a bar line; a bar or longer starts
+// on a bar line; the progression ends on a bar line.
+func (c Candidate) validateBeats(ts music.TimeSignature) []error {
+	if c.Beats == nil {
+		return nil
+	}
+	if len(c.Beats) != len(c.Progression) {
+		return []error{fmt.Errorf("beats has %d lengths for %d chords", len(c.Beats), len(c.Progression))}
+	}
+	var errs []error
+	allowed := AllowedBeats[ts]
+	bar := ts.BeatsPerBar()
+	at := 0 // beats from the start
+	for i, b := range c.Beats {
+		pos := at % bar
+		switch {
+		case !slices.Contains(allowed, b):
+			errs = append(errs, fmt.Errorf("beats[%d] must be one of %v in %d/%d, got %d", i, allowed, ts.Numerator, ts.Denominator, b))
+		case b < bar && pos%b != 0:
+			errs = append(errs, fmt.Errorf("beats[%d]: a chord of %d beats must start on beat %s of the bar, not beat %d", i, b, startBeats(bar, b), pos+1))
+		case b >= bar && pos != 0:
+			errs = append(errs, fmt.Errorf("beats[%d]: a chord of %d beats must start on a bar line, not beat %d", i, b, pos+1))
+		}
+		at += b
+	}
+	if bar > 0 && at%bar != 0 {
+		errs = append(errs, fmt.Errorf("the progression ends mid-bar (%d beats, bars of %d)", at, bar))
+	}
 	return errs
+}
+
+// startBeats lists where a chord of length b may start in a bar: "1 or 3".
+func startBeats(bar, b int) string {
+	var s []string
+	for p := 0; p < bar; p += b {
+		s = append(s, fmt.Sprint(p+1))
+	}
+	return strings.Join(s, " or ")
 }
 
 func (c Candidate) validatePatterns() []error {
@@ -242,7 +289,11 @@ func DrumIDsFor(ts music.TimeSignature) []string {
 func (c Candidate) ToProgression() (music.Progression, error) {
 	prog := make(music.Progression, 0, len(c.Progression))
 	for i, label := range c.Progression {
-		step, err := music.StepFromLabel(c.Key, label, c.BeatsPerChord)
+		beats := c.BeatsPerChord
+		if c.Beats != nil {
+			beats = c.Beats[i]
+		}
+		step, err := music.StepFromLabel(c.Key, label, beats)
 		if err != nil {
 			return nil, fmt.Errorf("intent: progression[%d]: %w", i, err)
 		}

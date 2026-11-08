@@ -269,3 +269,57 @@ func TestSixEightCandidate(t *testing.T) {
 		t.Errorf("6/8 should map to music.SixEight")
 	}
 }
+
+// TestPerChordBeats (BL-109): beats gives each chord its own length in
+// beats of the meter. Each length is one the meter allows; a chord
+// shorter than a bar starts at a multiple of its length within the bar
+// (so it never crosses a bar line), a longer one starts on a bar line, and
+// the progression ends on a bar line.
+func TestPerChordBeats(t *testing.T) {
+	tests := []struct {
+		name  string
+		meter string
+		prog  []string
+		beats []int
+		want  string // "" means valid
+	}{
+		{"hold I two bars, then two beats each", "", []string{"i", "VI", "III", "VII"}, []int{8, 4, 2, 2}, ""},
+		{"omitted uses beatsPerChord", "", []string{"i", "VI", "III", "VII"}, nil, ""},
+		{"length mismatch", "", []string{"i", "VI", "III", "VII"}, []int{8, 4}, "beats has 2 lengths for 4 chords"},
+		{"length the meter does not allow", "", []string{"i", "VI", "III", "VII"}, []int{3, 1, 4, 8}, "beats[0] must be one of [1 2 4 8]"},
+		{"half bar on beat 2", "", []string{"i", "VI", "III", "VII"}, []int{1, 2, 1, 4}, "beats[1]: a chord of 2 beats must start on beat 1 or 3"},
+		{"bar-long chord mid-bar", "", []string{"i", "VI", "III", "VII"}, []int{2, 4, 2, 4}, "beats[1]: a chord of 4 beats must start on a bar line"},
+		{"ends mid-bar", "", []string{"i", "VI", "III", "VII"}, []int{4, 4, 4, 2}, "the progression ends mid-bar"},
+		{"6/8 half bars", "6/8", []string{"i", "VI", "III", "VII"}, []int{2, 1, 1, 2}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			c := &in.Candidates[0]
+			c.Progression, c.Beats = tt.prog, tt.beats
+			if tt.meter == "6/8" {
+				c.Meter, c.BeatsPerChord = "6/8", 2
+			}
+			err := in.Validate()
+			switch {
+			case tt.want == "" && err != nil:
+				t.Fatalf("should be valid: %v", err)
+			case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+				t.Fatalf("error %v should mention %q", err, tt.want)
+			}
+		})
+	}
+	c := valid().Candidates[0]
+	c.Beats = []int{8, 4, 2, 2}
+	prog, err := c.ToProgression()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []int
+	for _, s := range prog {
+		got = append(got, s.Beats)
+	}
+	if fmt.Sprint(got) != "[8 4 2 2]" {
+		t.Errorf("steps carry the per-chord beats: %v", got)
+	}
+}

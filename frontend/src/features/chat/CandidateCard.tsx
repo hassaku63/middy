@@ -11,7 +11,7 @@ type Props = {
 
 /** One proposal: what it is, why it fits, and a button to load it. */
 export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
-  const { title, key, tempoBpm, progression, beatsPerChord, reason } = candidate;
+  const { title, key, tempoBpm, progression, beatsPerChord, beats, reason } = candidate;
   const labels = patternLabels(candidate, patterns);
   return (
     <article className={`candidate${open ? ' is-open' : ''}`} aria-label={title}>
@@ -19,7 +19,7 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
       <p className="candidate__spec">
         <span>{keyName(key)}</span>
         <span>{tempoBpm} BPM</span>
-        <span>{beatsPerChord} 拍/コード</span>
+        <span>{beats ? `長さ: ${beats.join('・')} 拍` : `${beatsPerChord} 拍/コード`}</span>
       </p>
       <p className="candidate__progression">{progression.join(' - ')}</p>
       {labels.length > 0 && (

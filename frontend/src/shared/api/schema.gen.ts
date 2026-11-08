@@ -226,8 +226,13 @@ export interface components {
       tempoBpm: number;
       /** @description ローマ数字（`ProgressionLabel.numeral` と同じ語彙） */
       progression: string[];
-      /** @enum {integer} */
-      beatsPerChord: 1 | 2 | 4 | 8;
+      /**
+       * @description 和音の長さ（拍子の拍の数）。`beats` がないときは全部の和音がこの長さ。4/4 では 1・2・4・8、3/4 では 3・6、6/8 では 1・2・4
+       * @enum {integer}
+       */
+      beatsPerChord: 1 | 2 | 3 | 4 | 6 | 8;
+      /** @description 和音ごとの長さ（拍子の拍の数。BL-109）。`progression` と同じ数。省略時は全部が `beatsPerChord` */
+      beats?: (1 | 2 | 3 | 4 | 6 | 8)[];
       /** @description 聴きどころの短い解説（1〜2 文の日本語） */
       reason: string;
       /** @description 伴奏テンプレートの id（`GET /patterns`）。省略時はブロックコード */
