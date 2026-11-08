@@ -1,5 +1,6 @@
 import type { Timeline } from '@/shared/api/client';
 import { ChordNotes } from './ChordNotes';
+import { DegreeMap } from './DegreeMap';
 import { explainedIndex } from './explainedIndex';
 import { OverviewNotes } from './OverviewNotes';
 import { RhythmNotes } from './RhythmNotes';
@@ -12,6 +13,8 @@ export type ExplanationPanelProps = {
   /** Index into timeline.harmony pinned by the user, or null to follow playback. */
   selectedHarmony: number | null;
   onClearSelection?: () => void;
+  /** Shows the degree map under trial (BL-099, ?degrees). */
+  showDegreeMap?: boolean;
 };
 
 /**
@@ -24,6 +27,7 @@ export function ExplanationPanel({
   positionTick,
   selectedHarmony,
   onClearSelection,
+  showDegreeMap = false,
 }: ExplanationPanelProps) {
   const harmony = timeline?.harmony ?? [];
   const index = explainedIndex(harmony, positionTick, selectedHarmony);
@@ -33,6 +37,9 @@ export function ExplanationPanel({
   return (
     <section className="explanation" aria-label="解説" aria-live="polite">
       {timeline?.overview && <OverviewNotes overview={timeline.overview} />}
+      {showDegreeMap && timeline?.overview && (
+        <DegreeMap degrees={timeline.overview.degrees} event={event} />
+      )}
       {event ? (
         <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
       ) : (

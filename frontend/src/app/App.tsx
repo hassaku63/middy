@@ -14,11 +14,12 @@ import { PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import { TimelineStage } from '@/features/timeline/lab/TimelineStage';
-import { TIMELINE_LAYOUTS, isTimelineLayout } from '@/features/timeline/lab/variants';
 import type { IdeaCandidate, PitchClass, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
 import { useTimelineLayout } from './useTimelineLayout';
+import { LabControls } from './LabControls';
+import { useDegreeMapTrial } from './useDegreeMapTrial';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
@@ -46,6 +47,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const pwa = usePwa();
   const keyChange = useKeyChange();
   const timelineLayout = useTimelineLayout();
+  const degreeMap = useDegreeMapTrial();
   // Normal is silent; only an unreachable backend is worth a word (BL-065).
   const backend = useBackendHealth(pwa.online);
 
@@ -121,23 +123,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             )}
             {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
             {projectName && <span className="app__open-title">プロジェクト: {projectName}</span>}
-            {timelineLayout.lab && (
-              <label className="app__lab">
-                表示（試験）
-                <select
-                  value={timelineLayout.layout}
-                  onChange={(e) => {
-                    if (isTimelineLayout(e.target.value)) timelineLayout.choose(e.target.value);
-                  }}
-                >
-                  {TIMELINE_LAYOUTS.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+            <LabControls layout={timelineLayout} degreeMap={degreeMap} />
           </div>
           {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
           <div className="app__stage">
@@ -153,6 +139,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
               positionTick={player.positionTick}
               selectedHarmony={selectedHarmony}
               onClearSelection={() => setSelectedHarmony(null)}
+              showDegreeMap={degreeMap.on}
             />
           </div>
         </section>
