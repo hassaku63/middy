@@ -4,8 +4,8 @@ package music
 // names (A# and Bb); the key decides which one is right. The rule here is
 // the one notation uses: find the key's parent major, spell that scale on
 // seven consecutive letters starting from its tonic, and name every
-// diatonic pitch by its letter. Minor keys and, later, other modes inherit
-// the signature of their parent major, so D dorian spells like C major.
+// diatonic pitch by its letter. Minor keys and the other modes inherit the
+// signature of their parent major, so D dorian spells like C major.
 
 // parentOffset is where each mode's tonic sits inside its parent major
 // scale, in semitones (ionian 0, dorian 2, ..., aeolian 9).
