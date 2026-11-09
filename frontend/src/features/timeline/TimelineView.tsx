@@ -66,7 +66,9 @@ export function TimelineView({
   return (
     <svg
       className={className ? `timeline ${className}` : 'timeline'}
-      role="img"
+      // A group, not an img: an img's children are hidden from assistive
+      // technology, and the chord lane inside is an interactive listbox.
+      role="group"
       aria-label={label}
       aria-hidden={decorative || undefined}
       width={view?.width ?? layout.width}

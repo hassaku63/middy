@@ -10,10 +10,14 @@ type Props = {
 
 const BLACK_KEYS = new Set([1, 3, 6, 8, 10]);
 
-/** Pitch rows (with C labels) and one rectangle per note; sounding notes are marked. */
+/**
+ * Pitch rows (with C labels) and one rectangle per note; sounding notes are
+ * marked. A picture only: assistive technology gets the chords (ChordLane)
+ * and the explanation instead of dozens of note names (BL-162).
+ */
 export function PianoRoll({ notes, layout, positionTick }: Props) {
   return (
-    <g aria-label="ピアノロール">
+    <g aria-hidden="true">
       {Array.from({ length: layout.rows }, (_, i) => {
         const pitch = layout.hi - i;
         return (
@@ -40,7 +44,7 @@ export function PianoRoll({ notes, layout, positionTick }: Props) {
             key={`note-${i}`}
             className={`timeline__note${sounding ? ' is-sounding' : ''}`}
             data-sounding={sounding ? 'true' : undefined}
-            aria-label={pitchName(n.pitch)}
+            data-pitch={pitchName(n.pitch)}
             x={layout.x(n.start)}
             y={layout.y(n.pitch) + 1}
             width={Math.max(2, layout.x(n.duration) - LABEL_WIDTH - 1)}

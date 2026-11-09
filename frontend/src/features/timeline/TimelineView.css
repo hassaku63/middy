@@ -49,7 +49,7 @@
 }
 
 .timeline__pitch-label {
-  fill: #9ca3af;
+  fill: var(--text-muted);
   font-size: 9px;
 }
 

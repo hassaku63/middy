@@ -17,7 +17,7 @@
 
 .projects__fold summary {
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .projects__fold[open] summary {
@@ -48,7 +48,7 @@
 }
 
 .projects__meta {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 0.85rem;
   flex: 1;
 }

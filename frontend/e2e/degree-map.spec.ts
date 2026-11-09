@@ -24,7 +24,7 @@ test.describe('degree map on a phone', () => {
     ]);
     await result
       .getByRole('listbox', { name: 'コード' })
-      .getByRole('option', { name: 'IV (G)' })
+      .getByRole('option', { name: 'IV G' })
       .click();
     await expect(map.locator('[aria-current="true"]')).toHaveText('IVG');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(

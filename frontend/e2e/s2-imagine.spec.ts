@@ -82,7 +82,7 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   // The dorian IV is a major chord, spelled for the key, and explained by its sixth.
   await result
     .getByRole('listbox', { name: 'コード' })
-    .getByRole('option', { name: 'IV (G)' })
+    .getByRole('option', { name: 'IV G' })
     .click();
   await expect(result.locator('.explanation__text').first()).toContainText(
     'ドリアンの特徴音（主音から長 6 度の B）',
@@ -115,7 +115,7 @@ test('a borrowed iv in a major example is spelled for the key and explained (BL-
   // G major's borrowed iv is Cm, taken from G minor.
   await result
     .getByRole('listbox', { name: 'コード' })
-    .getByRole('option', { name: 'iv (Cm)' })
+    .getByRole('option', { name: 'iv Cm' })
     .click();
   await expect(result.locator('.explanation__text').first()).toContainText(
     '同主短調（G minor）から借りた和音',
@@ -127,7 +127,7 @@ test('a secondary dominant names the chord it pulls towards (BL-074)', async ({ 
   const { result } = await openExample(page, '晴れた朝', '朝の光');
   await result
     .getByRole('listbox', { name: 'コード' })
-    .getByRole('option', { name: 'V7/vi (E7)' })
+    .getByRole('option', { name: 'V7/vi E7' })
     .click();
   const text = result.locator('.explanation__text').first();
   await expect(text).toContainText('vi（Am）へ向かうセカンダリードミナント');
@@ -205,7 +205,7 @@ test('a graduation song walks its bass down with slash chords, kept when the key
   // The slash chord names its bass, and the explanation says what the bass does.
   await result
     .getByRole('listbox', { name: 'コード' })
-    .getByRole('option', { name: 'I/7 (C/B)' })
+    .getByRole('option', { name: 'I/7 C/B' })
     .click();
   await expect(result.locator('.explanation__text').first()).toContainText('経過音');
   await page.getByRole('button', { name: /固定を解除/ }).click();
@@ -214,7 +214,7 @@ test('a graduation song walks its bass down with slash chords, kept when the key
   await expect(result.getByLabel('キー')).toHaveValue('2');
   await expect(overview).toContainText('ベースが D → C# → B → A → G → F# → E と順に下がる');
   await expect(
-    result.getByRole('listbox', { name: 'コード' }).getByRole('option', { name: 'I/7 (D/C#)' }),
+    result.getByRole('listbox', { name: 'コード' }).getByRole('option', { name: 'I/7 D/C#' }),
   ).toHaveCount(1);
 });
 
@@ -223,7 +223,7 @@ test('a driving image pushes a chord early and explains the push (BL-085)', asyn
   const { result } = await openExample(page, '勢いのあるロック', '朝の光');
   await result
     .getByRole('listbox', { name: 'コード' })
-    .getByRole('option', { name: 'IV (F)' })
+    .getByRole('option', { name: 'IV F' })
     .click();
   await expect(result.locator('.explanation__text').first()).toContainText(
     '8 分音符ひとつ早く（4 拍目の裏で）入る（押し）',
@@ -232,7 +232,7 @@ test('a driving image pushes a chord early and explains the push (BL-085)', asyn
   await result.getByLabel('キー').selectOption('2');
   await result
     .getByRole('listbox', { name: 'コード' })
-    .getByRole('option', { name: 'IV (G)' })
+    .getByRole('option', { name: 'IV G' })
     .click();
   await expect(result.locator('.explanation__text').first()).toContainText('（押し）');
 });

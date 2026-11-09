@@ -81,7 +81,7 @@
   display: flex;
   gap: 10px;
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .candidate__progression {
@@ -113,7 +113,7 @@
 
 .chat__hint {
   margin: 0;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -141,7 +141,7 @@
 
 .chat__earlier summary {
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 

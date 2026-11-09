@@ -23,13 +23,13 @@
 
 .explanation__overview-label {
   margin-right: 8px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
 .explanation__empty {
   margin: 0;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .explanation__header {
@@ -110,7 +110,7 @@
 .explanation__subtitle {
   margin: 0 0 6px;
   font-size: 0.95rem;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .explanation__part + .explanation__part {

@@ -31,7 +31,7 @@ export function ChordLane({
           <g
             key={i}
             role="option"
-            aria-label={`${h.romanNumeral} (${harmonySymbol(h)})`}
+            aria-label={`${h.romanNumeral} ${harmonySymbol(h)}`}
             aria-current={active ? 'true' : undefined}
             aria-selected={selected}
             className={`timeline__chord${active ? ' is-active' : ''}${selected ? ' is-selected' : ''}`}
@@ -51,11 +51,15 @@ export function ChordLane({
               height={CHORD_LANE_HEIGHT - 4}
               rx={4}
             />
-            <text x={x + 6} y={18} className="timeline__numeral">
-              {h.romanNumeral}
-            </text>
-            <text x={x + 6} y={36} className="timeline__symbol">
-              {harmonySymbol(h)}
+            {/* One text with a space between the lines, so the visible text
+                reads "V7 B7" like the option's name (WCAG 2.5.3, BL-162). */}
+            <text>
+              <tspan x={x + 6} y={18} className="timeline__numeral">
+                {h.romanNumeral}
+              </tspan>{' '}
+              <tspan x={x + 6} y={36} className="timeline__symbol">
+                {harmonySymbol(h)}
+              </tspan>
             </text>
           </g>
         );
