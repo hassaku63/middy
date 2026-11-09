@@ -7,10 +7,10 @@
 # takes about a minute, which is acceptable once per version. Run it from
 # backend/ so the fallback builds with the project's Go.
 #
-# Usage: scripts/install-golangci-lint.sh v2.5.0 "$HOME/.local/golangci-lint"
+# Usage: scripts/install-golangci-lint.sh v2.15.0 "$HOME/.local/golangci-lint"
 set -euo pipefail
 
-version="${1:?version like v2.5.0}"
+version="${1:?version like v2.15.0}"
 dest="${2:?destination directory}"
 v="${version#v}"
 

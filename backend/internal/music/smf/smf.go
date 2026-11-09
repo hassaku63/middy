@@ -38,7 +38,7 @@ func Write(tl music.Timeline) ([]byte, error) {
 		if delta < 0 || delta > maxVarLen {
 			return nil, fmt.Errorf("smf: event at tick %d is %d ticks after the previous one; SMF allows 0..%d", e.tick, delta, maxVarLen)
 		}
-		writeVarLen(&track, uint32(delta)) //nolint:gosec // checked above: 0..maxVarLen
+		writeVarLen(&track, uint32(delta))
 		last = e.tick
 		track.Write(e.data)
 	}
@@ -76,12 +76,14 @@ func collectEvents(tl music.Timeline) []event {
 		events = append(events, event{tick: tick, kind: kind, seq: seq, data: data})
 		seq++
 	}
+	// Write validated the timeline (music.Timeline.Validate): channel 0..15,
+	// program, pitch and velocity 0..127. gosec cannot see that across calls.
 	for _, tr := range tl.Tracks {
-		ch := byte(tr.Channel)
-		push(0, 0, 0xC0|ch, byte(tr.Program))
+		ch := byte(tr.Channel)                //nolint:gosec // validated: 0..15
+		push(0, 0, 0xC0|ch, byte(tr.Program)) //nolint:gosec // validated: 0..127
 		for _, n := range tr.Notes {
-			push(n.Start, 2, 0x90|ch, byte(n.Pitch), byte(n.Velocity))
-			push(n.End(), 1, 0x80|ch, byte(n.Pitch), 0)
+			push(n.Start, 2, 0x90|ch, byte(n.Pitch), byte(n.Velocity)) //nolint:gosec // validated: 0..127
+			push(n.End(), 1, 0x80|ch, byte(n.Pitch), 0)                //nolint:gosec // validated: 0..127
 		}
 	}
 	sort.SliceStable(events, func(i, j int) bool {
@@ -124,7 +126,7 @@ func writeVarLen(w *bytes.Buffer, v uint32) {
 // tempoBytes is microseconds per quarter note as a 24-bit integer.
 func tempoBytes(bpm float64) []byte {
 	us := uint32(math.Round(60_000_000 / bpm))
-	return []byte{byte(us >> 16), byte(us >> 8), byte(us)}
+	return []byte{byte(us >> 16), byte(us >> 8), byte(us)} //nolint:gosec // big-endian bytes of a 24-bit value; the tempo range keeps it under 2^24
 }
 
 // timeSignatureBytes is numerator, log2(denominator), MIDI clocks per
@@ -136,7 +138,7 @@ func timeSignatureBytes(ts music.TimeSignature) []byte {
 	for d := ts.Denominator; d > 1; d >>= 1 {
 		dd++
 	}
-	return []byte{byte(ts.Numerator), dd, byte(music.BeatTicks(ts, 24)), 8}
+	return []byte{byte(ts.Numerator), dd, byte(music.BeatTicks(ts, 24)), 8} //nolint:gosec // validated: numerator 1..32; a beat is at most 96 clocks (a whole note)
 }
 
 // keySignatureBytes is the number of sharps (positive) or flats (negative)

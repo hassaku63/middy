@@ -111,7 +111,7 @@ func TestRequestLoggerTurnsAPanicIntoTheErrorEnvelope(t *testing.T) {
 		panic("engine bug")
 	}))
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/v1/ideas", nil))
+	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/v1/ideas", nil))
 
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want 500", rec.Code)
@@ -134,7 +134,7 @@ func TestRequestLoggerLeavesAStartedResponseAlone(t *testing.T) {
 		panic("late")
 	}))
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil))
 	if rec.Code != http.StatusAccepted || rec.Body.Len() != 0 {
 		t.Fatalf("got %d %q, want the handler's own 202 with nothing appended", rec.Code, rec.Body.String())
 	}
@@ -147,7 +147,7 @@ func TestRequestLoggerReachesTheRealWriter(t *testing.T) {
 			t.Errorf("Flush through the logger: %v", err)
 		}
 	}))
-	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil))
 }
 
 // TestKnownPathWithAnotherMethodIs405 (review): the catch-all "/" must not
@@ -171,7 +171,7 @@ func TestKnownPathWithAnotherMethodIs405(t *testing.T) {
 // a stray "}" or "]", so those must still count as trailing data.
 func TestTrailingClosersAreRejected(t *testing.T) {
 	for _, tail := range []string{"}", "]", " {}", ""} {
-		r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"a":1}`+tail))
+		r := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", strings.NewReader(`{"a":1}`+tail))
 		var v map[string]int
 		err := decodeJSON(r, &v)
 		if tail == "" && err != nil {

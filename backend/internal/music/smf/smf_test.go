@@ -192,11 +192,11 @@ func parseTrack(t *testing.T, data []byte) []string {
 }
 
 func formatEvent(tick uint32, status byte, data ...byte) string {
-	s := formatUint(tick) + " " + hex2(status)
+	parts := []string{formatUint(tick), hex2(status)}
 	for _, d := range data {
-		s += " " + hex2(d)
+		parts = append(parts, hex2(d))
 	}
-	return s
+	return strings.Join(parts, " ")
 }
 
 func hex2(b byte) string {
