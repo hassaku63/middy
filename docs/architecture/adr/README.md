@@ -34,6 +34,7 @@
 | [0028](0028-one-required-check.md) | main の必須チェックは、`make check` に当たるジョブをまとめた 1 つだけにする | Accepted |
 | [0029](0029-lint-policy.md) | 推奨される lint は 1 つずつ入れ、道具そのものの陳腐化を定期的に検討する | Accepted |
 | [0030](0030-problem-details.md) | エラー応答は RFC 9457 の problem detail にする | Accepted |
+| [0033](0033-problem-details-only-for-the-api.md) | problem detail は API の応答にだけ使い、アプリのファイルと画面のエラーは短い平文にする | Accepted |
 
 ## いつ ADR を書くか
 

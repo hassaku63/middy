@@ -46,6 +46,11 @@ server {
         proxy_read_timeout 180s;
         proxy_send_timeout 180s;
         client_max_body_size 4m;
+        # What nginx answers here in the API's place is a problem detail like
+        # the API's own (RFC 9457, ADR-0030; docs/api/problems.md). Errors
+        # the API returns pass through untouched.
+        error_page 413 = @api_request_too_large;
+        error_page 502 503 504 = @api_unavailable;
     }
 
     # Hashed build output: cached for a year. A missing one is a 404, and so
@@ -78,27 +83,31 @@ server {
         try_files $uri /index.html;
     }
 
-    # Every error nginx itself answers is a problem detail like the API's
-    # (RFC 9457, ADR-0030; docs/api/problems.md), never an HTML page. The
-    # static module may already have typed the answer; an empty type map
-    # makes default_type apply.
+    # Errors for the app's files and screens are short plain text, never an
+    # HTML page (ADR-0033): they are not API responses, so not problem
+    # details. The static module may already have typed the answer; an
+    # empty type map makes default_type apply.
     error_page 404 = @not_found;
     error_page 405 = @method_not_allowed;
     error_page 413 = @request_too_large;
-    error_page 502 503 504 = @api_unavailable;
     location @not_found {
         types { }
-        default_type application/problem+json;
+        default_type text/plain;
         add_header Cache-Control "no-cache" always;
-        return 404 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#not_found","title":"Not found","status":404,"detail":"no such file","code":"not_found"}\n';
+        return 404 "not found\n";
     }
     location @method_not_allowed {
         types { }
-        default_type application/problem+json;
+        default_type text/plain;
         add_header Allow "GET, HEAD" always;
-        return 405 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#method_not_allowed","title":"Method not allowed","status":405,"detail":"static files are read-only","code":"method_not_allowed"}\n';
+        return 405 "method not allowed\n";
     }
     location @request_too_large {
+        types { }
+        default_type text/plain;
+        return 413 "request too large\n";
+    }
+    location @api_request_too_large {
         types { }
         default_type application/problem+json;
         return 413 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#request_too_large","title":"Request too large","status":413,"detail":"the request body is larger than 4 MiB","code":"request_too_large"}\n';
