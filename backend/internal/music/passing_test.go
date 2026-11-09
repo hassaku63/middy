@@ -70,3 +70,20 @@ func TestPassingDiminishedIsAnalysed(t *testing.T) {
 		t.Errorf("I – vii°7/V – V leads but does not pass: %s", e)
 	}
 }
+
+// TestMinorTargetsReadTheHarmonicV (BL-131): in a minor key the uppercase V
+// is the harmonic-minor dominant on v's root, so V7/V, subV7/V and
+// vii°7/V name the same chords as V7/v, subV7/v and vii°7/v, and are
+// spelled that way.
+func TestMinorTargetsReadTheHarmonicV(t *testing.T) {
+	am := Key{A, Minor}
+	for label, want := range map[string]string{"V7/V": "V7/v", "subV7/V": "subV7/v", "vii°7/V": "vii°7/v", "V/V": "V/v"} {
+		canon, err := CanonicalLabel(am, label)
+		if err != nil || canon != want {
+			t.Errorf("%s: CanonicalLabel = %q, %v; want %q", label, canon, err, want)
+		}
+	}
+	if _, err := CanonicalLabel(Key{C, Major}, "V7/v"); err == nil {
+		t.Error("a major key's v is still the wrong case")
+	}
+}
