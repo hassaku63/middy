@@ -22,7 +22,10 @@ jobs:
         with:
           go-version-file: .tool-versions
           cache: false
-      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      # Pinned: v1.8.0 and later need Go 1.26, and this repository builds with
+      # the Go in .tool-versions (1.25). The vulnerability database is fetched
+      # at run time, so the findings stay current. Lift with the Go upgrade.
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...
 
   npm-audit:
     runs-on: ubuntu-latest
