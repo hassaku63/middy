@@ -175,17 +175,7 @@ jobs:
       - name: Smoke test the container
         run: |
           docker run -d --name app -p 8080:8080 middy:ci
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:8080/api/v1/health > health.json; then break; fi
-            sleep 1
-          done
-          cat health.json
-          grep -q '"version":"${{ github.sha }}"' health.json
-          curl -fsS -o index.html -D headers.txt http://localhost:8080/
-          grep -qi 'content-type: text/html' headers.txt
-          grep -q '<div id="root">' index.html
-          curl -fsS -o /dev/null -D sw.txt http://localhost:8080/sw.js
-          grep -qi 'cache-control: no-cache' sw.txt
+          bash scripts/smoke.sh http://localhost:8080 "${{ github.sha }}"
           for i in $(seq 1 30); do
             status=$(docker inspect --format '{{.State.Health.Status}}' app)
             [ "$status" = "healthy" ] && break
