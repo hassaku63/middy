@@ -106,7 +106,9 @@ export class TimelinePlayer {
     this.nextNote = 0;
     this.startTime = this.clock.now();
     this.tick();
-    if (this.state !== 'playing') return; // an empty timeline finished at once: no timer to leak
+    // Read through the getter: tick() may have finished an empty timeline,
+    // which the narrowing from the assignment above cannot see.
+    if (!this.isPlaying) return; // no timer to leak
     this.timer = this.setInterval(() => this.tick(), this.intervalMs);
     this.notify();
   }

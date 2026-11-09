@@ -52,9 +52,7 @@ test.describe('at phone width', () => {
       .evaluate((el) => [Number(el.getAttribute('width')), Number(el.getAttribute('height'))]);
     expect(box).not.toBeNull();
     // Scaled down to fit, the drawing keeps its aspect ratio instead of a tall empty box.
-    expect(Math.abs((box?.height ?? 0) / (box?.width ?? 1) - (h ?? 0) / (w ?? 1))).toBeLessThan(
-      0.05,
-    );
+    expect(Math.abs((box?.height ?? 0) / (box?.width ?? 1) - h / w)).toBeLessThan(0.05);
   });
 });
 
