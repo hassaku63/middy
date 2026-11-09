@@ -1,4 +1,6 @@
-# End-to-end scenarios against the production image (ADR-0008).
+# End-to-end scenarios against the production-like stack (ADR-0027): the
+# web and api images run together by compose, as `make up` and the CI image
+# job do, so the scenarios go through nginx.
 # Manual to start with; promote to pull_request once the suite proves stable.
 name: e2e
 
@@ -21,20 +23,34 @@ jobs:
         run: |
           echo "go=$(awk '$1 == "golang" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
           echo "node=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
-      - name: Build the image
+      - name: Build the api image
         uses: docker/build-push-action@v7
         with:
           context: .
+          target: api
           load: true
-          tags: middy:e2e
+          tags: middy-api:e2e
           build-args: |
             VERSION=${{ github.sha }}
             GO_VERSION=${{ steps.tv.outputs.go }}
             NODE_VERSION=${{ steps.tv.outputs.node }}
           cache-from: type=gha,scope=api
-      - name: Run the container
+      - name: Build the web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: web
+          load: true
+          tags: middy-web:e2e
+          build-args: |
+            NODE_VERSION=${{ steps.tv.outputs.node }}
+          cache-from: |
+            type=gha,scope=api
+            type=gha,scope=web
+      - name: Start the stack
+        # --wait returns once both HEALTHCHECKs report healthy.
         run: |
-          docker run -d --name app -p 8080:8080 middy:e2e
+          TAG=e2e docker compose up -d --no-build --wait
           bash scripts/smoke.sh http://localhost:8080 "${{ github.sha }}"
       - uses: actions/setup-node@v7
         with:
@@ -49,9 +65,11 @@ jobs:
         run: npx playwright test
         env:
           E2E_BASE_URL: http://localhost:8080
-      - name: Container logs
+      - name: Stack logs
         if: always()
-        run: docker logs app
+        run: |
+          TAG=e2e docker compose logs
+          TAG=e2e docker compose down
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

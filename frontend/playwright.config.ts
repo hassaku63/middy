@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * End-to-end scenarios against a running middy server (ADR-0008): by
- * default the production-like single binary / container on :8080.
+ * End-to-end scenarios against a running middy on :8080 by default: the
+ * production-like compose stack (ADR-0027), or the single binary.
  *
  *   make build && make run        # or: make up
  *   make e2e                      # E2E_BASE_URL overrides the target
