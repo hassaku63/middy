@@ -32,7 +32,7 @@ const styles: PatternsResponse['styles'] = [
 ];
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
-const failure = () => json(400, { error: { code: 'invalid', message: '作れません' } });
+const failure = () => json(400, { code: 'invalid', detail: '作れません' });
 
 /** A fetch whose answers the test hands out one at a time. */
 function heldFetch() {

@@ -50,26 +50,14 @@ export class ApiError extends Error {
 }
 
 /**
- * The code and developer message of an error body: an RFC 9457 problem
- * detail (ADR-0030), or the envelope nginx still answers with until it
- * moves too (BL-164). Null for anything else, such as a proxy's own page.
+ * The code and developer message of an RFC 9457 problem detail, which the
+ * API and nginx answer every error with (ADR-0030). Null for anything
+ * else, such as a proxy's own page.
  */
 function readError(body: unknown): { code: string; message: string } | null {
   if (typeof body !== 'object' || body === null) return null;
   if ('code' in body && typeof body.code === 'string' && 'detail' in body) {
     return { code: body.code, message: typeof body.detail === 'string' ? body.detail : '' };
-  }
-  if (!('error' in body)) return null;
-  const error: unknown = body.error;
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof error.code === 'string' &&
-    'message' in error &&
-    typeof error.message === 'string'
-  ) {
-    return { code: error.code, message: error.message };
   }
   return null;
 }

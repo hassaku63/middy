@@ -45,7 +45,7 @@ describe('useRegroove', () => {
   it('turns an API failure into the error state', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(json(500, { error: { code: 'internal_error', message: 'x' } })),
+      vi.fn().mockResolvedValue(json(500, { code: 'internal_error', detail: 'x' })),
     );
     const { result } = renderHook(() => useRegroove());
     let next: Timeline | null = timeline;

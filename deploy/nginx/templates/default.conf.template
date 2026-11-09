@@ -78,30 +78,34 @@ server {
         try_files $uri /index.html;
     }
 
-    # Every error nginx itself answers uses the API's envelope
-    # (docs/api/openapi.yaml, Error), never an HTML page.
+    # Every error nginx itself answers is a problem detail like the API's
+    # (RFC 9457, ADR-0030; docs/api/problems.md), never an HTML page. The
+    # static module may already have typed the answer; an empty type map
+    # makes default_type apply.
     error_page 404 = @not_found;
     error_page 405 = @method_not_allowed;
     error_page 413 = @request_too_large;
     error_page 502 503 504 = @api_unavailable;
     location @not_found {
-        default_type application/json;
+        types { }
+        default_type application/problem+json;
         add_header Cache-Control "no-cache" always;
-        return 404 '{"error":{"code":"not_found","message":"no such file"}}\n';
+        return 404 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#not_found","title":"Not found","status":404,"detail":"no such file","code":"not_found"}\n';
     }
     location @method_not_allowed {
-        # The static module has already typed this answer; an empty type
-        # map makes default_type apply.
         types { }
-        default_type application/json;
-        return 405 '{"error":{"code":"method_not_allowed","message":"static files are read-only"}}\n';
+        default_type application/problem+json;
+        add_header Allow "GET, HEAD" always;
+        return 405 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#method_not_allowed","title":"Method not allowed","status":405,"detail":"static files are read-only","code":"method_not_allowed"}\n';
     }
     location @request_too_large {
-        default_type application/json;
-        return 413 '{"error":{"code":"request_too_large","message":"the request body is larger than 4 MiB"}}\n';
+        types { }
+        default_type application/problem+json;
+        return 413 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#request_too_large","title":"Request too large","status":413,"detail":"the request body is larger than 4 MiB","code":"request_too_large"}\n';
     }
     location @api_unavailable {
-        default_type application/json;
-        return 503 '{"error":{"code":"api_unavailable","message":"the API is not reachable; try again"}}\n';
+        types { }
+        default_type application/problem+json;
+        return 503 '{"type":"https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#api_unavailable","title":"API unavailable","status":503,"detail":"the API is not reachable; try again","code":"api_unavailable"}\n';
     }
 }

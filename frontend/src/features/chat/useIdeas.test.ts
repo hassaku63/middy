@@ -45,7 +45,7 @@ describe('useIdeas', () => {
   it('translates provider errors into friendly text and keeps the user turn', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(json(502, { error: { code: 'llm_unavailable', message: 'x' } })),
+      vi.fn().mockResolvedValue(json(502, { code: 'llm_unavailable', detail: 'x' })),
     );
     const { result } = renderHook(() => useIdeas());
     await act(() => result.current.send('雨'));
@@ -60,7 +60,7 @@ describe('useIdeas', () => {
   it('asks the user to rephrase when the model declines', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(json(422, { error: { code: 'llm_declined', message: 'x' } })),
+      vi.fn().mockResolvedValue(json(422, { code: 'llm_declined', detail: 'x' })),
     );
     const { result } = renderHook(() => useIdeas());
     await act(() => result.current.send('深夜に一人で勉強している集中した時間'));
@@ -87,7 +87,7 @@ describe('useIdeas', () => {
   it('does not report an answer when the request fails', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => Promise.resolve(json(502, { error: { code: 'llm_unavailable', message: 'x' } }))),
+      vi.fn(() => Promise.resolve(json(502, { code: 'llm_unavailable', detail: 'x' }))),
     );
     const onAnswer = vi.fn();
     const { result } = renderHook(() => useIdeas(onAnswer));
@@ -98,11 +98,11 @@ describe('useIdeas', () => {
   it('says what went wrong in Japanese for any other failure (review)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        json(500, {
-          error: { code: 'internal_error', message: 'the examples could not be built' },
-        }),
-      ),
+      vi
+        .fn()
+        .mockResolvedValue(
+          json(500, { code: 'internal_error', detail: 'the examples could not be built' }),
+        ),
     );
     const { result } = renderHook(() => useIdeas());
     await act(() => result.current.send('雨'));
