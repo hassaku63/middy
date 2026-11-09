@@ -40,7 +40,7 @@ COPY deploy/nginx/templates/ /etc/nginx/templates/
 ENV PORT=8080 RESOLVER=127.0.0.11
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=1s --retries=3 \
-  CMD wget -q -O /dev/null "http://127.0.0.1:${PORT}/healthz" || exit 1
+  CMD ["sh", "-c", "wget -q -O /dev/null \"http://127.0.0.1:${PORT}/healthz\" || exit 1"]
 
 # --- api: the Go server ------------------------------------------------------
 FROM gcr.io/distroless/static-debian12:nonroot AS api
@@ -48,7 +48,9 @@ WORKDIR /app
 COPY --from=backend /out/server /app/server
 ENV PORT=8080 LLM_PROVIDER=fake
 EXPOSE 8080
-USER nonroot:nonroot
+# The image's nonroot user, by number: a platform that checks for a
+# non-root user (Kubernetes runAsNonRoot) can only verify a numeric one.
+USER 65532:65532
 # distroless has no shell or curl; the server exposes a probe flag instead.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=1s --retries=3 \
   CMD ["/app/server", "-healthcheck"]

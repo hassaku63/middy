@@ -18,7 +18,7 @@ VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev
 
 .PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor e2e smoke eval dev-backend dev-frontend run image up down \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build \
-        frontend-test frontend-lint shell-lint actions-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
+        frontend-test frontend-lint shell-lint actions-lint dockerfile-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
 
 help: ## Show this help
@@ -81,6 +81,12 @@ shell-lint: ## shellcheck the scripts (install: apt install shellcheck, or brew 
 actions-lint: ## actionlint the GitHub workflows (install: go install github.com/rhysd/actionlint/cmd/actionlint@v<version in .tool-versions>)
 	@command -v actionlint >/dev/null || { echo "actionlint not found: go install github.com/rhysd/actionlint/cmd/actionlint@v$$(awk '$$1 == "actionlint" { print $$2 }' .tool-versions)"; exit 1; }
 	actionlint
+
+dockerfile-lint: ## hadolint the Dockerfile, with a local hadolint or the pinned image (not in `check`: it needs one of them; CI runs it)
+	@v=$$(awk '$$1 == "hadolint" { print $$2 }' .tool-versions); \
+	if command -v hadolint >/dev/null; then hadolint Dockerfile; \
+	elif command -v docker >/dev/null; then docker run --rm -i "ghcr.io/hadolint/hadolint:v$$v" < Dockerfile; \
+	else echo "dockerfile-lint: needs hadolint $$v or docker"; exit 1; fi
 
 backend-lint: ## go vet + golangci-lint (the config is verified first, as CI does)
 	cd $(BACKEND) && go vet ./... && golangci-lint config verify && golangci-lint run ./...
