@@ -24,6 +24,7 @@ linters:
     - nilerr
     - noctx
     - nolintlint
+    - sloglint
     - usestdlibvars
   exclusions:
     rules:
@@ -82,10 +83,20 @@ linters:
           deny:
             - pkg: net/http
               desc: HTTP belongs to internal/httpapi, cmd/server and LLM adapters
+    # Loggers come through Deps or Config, never the global (conventions.md).
+    sloglint:
+      no-global: default
+      forbidden-keys: [err]
     revive:
       rules:
         - name: exported
           arguments: ["disableStutteringCheck"]
+
+# Show every finding, not the first 3 of each kind: a lint PR fixes them all
+# (ADR-0029).
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
 
 formatters:
   enable:

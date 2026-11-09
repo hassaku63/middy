@@ -32,8 +32,9 @@ func main() {
 		}
 		return
 	}
-	if err := run(); err != nil {
-		slog.Error("server exited with error", "err", err)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	if err := run(logger); err != nil {
+		logger.Error("server exited with error", "error", err)
 		os.Exit(1)
 	}
 }
@@ -67,16 +68,15 @@ func probe(url string, timeout time.Duration) error {
 	return nil
 }
 
-func run() error {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+func run(logger *slog.Logger) error {
+	slog.SetDefault(logger) // for libraries that log through the default
 
 	cfg, err := config.Load(os.Getenv)
 	if err != nil {
 		return err
 	}
 
-	llmClient, err := newLLMClient(cfg)
+	llmClient, err := newLLMClient(cfg, logger)
 	if err != nil {
 		return err
 	}
@@ -150,12 +150,12 @@ func shutdown(srv *http.Server, logger *slog.Logger, budget time.Duration) error
 }
 
 // newLLMClient selects the LLM provider from configuration.
-func newLLMClient(cfg config.Config) (llm.Client, error) {
+func newLLMClient(cfg config.Config, logger *slog.Logger) (llm.Client, error) {
 	switch cfg.LLMProvider {
 	case config.LLMProviderFake:
 		return fake.New(), nil
 	case config.LLMProviderAnthropic:
-		return anthropic.New(anthropic.Config{APIKey: cfg.AnthropicAPIKey, Model: cfg.AnthropicModel})
+		return anthropic.New(anthropic.Config{APIKey: cfg.AnthropicAPIKey, Model: cfg.AnthropicModel, Logger: logger})
 	default:
 		return nil, errors.New("unsupported LLM_PROVIDER: " + cfg.LLMProvider)
 	}

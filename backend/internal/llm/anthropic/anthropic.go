@@ -50,6 +50,8 @@ type Config struct {
 	BaseURL string
 	// MaxRetries overrides the SDK default (2); tests set 0.
 	MaxRetries *int
+	// Logger receives the per-call token accounting; nil discards it.
+	Logger *slog.Logger
 }
 
 // Client calls the Messages API.
@@ -57,6 +59,7 @@ type Client struct {
 	api    sdk.Client
 	model  string
 	effort sdk.OutputConfigEffort
+	logger *slog.Logger
 }
 
 var _ llm.Client = (*Client)(nil)
@@ -86,7 +89,11 @@ func New(cfg Config) (*Client, error) {
 	if cfg.Effort != "" {
 		effort = sdk.OutputConfigEffort(cfg.Effort)
 	}
-	return &Client{api: sdk.NewClient(opts...), model: cfg.Model, effort: effort}, nil
+	logger := cfg.Logger
+	if logger == nil {
+		logger = slog.New(slog.DiscardHandler)
+	}
+	return &Client{api: sdk.NewClient(opts...), model: cfg.Model, effort: effort, logger: logger}, nil
 }
 
 // Complete sends one request. When req.OutputSchema is set the model is
@@ -105,7 +112,7 @@ func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, e
 	// seeing whether the cached system prompt is actually read from cache.
 	// Logged before the stop reason, so a truncated (and costliest) call
 	// is counted too.
-	slog.InfoContext(ctx, "llm usage",
+	c.logger.InfoContext(ctx, "llm usage",
 		"model", c.model,
 		"stop_reason", msg.StopReason,
 		"input_tokens", msg.Usage.InputTokens,

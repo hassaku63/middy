@@ -52,7 +52,11 @@ type timelineResponse struct {
 // handleFromProgression renders a roman-numeral progression in a key and
 // returns the analysed timeline. It is the whole M1 pipeline in one call:
 // parse -> FromProgression -> Analyze.
-func handleFromProgression(w http.ResponseWriter, r *http.Request) {
+func handleFromProgression(logger *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) { fromProgression(w, r, logger) }
+}
+
+func fromProgression(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
 	var req fromProgressionRequest
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
@@ -86,7 +90,7 @@ func handleFromProgression(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Every chord the request may name is one Analyze can place, so
 		// this is a bug, not user error: log it, tell the client little.
-		slog.ErrorContext(r.Context(), "timelines: could not analyse the timeline", "error", err)
+		logger.ErrorContext(r.Context(), "timelines: could not analyse the timeline", "error", err)
 		writeError(w, http.StatusInternalServerError, "internal_error", "the timeline could not be analysed")
 		return
 	}

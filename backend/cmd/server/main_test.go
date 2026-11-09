@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -62,7 +61,7 @@ func TestShutdownClosesWhatOutlivesTheBudget(t *testing.T) {
 	}()
 
 	<-started
-	if err := shutdown(ts.Config, slog.New(slog.NewJSONHandler(io.Discard, nil)), 50*time.Millisecond); err != nil {
+	if err := shutdown(ts.Config, slog.New(slog.DiscardHandler), 50*time.Millisecond); err != nil {
 		t.Fatalf("shutdown with a request still running = %v, want nil (a signal is not a failure)", err)
 	}
 }

@@ -25,7 +25,7 @@ func newIdeasServer(t *testing.T, client llm.Client) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewServer(NewHandler(Deps{
 		LLM:    client,
-		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Logger: slog.New(slog.DiscardHandler),
 	}))
 	t.Cleanup(srv.Close)
 	return srv
