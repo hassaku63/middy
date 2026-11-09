@@ -83,51 +83,6 @@ func (g Groove) Choice(style string) Choice {
 
 func program(p int) *int { return &p }
 
-var styles = []Style{
-	{
-		ID: "pop", Name: "ポップ", Description: "歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。",
-		Accompaniments: []string{"pulse", "ballad", "arpeggio", "strum", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6"},
-		Drums:          []string{"eight-beat", "ballad", "waltz", "six-eight"},
-		Feels:          []Feel{FeelStraight, FeelSwing},
-	},
-	{
-		ID: "ballad", Name: "バラード", Description: "ゆっくり歌う曲。間を広く取り、和音を伸ばしたり分散したりする。",
-		Accompaniments: []string{"ballad", "arpeggio", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "drone"},
-		Drums:          []string{"ballad", "waltz", "six-eight"},
-		Feels:          []Feel{FeelStraight},
-		Tensions:       &Tensions{Add9: true, Text: "長三和音に 9 度を足して（add9）柔らかくしている"},
-	},
-	{
-		ID: "rock", Name: "ロック", Description: "ギターのストロークと 8 ビートで、強く前に進む。",
-		Accompaniments: []string{"strum", "pulse"},
-		Drums:          []string{"eight-beat"},
-		Feels:          []Feel{FeelStraight, FeelSwing},
-		Program:        program(29), Instrument: "歪んだギター",
-	},
-	{
-		ID: "jazz", Name: "ジャズ", Description: "ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。",
-		Accompaniments: []string{"comp", "walking", "arpeggio", "ballad", "waltz", "arpeggio-3"},
-		Drums:          []string{"jazz-ride", "jazz-waltz"},
-		Feels:          []Feel{FeelSwing, FeelStraight},
-		Tensions:       &Tensions{Ninths: true, Thirteenths: true, Text: "七の和音に 9 度、属七には 13 度も足している"},
-	},
-	{
-		ID: "bossa", Name: "ボサノバ", Description: "ブラジルの穏やかなリズム。表と裏が交互に来るキックの上で、和音を軽く流す。",
-		Accompaniments: []string{"arpeggio", "comp", "ballad"},
-		Drums:          []string{"bossa"},
-		Feels:          []Feel{FeelStraight},
-		Tensions:       &Tensions{Ninths: true, Text: "七の和音に 9 度を足している"},
-		Program:        program(24), Instrument: "ナイロン弦ギター",
-	},
-	{
-		ID: "celtic", Name: "ケルト", Description: "アイルランドやスコットランドの舞曲と民謡。リールの裏打ちとボーラン、6/8 のジグ、ドローン。",
-		Accompaniments: []string{"reel", "drone", "arpeggio", "arpeggio-3", "waltz", "rocking-6", "arpeggio-6"},
-		Drums:          []string{"bodhran", "jig", "six-eight"},
-		Feels:          []Feel{FeelStraight},
-		Program:        program(46), Instrument: "ハープ",
-	},
-}
-
 // tensions is the style's colouring; none without a style.
 func (s *Style) tensions() *Tensions {
 	if s == nil {

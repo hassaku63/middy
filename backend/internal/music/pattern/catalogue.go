@@ -15,7 +15,8 @@ import (
 // every test and never reaches a user. Moving it out of Go tables does not
 // move the line of ADR-0003: the patterns are still the engine's, not the
 // model's. Accompaniments live in data/accompaniments.json and drums in
-// data/drums.json, one hit per line; styles are still a Go table (BL-179).
+// data/drums.json, one hit per line; styles, which name the patterns that
+// suit them, in data/styles.json.
 // An accompaniment without a meter fits any, and a hit of it with no
 // duration lasts to the end of whatever bar it plays in.
 
@@ -25,10 +26,14 @@ var accompanimentsJSON []byte
 //go:embed data/drums.json
 var drumsJSON []byte
 
+//go:embed data/styles.json
+var stylesJSON []byte
+
 // Catalogue is the patterns the engine can play.
 type Catalogue struct {
 	Accompaniments []Accompaniment `json:"accompaniments,omitempty"`
 	Drums          []Drums         `json:"drums,omitempty"`
+	Styles         []Style         `json:"styles,omitempty"`
 }
 
 // voices are the roles an accompaniment's hit may play.
@@ -53,7 +58,72 @@ func (c Catalogue) Validate() error {
 		seen["drums:"+d.ID] = true
 		errs = append(errs, drumProblems(where, d)...)
 	}
+	errs = append(errs, c.styleProblems()...)
 	return errors.Join(errs...)
+}
+
+// styleProblems checks the styles: what every entry needs, that every
+// pattern a style names is in the catalogue and every pattern but block
+// belongs to a style, known feels, and an instrument named with its
+// program. Grooves are worked out by the engine, not written.
+func (c Catalogue) styleProblems() []error {
+	var errs []error
+	known, used, seen := map[string]bool{}, map[string]bool{}, map[string]bool{}
+	for _, a := range c.Accompaniments {
+		known["acc:"+a.ID] = true
+	}
+	for _, d := range c.Drums {
+		known["drums:"+d.ID] = true
+	}
+	for i, st := range c.Styles {
+		where := fmt.Sprintf("styles[%d] %q", i, st.ID)
+		errs = append(errs, entryProblems(where, st.ID, st.Name, st.Description, len(st.Feels), seen[st.ID])...)
+		seen[st.ID] = true
+		errs = append(errs, oneStyleProblems(where, st, known, used)...)
+	}
+	if len(c.Styles) == 0 {
+		return errs // a catalogue of patterns alone has no styles to belong to
+	}
+	for ref := range known {
+		if ref != "acc:block" && !used[ref] {
+			errs = append(errs, fmt.Errorf("%s belongs to no style", ref))
+		}
+	}
+	return errs
+}
+
+// oneStyleProblems checks one style, marking the patterns it names as used.
+func oneStyleProblems(where string, st Style, known, used map[string]bool) []error {
+	var errs []error
+	for _, ref := range append(prefixed("acc:", st.Accompaniments), prefixed("drums:", st.Drums)...) {
+		if !known[ref] {
+			errs = append(errs, fmt.Errorf("%s: names %s, which is not in the catalogue", where, ref))
+		}
+		used[ref] = true
+	}
+	for _, f := range st.Feels {
+		if _, err := findFeel(f); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", where, err))
+		}
+	}
+	if (st.Program == nil) != (st.Instrument == "") || st.Program != nil && (*st.Program < 0 || *st.Program > 127) {
+		errs = append(errs, fmt.Errorf("%s: an instrument needs both a program in 0..127 and its name", where))
+	}
+	if st.Tensions != nil && st.Tensions.Text == "" {
+		errs = append(errs, fmt.Errorf("%s: tensions need a text", where))
+	}
+	if len(st.Grooves) > 0 {
+		errs = append(errs, fmt.Errorf("%s: grooves are worked out, not written", where))
+	}
+	return errs
+}
+
+func prefixed(prefix string, ids []string) []string {
+	out := make([]string, len(ids))
+	for i, id := range ids {
+		out[i] = prefix + id
+	}
+	return out
 }
 
 // accompanimentProblems checks the hits against the template's bar; one
@@ -146,16 +216,17 @@ func decodeCatalogue(data []byte) (Catalogue, error) {
 
 // The catalogue, read once at start-up and checked as a whole; a broken
 // one stops the program before it serves.
-var accompaniments, drums = mustLoadCatalogue()
+var accompaniments, drums, styles = mustLoadCatalogue()
 
-func mustLoadCatalogue() ([]Accompaniment, []Drums) {
+func mustLoadCatalogue() ([]Accompaniment, []Drums, []Style) {
 	var c Catalogue
 	var errs []error
-	for _, data := range [][]byte{accompanimentsJSON, drumsJSON} {
+	for _, data := range [][]byte{accompanimentsJSON, drumsJSON, stylesJSON} {
 		part, err := decodeCatalogue(data)
 		errs = append(errs, err)
 		c.Accompaniments = append(c.Accompaniments, part.Accompaniments...)
 		c.Drums = append(c.Drums, part.Drums...)
+		c.Styles = append(c.Styles, part.Styles...)
 	}
 	err := errors.Join(errs...)
 	if err == nil {
@@ -164,5 +235,5 @@ func mustLoadCatalogue() ([]Accompaniment, []Drums) {
 	if err != nil {
 		panic(fmt.Sprintf("pattern: the built-in catalogue is broken: %v", err))
 	}
-	return c.Accompaniments, c.Drums
+	return c.Accompaniments, c.Drums, c.Styles
 }
