@@ -35,6 +35,9 @@ type Step struct {
 	// of that dominant (subV7/x, BL-128, ADR-0023): the dominant seventh a
 	// semitone above Degree.
 	Substitute bool `json:"substitute,omitempty"`
+	// LeadingTone, with Applied and Seventh, makes it the diminished seventh
+	// on x's leading tone (vii°7/x, BL-130): a semitone below Degree.
+	LeadingTone bool `json:"leadingTone,omitempty"`
 }
 
 // Progression is an ordered list of steps, e.g. I-V-vi-IV. It is key-agnostic:
@@ -62,6 +65,9 @@ func (s Step) appliedProblems(i int) []error {
 	}
 	if s.Substitute && (!s.Applied || !s.Seventh) {
 		errs = append(errs, fmt.Errorf("music: steps[%d]: a tritone substitute is an applied dominant seventh (subV7/x)", i))
+	}
+	if s.LeadingTone && (!s.Applied || !s.Seventh || s.Substitute) {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: a leading-tone diminished seventh is an applied seventh of its own (vii°7/x)", i))
 	}
 	return errs
 }
@@ -199,15 +205,16 @@ func stepChord(key Key, s Step) (Chord, string, string, error) {
 // chordOfStep resolves the chord, numeral and symbol without the bass.
 func chordOfStep(key Key, s Step) (Chord, string, string, error) {
 	if s.Applied {
-		chord, err := key.appliedChord(s.Degree, s.Seventh, s.Substitute)
+		kind := appliedKindOf(s)
+		chord, err := key.appliedChord(s.Degree, s.Seventh, kind)
 		if err != nil {
 			return Chord{}, "", "", err
 		}
-		numeral, err := key.appliedNumeral(s.Degree, s.Seventh, s.Substitute)
+		numeral, err := key.appliedNumeral(s.Degree, s.Seventh, kind)
 		if err != nil {
 			return Chord{}, "", "", err
 		}
-		return chord, numeral, key.spellApplied(s.Degree, s.Substitute) + chord.Quality.Symbol(), nil
+		return chord, numeral, key.spellApplied(s.Degree, kind) + chord.Quality.Symbol(), nil
 	}
 	chord, err := key.Diatonic(s.Degree, s.Seventh)
 	if err != nil {

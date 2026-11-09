@@ -52,7 +52,10 @@ type Analysis struct {
 	AppliedTo int `json:"appliedTo,omitempty"`
 	// Substitute is true when that dominant is a tritone substitute
 	// (subV7/x, BL-128).
-	Substitute  bool   `json:"substitute,omitempty"`
+	Substitute bool `json:"substitute,omitempty"`
+	// LeadingTone is true when the applied chord is the diminished seventh
+	// on the target's leading tone (vii°7/x, BL-130).
+	LeadingTone bool   `json:"leadingTone,omitempty"`
 	Explanation string `json:"explanation"`
 }
 
@@ -78,7 +81,8 @@ func Analyze(tl Timeline) (Timeline, error) {
 				Function:    Dominant,
 				AppliedTo:   p.applied,
 				Substitute:  p.sub,
-				Explanation: explainApplied(tl.Key, *h, p, next(tl.Harmony, i)),
+				LeadingTone: p.lead,
+				Explanation: explainApplied(tl.Key, *h, p, next(tl.Harmony, i)) + passingText(tl.Harmony, i, p),
 			}
 			continue
 		}
@@ -113,38 +117,15 @@ type placed struct {
 	borrowed bool
 	applied  int  // the target degree of a secondary dominant, else 0
 	sub      bool // that dominant is a tritone substitute (subV7/x)
+	lead     bool // the applied chord is a leading-tone diminished seventh (vii°7/x)
 	leading  bool // a V that carries the leading tone (major triad or dominant seventh)
 }
 
 func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 	out := make([]placed, len(hs))
 	for i, h := range hs {
-		// The same sound can be two chords: C major in C minor is the
-		// borrowed I (a Picardy third) or V/iv, the dominant of iv. The label
-		// says which the author meant.
-		chordLabel, _, _ := splitBass(h.RomanNumeral)
-		if strings.HasPrefix(chordLabel, "subV") {
-			if target, ok := substituteTargetOf(k, h.Chord); ok {
-				d, _ := degreeOf(k, h.Chord.Root)
-				out[i] = placed{degree: d, applied: target, sub: true}
-				continue
-			}
-		}
-		if strings.Contains(chordLabel, "/") {
-			if target, ok := appliedTargetOf(k, h.Chord); ok {
-				d, _ := degreeOf(k, h.Chord.Root)
-				out[i] = placed{degree: d, applied: target}
-				continue
-			}
-		}
-		if target, ok := locateApplied(k, h.Chord); ok {
-			d, _ := degreeOf(k, h.Chord.Root)
-			out[i] = placed{degree: d, applied: target}
-			continue
-		}
-		if target, ok := locateSubstitute(k, h.Chord); ok {
-			d, _ := degreeOf(k, h.Chord.Root)
-			out[i] = placed{degree: d, applied: target, sub: true}
+		if p, ok := placeApplied(k, h); ok {
+			out[i] = p
 			continue
 		}
 		d, borrowed, ok := locate(k, h.Chord)
@@ -154,6 +135,40 @@ func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 		out[i] = placed{degree: d, borrowed: borrowed, leading: hasLeadingTone(d, h.Chord)}
 	}
 	return out, nil
+}
+
+// placeApplied places an applied chord: a secondary dominant, its tritone
+// substitute or a leading-tone diminished seventh. The same sound can be
+// two chords: C major in C minor is the borrowed I (a Picardy third) or
+// V/iv, the dominant of iv; Bb7 in C major is the borrowed bVII7 or
+// subV7/vi. The label says which the author meant; an unlabelled chord is
+// applied only when nothing in the key explains it.
+func placeApplied(k Key, h HarmonyEvent) (placed, bool) {
+	chordLabel, _, _ := splitBass(h.RomanNumeral)
+	at := func(target int, sub, lead bool) placed {
+		d, _ := degreeOf(k, h.Chord.Root)
+		return placed{degree: d, applied: target, sub: sub, lead: lead}
+	}
+	if strings.HasPrefix(chordLabel, "subV") {
+		if target, ok := substituteTargetOf(k, h.Chord); ok {
+			return at(target, true, false), true
+		}
+	}
+	if target, ok := leadingTargetOf(k, h.Chord); ok {
+		return at(target, false, true), true // no key's own chord is a diminished seventh
+	}
+	if strings.Contains(chordLabel, "/") {
+		if target, ok := appliedTargetOf(k, h.Chord); ok {
+			return at(target, false, false), true
+		}
+	}
+	if target, ok := locateApplied(k, h.Chord); ok {
+		return at(target, false, false), true
+	}
+	if target, ok := locateSubstitute(k, h.Chord); ok {
+		return at(target, true, false), true
+	}
+	return placed{}, false
 }
 
 // hasLeadingTone reports a V that carries the leading tone, the major
@@ -428,9 +443,11 @@ func next(hs []HarmonyEvent, i int) *Chord {
 const (
 	appliedText = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主音のように聞かせて、そこへ強く引き寄せる。"
 	// %s（%s）: the substitute; %s（%s）: the target; %s（%s）: the dominant it replaces; %s: the target.
-	substituteText = "%s（%s）は、%s（%s）へ向かう裏コード（トライトーン代理）。%s（%s）の代わりに、根音が三全音離れた属七を置いている。同じ三全音（3 度と 7 度）を持つので同じように引き寄せ、根音は半音上から %s の根音へ降りる。"
-	resolvesText   = "次の %s へ解決する。"
-	deflectedText  = "ここでは %s へは進まず、引き寄せをかわす。"
+	substituteText  = "%s（%s）は、%s（%s）へ向かう裏コード（トライトーン代理）。%s（%s）の代わりに、根音が三全音離れた属七を置いている。同じ三全音（3 度と 7 度）を持つので同じように引き寄せ、根音は半音上から %s の根音へ降りる。"
+	leadingText     = "%s（%s）は、%s（%s）の導音の上に積んだ減七。根音が %s の根音へ半音で上がり、そこへ引き寄せる。"
+	passingSentence = "前の和音から根音が半音ずつ上がる、経過の減七（パッシング・ディミニッシュ）。"
+	resolvesText    = "次の %s へ解決する。"
+	deflectedText   = "ここでは %s へは進まず、引き寄せをかわす。"
 )
 
 func explainApplied(k Key, h HarmonyEvent, p placed, following *Chord) string {
@@ -442,9 +459,12 @@ func explainApplied(k Key, h HarmonyEvent, p placed, following *Chord) string {
 	if p.sub {
 		dominant := "V7"
 		if target != 1 {
-			dominant, _ = k.appliedNumeral(target, true, false)
+			dominant, _ = k.appliedNumeral(target, true, dominantOf)
 		}
-		s = fmt.Sprintf(substituteText, h.RomanNumeral, symbolOf(k, h), rn, symbol, dominant, k.spellApplied(target, false)+"7", symbol)
+		s = fmt.Sprintf(substituteText, h.RomanNumeral, symbolOf(k, h), rn, symbol, dominant, k.spellApplied(target, dominantOf)+"7", symbol)
+	}
+	if p.lead {
+		s = fmt.Sprintf(leadingText, h.RomanNumeral, symbolOf(k, h), rn, symbol, symbol)
 	}
 	switch {
 	case following == nil:
@@ -454,4 +474,18 @@ func explainApplied(k Key, h HarmonyEvent, p placed, following *Chord) string {
 		s += " " + fmt.Sprintf(deflectedText, rn)
 	}
 	return s
+}
+
+// passingText names a leading-tone diminished seventh that passes: the
+// root climbs a semitone from the chord before and another to the next
+// (I – vii°7/ii – ii). "" for any other chord.
+func passingText(hs []HarmonyEvent, i int, p placed) string {
+	if !p.lead || i == 0 || i+1 >= len(hs) {
+		return ""
+	}
+	root := hs[i].Chord.Root
+	if hs[i-1].Chord.Root.Add(1) != root || root.Add(1) != hs[i+1].Chord.Root {
+		return ""
+	}
+	return " " + passingSentence
 }

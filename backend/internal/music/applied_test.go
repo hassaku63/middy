@@ -74,7 +74,7 @@ func TestAppliedDominantsAreLimitedToRealOnes(t *testing.T) {
 		{Key{G, Mixolydian}, "V7/IV", "G mixolydian's own I7"}, // the mixolydian tonic seventh
 		{Key{C, Major}, "V/II", `write the target as "ii"`},
 		{Key{C, Major}, "V/ii7", "write the target as the key's plain triad"},
-		{Key{C, Major}, "IV/V", "only V, V7 and subV7 can be applied"},
+		{Key{C, Major}, "IV/V", "only V, V7, subV7 and vii°7 can be applied"},
 		{Key{C, Major}, "V/X", "not a roman numeral"},
 	}
 	for _, tt := range tests {

@@ -27,6 +27,7 @@
 | [0021](0021-style-groove.md) | スタイルを選び直したときのグルーヴはエンジンが決める | Accepted |
 | [0022](0022-missing-files-are-404.md) | 存在しないファイルは 404 にし、SPA に振り分けるのは画面の URL だけにする | Accepted |
 | [0023](0023-tritone-substitutes.md) | 裏コードは `subV7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
+| [0024](0024-leading-tone-diminished.md) | 導音の減七は `vii°7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
 
 ## いつ ADR を書くか
 
