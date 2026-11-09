@@ -54,7 +54,7 @@
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
 | `go build` / `vite build` | ビルド不能 | `make build` | `make check`, CI |
-| コンテナイメージのビルドとスモーク（`scripts/smoke.sh`: health の SHA、`/` の HTML とキャッシュ、`assets/` の `immutable`、存在しないファイルの 404、画面の URL、API の 404、本文の上限。加えて `HEALTHCHECK` healthy） | Dockerfile の腐敗、配信の退行 | `make image` と `make smoke`（`make run` か `make up` に対して） | CI `image`（compose で 2 つのコンテナ）、`e2e` の起動の確認 |
+| コンテナイメージのビルドとスモーク（`scripts/smoke.sh`: health の SHA、`/` の HTML とキャッシュ、`assets/` の `immutable`、存在しないファイルの 404、画面の URL、API の 404、本文の上限。加えて `HEALTHCHECK` healthy） | Dockerfile の腐敗、配信の退行 | `make image` と `make smoke`（`make up` に対して） | CI `image` と `e2e`（どちらも compose で 2 つのコンテナ） |
 | E2E（Playwright, イメージから例を聴く通しのシナリオ・言い直し・画面幅ごとの配置・保存・オフライン・SPA フォールバック・Service Worker） | モックでは見えない通しの退行 | `make e2e`（サーバー起動が前提） | `e2e` ワークフロー（手動・週次） |
 
 ## 依存（削減）

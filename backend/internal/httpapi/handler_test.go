@@ -58,12 +58,33 @@ func TestHealth(t *testing.T) {
 	}
 }
 
+// TestUnknownRouteIs404: the server answers the API only (ADR-0027). Any
+// other path, a screen's included, is the JSON 404, whatever the method.
 func TestUnknownRouteIs404(t *testing.T) {
 	srv := newTestServer(t)
 
-	resp := get(t, srv.URL+"/api/v1/nope")
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("status = %d, want 404", resp.StatusCode)
+	for _, tc := range []struct{ method, path string }{
+		{http.MethodGet, "/api/v1/nope"},
+		{http.MethodGet, "/api"},
+		{http.MethodGet, "/"},
+		{http.MethodGet, "/projects/42"},
+		{http.MethodGet, "/assets/index.js"},
+		{http.MethodPost, "/some/screen"},
+	} {
+		req, err := http.NewRequestWithContext(t.Context(), tc.method, srv.URL+tc.path, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var e errorResponse
+		decodeErr := json.NewDecoder(resp.Body).Decode(&e)
+		_ = resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound || decodeErr != nil || e.Error.Code != "not_found" {
+			t.Errorf("%s %s = %d %+v (%v), want 404 not_found", tc.method, tc.path, resp.StatusCode, e, decodeErr)
+		}
 	}
 }
 

@@ -30,19 +30,10 @@
 make doctor         # 手元の版が .tool-versions と合っているか
 make setup          # 依存のインストール
 make check          # フォーマット・lint・テスト・ビルド・ドキュメント検査を全部
-make e2e            # Playwright の通しシナリオ（make run か make up で起動したサーバーに対して）
+make e2e            # Playwright の通しシナリオ（make up で起動したものに対して）
 make dev-backend    # :8080 で API（LLM は fake）
 make dev-frontend   # :5173 で UI（/api を API_UPSTREAM へプロキシ。既定は http://localhost:8080）
 ```
-
-本番相当で動かす（単一バイナリ、ADR-0008）:
-
-```bash
-make build          # vite build → バイナリに同梱 → go build
-make run            # :8080 で UI と API を同一オリジンから配信
-```
-
-フロントを同梱せずに `go build` したバイナリは API だけが動き、`/` は 503 を返します。
 
 コンテナで動かす（CI と同じ 2 つのイメージ、ADR-0027）:
 

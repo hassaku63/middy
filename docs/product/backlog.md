@@ -22,7 +22,6 @@
 | BL-153 | **lint: 依存の増える ESLint のプラグイン** (#226) React 本体、jsx-a11y、Testing Library、Vitest。1 つ = 1 PR | 同上。PR に ADR-0029 の決定 3 の根拠を書き、満たさないものは入れない | M | BL-152 | Ready |
 | BL-154 | **lint: shellcheck、actionlint、hadolint** (#226) 1 つ = 1 PR | 同上 | S | — | Ready |
 | BL-155 | **道具の陳腐化の定期の報告と、AI による検討** (#226) | 四半期の定期のジョブが報告の Issue を開く。そのあとに Claude の定期のタスクを作る（所有者の判断済み） | S | — | Ready |
-| BL-148 | **Go から静的配信と embed を外す** (#206 の A-5、所有者の判断) | Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ。手元の E2E は `make up` に当てる。文書と ADR-0022 の状態を直す | M | BL-147 | Ready |
 | BL-138 | **業界標準の索引: 和声・分析、音高・調律** (#213) 並行 | 同上。middy の記法と食い違う慣習は「middy との違い」として書く（直すかは別の Issue） | M | BL-136 | Ready |
 | BL-139 | **業界標準の索引: 音源・音声、ブラウザ、同期** (#213) 並行 | 同上 | M | BL-136 | Ready |
 | BL-140 | **業界標準の索引: Web・API・安全、アクセシビリティ・国際化** (#213) 並行 | 同上 | S | BL-136 | Ready |
@@ -77,6 +76,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-148 | Go から静的配信と embed を外す（Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ、手元の E2E とスモークは `make up` に当てる。#206 の A-5） | 2026-11-09 |
 | BL-147 | E2E を compose で（`e2e.yml` が `web`・`api` のイメージを作り、compose で起動してスモークのあと Playwright を nginx 越しに当て、compose のログを残す。#206 の A-3） | 2026-11-09 |
 | BL-157 | hook の `try` を失敗しうる呼び出しだけに狭める（`useKeyChange.ts`・`useRegroove.ts`。要求の組み立てと説明の文は `try` の外。自分の関数の例外が「〜できませんでした」に化けないことをテストで確かめる。#228） | 2026-11-09 |
 | BL-151 | Go の linter を 1 つずつ有効にする（`intrange`、`bodyclose`、`noctx`、`sloglint`、`unparam`、`forcetypeassert`、`gosec`、`perfsprint`、`exhaustive`、revive のエラーの規則。ADR-0029、#226） | 2026-11-09 |

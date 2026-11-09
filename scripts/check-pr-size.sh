@@ -15,7 +15,6 @@ fail_at=600
 # Paths that do not count: lock files, binary assets, generated fixtures.
 excludes=(
   ':!**/package-lock.json' ':!**/go.sum' ':!**/*.png' ':!**/*.svg' ':!**/*.mid'
-  ':!backend/internal/web/dist/**'
   ':!frontend/src/shared/api/fixtures/**'
   ':!**/*.gen.ts'
 )
