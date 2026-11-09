@@ -17,10 +17,13 @@ export function useKeyChange(): KeyChange {
   const [error, setError] = useState<string | null>(null);
 
   const change = useCallback(async (timeline: Timeline, tonic: PitchClass) => {
+    // Outside the try: a fault in our own request building is a bug, not a
+    // failed key change (conventions.md).
+    const request = rebuildRequest(timeline, tonic);
     setBusy(true);
     setError(null);
     try {
-      return await createTimelineFromProgression(rebuildRequest(timeline, tonic));
+      return await createTimelineFromProgression(request);
     } catch {
       setError('キーを変えられませんでした');
       return null;
