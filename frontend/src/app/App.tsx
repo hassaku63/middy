@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChatPanel } from '@/features/chat/ChatPanel';
-import { useIdeas } from '@/features/chat/useIdeas';
 import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
 import { KeySelect } from '@/features/key-change/KeySelect';
 import { StyleSelect } from '@/features/regroove/StyleSelect';
@@ -22,6 +21,7 @@ import { LabControls } from './LabControls';
 import { useDegreeMapTrial } from './useDegreeMapTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
+import { useAnswerOpening } from './useAnswerOpening';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
@@ -71,13 +71,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     setOrigin({ kind: 'idea', image, candidateTitle: c.title });
   };
 
-  // An answer arrives ready to hear: its first example opens at once (BL-064).
-  const ideas = useIdeas((answer) => {
-    const first = answer.candidates[0];
-    if (first) openCandidate(first, answer.image);
-  });
+  // An answer arrives ready to hear, unless the user chose another meanwhile.
+  const { ideas, opened } = useAnswerOpening(openCandidate);
 
   const openProject = (p: Project) => {
+    opened();
     show(p.timeline);
     forget();
     setOpenExample(null);
@@ -101,7 +99,10 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
 
       <ChatPanel
         ideas={ideas}
-        onOpenCandidate={(c) => openCandidate(c, imageFor(ideas.turns, c))}
+        onOpenCandidate={(c) => {
+          opened();
+          openCandidate(c, imageFor(ideas.turns, c));
+        }}
         openExample={openExample}
         patterns={patterns}
       />
@@ -139,6 +140,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
               layout={timelineLayout.layout}
               timeline={timeline}
               positionTick={player.positionTick}
+              playing={player.state === 'playing'}
               selectedHarmony={selectedHarmony}
               onSelectHarmony={setSelectedHarmony}
             />

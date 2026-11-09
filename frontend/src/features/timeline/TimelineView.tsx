@@ -10,6 +10,12 @@ export type TimelineViewProps = {
   timeline: Timeline;
   /** Playhead position in ticks. */
   positionTick: number;
+  /**
+   * Whether the timeline is playing. Stopped, nothing is marked as
+   * sounding (the playhead still shows where play starts); omitted, the
+   * marks follow the playhead.
+   */
+  playing?: boolean;
   /** Index into timeline.harmony the user pinned by clicking, if any. */
   selectedHarmony?: number | null;
   onSelectHarmony?: (index: number) => void;
@@ -36,6 +42,7 @@ export type TimelineViewProps = {
 export function TimelineView({
   timeline,
   positionTick,
+  playing = true,
   selectedHarmony = null,
   onSelectHarmony,
   view,
@@ -53,6 +60,8 @@ export function TimelineView({
     }),
     [timeline],
   );
+
+  const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (
     <svg
@@ -77,12 +86,12 @@ export function TimelineView({
       <ChordLane
         harmony={timeline.harmony}
         layout={layout}
-        activeIndex={harmonyAt(timeline.harmony, positionTick)}
+        activeIndex={harmonyAt(timeline.harmony, sounding)}
         selectedIndex={selectedHarmony}
         onSelect={onSelectHarmony}
       />
-      <PianoRoll notes={notes} layout={layout} positionTick={positionTick} />
-      <DrumLane notes={drumNotes} layout={layout} positionTick={positionTick} />
+      <PianoRoll notes={notes} layout={layout} positionTick={sounding} />
+      <DrumLane notes={drumNotes} layout={layout} positionTick={sounding} />
       {highlight && (
         <rect
           className="timeline__highlight"
