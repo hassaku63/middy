@@ -6,7 +6,9 @@ import { useCallback, useState } from 'react';
  * Off by default; the owner decides whether to adopt it.
  */
 export function useDegreeMapTrial() {
-  const [on, setOn] = useState(() => new URLSearchParams(window.location.search).has('degrees'));
+  const params = new URLSearchParams(window.location.search);
+  const [on, setOn] = useState(() => params.has('degrees'));
+  const lab = params.has('lab');
 
   const toggle = useCallback((next: boolean) => {
     setOn(next);
@@ -16,5 +18,5 @@ export function useDegreeMapTrial() {
     window.history.replaceState(null, '', url);
   }, []);
 
-  return { on, toggle };
+  return { on, toggle, lab };
 }

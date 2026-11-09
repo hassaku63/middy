@@ -12,11 +12,10 @@ import { SaveProjectForm } from '@/features/projects/SaveProjectForm';
 import { PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
-import { TimelineStage } from '@/features/timeline/lab/TimelineStage';
+import { TimelineOverview } from '@/features/timeline/TimelineOverview';
 import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
-import { useTimelineLayout } from './useTimelineLayout';
 import { LabControls } from './LabControls';
 import { useDegreeMapTrial } from './useDegreeMapTrial';
 import { useExampleChanges } from './useExampleChanges';
@@ -49,7 +48,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const patterns = usePatterns(backend !== 'down');
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
-  const timelineLayout = useTimelineLayout();
   const degreeMap = useDegreeMapTrial();
 
   const show = (tl: Timeline) => {
@@ -132,12 +130,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             )}
             {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
             {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-            <LabControls layout={timelineLayout} degreeMap={degreeMap} />
+            <LabControls degreeMap={degreeMap} />
           </div>
           {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
           <div className="app__stage">
-            <TimelineStage
-              layout={timelineLayout.layout}
+            <TimelineOverview
               timeline={timeline}
               positionTick={player.positionTick}
               playing={player.state === 'playing'}

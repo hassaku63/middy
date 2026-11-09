@@ -8,10 +8,19 @@ type Props = {
   activeIndex: number;
   selectedIndex: number | null;
   onSelect?: ((index: number) => void) | undefined;
+  /** False for a duplicate drawing hidden from assistive tech: clickable, but no tab stop. */
+  focusable?: boolean;
 };
 
 /** One clickable block per harmony event, with roman numeral and chord symbol. */
-export function ChordLane({ harmony, layout, activeIndex, selectedIndex, onSelect }: Props) {
+export function ChordLane({
+  harmony,
+  layout,
+  activeIndex,
+  selectedIndex,
+  onSelect,
+  focusable = true,
+}: Props) {
   return (
     <g aria-label="コード" role="listbox">
       {harmony.map((h, i) => {
@@ -27,7 +36,7 @@ export function ChordLane({ harmony, layout, activeIndex, selectedIndex, onSelec
             aria-selected={selected}
             className={`timeline__chord${active ? ' is-active' : ''}${selected ? ' is-selected' : ''}`}
             onClick={() => onSelect?.(i)}
-            tabIndex={onSelect ? 0 : undefined}
+            tabIndex={onSelect && focusable ? 0 : undefined}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault(); // Space would also scroll the page

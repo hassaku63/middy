@@ -21,8 +21,8 @@ export type TimelineViewProps = {
   onSelectHarmony?: (index: number) => void;
   /**
    * Show only this horizontal slice of the drawing (user units, i.e. the
-   * unscaled pixels of computeLayout). Used by the long-timeline layouts
-   * under ./lab (BL-080 experiment); omitted, the whole timeline is drawn.
+   * unscaled pixels of computeLayout). Used by TimelineOverview's detail
+   * (BL-080); omitted, the whole timeline is drawn.
    */
   view?: { x: number; width: number };
   /** Outline this slice, e.g. the part shown in detail next to an overview. */
@@ -89,6 +89,7 @@ export function TimelineView({
         activeIndex={harmonyAt(timeline.harmony, sounding)}
         selectedIndex={selectedHarmony}
         onSelect={onSelectHarmony}
+        focusable={!decorative}
       />
       <PianoRoll notes={notes} layout={layout} positionTick={sounding} />
       <DrumLane notes={drumNotes} layout={layout} positionTick={sounding} />
