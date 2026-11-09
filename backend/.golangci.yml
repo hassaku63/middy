@@ -19,6 +19,7 @@ linters:
     - dupl
     - bodyclose
     - errname
+    - gosec
     - intrange
     - nakedret
     - nilerr

@@ -3,6 +3,7 @@ package smf
 import (
 	"bytes"
 	"encoding/binary"
+	"strings"
 	"testing"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -227,5 +228,18 @@ func TestSixEightTempoIsPerDottedQuarter(t *testing.T) {
 	tempo := append([]byte{0xFF, 0x51, 0x03}, tempoBytes(90)...)
 	if !bytes.Contains(data, tempo) {
 		t.Errorf("6/8 at 60 BPM should write the tempo of 90 quarters a minute: % X", data)
+	}
+}
+
+// An event further from the previous one than a MIDI variable-length
+// quantity can hold is refused, not written as a wrong delta.
+func TestWriteRefusesAGapSMFCannotHold(t *testing.T) {
+	tl, err := music.FromProgression(music.Key{Tonic: music.C, Mode: music.Major}, music.Progression{{Degree: 1, Beats: 1}}, 120)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tl.Tracks[0].Notes[0].Start = 2 * maxVarLen
+	if _, err := Write(tl); err == nil || !strings.Contains(err.Error(), "SMF allows") {
+		t.Fatalf("want the gap refused, got %v", err)
 	}
 }

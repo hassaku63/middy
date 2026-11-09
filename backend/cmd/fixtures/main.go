@@ -24,7 +24,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "fixtures:", err)
 		os.Exit(1)
 	}
-	if err := os.MkdirAll(*out, 0o755); err != nil {
+	if err := os.MkdirAll(*out, 0o750); err != nil {
 		fmt.Fprintln(os.Stderr, "fixtures:", err)
 		os.Exit(1)
 	}

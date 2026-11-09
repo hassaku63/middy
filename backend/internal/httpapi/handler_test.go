@@ -30,7 +30,7 @@ func get(t *testing.T, url string) *http.Response {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp, err := http.DefaultClient.Do(req) //nolint:gosec // test-local URL
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("GET %s: %v", url, err)
 	}
