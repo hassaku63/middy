@@ -101,6 +101,7 @@ func TestClaimsTheChordsBearOutAreNotRetried(t *testing.T) {
 func TestClaimsNamingARunAreCheckedNameByName(t *testing.T) {
 	d := map[string]any{"tonic": 2, "mode": "major"}
 	am := map[string]any{"tonic": 9, "mode": "minor"}
+	f := map[string]any{"tonic": 5, "mode": "major"}
 	tests := []struct {
 		name        string
 		key         map[string]any
@@ -114,6 +115,10 @@ func TestClaimsNamingARunAreCheckedNameByName(t *testing.T) {
 		{"a run named wrong", d, "I–V–vi–IV（D–A–Bm–F）を回します。", []string{"I", "V", "vi", "IV"}, "IV を F と書いているが、この調の IV は G"},
 		{"more names than numerals", d, "I–V（D–A–Bm）で始まります。", []string{"I", "V", "vi", "IV"}, ""},
 		{"a name and words", d, "IV（G、明るい下属和音）へ広がります。", []string{"I", "V", "vi", "IV"}, ""},
+		{"names split by a slash", f, "V–V/V（C/G）で盛り上げます。", []string{"I", "V", "V/V", "V"}, ""},
+		{"a slash chord", d, "I/3（D/F#）でベースが上がります。", []string{"I", "I/3", "IV", "V"}, ""},
+		{"what a chord belongs to", d, "V7（D の V7）で戻ります。", []string{"I", "IV", "V7", "I"}, ""},
+		{"a slash chord named wrong", d, "IV（E/G#）へ進みます。", []string{"I", "V", "vi", "IV"}, "IV を E/G# と書いているが"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
