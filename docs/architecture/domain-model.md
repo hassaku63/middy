@@ -22,7 +22,7 @@
 
 ### 調と音階
 
-- `Mode` — `Major`, `Minor`（自然短音階）, `Dorian`, `Mixolydian`（ADR-0015）。JSON では `"major"` / `"minor"` / `"dorian"` / `"mixolydian"`。ローマ数字はそのモードの音階に対して書く（D ドリアンは `i ii III IV v vi° VII`、G ミクソリディアンは `I ii iii° IV v vi VII`）。質は音階から導くので、モードを足すのは `modeIntervals`・`parentOffset`（綴り）・`characteristicDegree`（解説）の 3 行。`Characteristic()` はモードの特徴音の度数（ドリアン 6、ミクソリディアン 7。長調・短調は 0）
+- `Mode` — `Major`, `Minor`（自然短音階）, `Dorian`, `Mixolydian`（ADR-0015）, `Phrygian`（BL-134。短調の 2 度を半音下げた音階。特徴音は短 2 度で、2 度の長三和音 `II`（E phrygian の F）を解説が ♭II として述べ、主和音へ半音で下りる動きをフリジアン終止と呼ぶ。終止の種類としては数えない）。JSON では `"major"` / `"minor"` / `"dorian"` / `"mixolydian"` / `"phrygian"`。ローマ数字はそのモードの音階に対して書く（D ドリアンは `i ii III IV v vi° VII`、G ミクソリディアンは `I ii iii° IV v vi VII`）。質は音階から導くので、モードを足すのは `modeIntervals`・`parentOffset`（綴り）・`characteristicDegree`（解説）の 3 行。`Characteristic()` はモードの特徴音の度数（ドリアン 6、ミクソリディアン 7、フリジアン 2。長調・短調は 0）
 - `Key{Tonic, Mode}` — `Scale()`（7 音）, `Degree(n)`, `Contains(pc)`, `Diatonic(degree, seventh)`
 
 ### コード

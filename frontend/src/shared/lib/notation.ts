@@ -39,9 +39,11 @@ const QUALITY_SUFFIX: Record<ChordQuality, string> = {
 const TONICS: Record<Key['mode'], readonly string[]> = {
   major: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
   minor: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
-  // Dorian takes the signature of the major a tone below, mixolydian of the major a fifth below.
+  // Dorian takes the signature of the major a tone below, mixolydian of the major a fifth
+  // below, phrygian of the major a major third below.
   dorian: ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
   mixolydian: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
+  phrygian: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'],
 };
 
 /** "Bb major", "C# minor", "D dorian": the key as notation spells it. */

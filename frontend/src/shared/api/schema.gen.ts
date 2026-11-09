@@ -319,10 +319,10 @@ export interface components {
     /** @description MIDI ノート番号。60 = C4 */
     Pitch: number;
     /**
-     * @description 長調、自然短音階、ドリアン、ミクソリディアン（ADR-0015）。ローマ数字はそのモードの音階に対して読む
+     * @description 長調、自然短音階、ドリアン、ミクソリディアン（ADR-0015）、フリジアン（BL-134）。ローマ数字はそのモードの音階に対して読む
      * @enum {string}
      */
-    Mode: 'major' | 'minor' | 'dorian' | 'mixolydian';
+    Mode: 'major' | 'minor' | 'dorian' | 'mixolydian' | 'phrygian';
     Key: {
       tonic: components['schemas']['PitchClass'];
       mode: components['schemas']['Mode'];

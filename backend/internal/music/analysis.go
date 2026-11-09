@@ -388,6 +388,18 @@ var cadenceText = map[Cadence]string{
 var characteristicText = map[Mode]string{
 	Dorian:     "この和音はドリアンの特徴音（主音から長 6 度の %s）を含む。短調に似た響きの中で明るく聞こえる理由。",
 	Mixolydian: "この和音はミクソリディアンの特徴音（主音から短 7 度の %s）を含む。導音がないので、長調より開放的に聞こえる理由。",
+	Phrygian:   "この和音はフリジアンの特徴音（主音から短 2 度の %s）を含む。主音のすぐ上に半音があるので、短調よりさらに暗く、張りつめて聞こえる理由。",
+}
+
+// phrygianSecondText is said of phrygian's major chord on the second
+// degree (BL-134), the chord that marks the mode most strongly.
+const phrygianSecondText = "主音の半音上の長三和音（♭II）は、フリジアンをいちばん強く印象づける和音。ここから主和音へ根音が半音で下りる動きは、フリジアン終止と呼ばれる。"
+
+// isPhrygianSecond reports the major triad (or its seventh) on phrygian's
+// second degree.
+func isPhrygianSecond(key Key, c Chord) bool {
+	return key.Mode == Phrygian && c.Root.Normalize() == key.Tonic.Add(1).Normalize() &&
+		(c.Quality == MajorTriad || c.Quality == Major7)
 }
 
 const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
@@ -432,6 +444,9 @@ func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) s
 	}
 	if tone, ok := characteristicTone(key, h.Chord); ok {
 		s += " " + fmt.Sprintf(characteristicText[key.Mode], key.PitchClassName(tone))
+	}
+	if isPhrygianSecond(key, h.Chord) {
+		s += " " + phrygianSecondText
 	}
 	if cad != NoCadence {
 		s += " " + cadenceText[cad]

@@ -335,6 +335,90 @@
         "mode": "mixolydian"
       },
       "name": "B mixolydian"
+    },
+    {
+      "key": {
+        "tonic": 0,
+        "mode": "phrygian"
+      },
+      "name": "C phrygian"
+    },
+    {
+      "key": {
+        "tonic": 1,
+        "mode": "phrygian"
+      },
+      "name": "C# phrygian"
+    },
+    {
+      "key": {
+        "tonic": 2,
+        "mode": "phrygian"
+      },
+      "name": "D phrygian"
+    },
+    {
+      "key": {
+        "tonic": 3,
+        "mode": "phrygian"
+      },
+      "name": "D# phrygian"
+    },
+    {
+      "key": {
+        "tonic": 4,
+        "mode": "phrygian"
+      },
+      "name": "E phrygian"
+    },
+    {
+      "key": {
+        "tonic": 5,
+        "mode": "phrygian"
+      },
+      "name": "F phrygian"
+    },
+    {
+      "key": {
+        "tonic": 6,
+        "mode": "phrygian"
+      },
+      "name": "F# phrygian"
+    },
+    {
+      "key": {
+        "tonic": 7,
+        "mode": "phrygian"
+      },
+      "name": "G phrygian"
+    },
+    {
+      "key": {
+        "tonic": 8,
+        "mode": "phrygian"
+      },
+      "name": "G# phrygian"
+    },
+    {
+      "key": {
+        "tonic": 9,
+        "mode": "phrygian"
+      },
+      "name": "A phrygian"
+    },
+    {
+      "key": {
+        "tonic": 10,
+        "mode": "phrygian"
+      },
+      "name": "Bb phrygian"
+    },
+    {
+      "key": {
+        "tonic": 11,
+        "mode": "phrygian"
+      },
+      "name": "B phrygian"
     }
   ],
   "pitchClasses": [
