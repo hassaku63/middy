@@ -187,3 +187,25 @@ func TestParamsRejectsBadInput(t *testing.T) {
 		t.Error("non-object schema must be rejected before the call")
 	}
 }
+
+// TestErrorsDoNotCarryTheKey: the server logs upstream errors (BL-144), so
+// an API or transport error must never include the API key.
+func TestErrorsDoNotCarryTheKey(t *testing.T) {
+	const key = "sk-ant-test-SENTINEL-do-not-log"
+	zero := 0
+	req := llm.Request{Messages: []llm.Message{{Role: llm.RoleUser, Content: "x"}}}
+	srv, _ := newServer(t, 401, `{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}`)
+	for name, url := range map[string]string{"api error": srv.URL, "transport error": "http://127.0.0.1:1"} {
+		c, err := New(Config{APIKey: key, BaseURL: url, MaxRetries: &zero})
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = c.Complete(context.Background(), req)
+		if err == nil {
+			t.Fatalf("%s: want an error", name)
+		}
+		if strings.Contains(err.Error(), key) || strings.Contains(err.Error(), "SENTINEL") {
+			t.Errorf("%s: the error carries the key: %v", name, err)
+		}
+	}
+}
