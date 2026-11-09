@@ -133,6 +133,9 @@ func checkClaims(res Result) []claimProblem {
 			for _, m := range motionProblems(s, c) {
 				problems = append(problems, claimProblem{i, s, m})
 			}
+			for _, m := range bassProblems(s, c) {
+				problems = append(problems, claimProblem{i, s, m})
+			}
 		}
 	}
 	// The reply speaks of the image, not of one candidate: a named chord
