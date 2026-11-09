@@ -45,6 +45,7 @@ func tensionsOf(t *Tensions, key music.Key, h music.HarmonyEvent) []music.PitchC
 		if t.Add9 {
 			adds = []int{2}
 		}
+	default: // the other qualities take no tension
 	}
 	tones := ch.PitchClasses()
 	if h.Bass != nil {

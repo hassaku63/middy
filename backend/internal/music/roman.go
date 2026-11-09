@@ -110,6 +110,7 @@ func outsideStep(key Key, label string, step Step, seventh, upper bool, suffix s
 		q, ok = borrowedQuality(key, step.Degree, seventh, suffix, accidental)
 	case Minor:
 		q, ok = minorBorrowedQuality(step.Degree, seventh, upper, suffix, accidental)
+	default: // the modes borrow nothing (ADR-0012)
 	}
 	if ok {
 		step.Quality = &q
@@ -275,8 +276,9 @@ func (q ChordQuality) isUpper() bool {
 	switch q {
 	case MajorTriad, Major7, Dominant7, AugmentedTriad:
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 // suffixAllows reports whether an explicit suffix agrees with the quality.

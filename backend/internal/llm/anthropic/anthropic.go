@@ -125,6 +125,7 @@ func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, e
 		return llm.Response{}, fmt.Errorf("anthropic: %w (%s)", ErrRefused, msg.StopDetails.Category)
 	case sdk.StopReasonMaxTokens:
 		return llm.Response{}, ErrTruncated
+	default: // end_turn and the rest: the answer is the text below
 	}
 	var text strings.Builder
 	for _, block := range msg.Content {

@@ -57,6 +57,7 @@ func (k Key) appliedChord(target int, seventh bool, kind appliedKind) (Chord, er
 		return Chord{Root: t.Root.Add(1), Quality: Dominant7}, nil
 	case leadingOf:
 		return Chord{Root: t.Root.Add(-1), Quality: Diminished7}, nil
+	default: // dominantOf: the chord a fifth above, below
 	}
 	q := MajorTriad
 	if seventh {
@@ -100,6 +101,7 @@ func (k Key) spellApplied(target int, kind appliedKind) string {
 		return spell(letters[(start+1)%7], k.Scale()[target-1].Add(1))
 	case leadingOf:
 		return spell(letters[(start+6)%7], k.Scale()[target-1].Add(-1))
+	default: // dominantOf: the letter a fifth above, below
 	}
 	root := k.Scale()[target-1].Add(7)
 	return spell(letters[(start+4)%7], root)
