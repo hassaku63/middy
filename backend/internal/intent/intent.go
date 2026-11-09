@@ -169,7 +169,7 @@ func (c Candidate) validateProgression() []error {
 		// minor, I7 in major) is an error the model can act on, not
 		// something to fix quietly (ADR-0013).
 		if _, err := music.CanonicalLabel(c.Key, label); err != nil {
-			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s", i, err, c.suggestLabel(label), c.dominantHint(label)))
+			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s%s", i, err, c.suggestLabel(label), c.dominantHint(label), c.substituteHint(label)))
 		}
 	}
 	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
@@ -229,6 +229,41 @@ func (c Candidate) suggestLabel(label string) string {
 		try := string(r[:i]) + string(r[i+1:])
 		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
 			return fmt.Sprintf(`; did you mean %q?`, try)
+		}
+	}
+	return ""
+}
+
+// substituteHint offers the tritone substitute a dominant seventh written by
+// its root most likely meant (BL-129): "bII7" in C major is Db7, which the
+// key writes "subV7/I". "" when the label is not such a seventh, or the
+// chord a semitone below is not a target a substitute can aim at.
+func (c Candidate) substituteHint(label string) string {
+	head, ok := strings.CutSuffix(strings.TrimSpace(label), "7")
+	numeral := strings.TrimPrefix(head, "b") // a flat root: bII, bVI
+	if !ok || numeral == "" || strings.ContainsAny(numeral, "/°ø+m") || strings.ToUpper(numeral) != numeral {
+		return ""
+	}
+	chord, err := music.LiteralChord(c.Key.Tonic, head+"7")
+	if err != nil || chord.Quality != music.Dominant7 {
+		return ""
+	}
+	for d := 1; d <= 7; d++ {
+		pc, err := c.Key.Degree(d)
+		if err != nil || pc != chord.Root.Add(-1) {
+			continue
+		}
+		target, err := c.Key.Diatonic(d, false)
+		if err != nil {
+			return ""
+		}
+		rn, err := music.RomanNumeral(d, target.Quality)
+		if err != nil {
+			return ""
+		}
+		try := "subV7/" + rn
+		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
+			return fmt.Sprintf(`; if you meant the tritone substitute resolving to %s, write %q`, rn, try)
 		}
 	}
 	return ""

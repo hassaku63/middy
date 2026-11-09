@@ -628,3 +628,24 @@ func TestParseTrimsEnums(t *testing.T) {
 		t.Errorf("enums not trimmed: %q %q", c.Accompaniment, c.Feel)
 	}
 }
+
+// TestTritoneSubstitutesInTheIntent (BL-129): subV7/x is a label the model
+// may write, and a substitute written by its root (bII7) gets the label to
+// use instead.
+func TestTritoneSubstitutesInTheIntent(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Key = music.Key{Tonic: music.C, Mode: music.Major}
+	in.Candidates[0].Progression = []string{"ii7", "subV7/I", "Imaj7", "Imaj7"}
+	if err := in.Validate(); err != nil {
+		t.Fatalf("subV7/I rejected: %v", err)
+	}
+	in.Candidates[0].Progression = []string{"ii7", "bII7", "Imaj7", "Imaj7"}
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), `write "subV7/I"`) {
+		t.Errorf("want the subV7/I hint for bII7, got %v", err)
+	}
+	in.Candidates[0].Progression = []string{"I", "bVI7", "V7", "I"}
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), `write "subV7/V"`) {
+		t.Errorf("want the subV7/V hint for bVI7, got %v", err)
+	}
+}
