@@ -45,3 +45,19 @@ export function ChordNotes({ event, pinned, onClearSelection }: Props) {
     </>
   );
 }
+
+/**
+ * The one live region of the explanation (#274, WCAG 4.1.3): the sounding
+ * or pinned chord's name and function, short enough to announce at the
+ * pace of playback. The longer text is there to read, not announced.
+ */
+export function ChordStatus({ event }: { event: HarmonyEvent | undefined }) {
+  const fn = event?.analysis?.function;
+  return (
+    <p className="explanation__live" aria-live="polite">
+      {event
+        ? `${event.romanNumeral} ${harmonySymbol(event)}${fn ? ` ${FUNCTION_NAME[fn]}` : ''}`
+        : ''}
+    </p>
+  );
+}

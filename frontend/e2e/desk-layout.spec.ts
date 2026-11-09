@@ -62,3 +62,49 @@ test('below 1024 px the desk stacks as today', async ({ page }) => {
   expect(chat && stage && chat.y + chat.height <= stage.y).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
+
+/**
+ * BL-185 (#279): on the desk, one chord's explanation sits in a frame of
+ * fixed size above the timeline. Pinning shows by the frame's colour and
+ * by ▶／■ on the chord lane; ← → move and pin, Esc follows again.
+ */
+test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', async ({ page }) => {
+  await page.goto('/?layout=desk');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  const frame = result.getByRole('region', { name: 'コードの解説' });
+  await expect(frame).toHaveClass(/is-following/);
+
+  // Playing through chords of different length and text, the frame stays put.
+  const heights = new Set<number>();
+  await page.getByRole('button', { name: '再生' }).click();
+  for (let i = 0; i < 8; i++) {
+    heights.add(Math.round((await frame.boundingBox())?.height ?? 0));
+    await page.waitForTimeout(400);
+  }
+  await page.getByRole('button', { name: '停止' }).click();
+  expect(heights.size).toBe(1);
+  // 141 characters of the widest kind fit at 1280 px without scrolling.
+  const fits = await frame.evaluate((f) => {
+    const text = f.querySelector('.explanation__text');
+    if (text) text.textContent = 'あ'.repeat(141);
+    return f.scrollHeight <= f.clientHeight;
+  });
+  expect(fits).toBe(true);
+
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('ArrowRight');
+  await expect(frame).toHaveClass(/is-pinned/);
+  await expect(result.locator('.timeline__mark').filter({ hasText: '■' }).first()).toBeVisible();
+  const first = await frame.getByRole('heading', { level: 2 }).textContent();
+  await page.keyboard.press('ArrowRight');
+  await expect(frame.getByRole('heading', { level: 2 })).not.toHaveText(first ?? '');
+
+  await page.keyboard.press('Escape');
+  await expect(frame).toHaveClass(/is-following/);
+  await expect(result.locator('.timeline__mark').filter({ hasText: '■' })).toHaveCount(0);
+
+  // Typing in the input keeps the arrows for the input.
+  await page.getByLabel('イメージ', { exact: true }).focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(frame).toHaveClass(/is-following/);
+});

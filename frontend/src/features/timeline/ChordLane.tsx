@@ -10,6 +10,11 @@ type Props = {
   onSelect?: ((index: number) => void) | undefined;
   /** False for a duplicate drawing hidden from assistive tech: clickable, but no tab stop. */
   focusable?: boolean;
+  /**
+   * Mark the chord the explanation follows with ▶ and the pinned one with ■,
+   * so pinning shows without colour (WCAG 1.4.1; the desk under trial, BL-185).
+   */
+  marks?: boolean | undefined;
 };
 
 /** One clickable block per harmony event, with roman numeral and chord symbol. */
@@ -20,6 +25,7 @@ export function ChordLane({
   selectedIndex,
   onSelect,
   focusable = true,
+  marks = false,
 }: Props) {
   return (
     <g aria-label="コード" role="listbox">
@@ -27,6 +33,8 @@ export function ChordLane({
         const active = i === activeIndex;
         const selected = i === selectedIndex;
         const x = layout.x(h.start);
+        const width = layout.x(h.duration) - LABEL_WIDTH;
+        const mark = selected ? '■' : active && selectedIndex === null ? '▶' : null;
         return (
           <g
             key={i}
@@ -44,13 +52,7 @@ export function ChordLane({
               }
             }}
           >
-            <rect
-              x={x}
-              y={2}
-              width={layout.x(h.duration) - LABEL_WIDTH}
-              height={CHORD_LANE_HEIGHT - 4}
-              rx={4}
-            />
+            <rect x={x} y={2} width={width} height={CHORD_LANE_HEIGHT - 4} rx={4} />
             {/* One text with a space between the lines, so the visible text
                 reads "V7 B7" like the option's name (WCAG 2.5.3, BL-162). */}
             <text>
@@ -61,6 +63,17 @@ export function ChordLane({
                 {harmonySymbol(h)}
               </tspan>
             </text>
+            {marks && mark && (
+              <text
+                x={x + width - 6}
+                y={18}
+                textAnchor="end"
+                className="timeline__mark"
+                aria-hidden="true"
+              >
+                {mark}
+              </text>
+            )}
           </g>
         );
       })}
