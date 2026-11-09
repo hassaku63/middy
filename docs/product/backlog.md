@@ -70,6 +70,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-174 | HCI の知見の索引を `.claude/skills/hci/` に置き（35 項目、判断の種類で分類、外したもの 22 件）、AGENTS.md から引くようにする（#274 のスライス 1） | 2026-11-09 |
 | BL-168 | e2e・security audit・docs gardening のジョブにも `timeout-minutes`（#266 の G。harness.md の「すべてのジョブに」を満たす） | 2026-11-09 |
 | BL-167 | `main` への push でも `ci-changes.sh` でジョブを選び（push の前の先頭と比べる）、`main` の実行は取り消さない（#266 の A、ADR-0032） | 2026-11-09 |
 | BL-166 | CodeQL を advanced setup（`codeql.yml`）に移し、`docs/**` と `**/*.md` だけの変更では走らせない。週 1 回は全体を解析（#266 の C、ADR-0031） | 2026-11-09 |
