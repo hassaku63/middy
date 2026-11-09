@@ -1,6 +1,6 @@
 import type { Timeline } from '@/shared/api/client';
 import { DegreeMap } from '@/shared/ui/DegreeMap';
-import { ChordNotes } from './ChordNotes';
+import { ChordNotes, ChordStatus } from './ChordNotes';
 import { explainedIndex } from './explainedIndex';
 import { OverviewNotes } from './OverviewNotes';
 import { RhythmNotes } from './RhythmNotes';
@@ -13,6 +13,12 @@ export type ExplanationPanelProps = {
   /** Index into timeline.harmony pinned by the user, or null to follow playback. */
   selectedHarmony: number | null;
   onClearSelection?: () => void;
+  /**
+   * False when the chord's explanation has a frame of its own (ChordFrame,
+   * the desk under trial, BL-185); the panel then keeps the whole, the
+   * degree map and the rhythm.
+   */
+  chord?: boolean;
 };
 
 /**
@@ -25,6 +31,7 @@ export function ExplanationPanel({
   positionTick,
   selectedHarmony,
   onClearSelection,
+  chord = true,
 }: ExplanationPanelProps) {
   const harmony = timeline?.harmony ?? [];
   const index = explainedIndex(harmony, positionTick, selectedHarmony);
@@ -32,17 +39,22 @@ export function ExplanationPanel({
   const pinned = selectedHarmony !== null && index === selectedHarmony;
 
   return (
-    <section className="explanation" aria-label="解説" aria-live="polite">
+    <section className="explanation" aria-label="解説">
       {timeline?.overview && <OverviewNotes overview={timeline.overview} />}
       {timeline?.overview && <DegreeMap degrees={timeline.overview.degrees} event={event} />}
-      {event ? (
-        <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
-      ) : (
-        <p className="explanation__empty">
-          {timeline
-            ? '再生するか、コードをクリックすると解説が表示されます。'
-            : 'タイムラインがありません。'}
-        </p>
+      {chord && (
+        <>
+          <ChordStatus event={event} />
+          {event ? (
+            <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
+          ) : (
+            <p className="explanation__empty">
+              {timeline
+                ? '再生するか、コードをクリックすると解説が表示されます。'
+                : 'タイムラインがありません。'}
+            </p>
+          )}
+        </>
       )}
       {timeline?.rhythm && <RhythmNotes rhythm={timeline.rhythm} />}
     </section>

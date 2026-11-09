@@ -29,6 +29,8 @@ export type TimelineViewProps = {
   highlight?: { x: number; width: number };
   /** Accessible name; several timelines on one screen need distinct names. */
   label?: string;
+  /** ▶ on the chord followed, ■ on the pinned one (see ChordLane). */
+  marks?: boolean;
   /** Hide from assistive tech (a duplicate drawing such as an overview). */
   decorative?: boolean;
   className?: string;
@@ -49,6 +51,7 @@ export function TimelineView({
   highlight,
   label = 'タイムライン',
   decorative = false,
+  marks,
   className,
 }: TimelineViewProps) {
   // The playhead re-renders this every frame; the layout only changes with the timeline.
@@ -92,6 +95,7 @@ export function TimelineView({
         selectedIndex={selectedHarmony}
         onSelect={onSelectHarmony}
         focusable={!decorative}
+        marks={marks}
       />
       <PianoRoll notes={notes} layout={layout} positionTick={sounding} />
       <DrumLane notes={drumNotes} layout={layout} positionTick={sounding} />

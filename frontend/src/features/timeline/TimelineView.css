@@ -27,6 +27,12 @@
   stroke-width: 2;
 }
 
+.timeline__mark {
+  fill: #f9fafb;
+  font-size: 12px;
+  pointer-events: none;
+}
+
 .timeline__numeral {
   fill: #f9fafb;
   font-size: 14px;
@@ -80,7 +86,8 @@
     fill: #d1d5db;
     stroke: #9ca3af;
   }
-  .timeline__numeral {
+  .timeline__numeral,
+  .timeline__mark {
     fill: #111827;
   }
   .timeline__symbol {

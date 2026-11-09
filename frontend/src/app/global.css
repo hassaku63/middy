@@ -72,6 +72,14 @@ main {
   }
 }
 
+/* The desk under trial (BL-185): the chord's frame above the timeline. */
+.app__score {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
 .app__toolbar {
   display: flex;
   gap: 16px;

@@ -155,3 +155,26 @@ describe('TimelineView', () => {
     expect(screen.queryAllByRole('option')).toHaveLength(0);
   });
 });
+
+describe('marks (BL-185)', () => {
+  const marks = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('.timeline__mark')).map((m) => m.textContent);
+
+  it('marks the chord followed with ▶, and only when asked', () => {
+    const { container, rerender } = render(
+      <TimelineView timeline={timeline} positionTick={2000} />,
+    );
+    expect(marks(container)).toEqual([]);
+    rerender(<TimelineView timeline={timeline} positionTick={2000} marks />);
+    expect(marks(container)).toEqual(['▶']);
+  });
+
+  it('marks the pinned chord with ■ and hides the marks from assistive tech', () => {
+    const { container } = render(
+      <TimelineView timeline={timeline} positionTick={2000} selectedHarmony={2} marks />,
+    );
+    expect(marks(container)).toEqual(['■']);
+    expect(container.querySelector('.timeline__mark')?.getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByRole('option', { name: 'vi Am' })).toBeInTheDocument();
+  });
+});

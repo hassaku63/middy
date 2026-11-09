@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChatPanel } from '@/features/chat/ChatPanel';
-import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
 import { KeySelect } from '@/features/key-change/KeySelect';
 import { StyleSelect } from '@/features/regroove/StyleSelect';
 import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
@@ -12,7 +11,6 @@ import { SaveProjectForm } from '@/features/projects/SaveProjectForm';
 import { PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
-import { TimelineOverview } from '@/features/timeline/TimelineOverview';
 import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
@@ -22,6 +20,7 @@ import { useLayoutTrial } from './useLayoutTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
 import { useAnswerOpening } from './useAnswerOpening';
+import { Stage } from './Stage';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
@@ -124,23 +123,14 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
         <LabControls zoom={zoom} layout={layout} />
       </div>
-      {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
-      <div className="app__stage">
-        <TimelineOverview
-          follow={zoom.follow}
-          timeline={timeline}
-          positionTick={player.positionTick}
-          playing={player.state === 'playing'}
-          selectedHarmony={selectedHarmony}
-          onSelectHarmony={setSelectedHarmony}
-        />
-        <ExplanationPanel
-          timeline={timeline}
-          positionTick={player.positionTick}
-          selectedHarmony={selectedHarmony}
-          onClearSelection={() => setSelectedHarmony(null)}
-        />
-      </div>
+      <Stage
+        timeline={timeline}
+        player={player}
+        follow={zoom.follow}
+        desk={layout.desk}
+        selectedHarmony={selectedHarmony}
+        onSelectHarmony={setSelectedHarmony}
+      />
     </section>
   );
 

@@ -124,3 +124,52 @@
   gap: 8px;
   align-items: baseline;
 }
+
+/* The live region: read out, not shown; the heading shows the same. */
+.explanation__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The frame of the desk under trial (BL-185): a header and four lines of
+   text, whatever the chord. Following has the amber of the sounding chord
+   on its edge, pinned the blue of the pinned one; the chord lane adds ▶
+   or ■ for those who do not see colour. */
+.explanation--frame {
+  position: relative;
+  box-sizing: border-box;
+  /* The header row, then five lines of text (line-height 1.7): 141 kana
+     at 1280 px. A narrower stage scrolls the text inside the frame. */
+  height: calc(8.5em + 72px);
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  column-gap: 12px;
+  border-left: 4px solid #d97706;
+}
+
+.explanation--frame.is-pinned {
+  border-left-color: #2563eb;
+}
+
+/* In the frame, the unpin button shares the header's row, so the text
+   keeps its five lines. */
+.explanation--frame > .explanation__text,
+.explanation--frame > .explanation__empty {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.explanation--frame > .explanation__unpin {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: start;
+  margin-top: 0;
+}
