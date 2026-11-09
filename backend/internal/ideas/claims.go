@@ -25,9 +25,18 @@ import (
 // letters do not continue it on either side (see labelsIn).
 var numeralPattern = regexp.MustCompile(`(?:sub)?(?:b|♭|#|♯)?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:°|ø|o)?(?:maj7|m7b5|ø7|°7|7sus4|sus4|m6|7|5)?(?:/(?:b|♭|#|♯)?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i))?`)
 
-// namedChord matches a chord symbol in brackets right after a numeral:
-// "（F7）", "(Bb7)", "（E♭maj7）". Only its root is compared.
-var namedChord = regexp.MustCompile(`^\s*[（(]\s*(([A-G])([b♭#♯]?)[^）)、,\s]*)`)
+// bracketed is what a numeral is followed by in brackets: "（F7）",
+// "(Bb7)", or the names of a whole run of numerals, "I–V–vi–IV（D–A–Bm–G）".
+var bracketed = regexp.MustCompile(`^\s*[（(]([^）)]*)[）)]`)
+
+// chordName reads a chord symbol's root: "F7", "E♭maj7", "Bm", "C/E".
+var chordName = regexp.MustCompile(`^([A-G])([b♭#♯]?)`)
+
+// between matches what may separate the numerals of a run, or the names
+// in brackets: dashes, arrows, middle dots, commas and spaces.
+var between = regexp.MustCompile(`^[\s–—\-→・、,]*$`)
+
+var nameSeparators = regexp.MustCompile(`[\s–—\-→・、,]+`)
 
 // motion matches a target numeral followed by a particle and a verb of
 // moving to it: "vi7 へ滑り込む", "IVmaj7 へ戻る", "I に解決する".
@@ -170,35 +179,95 @@ func sentences(text string) []string {
 	return out
 }
 
-// namedChordProblems checks "numeral（chord）" in a sentence: the chord's
-// root must be the numeral's root in one of the keys.
+// namedChordProblems checks numerals named in brackets: "numeral（chord）",
+// or a run of numerals named name by name, "I–V–vi–IV（D–A–Bm–G）". Each
+// name's root must be its numeral's root in one of the keys. Brackets
+// that are not chord names, or whose names do not line up one to one
+// with the run before them, are not checked.
 func namedChordProblems(sentence string, keys []music.Key) []string {
 	var problems []string
-	for _, m := range labelsIn(sentence) {
-		g := namedChord.FindStringSubmatch(sentence[m.end:])
+	ms := labelsIn(sentence)
+	for j, m := range ms {
+		g := bracketed.FindStringSubmatch(sentence[m.end:])
 		if g == nil {
 			continue
 		}
-		claimed := namedRoot(g[2], g[3])
-		readable, fits := false, false
-		var want []string
-		for _, k := range keys {
-			root, symbol, ok := chordOf(k, m.label)
-			if !ok {
+		names := chordNames(g[1])
+		if len(names) == 0 {
+			continue
+		}
+		run := []mention{m}
+		if len(names) > 1 {
+			run = runEndingAt(sentence, ms, j)
+			if len(run) < len(names) {
 				continue
 			}
-			readable = true
-			if root == claimed {
-				fits = true
-				break
-			}
-			want = append(want, symbol)
+			run = run[len(run)-len(names):]
 		}
-		if readable && !fits {
-			problems = append(problems, fmt.Sprintf("%s を %s と書いているが、この調の %s は %s", m.label, g[1], m.label, strings.Join(want, " / ")))
+		for i, name := range names {
+			if p := namedChordProblem(run[i].label, name, keys); p != "" {
+				problems = append(problems, p)
+			}
 		}
 	}
 	return problems
+}
+
+// chordNames reads the chord names in a bracket: one name followed by
+// other words ("F7、ブルースの属七") is that one name; a list of names
+// ("D–A–Bm–G") is the list. Anything else names no chord.
+func chordNames(inside string) []string {
+	parts := nameSeparators.Split(strings.TrimSpace(inside), -1)
+	var names []string
+	for _, p := range parts {
+		if !chordName.MatchString(p) {
+			break
+		}
+		names = append(names, p)
+	}
+	if len(names) > 1 && len(names) < len(parts) {
+		return nil // a list mixed with words: ambiguous
+	}
+	if len(names) > 1 {
+		return names
+	}
+	if len(names) == 1 {
+		return names[:1]
+	}
+	return nil
+}
+
+// runEndingAt is the numerals that end at ms[j] with only dashes, arrows,
+// dots or commas between them.
+func runEndingAt(sentence string, ms []mention, j int) []mention {
+	first := j
+	for first > 0 && between.MatchString(sentence[ms[first-1].end:ms[first].start]) {
+		first--
+	}
+	return ms[first : j+1]
+}
+
+// namedChordProblem compares one name with its numeral's root in the keys.
+func namedChordProblem(label, name string, keys []music.Key) string {
+	g := chordName.FindStringSubmatch(name)
+	claimed := namedRoot(g[1], g[2])
+	readable := false
+	var want []string
+	for _, k := range keys {
+		root, symbol, ok := chordOf(k, label)
+		if !ok {
+			continue
+		}
+		readable = true
+		if root == claimed {
+			return ""
+		}
+		want = append(want, symbol)
+	}
+	if !readable {
+		return ""
+	}
+	return fmt.Sprintf("%s を %s と書いているが、この調の %s は %s", label, name, label, strings.Join(want, " / "))
 }
 
 // motionProblems checks "source … target へ（解決する、進む…）" in a
