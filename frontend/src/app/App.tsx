@@ -13,6 +13,7 @@ import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
+import type { ChatTurn } from '@/features/chat/useIdeas';
 import { useBackendHealth } from './useBackendHealth';
 import { LabControls } from './LabControls';
 import { useZoomTrial } from './useZoomTrial';
@@ -21,6 +22,8 @@ import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
 import { useAnswerOpening } from './useAnswerOpening';
 import { Stage } from './Stage';
+import { usePinMemory } from './usePinMemory';
+import { useCandidateKeys } from './useCandidateKeys';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
@@ -62,8 +65,10 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     patterns.styles,
   );
 
+  const recallPin = usePinMemory(openExample, selectedHarmony);
   const openCandidate = (c: IdeaCandidate, image: string) => {
     show(c.timeline);
+    setSelectedHarmony(recallPin(c));
     forget();
     setOpenExample(c);
     setProjectName(null);
@@ -82,18 +87,22 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     setOrigin(p.source);
   };
 
+  const openChosen = (c: IdeaCandidate) => {
+    opened();
+    openCandidate(c, imageFor(ideas.turns, c));
+  };
+  useCandidateKeys(layout.desk, latestCandidates(ideas.turns), openChosen);
+
   const conversation = (
     <>
       <ProjectList projects={projects} onOpen={openProject} />
 
       <ChatPanel
         ideas={ideas}
-        onOpenCandidate={(c) => {
-          opened();
-          openCandidate(c, imageFor(ideas.turns, c));
-        }}
+        onOpenCandidate={openChosen}
         openExample={openExample}
         patterns={patterns}
+        list={layout.desk}
       />
     </>
   );
@@ -171,4 +180,10 @@ function AppHeader({ pwa, backendDown }: { pwa: ReturnType<typeof usePwa>; backe
       )}
     </>
   );
+}
+
+/** The examples of the latest answer, the ones 1, 2 and 3 open on the desk. */
+function latestCandidates(turns: ChatTurn[]) {
+  const last = turns.at(-1);
+  return last?.role === 'assistant' ? last.candidates : [];
 }

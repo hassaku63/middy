@@ -149,3 +149,55 @@
 .chat__earlier[open] summary {
   margin-bottom: 10px;
 }
+
+/* Earlier exchanges on the desk under trial (BL-186): one line per example. */
+.chat__exchanges,
+.chat__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat__exchanges {
+  gap: 10px;
+}
+
+.chat__exchange-image {
+  margin: 0 0 2px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat__exchange-number {
+  display: inline-block;
+  min-width: 1.5em;
+  font-weight: 600;
+}
+
+.chat__line {
+  width: 100%;
+  min-height: 28px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid transparent;
+}
+
+.chat__line.is-open {
+  border-color: #f59e0b;
+}
+
+.chat__line-title {
+  font-weight: 600;
+}
+
+.chat__line-spec {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
