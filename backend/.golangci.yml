@@ -18,6 +18,7 @@ linters:
     - copyloopvar
     - dupl
     - errname
+    - intrange
     - nakedret
     - nilerr
     - nolintlint
