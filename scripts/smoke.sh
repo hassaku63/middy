@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Smoke-test a running middy against what serving it must do: the API's
 # health, the SPA and its cache headers, the 404 rules (ADR-0022) and the
-# body limit. The same checks run against `make run`, the CI image and
-# whatever stands in front of the app later (#206), so a change of
+# body limit. The same checks run against `make up`, the CI image job, the
+# e2e workflow and whatever is deployed later (#206), so a change of
 # topology changes how the app is started, not what is expected.
 #
 # Usage: scripts/smoke.sh <base-url> [expected-version]

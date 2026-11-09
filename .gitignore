@@ -13,8 +13,6 @@ Thumbs.db
 # backend
 backend/bin/
 backend/coverage.out
-backend/internal/web/dist/*
-!backend/internal/web/dist/.gitkeep
 
 # frontend
 frontend/node_modules/

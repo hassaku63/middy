@@ -9,7 +9,6 @@ SHELL := /bin/bash
 
 BACKEND  := backend
 FRONTEND := frontend
-EMBED_DIR := $(BACKEND)/internal/web/dist
 # Override when the local toolchain lacks the coverage tools (e.g. an auto-downloaded
 # toolchain module): make check GOTEST_FLAGS=-race
 GOTEST_FLAGS ?= -race -cover
@@ -18,7 +17,7 @@ NODE_VERSION := $(shell awk '$$1 == "nodejs" { print $$2 }' .tool-versions)
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 .PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor e2e smoke eval dev-backend dev-frontend run image up down \
-        backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-embed \
+        backend-test backend-lint backend-fmt backend-fmt-check backend-build \
         frontend-test frontend-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
 
@@ -41,15 +40,15 @@ test-report: ## Slowest tests, totals and time budgets for both suites (scripts/
 eval: ## Run the prompt evaluation set against the real API (needs ANTHROPIC_API_KEY; prints a Markdown table)
 	cd $(BACKEND) && go test -count=1 -tags eval -run TestLiveEval -v ./internal/ideas/evals/
 
-e2e: ## Playwright scenarios against a running server (E2E_BASE_URL, default http://localhost:8080; see `make run` / `make up`)
+e2e: ## Playwright scenarios against a running stack (E2E_BASE_URL, default http://localhost:8080; see `make up`)
 	cd $(FRONTEND) && npx playwright test
 
-smoke: ## Smoke-test a running server (SMOKE_URL, default http://localhost:8080; see `make run` / `make up`)
+smoke: ## Smoke-test a running stack (SMOKE_URL, default http://localhost:8080; see `make up`)
 	bash scripts/smoke.sh $(or $(SMOKE_URL),http://localhost:8080)
 lint: backend-lint frontend-lint ## Run all linters
 fmt: backend-fmt frontend-fmt ## Format all code in place
 fmt-check: backend-fmt-check frontend-fmt-check ## Verify formatting without changing files
-build: frontend-build backend-embed backend-build ## Build the single binary: vite build -> embed -> go build (ADR-0008)
+build: frontend-build backend-build ## Build the frontend (frontend/dist) and the API server (backend/bin/server)
 
 dev-backend: ## Run the API server; settings come only from the environment (ADR-0011)
 	cd $(BACKEND) && go run ./cmd/server
@@ -57,7 +56,7 @@ dev-backend: ## Run the API server; settings come only from the environment (ADR
 dev-frontend: ## Run the Vite dev server (proxies /api to API_UPSTREAM, default http://localhost:8080)
 	cd $(FRONTEND) && npm run dev
 
-run: ## Run the built single binary (UI + API on :8080); build first with `make build`
+run: ## Run the built API server on :8080 (the API only; `make up` serves the UI too); build first with `make build`
 	$(BACKEND)/bin/server
 
 image: ## Build the two production images (middy-api:local, middy-web:local; ADR-0027) with the toolchain from .tool-versions
@@ -84,13 +83,7 @@ backend-fmt: ## gofmt in place
 backend-fmt-check: ## Fail if any Go file is not gofmt-ed
 	@cd $(BACKEND) && out=$$(gofmt -l .); if [ -n "$$out" ]; then echo "gofmt needed:"; echo "$$out"; exit 1; fi
 
-backend-embed: ## Copy frontend/dist into the Go embed directory
-	rm -rf $(EMBED_DIR)
-	mkdir -p $(EMBED_DIR)
-	cp -R $(FRONTEND)/dist/. $(EMBED_DIR)/
-	touch $(EMBED_DIR)/.gitkeep
-
-backend-build: ## Compile the server binary to backend/bin/server (embeds whatever is in the embed directory)
+backend-build: ## Compile the API server to backend/bin/server
 	cd $(BACKEND) && go build -ldflags "-X github.com/hassaku63/middy/backend/internal/httpapi.Version=$(VERSION)" -o bin/server ./cmd/server
 
 # --- frontend ------------------------------------------------------------
@@ -127,6 +120,5 @@ deps-check: ## go.mod tidy check + npm audit of production deps (needs network; 
 	cd $(BACKEND) && go mod tidy -diff
 	cd $(FRONTEND) && npm audit --omit=dev --audit-level=high
 
-clean: ## Remove build outputs (backend/bin, embedded frontend, frontend/dist, dev-dist, coverage)
+clean: ## Remove build outputs (backend/bin, frontend/dist, dev-dist, coverage)
 	rm -rf backend/bin frontend/dist frontend/dev-dist frontend/coverage
-	rm -rf backend/internal/web/dist && mkdir -p backend/internal/web/dist && touch backend/internal/web/dist/.gitkeep

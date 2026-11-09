@@ -47,7 +47,6 @@
 | `backend/internal/intent` | LLM が返す MusicalIntent の型・検証・Schema | `music` にのみ依存。制約を変えたら `Validate` と `Schema` を同時に |
 | `backend/internal/ideas` | S2 のユースケース（会話 → LLM → intent → music） | システムプロンプトは `prompt.go` の `SystemPrompt()`（固定文 + パターンカタログ）。変更したら PR に `needs-eval` ラベルを付けて実 API の評価を走らせる（ADR-0018） |
 | `backend/internal/llm` | LLM 境界。`Client` interface、`fake`、`anthropic` アダプタ | プロバイダ依存はサブパッケージに閉じる |
-| `backend/internal/web` | ビルド済みフロントの embed | `dist/` の中身はコミットしない（`make build` が生成） |
 | `backend/internal/fixtures` | フロント照合用の正準 JSON の生成 | 表記を変えたら `make fixtures` を実行してコミット |
 | `frontend/src/app` | アプリシェル・ルーティング | |
 | `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ（ESLint で強制）。`*.tsx` は API 呼び出しや `fetch` / `AudioContext` 等の副作用を持たず、hook に置く（ESLint で強制） |

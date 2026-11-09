@@ -2,9 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * End-to-end scenarios against a running middy on :8080 by default: the
- * production-like compose stack (ADR-0027), or the single binary.
+ * production-like compose stack (ADR-0027), nginx in front of the API.
  *
- *   make build && make run        # or: make up
+ *   make up
  *   make e2e                      # E2E_BASE_URL overrides the target
  *
  * Unit tests live in src/ and run with Vitest; this config only sees e2e/.
