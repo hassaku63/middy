@@ -130,6 +130,10 @@ func TestImagineValidatesTheConversation(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), tt.want) {
 				t.Fatalf("want %q, got %v", tt.want, err)
 			}
+			// The caller can branch on it, and the text names the package once (#228).
+			if !errors.Is(err, ErrInvalidConversation) || strings.Count(err.Error(), "ideas:") != 1 {
+				t.Errorf("error = %q: want ErrInvalidConversation with one ideas: prefix", err)
+			}
 		})
 	}
 }
