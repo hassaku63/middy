@@ -40,34 +40,13 @@ func notesIn(tl music.Timeline, track string) []music.NoteEvent {
 }
 
 func TestCatalogueIsWellFormed(t *testing.T) {
-	ids := map[string]bool{}
-	for _, a := range Accompaniments() {
-		if a.ID == "" || a.Name == "" || a.Description == "" || len(a.Hits) == 0 || ids[a.ID] {
-			t.Errorf("bad accompaniment %+v", a)
-		}
-		ids[a.ID] = true
-		length := bar
-		if a.Meter != nil {
-			length = music.BarTicks(*a.Meter, music.DefaultPPQ)
-		}
-		for _, h := range a.Hits {
-			anyMeter := a.Meter == nil && h.Duration == 0 // lasts to the end of whatever bar
-			if h.Start < 0 || h.Start+h.Duration > length || (h.Duration <= 0 && !anyMeter) || h.Velocity < 1 || h.Velocity > 127 || (h.Voice != VoiceWalk && len(pitches(music.Key{Tonic: music.C, Mode: music.Major}, []music.Pitch{60, 64, 67}, []music.Pitch{60, 64, 67}, nil, h.Voice)) == 0) {
-				t.Errorf("%s: bad hit %+v", a.ID, h)
-			}
-		}
+	if err := (Catalogue{Accompaniments: Accompaniments(), Drums: DrumPatterns()}).Validate(); err != nil {
+		t.Fatal(err)
 	}
-	for _, d := range DrumPatterns() {
-		if d.ID == "" || d.Name == "" || d.Description == "" || len(d.Hits) == 0 {
-			t.Errorf("bad drums %+v", d)
-		}
-		if d.Meter == nil {
-			t.Errorf("%s: drums must declare their meter", d.ID)
-			continue
-		}
-		for _, h := range d.Hits {
-			if h.Start < 0 || h.Start+h.Duration > music.BarTicks(*d.Meter, music.DefaultPPQ) || h.Duration <= 0 || !h.Note.Valid() {
-				t.Errorf("%s: bad hit %+v", d.ID, h)
+	for _, a := range Accompaniments() {
+		for _, h := range a.Hits {
+			if h.Voice != VoiceWalk && len(pitches(music.Key{Tonic: music.C, Mode: music.Major}, []music.Pitch{60, 64, 67}, []music.Pitch{60, 64, 67}, nil, h.Voice)) == 0 {
+				t.Errorf("%s: voice %q plays nothing", a.ID, h.Voice)
 			}
 		}
 	}
