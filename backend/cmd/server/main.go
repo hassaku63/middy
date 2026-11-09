@@ -50,8 +50,13 @@ func runHealthcheck() error {
 
 // probe fails unless url answers 200 within timeout.
 func probe(url string, timeout time.Duration) error {
-	client := &http.Client{Timeout: timeout}
-	resp, err := client.Get(url) //nolint:gosec // loopback probe of our own server
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req) //nolint:gosec // loopback probe of our own server
 	if err != nil {
 		return err
 	}

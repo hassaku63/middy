@@ -27,7 +27,11 @@ func newTestServer(t *testing.T) *httptest.Server {
 // get performs a GET and closes the body when the test ends.
 func get(t *testing.T, url string) *http.Response {
 	t.Helper()
-	resp, err := http.Get(url) //nolint:gosec // test-local URL
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := http.DefaultClient.Do(req) //nolint:gosec // test-local URL
 	if err != nil {
 		t.Fatalf("GET %s: %v", url, err)
 	}

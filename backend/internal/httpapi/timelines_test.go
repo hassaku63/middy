@@ -13,7 +13,12 @@ import (
 
 func postJSON(t *testing.T, url, body string) *http.Response {
 	t.Helper()
-	resp, err := http.Post(url, "application/json", strings.NewReader(body)) //nolint:gosec // test-local URL
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, url, strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req) //nolint:gosec // test-local URL
 	if err != nil {
 		t.Fatalf("POST %s: %v", url, err)
 	}
