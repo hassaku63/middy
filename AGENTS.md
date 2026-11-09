@@ -14,7 +14,7 @@
 2. 着手前に受け入れ条件を読み、曖昧なら **実装せずに質問する**（または最も保守的な解釈を選び、PR に明記する）。
 3. **テストを先に書く**（または同じコミットで書く）。ドメインロジックはテーブル駆動テスト、HTTP は `httptest`、UI は Testing Library。
 4. 実装する。ディレクトリ配置と規約は `docs/architecture/overview.md` と `docs/dev/conventions.md` に、画面や操作の判断は `docs/design/ux-principles.md` の手順に従う。
-5. **`make check` を通す。** 通らないものは完成ではない。
+5. **`make check` を通す。** 通らないものは完成ではない。CI では `required (make check)` がマージを止める（ADR-0028）。
 6. 影響するドキュメントを更新する: API 変更 → `docs/api/openapi.yaml`、設計判断 → `docs/architecture/adr/`、backlog のステータス。PR を出す前に `docs-sync` の自己点検（`docs/dev/docs-hygiene.md`）を行う。
 7. PR を開く前に自己レビューを行い（Claude Code では `/code-review`）、要約を PR の「レビューの見どころ」に書く。Conventional Commits でコミットし、PR テンプレートを埋める。1 PR = 1 backlog 項目 = 1 縦スライス。
 8. **未マージの自分の PR が 3 本になったら止まり、人間にマージか方針の判断を仰ぐ**（レビュー処理能力を超えない）。
