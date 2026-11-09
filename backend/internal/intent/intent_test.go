@@ -649,3 +649,24 @@ func TestTritoneSubstitutesInTheIntent(t *testing.T) {
 		t.Errorf("want the subV7/V hint for bVI7, got %v", err)
 	}
 }
+
+// TestPassingDiminishedInTheIntent (BL-131): vii°7/x is a label the model
+// may write; a diminished seventh written on a sharpened root (#i°7) gets
+// the label to use; and a minor key's V7/V is read as V7/v.
+func TestPassingDiminishedInTheIntent(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Key = music.Key{Tonic: music.C, Mode: music.Major}
+	in.Candidates[0].Progression = []string{"I", "vii°7/ii", "ii7", "V7"}
+	if err := in.Validate(); err != nil {
+		t.Fatalf("vii°7/ii rejected: %v", err)
+	}
+	in.Candidates[0].Progression = []string{"I", "#i°7", "ii7", "V7"}
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), `write "vii°7/ii"`) {
+		t.Errorf("want the vii°7/ii hint for #i°7, got %v", err)
+	}
+	minor := valid()
+	minor.Candidates[0].Progression = []string{"i", "V7/V", "V7", "i"}
+	if err := minor.Validate(); err != nil {
+		t.Errorf("V7/V in A minor rejected: %v", err)
+	}
+}
