@@ -32,6 +32,7 @@
 | [0026](0026-blues-dominants.md) | 長調の I7・IV7 は、ブルースの属七として受け付ける | Accepted |
 | [0027](0027-nginx-and-go-containers.md) | フロントは nginx のコンテナ、API は Go のコンテナにし、同一オリジンの 1 つのサービスとして配る | Accepted |
 | [0028](0028-one-required-check.md) | main の必須チェックは、`make check` に当たるジョブをまとめた 1 つだけにする | Accepted |
+| [0029](0029-lint-policy.md) | 推奨される lint は 1 つずつ入れ、道具そのものの陳腐化を定期的に検討する | Accepted |
 
 ## いつ ADR を書くか
 
