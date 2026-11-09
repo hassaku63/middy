@@ -89,6 +89,8 @@ src/test       Vitest セットアップ
 
 ## 配備形態（ADR-0008）
 
+今は下の単一バイナリで配る。フロントを nginx のコンテナ、API を Go のコンテナに分ける構成は ADR-0027 で決まっていて、BL-146〜148 で移す。
+
 - **単一の Go バイナリ** が API と UI を同一オリジンで配信する。`make build` が `vite build` → `backend/internal/web/dist` へコピー → `go build`（`-ldflags` でバージョン埋め込み）の順に行う。
 - `httpapi` の静的ハンドラ: `/api` 配下以外で、ファイルがあればそれを返す。なければ、画面の URL には `index.html`（SPA フォールバック）、ファイルを指す URL（`/assets/*` や拡張子のあるもの）には 404 を返す（ADR-0022）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。未知の `/api/*` は JSON の 404。
 - フロント未同梱のバイナリでも API は動き、UI は 503 `frontend_not_built` を返す。開発時は `make dev-frontend`（Vite のプロキシ）を使う。
