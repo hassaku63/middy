@@ -14,8 +14,13 @@ import (
 // code, read at start-up and checked as a whole, so a broken entry fails
 // every test and never reaches a user. Moving it out of Go tables does not
 // move the line of ADR-0003: the patterns are still the engine's, not the
-// model's. Drums live in data/drums.json; accompaniments and styles are
-// still Go tables (BL-178, BL-179).
+// model's. Accompaniments live in data/accompaniments.json and drums in
+// data/drums.json, one hit per line; styles are still a Go table (BL-179).
+// An accompaniment without a meter fits any, and a hit of it with no
+// duration lasts to the end of whatever bar it plays in.
+
+//go:embed data/accompaniments.json
+var accompanimentsJSON []byte
 
 //go:embed data/drums.json
 var drumsJSON []byte
@@ -139,17 +144,25 @@ func decodeCatalogue(data []byte) (Catalogue, error) {
 	return c, nil
 }
 
-// drums is the drum catalogue, read once at start-up. The whole catalogue
-// is checked with it; a broken one stops the program before it serves.
-var drums = mustLoadDrums()
+// The catalogue, read once at start-up and checked as a whole; a broken
+// one stops the program before it serves.
+var accompaniments, drums = mustLoadCatalogue()
 
-func mustLoadDrums() []Drums {
-	c, err := decodeCatalogue(drumsJSON)
+func mustLoadCatalogue() ([]Accompaniment, []Drums) {
+	var c Catalogue
+	var errs []error
+	for _, data := range [][]byte{accompanimentsJSON, drumsJSON} {
+		part, err := decodeCatalogue(data)
+		errs = append(errs, err)
+		c.Accompaniments = append(c.Accompaniments, part.Accompaniments...)
+		c.Drums = append(c.Drums, part.Drums...)
+	}
+	err := errors.Join(errs...)
 	if err == nil {
-		err = Catalogue{Accompaniments: accompaniments, Drums: c.Drums}.Validate()
+		err = c.Validate()
 	}
 	if err != nil {
 		panic(fmt.Sprintf("pattern: the built-in catalogue is broken: %v", err))
 	}
-	return c.Drums
+	return c.Accompaniments, c.Drums
 }

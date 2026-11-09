@@ -32,6 +32,10 @@ func TestValidateReportsEveryProblem(t *testing.T) {
 			{0, 0, "hum", 80}, {0, 5 * quarter, VoiceChord, 80},
 		}}}}, []string{`hits[0] voice "hum" is not a voice`, "hits[1] at 0 for 2400 does not fit a bar of 1920"},
 		},
+		{"a hit to the end of the bar needs a template for any meter", Catalogue{Accompaniments: []Accompaniment{
+			{ID: "any", Name: "A", Description: "x", Hits: []Hit{{0, 0, VoiceChord, 80}}},
+			{ID: "three", Name: "B", Description: "x", Meter: &threeFour, Hits: []Hit{{0, 0, VoiceChord, 80}}},
+		}}, []string{`accompaniments[1] "three": hits[0] at 0 for 0 does not fit a bar of 1440`}},
 		{"an accompaniment and drums may share an id", Catalogue{
 			Accompaniments: []Accompaniment{{ID: "d", Name: "D", Description: "x", Hits: []Hit{{0, 0, VoiceChord, 80}}}},
 			Drums:          []Drums{good},
