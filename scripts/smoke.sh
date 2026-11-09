@@ -68,16 +68,16 @@ fi
 
 fetch missing /assets/does-not-exist.js
 check "a missing file is 404" status missing 404
-check "a missing file says not_found" body missing '"not_found"'
+check "a missing file says not found" body missing 'not found'
 check "a missing file is not cached" header missing cache-control no-cache
-check "a missing file is a problem detail" header missing content-type application/problem+json
+check "a missing file is plain text" header missing content-type text/plain
 
 fetch assetsdir /assets
 check "/assets itself is 404" status assetsdir 404
 
 fetch post /some/screen -X POST
 check "a POST to a screen URL is 405" status post 405
-check "a POST to a screen URL is a problem detail" header post content-type application/problem+json
+check "a POST to a screen URL is plain text" header post content-type text/plain
 check "a POST to a screen URL says what is allowed" header post allow "GET, HEAD"
 
 fetch screen /some/screen
@@ -93,6 +93,12 @@ head -c 70000 /dev/zero | tr '\0' 'a' >"$tmp/big.json"
 fetch big /api/v1/ideas -X POST -H 'Content-Type: application/json' --data-binary "@$tmp/big.json"
 check "a 70 KB request is refused with 400" status big 400
 check "a 70 KB request says invalid_json" body big '"invalid_json"'
+
+head -c 5000000 /dev/zero | tr '\0' 'a' >"$tmp/huge.json"
+fetch huge /api/v1/ideas -X POST -H 'Content-Type: application/json' --data-binary "@$tmp/huge.json"
+check "a 5 MB API request is 413" status huge 413
+check "a 5 MB API request is a problem detail" header huge content-type application/problem+json
+check "a 5 MB API request says request_too_large" body huge '"code":"request_too_large"'
 
 if [ "$failures" -gt 0 ]; then
   echo "smoke: $failures check(s) failed against $base"

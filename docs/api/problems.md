@@ -1,6 +1,6 @@
 # 問題の種類（problem types）
 
-API と前段の nginx が返すエラーの種類の一覧。エラー応答は RFC 9457 の problem detail（`application/problem+json`）で、`type` はこの文書の各見出しを指す（ADR-0030）。
+API（`/api` の下）が返すエラーの種類の一覧。前段の nginx が API の代わりに答えるものも含む。アプリのファイルと画面の URL のエラーは平文で、ここには載せない（ADR-0033）。エラー応答は RFC 9457 の problem detail（`application/problem+json`）で、`type` はこの文書の各見出しを指す（ADR-0030）。
 
 ```json
 {
@@ -29,17 +29,17 @@ API と前段の nginx が返すエラーの種類の一覧。エラー応答は
 ## not_found
 
 - status: 404、title: `Not found`
-- そのパスに API のエンドポイントもファイルもない。nginx が答えることもある（存在しないファイル、ADR-0022）。
+- そのパスに API のエンドポイントがない。
 
 ## method_not_allowed
 
 - status: 405、title: `Method not allowed`
-- パスはあるが、そのメソッドを受け付けない。`Allow` ヘッダーに受け付けるメソッドがある。nginx が答えることもある（画面の URL への POST など）。
+- パスはあるが、そのメソッドを受け付けない。`Allow` ヘッダーに受け付けるメソッドがある。
 
 ## request_too_large
 
 - status: 413、title: `Request too large`
-- 要求の本文が nginx の上限（4 MiB）を超えた。nginx だけが答える。
+- API への要求の本文が nginx の上限（4 MiB）を超えた。nginx だけが答える。
 
 ## llm_declined
 
