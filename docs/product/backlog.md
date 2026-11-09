@@ -74,6 +74,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-149 | main の必須チェックを集約ジョブ 1 つで入れる（`required (make check)` が `changes`・`backend`・`frontend`・`docs` をまとめ、スキップは通す。ADR-0028。ルールセットへの登録は所有者。#219） | 2026-11-09 |
 | BL-146 | nginx のイメージと compose の 2 サービス（`Dockerfile` の `web`・`api` ターゲット、`deploy/nginx/templates/` に ADR-0022 の規則・キャッシュ・gzip・`/healthz`・`/api` の待ち 180 s と本文 4 MiB。compose は `web` を公開し `api` は 8081 で閉じる。CI の image のジョブが compose で起動してスモークする。#206 の A-2） | 2026-11-09 |
 | BL-145 | ADR-0027: フロントは nginx のコンテナ、API は Go のコンテナ、同一オリジンの 1 つのサービス（ADR-0008 の決定 1・3 と ADR-0022 を置き換え。#206 の A-1） | 2026-11-09 |
 | BL-144 | `/ideas` の上流のエラーをログに残す（502 のとき `WARN` で原因のエラーを 1 行。応答はコードだけ。Anthropic のアダプタのエラー文に鍵が入らないことをテスト。#206 の S-3） | 2026-11-09 |

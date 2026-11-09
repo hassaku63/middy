@@ -15,9 +15,9 @@ permissions:
 jobs:
   # Which jobs this change needs (ADR-0016). Pull requests run only the jobs
   # whose inputs changed (scripts/ci-changes.sh); pushes to main run all.
-  # There are no required checks yet, so a skipped job blocks nothing. When
-  # they are turned on, add one job that needs all others, treats skipped
-  # as success, and make only that job required.
+  # Only the `required` job at the end is a required check (ADR-0028): it
+  # treats a skipped job as passed, so a change that skips a job is not
+  # blocked by it.
   changes:
     name: changes
     runs-on: ubuntu-latest
@@ -208,3 +208,28 @@ jobs:
         with:
           fetch-depth: 0
       - run: bash scripts/check-pr-size.sh origin/${{ github.base_ref }}
+
+  # The one required check on main (ADR-0028, #219). It covers what
+  # `make check` covers: the jobs that pick (changes), test and lint the code
+  # (backend, frontend) and check the docs. A skipped job passes; a failed or
+  # cancelled one fails this. `always()` keeps it from being skipped, and so
+  # counted as passed, when a job it needs fails. image and pr-size are left
+  # out on purpose: see the ADR.
+  required:
+    name: required (make check)
+    needs: [changes, backend, frontend, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every needed job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::a required job ended as $r"; exit 1 ;;
+            esac
+          done

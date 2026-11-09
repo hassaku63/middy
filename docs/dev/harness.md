@@ -78,7 +78,7 @@
 
 ジョブはこれらをキャッシュから取り、ないときだけ取得元へ行く。すべてのジョブに `timeout-minutes` がある。
 
-PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`docs` と `pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックはまだないので、飛ばしたジョブは何も塞がない。必須チェックを入れるときの手順は `.github/workflows/ci.yml` の `changes` ジョブのコメントにある。
+PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`docs` と `pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
 
 | 取得するもの | 取得元 | キャッシュ | 取得元が不調のとき |
 | --- | --- | --- | --- |
