@@ -21,7 +21,6 @@
 | BL-147 | **E2E を compose で** (#206 の A-3) | `e2e.yml` が compose で起動して Playwright を当て、ログを残す。今のシナリオが nginx 越しに通る | S | BL-146 | Ready |
 | BL-157 | **hook の `try` を失敗しうる呼び出しだけに狭める** (#228) `useRegroove.ts` と `useKeyChange.ts` | 自分の純粋関数が投げた例外は「〜できませんでした」に変わらず、テストで見える。API の失敗は今までどおり画面の状態になる | S | — | Ready |
 | BL-158 | **`ideas` のエラー文の二重の接頭辞を直す** (#228) `ideas: invalid conversation: ideas: ...` | API の `message` に接頭辞が 1 回だけ出る。`errors.Is(err, ErrInvalidConversation)` は今までどおり通る（テスト） | S | — | Ready |
-| BL-150 | **lint: 指摘 0 件の Go の linter をまとめて有効にする** (#226、ADR-0029) `contextcheck`、`usestdlibvars`、`nilerr`、`errname`、`copyloopvar`、`nakedret`、`nolintlint`、`dupl` | `make check` が通る。`harness.md` に行がある | S | — | Ready |
 | BL-151 | **lint: Go の linter を 1 つずつ** (#226) `intrange`、`bodyclose`、`noctx`、`sloglint`（`no-global: default`、`forbidden-keys: [err]`）、`unparam`、`forcetypeassert`、`gosec`、`perfsprint`、`exhaustive`、revive のエラーの規則（今は `exported` しか動いていない）。1 つ = 1 PR。`errorlint` は入れない（原因を意図して `%v` で切る規約と衝突する。#228） | 各 PR でその linter の指摘を全部直すか、理由つきで除外する。`harness.md` に行を足す | M | BL-150 | Ready |
 | BL-152 | **lint: typescript-eslint の `strictTypeChecked`、次に `stylisticTypeChecked`** (#226) 1 つ = 1 PR | 同上 | M | — | Ready |
 | BL-153 | **lint: 依存の増える ESLint のプラグイン** (#226) React 本体、jsx-a11y、Testing Library、Vitest。1 つ = 1 PR | 同上。PR に ADR-0029 の決定 3 の根拠を書き、満たさないものは入れない | M | BL-152 | Ready |
@@ -82,6 +81,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-150 | 指摘 0 件の Go の linter をまとめて有効にする（`contextcheck`、`copyloopvar`、`dupl`、`errname`、`nakedret`、`nilerr`、`nolintlint`、`usestdlibvars`。ADR-0029、#226） | 2026-11-09 |
 | BL-156 | エラーは 1 か所で 1 回だけ扱う、包むか切るか、ログのレベル、hook の `catch` の規約を `conventions.md` に（各項に出典。#228） | 2026-11-09 |
 | BL-149 | main の必須チェックを集約ジョブ 1 つで入れる（`required (make check)` が `changes`・`backend`・`frontend`・`docs` をまとめ、スキップは通す。ADR-0028。ルールセットへの登録は所有者。#219） | 2026-11-09 |
 | BL-146 | nginx のイメージと compose の 2 サービス（`Dockerfile` の `web`・`api` ターゲット、`deploy/nginx/templates/` に ADR-0022 の規則・キャッシュ・gzip・`/healthz`・`/api` の待ち 180 s と本文 4 MiB。compose は `web` を公開し `api` は 8081 で閉じる。CI の image のジョブが compose で起動してスモークする。#206 の A-2） | 2026-11-09 |
