@@ -32,7 +32,7 @@ make setup          # 依存のインストール
 make check          # フォーマット・lint・テスト・ビルド・ドキュメント検査を全部
 make e2e            # Playwright の通しシナリオ（make run か make up で起動したサーバーに対して）
 make dev-backend    # :8080 で API（LLM は fake）
-make dev-frontend   # :5173 で UI（/api を :8080 へプロキシ）
+make dev-frontend   # :5173 で UI（/api を API_UPSTREAM へプロキシ。既定は http://localhost:8080）
 ```
 
 本番相当で動かす（単一バイナリ、ADR-0008）:
