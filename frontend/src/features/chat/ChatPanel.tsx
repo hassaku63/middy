@@ -1,6 +1,8 @@
 import { useState, type SubmitEvent } from 'react';
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
+import { ExampleList } from './ExampleList';
+import { exchangesOf } from './exchanges';
 import type { ChatTurn, Ideas } from './useIdeas';
 import './ChatPanel.css';
 
@@ -12,6 +14,11 @@ export type ChatPanelProps = {
   openExample?: IdeaCandidate | null;
   /** Catalogue for showing pattern names on cards. */
   patterns?: PatternsResponse | undefined;
+  /**
+   * Earlier exchanges as a list of one line per example instead of folded
+   * away (the desk under trial, BL-186).
+   */
+  list?: boolean;
 };
 
 const SUGGESTIONS = ['雨の日曜の午後', '出発の朝、晴れ', '夜の帰り道、少し寂しい'];
@@ -22,6 +29,7 @@ export function ChatPanel({
   onOpenCandidate,
   openExample = null,
   patterns,
+  list = false,
 }: ChatPanelProps) {
   const [text, setText] = useState('');
 
@@ -74,7 +82,14 @@ export function ChatPanel({
     <section className="chat" aria-label="イメージから">
       {/* What scrolls when the conversation has a column of its own (BL-184). */}
       <div className="chat__scroll">
-        {earlier.length > 0 && (
+        {list && earlier.length > 0 && (
+          <ExampleList
+            exchanges={exchangesOf(earlier)}
+            openExample={openExample}
+            onOpen={onOpenCandidate}
+          />
+        )}
+        {!list && earlier.length > 0 && (
           <details className="chat__earlier">
             <summary>これまでのやり取り（{earlierCount}）</summary>
             <ol className="chat__log" aria-label="これまでの会話">

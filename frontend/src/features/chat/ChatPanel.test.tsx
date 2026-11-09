@@ -175,4 +175,26 @@ describe('ChatPanel', () => {
     const latest = screen.getByRole('list', { name: '会話' });
     expect(within(latest).getByRole('button', { name: '開いています' })).toBeInTheDocument();
   });
+
+  it('lists earlier examples one line each on the desk, numbered by exchange (BL-186)', async () => {
+    const again: IdeaCandidate = { ...candidate };
+    const ideas = ideasWith({
+      turns: [
+        { role: 'user', content: '雨' },
+        { role: 'assistant', content: 'x', mood: [], candidates: [candidate] },
+        { role: 'user', content: 'やっぱり夜' },
+        { role: 'assistant', content: 'y', mood: [], candidates: [again] },
+      ],
+    });
+    const onOpen = vi.fn();
+    render(<ChatPanel ideas={ideas} onOpenCandidate={onOpen} openExample={again} list />);
+    expect(screen.queryByText(/これまでのやり取り/)).not.toBeInTheDocument();
+    const earlier = screen.getByRole('list', { name: 'これまでの例' });
+    const line = within(earlier).getByRole('button', {
+      name: new RegExp(`^1 回目：\\s*${candidate.title}`),
+    });
+    expect(line).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(line);
+    expect(onOpen).toHaveBeenCalledWith(candidate);
+  });
 });
