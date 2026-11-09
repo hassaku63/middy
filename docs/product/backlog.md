@@ -19,7 +19,6 @@
 | --- | --- | --- | --- | --- | --- |
 | BL-127 | **拡大の動き方を見比べる（次の A/B）** 拡大の部分が再生位置に合わせてどう動くかを 2 案で試せるようにし、所有者が選ぶ。所有者は B に傾いているので既定を B にし、A は `?zoom=page` か `?lab` の「拡大の動き（試験）」で見比べられる（B は停止中、拡大の下のスライダーで動かす）。両方を残したまま、所有者が決める。A: 今の小節スイッチ（4 小節ずつ切り替わる）。B: 再生位置を中央に保って自動で追随する（手で動かすための横スクロールバーが要るかを含めて検討する） | `?lab` で 2 案を切り替えられ、URL で共有できる。B は再生中に再生位置が拡大の中央に留まり、停止中は手で動かせる。所有者が 1 案を選んだら、選ばなかった案を消す。E2E が通る | M | BL-080 | In progress |
 | BL-162 | **E2E に axe-core のアクセシビリティの検査** (#248、所有者の判断は B) `@axe-core/playwright` で主な画面（最初の画面、例を開いた画面、解説を開いた画面）を検査する | axe の違反が E2E を失敗させる。今ある違反は直すか、理由をつけて外す。PR に ADR-0029 の決定 3 の根拠を書く | S〜M | — | Ready |
-| BL-139 | **業界標準の索引: 音源・音声、ブラウザ、同期** (#213) 並行 | 同上 | M | BL-136 | Ready |
 
 ## Next
 
@@ -72,6 +71,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-139 | 業界標準の索引の音源・音声、ブラウザの音と PWA、同期・連携（SoundFont 2、DLS、SFZ、WAV と BWF、BS.1770 と R 128、Web Audio API、Media Session API、Web App Manifest、Service Workers、MIDI Clock と MTC、OSC、Ableton Link。一次情報で確かめた。SoundFont 2 は一次情報に届かず未確認。#213） | 2026-11-09 |
 | BL-154 | shellcheck、actionlint、hadolint を入れる（スクリプトの `cd` の失敗、引用符、間接展開を直し、Dockerfile のヘルスチェックを JSON の形に、`api` の `USER` を数字の UID にした。hadolint は CI だけ。#226） | 2026-11-09 |
 | BL-138 | 業界標準の索引の和声・分析と音高・調律（MusicXML の `<harmony>`、Harte の和音表記、JAMS、RomanText、DCML、MIREX、ISO 16、科学的音高表記、Scala `.scl`。一次情報で確かめ、middy との違いを書いた。MIREX・ISO 16・科学的音高表記は一次情報に届かず未確認。#213） | 2026-11-09 |
 | BL-140 | 業界標準の索引の Web・API・安全とアクセシビリティ・国際化（OpenAPI、JSON Schema、RFC 9111、RFC 9457、CSP、OWASP ASVS、WCAG、WAI-ARIA、Unicode の音楽記号、CLDR。一次情報で確かめた。ASVS の公式サイトは届かず、リポジトリの README で確かめた。#213） | 2026-11-09 |
