@@ -1,5 +1,7 @@
-# Production-like local verification (ADR-0008): one container serving the
-# UI and the API on http://localhost:8080, built from this checkout.
+# Production-like local verification (ADR-0027): the web container (nginx and
+# the SPA) on http://localhost:8080 passes /api to the api container, which is
+# not published. The ports and the API_UPSTREAM name match the deployment.
+# WEB_PORT changes the published port; PORT is each container's own.
 #
 #   make up                                               # fake LLM
 #   LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up  # real LLM
@@ -11,17 +13,35 @@
 #
 # The development loop stays native (`make dev-backend`, `make dev-frontend`).
 services:
-  app:
+  web:
     build:
       context: .
+      target: web
+      args:
+        NODE_VERSION: ${NODE_VERSION:-22}
+    image: middy-web:${TAG:-local}
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    environment:
+      PORT: "8080"
+      API_UPSTREAM: http://api:8081
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+  api:
+    build:
+      context: .
+      target: api
       args:
         VERSION: ${VERSION:-compose}
         GO_VERSION: ${GO_VERSION:-1.25}
         NODE_VERSION: ${NODE_VERSION:-22}
-    image: middy:local
-    ports:
-      - "${PORT:-8080}:8080"
+    image: middy-api:${TAG:-local}
+    expose:
+      - "8081"
     environment:
+      PORT: "8081"
       LLM_PROVIDER: ${LLM_PROVIDER:-fake}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}

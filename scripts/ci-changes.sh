@@ -22,7 +22,7 @@ backend='^(backend/|docs/api/openapi\.yaml|frontend/src/shared/api/fixtures/)'
 # side generates the fixtures the frontend tests compare against.
 frontend='^(frontend/|docs/api/openapi\.yaml|backend/internal/fixtures/|backend/cmd/fixtures/)'
 # the image builds both apps.
-image='^(backend/|frontend/|Dockerfile|\.dockerignore|scripts/smoke\.sh)'
+image='^(backend/|frontend/|Dockerfile|\.dockerignore|compose\.yaml|deploy/|scripts/smoke\.sh)'
 # the real-API evaluation (eval.yml, ADR-0018) only matters when what the
 # model is told, or how its answer is read and rendered, may have changed.
 # It costs money, so it does not follow the "everything" paths above.

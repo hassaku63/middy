@@ -89,12 +89,15 @@ src/test       Vitest セットアップ
 
 ## 配備形態（ADR-0008）
 
-今は下の単一バイナリで配る。フロントを nginx のコンテナ、API を Go のコンテナに分ける構成は ADR-0027 で決まっていて、BL-146〜148 で移す。
+`make run` は単一バイナリで、`make up` は nginx と Go の 2 コンテナ（ADR-0027）で配る。Go から静的配信を外して 2 コンテナに一本化するのは BL-148。
 
 - **単一の Go バイナリ** が API と UI を同一オリジンで配信する。`make build` が `vite build` → `backend/internal/web/dist` へコピー → `go build`（`-ldflags` でバージョン埋め込み）の順に行う。
 - `httpapi` の静的ハンドラ: `/api` 配下以外で、ファイルがあればそれを返す。なければ、画面の URL には `index.html`（SPA フォールバック）、ファイルを指す URL（`/assets/*` や拡張子のあるもの）には 404 を返す（ADR-0022）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。未知の `/api/*` は JSON の 404。
 - フロント未同梱のバイナリでも API は動き、UI は 503 `frontend_not_built` を返す。開発時は `make dev-frontend`（Vite のプロキシ）を使う。
-- **コンテナ**: `Dockerfile` はマルチステージ（`node` でフロント → `golang` でバイナリ → `distroless/static` 非 root）。`HEALTHCHECK` はシェルのない distroless のため、バイナリの `-healthcheck` フラグが自分の `/api/v1/health` を叩く。`compose.yaml` は `app` 1 サービスで、`LLM_PROVIDER` と鍵を、起動するコマンドの環境変数だけから渡す（ADR-0011）。CI の `image` ジョブが同じ Dockerfile をビルドし、ヘルス・`/`・`sw.js` のヘッダ・`HEALTHCHECK` の healthy をスモークする。
+- **コンテナ**（ADR-0027）: `Dockerfile` から 2 つのイメージを `--target` で作る。
+  - `web`: `nginx-unprivileged` とビルド済みの SPA。`deploy/nginx/templates/` を起動時に `PORT` と `API_UPSTREAM`（URL）で埋め、上の静的ハンドラと同じ規則（ADR-0022 の 404、キャッシュ）に gzip と `/healthz` を足して配り、`/api` を Go へ渡す（読み取りの待ち 180 s、本文 4 MiB まで）。
+  - `api`: Go のバイナリを `distroless/static` 非 root で。`HEALTHCHECK` はバイナリの `-healthcheck` フラグが自分の `/api/v1/health` を叩く。BL-148 までは、このイメージもフロントを同梱している。
+  - `compose.yaml` は `web`（`WEB_PORT`、既定 8080 で公開）と `api`（`PORT=8081`、公開しない）。`LLM_PROVIDER` と鍵は `api` にだけ、起動するコマンドの環境変数から渡す（ADR-0011）。CI の `image` ジョブが 2 つのイメージを作り、compose で起動して両方の healthy を待ち、`scripts/smoke.sh` を当てる。
 
 ## 横断的関心事
 

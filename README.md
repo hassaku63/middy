@@ -44,15 +44,16 @@ make run            # :8080 で UI と API を同一オリジンから配信
 
 フロントを同梱せずに `go build` したバイナリは API だけが動き、`/` は 503 を返します。
 
-コンテナで動かす（CI と同じイメージ）:
+コンテナで動かす（CI と同じ 2 つのイメージ、ADR-0027）:
 
 ```bash
 make up             # docker compose up --build → http://localhost:8080
+make smoke          # 起動したものに配信の検査を当てる
 make down
 LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 ```
 
-イメージはマルチステージ（Node でフロント → Go でバイナリ → distroless、非 root）で、`HEALTHCHECK` はバイナリ自身の `-healthcheck` フラグが担います。
+`web`（nginx とビルド済みの SPA）が :8080 で受け、`/api` を `api`（Go、:8081。外には開かない）へ渡します。公開するポートは `WEB_PORT` で変えられます。どちらのイメージも非 root で、`HEALTHCHECK` を持ちます。
 
 ブラウザで http://localhost:5173 を開き、曲のイメージを言葉で送ると、調・テンポ・進行の候補が返ります（既定の `LLM_PROVIDER=fake` では気分語で変わる見本）。答えが届くと最初の候補が開き、タイムラインが表示されます（別の候補は「この候補を開く」で切り替え、「キー」で調を変えられる）。「再生」で鳴らすと、鳴っているコードとノートがハイライトされ、解説パネルがコードの機能と終止を説明します。コードをクリックすると解説を固定できます。「MIDI を保存」で Standard MIDI File をダウンロードし、DAW に読み込めます。名前をつけて「保存」すると、保存した例としてブラウザ（IndexedDB）に残り、次に開いたときも一覧から開けます。
 

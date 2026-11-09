@@ -18,7 +18,6 @@
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
 | BL-127 | **拡大の動き方を見比べる（次の A/B）** 拡大の部分が再生位置に合わせてどう動くかを 2 案で試せるようにし、所有者が選ぶ。所有者は B に傾いているので既定を B にし、A は `?zoom=page` か `?lab` の「拡大の動き（試験）」で見比べられる（B は停止中、拡大の下のスライダーで動かす）。両方を残したまま、所有者が決める。A: 今の小節スイッチ（4 小節ずつ切り替わる）。B: 再生位置を中央に保って自動で追随する（手で動かすための横スクロールバーが要るかを含めて検討する） | `?lab` で 2 案を切り替えられ、URL で共有できる。B は再生中に再生位置が拡大の中央に留まり、停止中は手で動かせる。所有者が 1 案を選んだら、選ばなかった案を消す。E2E が通る | M | BL-080 | In progress |
-| BL-146 | **nginx のイメージと compose の 2 サービス** (#206 の A-2) | ルートの `Dockerfile` に `web`・`api` のターゲット。`deploy/nginx/` のテンプレートが ADR-0022 の規則・キャッシュ・gzip・`proxy_read_timeout 180s`・`client_max_body_size 4m`・`/healthz` を持つ。`compose.yaml` は `web`（公開）と `api`（`PORT=8081`、`expose` だけ）。CI の image のジョブが compose で起動して `scripts/smoke.sh` を通す | M | BL-142, BL-143, BL-145 | Ready |
 | BL-147 | **E2E を compose で** (#206 の A-3) | `e2e.yml` が compose で起動して Playwright を当て、ログを残す。今のシナリオが nginx 越しに通る | S | BL-146 | Ready |
 | BL-148 | **Go から静的配信と embed を外す** (#206 の A-5、所有者の判断) | Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ。手元の E2E は `make up` に当てる。文書と ADR-0022 の状態を直す | M | BL-147 | Ready |
 | BL-138 | **業界標準の索引: 和声・分析、音高・調律** (#213) 並行 | 同上。middy の記法と食い違う慣習は「middy との違い」として書く（直すかは別の Issue） | M | BL-136 | Ready |
@@ -76,6 +75,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-146 | nginx のイメージと compose の 2 サービス（`Dockerfile` の `web`・`api` ターゲット、`deploy/nginx/templates/` に ADR-0022 の規則・キャッシュ・gzip・`/healthz`・`/api` の待ち 180 s と本文 4 MiB。compose は `web` を公開し `api` は 8081 で閉じる。CI の image のジョブが compose で起動してスモークする。#206 の A-2） | 2026-11-09 |
 | BL-145 | ADR-0027: フロントは nginx のコンテナ、API は Go のコンテナ、同一オリジンの 1 つのサービス（ADR-0008 の決定 1・3 と ADR-0022 を置き換え。#206 の A-1） | 2026-11-09 |
 | BL-144 | `/ideas` の上流のエラーをログに残す（502 のとき `WARN` で原因のエラーを 1 行。応答はコードだけ。Anthropic のアダプタのエラー文に鍵が入らないことをテスト。#206 の S-3） | 2026-11-09 |
 | BL-143 | Vite のプロキシ先を `API_UPSTREAM` で受ける（既定 `http://localhost:8080`。nginx の前段と同じ変数名で、API を別のポートに置いても開発ループが動く。#206 の S-2） | 2026-11-09 |

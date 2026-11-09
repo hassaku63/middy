@@ -160,31 +160,40 @@ jobs:
         run: |
           echo "go=$(awk '$1 == "golang" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
           echo "node=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
-      - name: Build
+      # The two images of ADR-0027, run together by compose as `make up` does.
+      - name: Build the api image
         uses: docker/build-push-action@v7
         with:
           context: .
+          target: api
           load: true
-          tags: middy:ci
+          tags: middy-api:ci
           build-args: |
             VERSION=${{ github.sha }}
             GO_VERSION=${{ steps.tv.outputs.go }}
             NODE_VERSION=${{ steps.tv.outputs.node }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Smoke test the container
+      - name: Build the web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: web
+          load: true
+          tags: middy-web:ci
+          build-args: |
+            NODE_VERSION=${{ steps.tv.outputs.node }}
+          cache-from: type=gha
+      - name: Smoke test the stack
+        # --wait returns once both HEALTHCHECKs report healthy.
         run: |
-          docker run -d --name app -p 8080:8080 middy:ci
+          TAG=ci docker compose up -d --no-build --wait
           bash scripts/smoke.sh http://localhost:8080 "${{ github.sha }}"
-          for i in $(seq 1 30); do
-            status=$(docker inspect --format '{{.State.Health.Status}}' app)
-            [ "$status" = "healthy" ] && break
-            sleep 2
-          done
-          echo "health status: $status"
-          [ "$status" = "healthy" ]
-          docker logs app
-          docker rm -f app
+      - name: Stack logs
+        if: always()
+        run: |
+          TAG=ci docker compose logs
+          TAG=ci docker compose down
 
   pr-size:
     name: pr size budget

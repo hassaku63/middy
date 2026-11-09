@@ -1,0 +1,72 @@
+# The web container (ADR-0027): serves the built SPA and passes /api to the
+# Go container on the same origin. The nginx image renders this template
+# into conf.d at start, filling ${PORT} and ${API_UPSTREAM} (a URL such as
+# http://api:8081, the same name and form the Vite dev server reads) from
+# the environment (ADR-0011). The serving rules are ADR-0022's; scripts/smoke.sh
+# checks them against any running stack.
+
+server {
+    listen ${PORT};
+    server_tokens off;
+    root /usr/share/nginx/html;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript application/json application/manifest+json image/svg+xml;
+
+    # nginx's own liveness, for the container and a load balancer.
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # The API, unchanged. The read timeout outlives the Go server's
+    # WriteTimeout (150 s, backend/cmd/server/main.go), and the body limit
+    # admits the MIDI export's 4 MiB (backend/internal/httpapi/export.go).
+    location ~ ^/api(/|$) {
+        proxy_pass ${API_UPSTREAM};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 180s;
+        proxy_send_timeout 180s;
+        client_max_body_size 4m;
+    }
+
+    # Hashed build output: cached for a year. A missing one is a 404.
+    location ^~ /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    # The web app manifest, with its own type: not every mime.types has it.
+    location = /manifest.webmanifest {
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    # Any other path that names a file (it has an extension): served as it
+    # is and revalidated, or a 404, never index.html.
+    location ~ \.[A-Za-z0-9]+$ {
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    # Screen URLs: the app shell, revalidated so a deploy is picked up.
+    location / {
+        add_header Cache-Control "no-cache" always;
+        try_files $uri /index.html;
+    }
+
+    # A missing file answers with the API's error envelope, not cached.
+    error_page 404 = @not_found;
+    location @not_found {
+        default_type application/json;
+        add_header Cache-Control "no-cache" always;
+        return 404 '{"error":{"code":"not_found","message":"no such file"}}\n';
+    }
+}
