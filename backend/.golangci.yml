@@ -25,6 +25,7 @@ linters:
     - noctx
     - nolintlint
     - sloglint
+    - unparam
     - usestdlibvars
   exclusions:
     rules:

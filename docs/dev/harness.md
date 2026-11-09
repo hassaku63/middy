@@ -29,7 +29,7 @@
 | --- | --- | --- | --- |
 | gofmt / goimports / Prettier | 書式のばらつき | `make fmt-check` | `make check`, CI |
 | golangci-lint 標準セット + revive, gocritic, misspell | 典型的なバグと不統一 | `make backend-lint` | `make check`, CI `backend` |
-| `bodyclose`（テストを除く）、`contextcheck`、`copyloopvar`、`dupl`、`errname`、`intrange`、`nakedret`、`nilerr`、`noctx`、`nolintlint`、`sloglint`（グローバルの logger と `err` のキーを禁じる）、`usestdlibvars`（Go。ADR-0029。1 つずつ入れた） | HTTP の応答の本文の閉じ忘れ、context の取りこぼし、古いループ変数のコピー、重複コード、エラー型の命名、整数の range で書けるループ、裸の return、`nil` を返して握りつぶすエラー、context のない HTTP の要求、注入されない logger、理由のない `//nolint`、標準ライブラリの定数の手書き | `make backend-lint` | `make check`, CI `backend` |
+| `bodyclose`（テストを除く）、`contextcheck`、`copyloopvar`、`dupl`、`errname`、`intrange`、`nakedret`、`nilerr`、`noctx`、`nolintlint`、`sloglint`（グローバルの logger と `err` のキーを禁じる）、`unparam`、`usestdlibvars`（Go。ADR-0029。1 つずつ入れた） | HTTP の応答の本文の閉じ忘れ、context の取りこぼし、古いループ変数のコピー、重複コード、エラー型の命名、整数の range で書けるループ、裸の return、`nil` を返して握りつぶすエラー、context のない HTTP の要求、注入されない logger、いつも同じ値の引数や戻り値、理由のない `//nolint`、標準ライブラリの定数の手書き | `make backend-lint` | `make check`, CI `backend` |
 | `depguard`（Go） | 境界違反: `music` の I/O、`httpapi` からアダプタ直 import、`net/http` の漏れ | `make backend-lint` | `make check`, CI `backend` |
 | `funlen` 80 行 / `gocognit` 20 / `gocyclo` 15 | 肥大した関数（テストは除外） | `make backend-lint` | `make check`, CI `backend` |
 | ESLint 型つき推奨 + react-hooks | 典型的なバグ | `make frontend-lint` | `make check`, CI `frontend` |

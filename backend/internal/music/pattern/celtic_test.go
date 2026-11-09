@@ -100,7 +100,7 @@ func TestDroneHoldsTheTonicUnderChangingChords(t *testing.T) {
 	if !strings.Contains(got.Rhythm.Accompaniment.Description, "和音が動いても主音が鳴り続ける") {
 		t.Errorf("the description should say the tonic keeps sounding: %s", got.Rhythm.Accompaniment.Description)
 	}
-	if _, err := Apply(sixEightTimeline(t, 2, 1, 5), mustAcc(t, "drone"), nil); err != nil {
+	if _, err := Apply(sixEightTimeline(t, 1, 5), mustAcc(t, "drone"), nil); err != nil {
 		t.Errorf("the drone fits any meter: %v", err)
 	}
 }
