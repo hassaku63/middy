@@ -28,7 +28,7 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
   await expect(page.getByLabel('再生位置')).toHaveText(/^2\./, { timeout: 7_000 });
   await expect(result.locator('[role=option][aria-current=true]')).toHaveAttribute(
     'aria-label',
-    'VI (F)',
+    'VI F',
   );
   await expect(result.getByRole('heading', { level: 2 })).toContainText('VI');
   await page.getByRole('button', { name: '停止' }).click();
@@ -39,7 +39,7 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
     .getByRole('article', { name: '遠い記憶' })
     .getByRole('button', { name: 'この候補を開く' })
     .click();
-  await result.getByRole('option', { name: 'V7 (B7)' }).click();
+  await result.getByRole('option', { name: 'V7 B7' }).click();
   await expect(result.getByRole('heading', { level: 2 })).toContainText('V7');
   // Uppercase V in minor is the harmonic-minor dominant.
   await expect(result.locator('.explanation__text').first()).toContainText('和声的短音階');

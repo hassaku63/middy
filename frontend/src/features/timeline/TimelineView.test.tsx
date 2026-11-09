@@ -45,21 +45,21 @@ describe('TimelineView', () => {
   it('renders one chord block per harmony event with numeral and symbol', () => {
     render(<TimelineView timeline={timeline} positionTick={0} />);
     const chords = screen.getAllByRole('option');
-    expect(chords.map((c) => c.getAttribute('aria-label'))).toEqual(['I (C)', 'V (G)', 'vi (Am)']);
+    expect(chords.map((c) => c.getAttribute('aria-label'))).toEqual(['I C', 'V G', 'vi Am']);
   });
 
   it('highlights the chord and notes under the playhead', () => {
     const { container, rerender } = render(
       <TimelineView timeline={timeline} positionTick={2000} />,
     );
-    expect(screen.getByRole('option', { current: true })).toHaveAttribute('aria-label', 'V (G)');
+    expect(screen.getByRole('option', { current: true })).toHaveAttribute('aria-label', 'V G');
     const sounding = [...container.querySelectorAll('[data-sounding="true"]')].map((n) =>
-      n.getAttribute('aria-label'),
+      n.getAttribute('data-pitch'),
     );
     expect(sounding).toEqual(['G4', 'B4', 'D5']);
 
     rerender(<TimelineView timeline={timeline} positionTick={4000} />);
-    expect(screen.getByRole('option', { current: true })).toHaveAttribute('aria-label', 'vi (Am)');
+    expect(screen.getByRole('option', { current: true })).toHaveAttribute('aria-label', 'vi Am');
   });
 
   it('moves the playhead one bar width per bar', () => {
@@ -81,8 +81,8 @@ describe('TimelineView', () => {
         onSelectHarmony={onSelect}
       />,
     );
-    expect(screen.getByRole('option', { selected: true })).toHaveAttribute('aria-label', 'vi (Am)');
-    await user.click(screen.getByRole('option', { name: 'V (G)' }));
+    expect(screen.getByRole('option', { selected: true })).toHaveAttribute('aria-label', 'vi Am');
+    await user.click(screen.getByRole('option', { name: 'V G' }));
     expect(onSelect).toHaveBeenCalledWith(1);
   });
 
@@ -151,7 +151,7 @@ describe('TimelineView', () => {
   it('renders an empty timeline as a single empty bar', () => {
     const empty: Timeline = { ...timeline, tracks: [], harmony: [] };
     render(<TimelineView timeline={empty} positionTick={0} />);
-    expect(screen.getByRole('img', { name: 'タイムライン' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'タイムライン' })).toBeInTheDocument();
     expect(screen.queryAllByRole('option')).toHaveLength(0);
   });
 });

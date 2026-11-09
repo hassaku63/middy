@@ -16,27 +16,29 @@
   padding: 4px 2px;
   border-radius: 6px;
   border: 2px solid transparent;
-  background: #374151;
-  opacity: 0.55;
+  /* A chord the example does not use is paler: its colour is mixed with the
+     page, while its text stays at full strength (WCAG 1.4.3, BL-162). */
+  --function: #374151;
+  background: color-mix(in srgb, var(--function) 55%, transparent);
   font-size: 0.8rem;
 }
 
 .degree-map__chord.is-T {
-  background: #065f46;
+  --function: #065f46;
 }
 .degree-map__chord.is-S {
-  background: #1d4ed8;
+  --function: #1d4ed8;
 }
 .degree-map__chord.is-D {
-  background: #b45309;
+  --function: #b45309;
 }
 
-.degree-map__chord.is-used {
-  opacity: 1;
+.degree-map__chord.is-used,
+.degree-map__chord.is-current {
+  background: var(--function);
 }
 
 .degree-map__chord.is-current {
-  opacity: 1;
   border-color: #f9fafb;
 }
 
@@ -52,7 +54,12 @@
 }
 
 @media (prefers-color-scheme: light) {
+  /* On the light page a pale cell needs dark text; a full-colour one light. */
   .degree-map__chord {
+    color: #111827;
+  }
+  .degree-map__chord.is-used,
+  .degree-map__chord.is-current {
     color: #f9fafb;
   }
   .degree-map__chord.is-current {

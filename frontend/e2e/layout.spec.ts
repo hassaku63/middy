@@ -28,7 +28,7 @@ test.describe('at 1280×800', () => {
     await page.goto('/');
     const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
     await page.getByRole('button', { name: '再生' }).click();
-    const timeline = result.getByRole('img', { name: 'タイムライン' });
+    const timeline = result.getByRole('group', { name: 'タイムライン' });
     await timeline.scrollIntoViewIfNeeded();
     await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
     await inViewport(page, timeline);
@@ -46,9 +46,9 @@ test.describe('at phone width', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       390,
     );
-    const box = await result.getByRole('img', { name: 'タイムライン' }).boundingBox();
+    const box = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
     const [w, h] = await result
-      .getByRole('img', { name: 'タイムライン' })
+      .getByRole('group', { name: 'タイムライン' })
       .evaluate((el) => [Number(el.getAttribute('width')), Number(el.getAttribute('height'))]);
     expect(box).not.toBeNull();
     // Scaled down to fit, the drawing keeps its aspect ratio instead of a tall empty box.

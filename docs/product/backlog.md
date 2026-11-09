@@ -71,6 +71,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-162 | E2E に axe-core のアクセシビリティの検査（主な画面を明るい・暗いテーマで。見つかった違反を直した: タイムラインの `svg` を `group` に、ピアノロールを支援技術から隠し、コードの選択肢の名前を見えている文字に合わせ、補足の文字と度数の地図のコントラストを上げた。#248） | 2026-11-09 |
 | BL-139 | 業界標準の索引の音源・音声、ブラウザの音と PWA、同期・連携（SoundFont 2、DLS、SFZ、WAV と BWF、BS.1770 と R 128、Web Audio API、Media Session API、Web App Manifest、Service Workers、MIDI Clock と MTC、OSC、Ableton Link。一次情報で確かめた。SoundFont 2 は一次情報に届かず未確認。#213） | 2026-11-09 |
 | BL-154 | shellcheck、actionlint、hadolint を入れる（スクリプトの `cd` の失敗、引用符、間接展開を直し、Dockerfile のヘルスチェックを JSON の形に、`api` の `USER` を数字の UID にした。hadolint は CI だけ。#226） | 2026-11-09 |
 | BL-138 | 業界標準の索引の和声・分析と音高・調律（MusicXML の `<harmony>`、Harte の和音表記、JAMS、RomanText、DCML、MIREX、ISO 16、科学的音高表記、Scala `.scl`。一次情報で確かめ、middy との違いを書いた。MIREX・ISO 16・科学的音高表記は一次情報に届かず未確認。#213） | 2026-11-09 |

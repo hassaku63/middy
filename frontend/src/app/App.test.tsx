@@ -91,7 +91,7 @@ async function sendImage(user: ReturnType<typeof userEvent.setup>, text = '雨�
   return { card, result: await screen.findByRole('region', { name: '結果' }) };
 }
 
-describe('App (docs/product/experience.md)', () => {
+describe('App docs/product/experience.md', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('offers the image as the only entry', async () => {
@@ -118,13 +118,13 @@ describe('App (docs/product/experience.md)', () => {
       within(within(result).getByRole('listbox', { name: 'コード' }))
         .getAllByRole('option')
         .map((o) => o.getAttribute('aria-label')),
-    ).toEqual(['I (C)', 'V (G)']);
+    ).toEqual(['I C', 'V G']);
     expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: '開いています' })).toBeInTheDocument();
     // Playhead at 0: the explanation follows the first chord.
     expect(within(result).getByRole('heading')).toHaveTextContent('IC');
 
-    await user.click(within(result).getByRole('option', { name: 'V (G)' }));
+    await user.click(within(result).getByRole('option', { name: 'V G' }));
     expect(within(result).getByRole('heading')).toHaveTextContent('VG');
     expect(within(result).getByText('半終止')).toBeInTheDocument();
 
@@ -232,7 +232,7 @@ describe('App (docs/product/experience.md)', () => {
         within(chords)
           .getAllByRole('option')
           .map((o) => o.getAttribute('aria-label')),
-      ).toEqual(['I (D)', 'V (A)']),
+      ).toEqual(['I D', 'V A']),
     );
     const call = fetchMock.mock.calls.find(([u]) => u.endsWith('/timelines/from-progression'));
     expect(JSON.parse(call?.[1]?.body as string)).toMatchObject({

@@ -12,7 +12,7 @@ async function send(page: Page, image: string, path = '/') {
   await page.getByLabel('イメージ', { exact: true }).fill(image);
   await page.getByRole('button', { name: '送る' }).click();
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result.getByRole('img', { name: 'タイムライン' }).first()).toBeVisible();
+  await expect(result.getByRole('group', { name: 'タイムライン' }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
   return result;
 }
@@ -35,7 +35,7 @@ test('a long timeline shows the whole piece and a four-bar detail that follows a
 test('a short timeline is drawn once, whole', async ({ page }) => {
   const result = await send(page, '雨の日曜');
   await expect(result.locator('svg.timeline--overview')).toHaveCount(0);
-  await expect(result.getByRole('img', { name: 'タイムライン' })).toHaveCount(1);
+  await expect(result.getByRole('group', { name: 'タイムライン' })).toHaveCount(1);
 });
 
 test('BL-127 trial: the detail follows by default (B); ?lab switches to pages (A), kept in the URL', async ({
