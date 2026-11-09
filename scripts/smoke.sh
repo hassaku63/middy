@@ -84,7 +84,8 @@ check "a screen URL is HTML" header screen content-type text/html
 
 fetch api404 /api/v1/nope
 check "an unknown API path is 404" status api404 404
-check "an unknown API path is JSON" header api404 content-type application/json
+check "an unknown API path is a problem detail" header api404 content-type application/problem+json
+check "an unknown API path says not_found" body api404 '"code":"not_found"'
 
 head -c 70000 /dev/zero | tr '\0' 'a' >"$tmp/big.json"
 fetch big /api/v1/ideas -X POST -H 'Content-Type: application/json' --data-binary "@$tmp/big.json"

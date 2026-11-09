@@ -83,12 +83,12 @@ func TestIdeasErrors(t *testing.T) {
 				body, _ := io.ReadAll(resp.Body)
 				t.Fatalf("status = %d, want %d: %s", resp.StatusCode, tt.wantStatus, body)
 			}
-			var e errorResponse
+			var e problem
 			if err := json.NewDecoder(resp.Body).Decode(&e); err != nil {
 				t.Fatal(err)
 			}
-			if e.Error.Code != tt.wantCode || strings.TrimSpace(e.Error.Message) == "" {
-				t.Fatalf("error = %+v, want code %q", e.Error, tt.wantCode)
+			if e.Code != tt.wantCode || strings.TrimSpace(e.Detail) == "" {
+				t.Fatalf("error = %+v, want code %q", e, tt.wantCode)
 			}
 		})
 	}

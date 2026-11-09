@@ -26,7 +26,7 @@ backlog から 1 項目 → 受け入れ条件を確認 → テストを書く �
 | --- | --- | --- |
 | `internal/music` | テーブル駆動の単体テスト。既知の理論的事実をデータとして列挙 | C major の I〜vii° が `C, Dm, Em, F, G, Am, Bdim` |
 | ユースケース | fake LLM の台本 + 入出力の検証 | 「雨の日曜」→ minor の候補が含まれる |
-| `httpapi` | `httptest` で JSON の形とステータスを検証 | 400 時のエラーエンベロープ |
+| `httpapi` | `httptest` で JSON の形とステータスを検証 | 400 時の problem detail |
 | フロント（ロジック） | Vitest。hook/純粋関数は DOM なしで | tick → 小節・拍の変換 |
 | フロント（UI） | Testing Library。role/text で検証、スナップショット禁止 | 再生ボタンを押すと status が更新される |
 

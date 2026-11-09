@@ -94,7 +94,7 @@ func fromProgression(w http.ResponseWriter, r *http.Request, logger *slog.Logger
 		writeError(w, http.StatusInternalServerError, "internal_error", "the timeline could not be analysed")
 		return
 	}
-	writeJSON(w, http.StatusOK, timelineResponse{Timeline: tl})
+	writeJSON(w, timelineResponse{Timeline: tl})
 }
 
 // patternsResponse is the catalogue for GET /patterns.
@@ -106,7 +106,7 @@ type patternsResponse struct {
 }
 
 func handlePatterns(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, patternsResponse{
+	writeJSON(w, patternsResponse{
 		Accompaniments: pattern.Accompaniments(),
 		Drums:          pattern.DrumPatterns(),
 		Feels:          pattern.Feels(),
