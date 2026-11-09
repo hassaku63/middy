@@ -165,8 +165,8 @@ func (c Candidate) validateProgression() []error {
 		errs = append(errs, fmt.Errorf("progression must have 1..%d chords, got %d", MaxChords, len(c.Progression)))
 	}
 	for i, label := range c.Progression {
-		// A label that names a chord the key would silently change (IV in
-		// minor, I7 in major) is an error the model can act on, not
+		// A label that names a chord the key would silently change (II in
+		// minor, Vmaj7 in major) is an error the model can act on, not
 		// something to fix quietly (ADR-0013).
 		if _, err := music.CanonicalLabel(c.Key, label); err != nil {
 			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s%s%s", i, err, c.suggestLabel(label), c.dominantHint(label), c.substituteHint(label), c.diminishedHint(label)))

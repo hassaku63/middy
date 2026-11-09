@@ -78,7 +78,7 @@ func TestFromProgressionErrors(t *testing.T) {
 		{"zero beats", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I","beats":0}]}`, "invalid_request", "beats must be >= 1"},
 		{"push on the first chord", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I","push":"eighth"}]}`, "invalid_request", "nothing to push into"},
 		{"unsupported meter", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"timeSignature":{"numerator":0,"denominator":4},"progression":[{"numeral":"I"}]}`, "invalid_request", "meter 0/4 is not supported"},
-		{"a label the key would change", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"I7"}]}`, "invalid_request", "I7"},
+		{"a label the key would change", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":90,"progression":[{"numeral":"Vmaj7"}]}`, "invalid_request", "Vmaj7"},
 		{"zero tempo", `{"key":{"tonic":0,"mode":"major"},"tempoBpm":0,"progression":[{"numeral":"I"}]}`, "invalid_request", "tempoBpm"},
 	}
 	for _, tt := range tests {

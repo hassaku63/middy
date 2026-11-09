@@ -170,7 +170,8 @@ func TestCanonicalLabelRejectsWhatTheKeyWouldSilentlyChange(t *testing.T) {
 		{dMajor, "vii°", "vii°", ""},
 		{dMajor, "vii", "vii°", ""}, // lowercase alone is close enough for a diminished degree
 		{dMajor, "v", "", `"v" would sound as A (V) in D major`},
-		{bbMajor, "I7", "", `"I7" would sound as Bbmaj7 (Imaj7) in Bb major`}, // the blues I7
+		{bbMajor, "I7", "I7", ""}, // the blues dominant (BL-135)
+		{bbMajor, "Vmaj7", "", `"Vmaj7" would sound as F7 (V7) in Bb major`},
 		{bbMajor, "Imaj7", "Imaj7", ""},
 		{bbMajor, "ii7", "ii7", ""},
 		{bbMajor, "bVII", "♭VII", ""}, // borrowed from Bb minor (BL-094)
