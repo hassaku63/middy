@@ -43,7 +43,7 @@ func sampleIntent(req llm.Request) string {
 					"accompaniment": "reel", "drums": "bodhran"},
 				{"title": "港町のジグ", "style": "celtic", "key": map[string]any{"tonic": 7, "mode": "mixolydian"}, "tempoBpm": 120,
 					"progression": []string{"I", "VII", "IV", "I"}, "beatsPerChord": 4,
-					"reason": "G ミクソリディアンの I–VII–IV–I。導音のない VII（F）がそのまま I へ戻る、モーダルな終止です。"},
+					"reason": "G ミクソリディアンの I–VII–IV–I。導音のない VII（F）から IV を経て I へ戻る、ミクソリディアンらしい明るい循環です。"},
 			},
 		}
 	case minor:
