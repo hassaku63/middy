@@ -19,6 +19,12 @@
 | --- | --- | --- | --- | --- | --- |
 | BL-127 | **拡大の動き方を見比べる（次の A/B）** 拡大の部分が再生位置に合わせてどう動くかを 2 案で試せるようにし、所有者が選ぶ。所有者は B に傾いているので既定を B にし、A は `?zoom=page` か `?lab` の「拡大の動き（試験）」で見比べられる（B は停止中、拡大の下のスライダーで動かす）。両方を残したまま、所有者が決める。A: 今の小節スイッチ（4 小節ずつ切り替わる）。B: 再生位置を中央に保って自動で追随する（手で動かすための横スクロールバーが要るかを含めて検討する） | `?lab` で 2 案を切り替えられ、URL で共有できる。B は再生中に再生位置が拡大の中央に留まり、停止中は手で動かせる。所有者が 1 案を選んだら、選ばなかった案を消す。E2E が通る | M | BL-080 | In progress |
 | BL-147 | **E2E を compose で** (#206 の A-3) | `e2e.yml` が compose で起動して Playwright を当て、ログを残す。今のシナリオが nginx 越しに通る | S | BL-146 | Ready |
+| BL-150 | **lint: 指摘 0 件の Go の linter をまとめて有効にする** (#226、ADR-0029) `contextcheck`、`usestdlibvars`、`nilerr`、`errname`、`copyloopvar`、`nakedret`、`nolintlint`、`dupl` | `make check` が通る。`harness.md` に行がある | S | — | Ready |
+| BL-151 | **lint: Go の linter を 1 つずつ** (#226) `intrange`、`bodyclose`、`noctx`、`sloglint`（`no-global: default`、`forbidden-keys: [err]`）、`unparam`、`forcetypeassert`、`gosec`、`perfsprint`、`exhaustive`、revive のエラーの規則（今は `exported` しか動いていない）。1 つ = 1 PR。`errorlint` は入れない（原因を意図して `%v` で切る規約と衝突する。#228） | 各 PR でその linter の指摘を全部直すか、理由つきで除外する。`harness.md` に行を足す | M | BL-150 | Ready |
+| BL-152 | **lint: typescript-eslint の `strictTypeChecked`、次に `stylisticTypeChecked`** (#226) 1 つ = 1 PR | 同上 | M | — | Ready |
+| BL-153 | **lint: 依存の増える ESLint のプラグイン** (#226) React 本体、jsx-a11y、Testing Library、Vitest。1 つ = 1 PR | 同上。PR に ADR-0029 の決定 3 の根拠を書き、満たさないものは入れない | M | BL-152 | Ready |
+| BL-154 | **lint: shellcheck、actionlint、hadolint** (#226) 1 つ = 1 PR | 同上 | S | — | Ready |
+| BL-155 | **道具の陳腐化の定期の報告と、AI による検討** (#226) | 四半期の定期のジョブが報告の Issue を開く。そのあとに Claude の定期のタスクを作る（所有者の判断済み） | S | — | Ready |
 | BL-148 | **Go から静的配信と embed を外す** (#206 の A-5、所有者の判断) | Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ。手元の E2E は `make up` に当てる。文書と ADR-0022 の状態を直す | M | BL-147 | Ready |
 | BL-138 | **業界標準の索引: 和声・分析、音高・調律** (#213) 並行 | 同上。middy の記法と食い違う慣習は「middy との違い」として書く（直すかは別の Issue） | M | BL-136 | Ready |
 | BL-139 | **業界標準の索引: 音源・音声、ブラウザ、同期** (#213) 並行 | 同上 | M | BL-136 | Ready |
