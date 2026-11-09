@@ -29,6 +29,7 @@
 | [0023](0023-tritone-substitutes.md) | 裏コードは `subV7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
 | [0024](0024-leading-tone-diminished.md) | 導音の減七は `vii°7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
 | [0025](0025-open-chords.md) | sus4・7sus4・パワーコードは「3 度のない和音」として足し、ブルースの属七は分ける | Accepted |
+| [0026](0026-blues-dominants.md) | 長調の I7・IV7 は、ブルースの属七として受け付ける | Accepted |
 
 ## いつ ADR を書くか
 

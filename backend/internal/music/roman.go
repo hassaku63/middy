@@ -73,12 +73,26 @@ func chordStep(key Key, label string, beats int) (Step, error) {
 		step.Quality = &q
 		return step, nil
 	}
+	if bluesDominant(key, degree, upper, suffix, accidental) {
+		q := Dominant7
+		step.Quality = &q
+		return step, nil
+	}
 	if accidental == 0 {
 		if dia, err := key.Diatonic(degree, seventh); err == nil && dia.Quality.isUpper() == upper && suffixAllows(suffix, seventh, dia.Quality) {
 			return step, nil // plainly diatonic
 		}
 	}
 	return outsideStep(key, label, step, seventh, upper, suffix, accidental)
+}
+
+// bluesDominant reports I7 or IV7 in a major key (BL-135, ADR-0026): the
+// blues writes the dominant seventh on the tonic and the subdominant, and
+// lead sheets read "I7" literally as that chord (LiteralChord), so the
+// label is not refused as "would sound as Imaj7". The chords keep their
+// functions; V7/IV is the same sound written as a secondary dominant.
+func bluesDominant(key Key, degree int, upper bool, suffix string, accidental int) bool {
+	return key.Mode == Major && accidental == 0 && upper && suffix == "7" && (degree == 1 || degree == 4)
 }
 
 // outsideStep handles a label that is not plainly the key's own chord: a
@@ -194,8 +208,8 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 
 // CanonicalLabel checks a label against the key and returns the engine's own
 // spelling of the chord it names. The written case and seventh type carry
-// meaning (an uppercase IV in minor asks for the dorian major chord; I7
-// asks for a dominant seventh), so when they disagree with the chord the
+// meaning (an uppercase II in minor asks for a major chord; Vmaj7 asks
+// for a major seventh), so when they disagree with the chord the
 // key gives that degree, the label is rejected with what it would have
 // sounded like, instead of being changed in silence (ADR-0013).
 func CanonicalLabel(key Key, label string) (string, error) {

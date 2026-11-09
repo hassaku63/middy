@@ -100,7 +100,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Function:    fn,
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
-			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -119,11 +119,16 @@ type placed struct {
 	sub      bool // that dominant is a tritone substitute (subV7/x)
 	lead     bool // the applied chord is a leading-tone diminished seventh (vii°7/x)
 	leading  bool // a V that carries the leading tone (major triad or dominant seventh)
+	blues    bool // I7 or IV7 in a major key, written so (BL-135)
 }
 
 func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 	out := make([]placed, len(hs))
 	for i, h := range hs {
+		if d, ok := bluesDegree(k, h); ok { // before placeApplied: C7 in C is V7/IV only when written so
+			out[i] = placed{degree: d, blues: true}
+			continue
+		}
 		if p, ok := placeApplied(k, h); ok {
 			out[i] = p
 			continue
@@ -169,6 +174,38 @@ func placeApplied(k Key, h HarmonyEvent) (placed, bool) {
 		return at(target, true, false), true
 	}
 	return placed{}, false
+}
+
+// bluesDegree places a dominant seventh written I7 or IV7 in a major key:
+// the blues dominant, which keeps its function (BL-135, ADR-0026). The
+// same chord written V7/IV, or unlabelled, is left to placeApplied.
+func bluesDegree(k Key, h HarmonyEvent) (int, bool) {
+	if h.Chord.Quality != Dominant7 {
+		return 0, false
+	}
+	chordLabel, _, _ := splitBass(h.RomanNumeral)
+	degree, _, upper, suffix, accidental, err := parseLabel(chordLabel)
+	if err != nil || !bluesDominant(k, degree, upper, suffix, accidental) {
+		return 0, false
+	}
+	if d, ok := degreeOf(k, h.Chord.Root); ok && d == degree {
+		return d, true
+	}
+	return 0, false
+}
+
+// bluesText explains a blues dominant: the seventh it adds and that it
+// does not resolve. On IV that seventh is the key's flat third, the blue
+// note.
+func bluesText(k Key, p placed) string {
+	if !p.blues {
+		return ""
+	}
+	if p.degree == 4 {
+		seventh := k.spellDegree(3, -1) // the seventh of IV is the key's lowered third
+		return fmt.Sprintf(" ブルースの属七。IV に %s を重ねた属七で、%s は調の ♭3（ブルー・ノート）にあたる。どこかへ解決する和音ではなく、サブドミナントのまま鳴る。", seventh, seventh)
+	}
+	return fmt.Sprintf(" ブルースの属七。主和音に %s（♭7）を重ねた属七で、解決を求めずトニックのまま鳴る。V7/IV と同じ音だが、IV へ向かう働きではない。", k.spellDegree(7, -1))
 }
 
 // hasLeadingTone reports a V that carries the leading tone, the major
