@@ -24,7 +24,6 @@
 | BL-146 | **nginx のイメージと compose の 2 サービス** (#206 の A-2) | ルートの `Dockerfile` に `web`・`api` のターゲット。`deploy/nginx/` のテンプレートが ADR-0022 の規則・キャッシュ・gzip・`proxy_read_timeout 180s`・`client_max_body_size 4m`・`/healthz` を持つ。`compose.yaml` は `web`（公開）と `api`（`PORT=8081`、`expose` だけ）。CI の image のジョブが compose で起動して `scripts/smoke.sh` を通す | M | BL-142, BL-143, BL-145 | Ready |
 | BL-147 | **E2E を compose で** (#206 の A-3) | `e2e.yml` が compose で起動して Playwright を当て、ログを残す。今のシナリオが nginx 越しに通る | S | BL-146 | Ready |
 | BL-148 | **Go から静的配信と embed を外す** (#206 の A-5、所有者の判断) | Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ。手元の E2E は `make up` に当てる。文書と ADR-0022 の状態を直す | M | BL-147 | Ready |
-| BL-137 | **業界標準の索引: 演奏データと譜面** (#213) 並行 | #213 の種まきの 2 分野を埋める。各項目の一次情報を開いて確かめ、確認日を入れる | M | BL-136 | Ready |
 | BL-138 | **業界標準の索引: 和声・分析、音高・調律** (#213) 並行 | 同上。middy の記法と食い違う慣習は「middy との違い」として書く（直すかは別の Issue） | M | BL-136 | Ready |
 | BL-139 | **業界標準の索引: 音源・音声、ブラウザ、同期** (#213) 並行 | 同上 | M | BL-136 | Ready |
 | BL-140 | **業界標準の索引: Web・API・安全、アクセシビリティ・国際化** (#213) 並行 | 同上 | S | BL-136 | Ready |
@@ -81,6 +80,7 @@
 | ID | スライス | 完了日 |
 | --- | --- | --- |
 | BL-142 | スモークを 1 か所に（`scripts/smoke.sh <base-url> [version]` と `make smoke`。CI の image のジョブと E2E の起動の確認が同じスクリプトを呼ぶ。期待値は今日の振る舞い。#206 の S-1） | 2026-11-09 |
+| BL-137 | 業界標準の索引の演奏データと譜面（MIDI 1.0、MIDI 2.0、MPE、MIDI Tuning、Web MIDI API、MNX、MEI、ABC、LilyPond、Humdrum、ChordPro、iReal Pro。一次情報で確かめた。MNX は一次情報のホストに届かず未確認。#213） | 2026-11-09 |
 | BL-136 | 業界標準の索引の器と形（`.claude/skills/standards/` にスキルと索引。項目の形と書かないもの。SMF・General MIDI・MusicXML の 3 項目を一次情報で確かめて入れる。`AGENTS.md` に案内。#213） | 2026-11-09 |
 | BL-133 | sus4・5 度・ブルースの属七を AI と評価に（プロンプトとスキーマに 1 文ずつ足す。評価の照合 `LiteralChord` が sus4・7sus4・5 を読む。departure-morning と rock-anthem の `wants` に sus4 とパワーコード。#165 の D1） | 2026-11-09 |
 | BL-135 | ブルースの属七（長調の `I7`・`IV7` を属七として受け付け、機能は根音の度数のまま。解説は足した 7 度を名指しし、`IV7` の 7 度がブルー・ノートと述べる。`V7/IV` と書けば今までどおりセカンダリードミナント。ADR-0026。#165 の D1） | 2026-11-09 |
