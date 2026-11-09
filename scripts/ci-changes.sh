@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Decides which CI jobs a pull request needs (ADR-0016), from the files it
-# changes against <base-ref>. Prints `<job>=true|false` lines for
-# $GITHUB_OUTPUT. This file is the one place that knows which paths feed
+# Decides which CI jobs a change needs (ADR-0016, ADR-0032), from the files
+# changed between <base-ref> and <head-ref>: a pull request against its base
+# branch, a push to main against the previous head. Prints
+# `<job>=true|false` lines for $GITHUB_OUTPUT. This file is the one place
+# that knows which paths feed
 # which job; when a job starts reading a new path, add it here.
 #
 # Usage: scripts/ci-changes.sh <base-ref> [head-ref]

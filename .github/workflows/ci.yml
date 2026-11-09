@@ -5,16 +5,21 @@ on:
     branches: [main]
   pull_request:
 
+# A newer push to a pull request cancels its run. Every push to main runs to
+# the end in a group of its own: it checks only what that push changed
+# (ADR-0032), so a cancelled or replaced run would leave a change unchecked.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
-  # Which jobs this change needs (ADR-0016). Pull requests run only the jobs
-  # whose inputs changed (scripts/ci-changes.sh); pushes to main run all.
+  # Which jobs this change needs (ADR-0016, ADR-0032). Pull requests and
+  # pushes to main run only the jobs whose inputs changed
+  # (scripts/ci-changes.sh): against the base branch for a pull request,
+  # against the previous head of main for a push.
   # Only the `required` job at the end is a required check (ADR-0028): it
   # treats a skipped job as passed, so a change that skips a job is not
   # blocked by it.
@@ -31,10 +36,17 @@ jobs:
         with:
           fetch-depth: 0
       - id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            bash scripts/ci-changes.sh "origin/${{ github.base_ref }}" | tee -a "$GITHUB_OUTPUT"
+          if [ "$EVENT" = "pull_request" ]; then
+            bash scripts/ci-changes.sh "origin/$BASE_REF" | tee -a "$GITHUB_OUTPUT"
+          elif [ "$EVENT" = "push" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            bash scripts/ci-changes.sh "$BEFORE" | tee -a "$GITHUB_OUTPUT"
           else
+            # No previous head to compare with: check everything.
             printf 'backend=true\nfrontend=true\nimage=true\n' | tee -a "$GITHUB_OUTPUT"
           fi
 

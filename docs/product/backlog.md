@@ -70,6 +70,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-167 | `main` への push でも `ci-changes.sh` でジョブを選び（push の前の先頭と比べる）、`main` の実行は取り消さない（#266 の A、ADR-0032） | 2026-11-09 |
 | BL-166 | CodeQL を advanced setup（`codeql.yml`）に移し、`docs/**` と `**/*.md` だけの変更では走らせない。週 1 回は全体を解析（#266 の C、ADR-0031） | 2026-11-09 |
 | BL-165 | アプリのファイルと画面の URL で nginx が答える 404・405・413 は短い `text/plain` に（ヘッダーは今のまま）。problem detail は `/api` の応答だけ（API の 413・503 を含む）。ADR-0033 | 2026-11-09 |
 | BL-164 | nginx が答える 404・405・413・503 も problem detail に（405 は `Allow` も返す）。フロントは problem detail だけを読む（ADR-0030） | 2026-11-09 |
