@@ -33,17 +33,21 @@ export function useRegroove(): Regroove {
       setError(`${style.name}はこの拍子の型を持っていません`);
       return null;
     }
+    // Only the API call is in the try: a fault in our own request building
+    // or note is a bug, not a failed style change (conventions.md).
+    const request = regrooveRequest(timeline, style.id, groove);
     setBusy(true);
+    let next: Timeline;
     try {
-      const next = await createTimelineFromProgression(regrooveRequest(timeline, style.id, groove));
-      setNote(grooveChanges(style.name, timeline.rhythm, next.rhythm));
-      return next;
+      next = await createTimelineFromProgression(request);
     } catch {
       setError('スタイルを替えられませんでした');
       return null;
     } finally {
       setBusy(false);
     }
+    setNote(grooveChanges(style.name, timeline.rhythm, next.rhythm));
+    return next;
   }, []);
 
   const clear = useCallback(() => {

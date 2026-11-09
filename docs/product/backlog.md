@@ -18,7 +18,6 @@
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
 | BL-127 | **拡大の動き方を見比べる（次の A/B）** 拡大の部分が再生位置に合わせてどう動くかを 2 案で試せるようにし、所有者が選ぶ。所有者は B に傾いているので既定を B にし、A は `?zoom=page` か `?lab` の「拡大の動き（試験）」で見比べられる（B は停止中、拡大の下のスライダーで動かす）。両方を残したまま、所有者が決める。A: 今の小節スイッチ（4 小節ずつ切り替わる）。B: 再生位置を中央に保って自動で追随する（手で動かすための横スクロールバーが要るかを含めて検討する） | `?lab` で 2 案を切り替えられ、URL で共有できる。B は再生中に再生位置が拡大の中央に留まり、停止中は手で動かせる。所有者が 1 案を選んだら、選ばなかった案を消す。E2E が通る | M | BL-080 | In progress |
-| BL-157 | **hook の `try` を失敗しうる呼び出しだけに狭める** (#228) `useRegroove.ts` と `useKeyChange.ts` | 自分の純粋関数が投げた例外は「〜できませんでした」に変わらず、テストで見える。API の失敗は今までどおり画面の状態になる | S | — | Ready |
 | BL-152 | **lint: typescript-eslint の `strictTypeChecked`、次に `stylisticTypeChecked`** (#226) 1 つ = 1 PR | 同上 | M | — | Ready |
 | BL-153 | **lint: 依存の増える ESLint のプラグイン** (#226) React 本体、jsx-a11y、Testing Library、Vitest。1 つ = 1 PR | 同上。PR に ADR-0029 の決定 3 の根拠を書き、満たさないものは入れない | M | BL-152 | Ready |
 | BL-154 | **lint: shellcheck、actionlint、hadolint** (#226) 1 つ = 1 PR | 同上 | S | — | Ready |
@@ -79,6 +78,7 @@
 | --- | --- | --- |
 | BL-148 | Go から静的配信と embed を外す（Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ、手元の E2E とスモークは `make up` に当てる。#206 の A-5） | 2026-11-09 |
 | BL-147 | E2E を compose で（`e2e.yml` が `web`・`api` のイメージを作り、compose で起動してスモークのあと Playwright を nginx 越しに当て、compose のログを残す。#206 の A-3） | 2026-11-09 |
+| BL-157 | hook の `try` を失敗しうる呼び出しだけに狭める（`useKeyChange.ts`・`useRegroove.ts`。要求の組み立てと説明の文は `try` の外。自分の関数の例外が「〜できませんでした」に化けないことをテストで確かめる。#228） | 2026-11-09 |
 | BL-151 | Go の linter を 1 つずつ有効にする（`intrange`、`bodyclose`、`noctx`、`sloglint`、`unparam`、`forcetypeassert`、`gosec`、`perfsprint`、`exhaustive`、revive のエラーの規則。ADR-0029、#226） | 2026-11-09 |
 | BL-150 | 指摘 0 件の Go の linter をまとめて有効にする（`contextcheck`、`copyloopvar`、`dupl`、`errname`、`nakedret`、`nilerr`、`nolintlint`、`usestdlibvars`。ADR-0029、#226） | 2026-11-09 |
 | BL-158 | `ideas` の会話の検証エラーの二重の接頭辞を直す（`ideas: invalid conversation: messages must not be empty`。中の文から `ideas: ` を外した。#228） | 2026-11-09 |
