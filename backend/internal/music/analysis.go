@@ -277,6 +277,7 @@ func locate(k Key, c Chord) (degree int, borrowed bool, ok bool) {
 		if d, ok := minorBorrowedDegree(k, c); ok {
 			return d, true, true
 		}
+	default: // the modes borrow nothing (ADR-0012)
 	}
 	return 0, false, false
 }
@@ -555,6 +556,7 @@ func openText(hs []HarmonyEvent, i int) string {
 			return susText + susResolveText
 		}
 		return susText
+	default: // a chord with a third: nothing to add here
 	}
 	return ""
 }

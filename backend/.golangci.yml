@@ -19,6 +19,7 @@ linters:
     - dupl
     - bodyclose
     - errname
+    - exhaustive
     - forcetypeassert
     - gosec
     - intrange
@@ -95,6 +96,12 @@ linters:
     # sentence templates, and concatenation would cut them into pieces.
     perfsprint:
       strconcat: false
+    # A switch with a default covers the rest on purpose. Pitch and
+    # PitchClass are numbers whose constants are bounds and note names,
+    # not closed sets, so they are not treated as enums.
+    exhaustive:
+      default-signifies-exhaustive: true
+      ignore-enum-types: "^github.com/hassaku63/middy/backend/internal/music\\.(Pitch|PitchClass)$"
     revive:
       rules:
         - name: exported

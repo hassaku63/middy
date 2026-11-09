@@ -142,6 +142,7 @@ func fillText(d Drums, ts music.TimeSignature, length music.Tick) string {
 		how = "太鼓を細かく転がすフィルを入れ"
 	case kitRide:
 		how = "シンバルで拍を刻んだまま、スネアで軽くつなぐフィルを入れ"
+	default: // kitSticks: the tom fill above
 	}
 	switch {
 	case k == kitHand || crashes == 0:
