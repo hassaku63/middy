@@ -1,7 +1,7 @@
 # 0022. 存在しないファイルは 404 にし、SPA に振り分けるのは画面の URL だけにする
 
 - 日付: 2026-11-09
-- 状態: Superseded by ADR-0027（規則は nginx の設定に移る。移行が終わるまでは Go の実装が持つ。BL-148）
+- 状態: Superseded by ADR-0027（規則そのものは有効で、nginx の設定 `deploy/nginx/templates/` が持つ。Go は `/api` だけを答える）
 
 ## 文脈
 

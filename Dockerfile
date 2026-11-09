@@ -2,8 +2,7 @@
 # Two images from one file (ADR-0027), picked with --target:
 #   web  nginx serving the built SPA and passing /api to the API container
 #   api  the Go server on a minimal non-root runtime (the default target)
-# `make up` runs both with compose (compose.yaml). Until BL-148 the api image
-# still embeds the frontend too (ADR-0008).
+# `make up` runs both with compose (compose.yaml).
 #
 #   docker build --target web -t middy-web .
 #   docker build --target api -t middy-api .
@@ -26,7 +25,6 @@ WORKDIR /src/backend
 COPY backend/go.mod backend/go.su[m] ./
 RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY backend/ ./
-COPY --from=frontend /src/frontend/dist ./internal/web/dist
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 go build -trimpath \
       -ldflags "-s -w -X github.com/hassaku63/middy/backend/internal/httpapi.Version=${VERSION}" \

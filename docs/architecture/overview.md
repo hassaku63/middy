@@ -46,7 +46,6 @@ internal/intent     LLM が返す MusicalIntent の型・検証・JSON Schema（
 internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）
 internal/music/pattern  伴奏・ドラムの 1 小節テンプレートと、Harmony からトラックを作り直す Apply（music にのみ依存）
 internal/llm        ポート（interface）。adapters: fake, anthropic（公式 SDK）
-internal/web        ビルド済みフロント（frontend/dist）の embed。未同梱なら Dist() が false
 internal/config     環境変数
 ```
 
@@ -87,17 +86,17 @@ src/test       Vitest セットアップ
 - `shared/lib/pwa` の `PwaStatus` が SW の状態・インストールの申し出・オンライン状態を持つ小さな外部ストアで、`main.tsx` の `wirePwa` が SW 登録と `window` のイベントをつなぐ。`features/pwa` の `PwaBanner` が「オフラインです」「新しいバージョンがあります」「インストール」を表示する。オフラインで使える準備ができたことは正常な状態なので、何も言わない（原則 7、BL-071）。
 - オフラインの価値は「保存済みプロジェクトの再生」。保存は IndexedDB（`features/projects`）、再生はブラウザ内で完結するので、ネットワークなしで開いて鳴らせる（E2E `offline.spec.ts` が検証）。生成と AI の提案はオンラインが必要。
 
-## 配備形態（ADR-0008）
+## 配備形態（ADR-0027）
 
-`make run` は単一バイナリで、`make up` は nginx と Go の 2 コンテナ（ADR-0027）で配る。Go から静的配信を外して 2 コンテナに一本化するのは BL-148。
+`web`（nginx とビルド済みの SPA）と `api`（Go）の 2 つのコンテナを、同一オリジンの 1 つのサービスとして配る。外に開くのは `web` だけで、`/api` を `api` に渡す。
 
-- **単一の Go バイナリ** が API と UI を同一オリジンで配信する。`make build` が `vite build` → `backend/internal/web/dist` へコピー → `go build`（`-ldflags` でバージョン埋め込み）の順に行う。
-- `httpapi` の静的ハンドラ: `/api` 配下以外で、ファイルがあればそれを返す。なければ、画面の URL には `index.html`（SPA フォールバック）、ファイルを指す URL（`/assets/*` や拡張子のあるもの）には 404 を返す（ADR-0022）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。未知の `/api/*` は JSON の 404。
-- フロント未同梱のバイナリでも API は動き、UI は 503 `frontend_not_built` を返す。開発時は `make dev-frontend`（Vite のプロキシ）を使う。
-- **コンテナ**（ADR-0027）: `Dockerfile` から 2 つのイメージを `--target` で作る。
-  - `web`: `nginx-unprivileged` とビルド済みの SPA。`deploy/nginx/templates/` を起動時に `PORT` と `API_UPSTREAM`（URL）で埋め、上の静的ハンドラと同じ規則（ADR-0022 の 404、キャッシュ）に gzip と `/healthz` を足して配り、`/api` を Go へ渡す（読み取りの待ち 180 s、本文 4 MiB まで）。
-  - `api`: Go のバイナリを `distroless/static` 非 root で。`HEALTHCHECK` はバイナリの `-healthcheck` フラグが自分の `/api/v1/health` を叩く。BL-148 までは、このイメージもフロントを同梱している。
-  - `compose.yaml` は `web`（`WEB_PORT`、既定 8080 で公開）と `api`（`PORT=8081`、公開しない）。`LLM_PROVIDER` と鍵は `api` にだけ、起動するコマンドの環境変数から渡す（ADR-0011）。CI の `image` ジョブが 2 つのイメージを作り、compose で起動して両方の healthy を待ち、`scripts/smoke.sh` を当てる。
+- **Go は API だけを答える。** `/api/v1` のルート以外は、画面の URL も含め、メソッドによらず JSON の 404（`not_found`）。既知のパスに別のメソッドが来たときは 405。
+- **配信の規則は nginx が持つ**（`deploy/nginx/templates/`）。ファイルがあればそれを返す。なければ、画面の URL には `index.html`（SPA フォールバック）、ファイルを指す URL（`/assets/*` や拡張子のあるもの）には JSON の 404 を返す（ADR-0022 の規則）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。
+- 開発時は `make dev-backend` と `make dev-frontend`（Vite が `/api` を `API_UPSTREAM` へプロキシ）。`make build` は `vite build` と `go build`（`-ldflags` でバージョン埋め込み）をそれぞれ行い、`make run` は API だけを起動する。
+- **コンテナ**: `Dockerfile` から 2 つのイメージを `--target` で作る。
+  - `web`: `nginx-unprivileged` とビルド済みの SPA。`deploy/nginx/templates/` を起動時に `PORT` と `API_UPSTREAM`（URL）で埋め、上の配信の規則に gzip と `/healthz` を足して配り、`/api` を Go へ渡す（読み取りの待ち 180 s、本文 4 MiB まで）。
+  - `api`: Go のバイナリを `distroless/static` 非 root で。`HEALTHCHECK` はバイナリの `-healthcheck` フラグが自分の `/api/v1/health` を叩く。
+  - `compose.yaml` は `web`（`WEB_PORT`、既定 8080 で公開）と `api`（`PORT=8081`、公開しない）。`LLM_PROVIDER` と鍵は `api` にだけ、起動するコマンドの環境変数から渡す（ADR-0011）。CI の `image` ジョブと `e2e` ワークフローが 2 つのイメージを作り、compose で起動して両方の healthy を待ち、`scripts/smoke.sh` を当てる（`e2e` はさらに Playwright を当てる）。
 
 ## 横断的関心事
 
