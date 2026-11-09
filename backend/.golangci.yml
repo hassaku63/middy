@@ -17,6 +17,7 @@ linters:
     - contextcheck
     - copyloopvar
     - dupl
+    - bodyclose
     - errname
     - intrange
     - nakedret
@@ -27,6 +28,10 @@ linters:
     rules:
       - path: _test\.go
         linters: [funlen, gocognit, gocyclo]
+      # Test helpers (postJSON, get) close response bodies in t.Cleanup,
+      # which bodyclose cannot follow. Production code is checked in full.
+      - path: _test\.go
+        linters: [bodyclose]
   settings:
     funlen:
       lines: 80
