@@ -12,11 +12,13 @@ head="${2:-HEAD}"
 warn_at=400
 fail_at=600
 
-# Paths that do not count: lock files, binary assets, generated fixtures.
+# Paths that do not count: lock files, binary assets, generated fixtures
+# and golden files (rewritten with -update, BL-176).
 excludes=(
   ':!**/package-lock.json' ':!**/go.sum' ':!**/*.png' ':!**/*.svg' ':!**/*.mid'
   ':!frontend/src/shared/api/fixtures/**'
   ':!**/*.gen.ts'
+  ':!**/testdata/golden/**' ':!backend/internal/golden/testdata/**'
 )
 
 total=$(git diff --numstat "$base...$head" -- . "${excludes[@]}" \

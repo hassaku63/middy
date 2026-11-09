@@ -14,6 +14,7 @@
 - テーブル駆動。ケース名に音楽的な意味を書く（`"A minor sevenths"`）。
 - 新しい型を足すときは「JSON ラウンドトリップ」「`Validate` の各失敗ケース」「境界値（degree 0/8、pitch -1/128）」を最低限含める。
 - `music/smf` は最小のファイルのバイト列を期待値として固定し、構造は小さな読み戻しパーサで検証する。外部ツール（`mido` 等）での読み戻しは UI スライス同様、手動で 1 回行う。
+- パターンのカタログは、描画の結果をゴールデンファイルで固定する（`internal/golden`。`music` は OS に触れないので、テストは外のパッケージに置く。全部の伴奏とドラムを拍子ごとに、全部のスタイルのグルーヴを拍子ごとに、決まった進行で）。`GET /patterns` の応答（`httpapi/testdata/golden/`）とシステムプロンプト（`ideas/testdata/golden/`）も同じく固定する。意図して変えたときは `go test ./internal/golden ./internal/httpapi ./internal/ideas -run Golden -update` で書き直し、差分を PR で見せる（BL-176、#207）。ゴールデンファイルは PR の行数に数えない（`scripts/check-pr-size.sh`）。
 
 ### ユースケース（`internal/ideas`）
 
