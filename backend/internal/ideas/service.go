@@ -104,18 +104,17 @@ func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, erro
 		MaxTokens:    maxOutputTokens,
 	}
 
-	in, err := s.ask(ctx, req)
+	res, err := s.ask(ctx, req)
 	retried := ""
 	if err != nil {
 		retried = retryReason(err)
-		in, err = s.retry(ctx, req, err)
+		res, err = s.retry(ctx, req, err)
 	}
 	if err != nil {
 		return Result{}, err
 	}
-	res, err := render(in)
-	res.Retry = retried
-	return res, err
+	res.Retry = retried + res.Retry
+	return res, nil
 }
 
 // retryReason names the first failure for Result.Retry.
@@ -134,7 +133,7 @@ func retryReason(err error) string {
 // past: an unusable answer, which is shown back with the validation errors,
 // or a safety refusal, which is resent unchanged because classifiers are
 // probabilistic. Any other failure, and any second failure, is final.
-func (s *Service) retry(ctx context.Context, req llm.Request, first error) (intent.Intent, error) {
+func (s *Service) retry(ctx context.Context, req llm.Request, first error) (Result, error) {
 	var invalid invalidOutputError
 	switch {
 	case errors.As(first, &invalid):
@@ -144,18 +143,23 @@ func (s *Service) retry(ctx context.Context, req llm.Request, first error) (inte
 		)
 	case errors.Is(first, llm.ErrRefused):
 	default:
-		return intent.Intent{}, first
+		return Result{}, first
 	}
-	in, err := s.ask(ctx, req)
+	res, err := s.ask(ctx, req)
+	var contradiction contradictionError
 	switch {
 	case err == nil:
-		return in, nil
+		return res, nil
+	case errors.As(err, &contradiction):
+		kept := withoutContradictions(contradiction.res, contradiction.problems)
+		kept.Retry = "\nthe retried answer still contradicted its chords; dropped: " + contradiction.reason
+		return kept, nil
 	case errors.As(err, &invalid):
-		return intent.Intent{}, fmt.Errorf("%w: %s", ErrInvalidOutput, invalid.reason)
+		return Result{}, fmt.Errorf("%w: %s", ErrInvalidOutput, invalid.reason)
 	case errors.Is(err, llm.ErrRefused):
-		return intent.Intent{}, fmt.Errorf("%w: %v", ErrDeclined, err)
+		return Result{}, fmt.Errorf("%w: %v", ErrDeclined, err)
 	}
-	return intent.Intent{}, err
+	return Result{}, err
 }
 
 // invalidOutputError carries the raw answer and the validation message so
@@ -167,20 +171,51 @@ type invalidOutputError struct {
 
 func (e invalidOutputError) Error() string { return "invalid intent: " + e.reason }
 
-func (s *Service) ask(ctx context.Context, req llm.Request) (intent.Intent, error) {
+// ask gets one answer and turns it into a result: parsed, validated,
+// rendered and analysed, with the harmony its own words claim checked
+// against its chords (claims.go, ADR-0034).
+func (s *Service) ask(ctx context.Context, req llm.Request) (Result, error) {
 	resp, err := s.llm.Complete(ctx, req)
 	if errors.Is(err, llm.ErrRefused) {
-		return intent.Intent{}, fmt.Errorf("ideas: %w", err)
+		return Result{}, fmt.Errorf("ideas: %w", err)
 	}
 	if err != nil {
-		return intent.Intent{}, fmt.Errorf("%w: %v", ErrLLMUnavailable, err)
+		return Result{}, fmt.Errorf("%w: %v", ErrLLMUnavailable, err)
 	}
 	in, err := intent.Parse([]byte(resp.Text))
 	if err != nil {
-		return intent.Intent{}, invalidOutputError{raw: resp.Text, reason: err.Error()}
+		return Result{}, invalidOutputError{raw: resp.Text, reason: err.Error()}
 	}
-	return in, nil
+	res, err := render(in)
+	if err != nil {
+		return Result{}, err
+	}
+	if problems := checkClaims(res); len(problems) > 0 {
+		reasons := make([]string, len(problems))
+		for i, p := range problems {
+			reasons[i] = p.String()
+		}
+		return Result{}, contradictionError{
+			invalidOutputError: invalidOutputError{raw: resp.Text, reason: strings.Join(reasons, "\n")},
+			res:                res,
+			problems:           problems,
+		}
+	}
+	return res, nil
 }
+
+// contradictionError is an answer whose music is sound but whose words
+// claim harmony its chords contradict. A retry is asked for as for any
+// invalid answer; if the retried answer still contradicts itself, the
+// contradicted sentences are dropped instead of failing the turn.
+type contradictionError struct {
+	invalidOutputError
+	res      Result
+	problems []claimProblem
+}
+
+// Unwrap lets the retry treat it as the invalid answer it is.
+func (e contradictionError) Unwrap() error { return e.invalidOutputError }
 
 // render turns every candidate into an analysed timeline. A candidate the
 // engine cannot render is a bug in intent.Validate, not user error.
