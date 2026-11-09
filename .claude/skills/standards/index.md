@@ -303,6 +303,156 @@
 | middy との接点 | 今はない。再生は A4 = 440 Hz の 12 平均律（`frontend/src/features/player/WebAudioSynth.ts` の `midiToHz`） |
 | 確認日 | 2026-11-09 |
 
+## 音源・音声
+
+### SoundFont 2
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | 一次情報を開けず、確かめていない |
+| 何を決めているか | 一次情報では確かめていない。SFZ の参照サイト（https://sfzformat.com/ ）は、サンプルと鳴らし方の定義を同じ 1 つのバイナリファイルに入れる形式で、SFZ とは別物と説明している（SoundFont の一次情報ではない） |
+| 一次情報 | 公式の置き場所を確かめられなかった。http://www.soundfont.com/ と https://www.creative.com/ はこの環境のプロキシに拒まれた（403）。MIDI.org のサイト内検索（https://midi.org/?s=soundfont ）に SoundFont の仕様のページはなかった。仕様の PDF を載せている第三者のサイト（www.synthfont.com）にも届かなかった |
+| 状態 | 一次情報では確かめていない |
+| 当たるべき場面 | サンプルの音源で鳴らすことを考えるとき。外部の音色の集まり（.sf2）を読み込むとき。DLS・SFZ と並べて形式を選ぶとき |
+| middy との接点 | 今はない。再生は発振器による合成で、`frontend/src/features/player/WebAudioSynth.ts` のコメントはサンプルの音源を backlog の案としている。`docs/product/vision.md` の「やらないこと」にサンプル音源の配布がある |
+| 確認日 | 未確認（一次情報のホストに届かなかった） |
+
+### DLS（Downloadable Sounds）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | MIDI Association（MIDI.org）。ページは「MMA の仕様」と書いている |
+| 何を決めているか | 音のデータ（サンプル）の形式と、DLS に対応する音源がそれを正しく鳴らすために要る機能。Level 1 が基準の構成を、Level 2 がその拡張を決める |
+| 一次情報 | https://midi.org/dls 。Level 1 は https://midi.org/dls-level-1 、Level 2 は https://midi.org/dls-level-2 。どちらもダウンロードには MIDI.org への参加（Join）が要る。chunk の ID の表（DLS Proprietary Chunk IDs）は https://midi.org/spec-detail にある |
+| 状態 | MIDI.org の仕様の一覧（https://midi.org/specs ）で、SMF・XMF と並ぶ公式のファイル形式に入っている。Level 2 は Level 1 の論理的な拡張とある。後継や廃止の記載はない |
+| 当たるべき場面 | サンプルの音源で鳴らすことを考えるとき。SoundFont 2・SFZ と並べて音色の形式を選ぶとき |
+| middy との接点 | 今はない。再生は発振器による合成（`frontend/src/features/player/WebAudioSynth.ts`）。`docs/product/vision.md` の「やらないこと」にサンプル音源の配布がある |
+| 確認日 | 2026-11-09 |
+
+### SFZ
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | 標準化の団体はない。sfzformat.com が参照の場を名乗り、サイトはオープンソース（GitHub の sfz organization）。最初の版は rgc:audio のサイトで公開されたとある |
+| 何を決めているか | サンプルの集まりを演奏のためにどう並べるかを定義する、文字のファイル形式。サンプルそのものは含まない |
+| 一次情報 | https://sfzformat.com/ 。版の説明は https://sfzformat.com/versions 。登録なしで読める。形式は無償で、無償・商用のどちらにも使えるとある |
+| 状態 | 第 2 版は明確に書かれた仕様がなく、サイトは Cakewalk の製品の解説書に載るものを第 2 版とみなすとある。ARIA などの拡張がある。新しい再生ソフトはすべての opcode に対応しなくてよいとある |
+| 当たるべき場面 | サンプルの音源を文字のデータで定義することを考えるとき。SoundFont 2・DLS と並べて音色の形式を選ぶとき |
+| middy との接点 | 今はない。再生は発振器による合成（`frontend/src/features/player/WebAudioSynth.ts`） |
+| 確認日 | 2026-11-09 |
+
+### WAV（RIFF WAVE）と BWF（Broadcast Wave Format）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | WAVE は Microsoft（RIFF の一種のファイル）。BWF は EBU（文書は Tech 3285） |
+| 何を決めているか | 音声のデータのファイル形式。RIFF は chunk を並べた入れ物で、WAVE はそのうち音声を入れるもの。BWF は WAVE に放送用のメタデータの chunk（Broadcast Audio Extension）を足し、放送の環境や機種の間で音声を交換できるようにする |
+| 一次情報 | BWF: https://tech.ebu.ch/docs/tech/tech3285.pdf （登録なしで開けた）。出版物のページ https://tech.ebu.ch/publications/tech3285 はサイトの防御（Cloudflare）に 403 で拒まれ、開けていない。WAVE: BWF が参照する Microsoft の文書（http://support.microsoft.com/kb/q120253/ 。Multimedia Registration Kit）はプロキシに拒まれた（403）。Microsoft Learn の RIFF の概要（https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff- 。XAudio2 の文書の一部）と、形式の構造体（https://learn.microsoft.com/en-us/windows/win32/api/mmreg/ns-mmreg-waveformatextensible ）は開けた。どれも無償 |
+| 状態 | 開いた BWF の PDF は Version 2（2011 年）で、前の版と互換とある。それより新しい版の有無は、出版物のページが開けず確かめていない。BWF の付録の WAVE の説明は参考で、詳しくは Microsoft の最新の文書に当たれとある |
+| 当たるべき場面 | 演奏を音声のファイルに書き出すことを考えるとき。サンプルの音源の音声を読み込むとき |
+| middy との接点 | 今はない。書き出しは SMF だけ（`frontend/src/features/export`）。`docs/product/vision.md` の「やらないこと」にサーバー側のオーディオレンダリングがある |
+| 確認日 | 2026-11-09（BWF の PDF と Microsoft Learn。WAVE の元の文書は未確認） |
+
+### ラウドネスの測定（ITU-R BS.1770、EBU R 128）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | BS.1770 は ITU-R（Study Group 6 が管理）。R 128 は EBU |
+| 何を決めているか | BS.1770 は番組の音の大きさ（ラウドネス）と true-peak のレベルを測るアルゴリズム。R 128 は、BS.1770 で測った番組のラウドネスで音声を正規化することと、許される最大のレベルを勧める |
+| 一次情報 | BS.1770: https://www.itu.int/rec/R-REC-BS.1770 。現行の版のページに「Free Download」とある。R 128: https://tech.ebu.ch/docs/r/r128.pdf （登録なしで開けた）。出版物のページ https://tech.ebu.ch/publications/r128 はサイトの防御（Cloudflare）に 403 で拒まれ、開けていない |
+| 状態 | BS.1770 は最新の版が「In force」で、前の版はすべて「Superseded」。R 128 の PDF は「EBU Recommendation」の 2023 年の版。測り方の細部は EBU Tech 3341・3342 に、配信（streaming）向けの案内は R 128 s2 にあるとある。R 128 の新しい版の有無は、出版物のページが開けず確かめていない |
+| 当たるべき場面 | 例や楽器の間で音量を揃えるとき。音声を書き出すときの音量の目標を決めるとき |
+| middy との接点 | 今はない。音量はマスターの固定の gain と、velocity からの曲線で決めていて、測っていない（`frontend/src/features/player/WebAudioSynth.ts`） |
+| 確認日 | 2026-11-09 |
+
+## ブラウザの音と PWA
+
+### Web Audio API（AudioWorklet を含む）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | W3C Web Audio Working Group |
+| 何を決めているか | Web アプリで音を処理・合成するための API。AudioNode をつないだ経路のグラフで音を作る。スクリプトで音を処理する仕組み（AudioWorklet）と、実時間より速く描き出す仕組み（OfflineAudioContext）も含む |
+| 一次情報 | 勧告は https://www.w3.org/TR/webaudio-1.0/ 。https://www.w3.org/TR/webaudio/ は Web Audio API 1.1 の草案を返す。編集中の版は、このページが示す https://webaudio.github.io/web-audio-api/ （開いていない）。登録なしで読める |
+| 状態 | Web Audio API（1.0）は W3C 勧告（2021-06-17）。1.1 は Working Draft（2026-09-22）で、勧告を目指している |
+| 当たるべき場面 | 再生の合成やスケジューリングを変えるとき。AudioWorklet で自前の音の処理を書くことを考えるとき。演奏を音声に描き出すことを考えるとき |
+| middy との接点 | `frontend/src/features/player/usePlayer.ts`（`AudioContext` を再生ボタンの操作から作る）、`WebAudioSynth.ts`（発振器・フィルター・gain のノード）、`TimelinePlayer.ts`（`AudioContext.currentTime` を時計にした先読みのスケジューラ）。AudioWorklet と OfflineAudioContext は使っていない |
+| 確認日 | 2026-11-09 |
+
+### Media Session API
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | W3C Media Working Group |
+| 何を決めているか | 再生中のメディアの情報を OS の画面に出し、OS のメディアの操作やメディアキー（キーボード、ヘッドセット、リモコン、モバイルのロック画面や通知のボタン）を Web アプリにつなぐ API |
+| 一次情報 | https://www.w3.org/TR/mediasession/ 。編集中の版は、このページが示す https://w3c.github.io/mediasession/ （開いていない）。登録なしで読める |
+| 状態 | Working Draft（2026-11-09）。勧告を目指している |
+| 当たるべき場面 | ロック画面や通知、イヤホンのボタンから再生・停止させるとき。再生中の例の名前を OS に見せるとき |
+| middy との接点 | 今はない。再生と停止は画面のボタンだけ（`frontend/src/features/player/PlayerControls.tsx`） |
+| 確認日 | 2026-11-09 |
+
+### Web Application Manifest
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | W3C Web Applications Working Group |
+| 何を決めているか | Web アプリのメタデータ（名前、アイコン、起動の URL、表示モードなど）を 1 か所に書く、JSON のファイル形式 |
+| 一次情報 | https://www.w3.org/TR/appmanifest/ 。編集中の版は、このページが示す https://w3c.github.io/manifest/ （開いていない）。登録なしで読める |
+| 状態 | Working Draft（2026-11-06）。仕様は安定しておらず、互換のない変更がありうるが、一部はすでにブラウザに出荷されているとある |
+| 当たるべき場面 | manifest の項目（名前、アイコン、表示モード、色など）を足す・変えるとき |
+| middy との接点 | `frontend/vite.config.ts` の `VitePWA` の `manifest`（vite-plugin-pwa が生成する）。使っている項目（`name`、`short_name`、`description`、`lang`、`theme_color`、`background_color`、`display`、`start_url`、`icons` と `purpose`）は、どれも今の草案にある。配信は nginx が `application/manifest+json` で `no-cache`（`deploy/nginx/templates/default.conf.template`、ADR-0027） |
+| 確認日 | 2026-11-09 |
+
+### Service Workers
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | W3C Web Applications Working Group |
+| 何を決めているか | イベントを受けて起きる worker。ページの取得のしかたを決めたり、push を受けたりする先になり、オフラインで開ける Web アプリの土台になる |
+| 一次情報 | https://www.w3.org/TR/service-workers/ （題は「Service Workers Nightly」）。編集中の版は、このページが示す https://w3c.github.io/ServiceWorker/ （開いていない）。登録なしで読める |
+| 状態 | Candidate Recommendation Draft（2026-10-29）。living document で、Service Workers 1 という版が勧告に向かっているとある |
+| 当たるべき場面 | オフラインの振る舞い、キャッシュの方針、更新の流れを変えるとき。HTTP のキャッシュとの関係は「Web・API・安全」の HTTP Caching の項目 |
+| middy との接点 | Service Worker は vite-plugin-pwa（Workbox）が生成する（`frontend/vite.config.ts`。`registerType: 'prompt'`、アプリシェルだけをプリキャッシュし、`/api/` はナビゲーションのフォールバックから外す）。登録と更新の案内は `frontend/src/shared/lib/pwa/wire.ts`。nginx は `sw.js` を `no-cache` で配る（`deploy/nginx/templates/default.conf.template`、ADR-0027） |
+| 確認日 | 2026-11-09 |
+
+## 同期・連携
+
+### MIDI Clock と MIDI Time Code（MTC）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | MIDI Association（MIDI.org）。どちらも MIDI 1.0 の中核の仕様群（MIDI 1.0 Core Specifications）に入る |
+| 何を決めているか | 機器の間で演奏の速さと位置を合わせるためのメッセージ。MIDI Clock は Timing Clock・Start・Continue・Stop と Song Position Pointer のメッセージ。MTC は Quarter Frame と Full の 2 種のメッセージ（と任意の SMPTE user bits のメッセージ）で時刻を送る |
+| 一次情報 | MIDI Clock のメッセージは MIDI 1.0 Detailed Specification（https://midi.org/midi-1-0-detailed-specification ）の全メッセージの中核の配置に入る。ステータスバイトの表は https://midi.org/expanded-midi-1-0-messages-list でページの上で読める（表のダウンロードには参加（Join）が要る）。MTC は https://midi.org/midi-time-code 。どちらのページのダウンロードのボタンにも参加の表示はない（リンク先の Google Drive はプロキシに拒まれ、開いていない） |
+| 状態 | 現行の MIDI 1.0 の一部。MTC は MIDI 1.0 Core Specifications のカテゴリにある |
+| 当たるべき場面 | 外部の機器や DAW とテンポ・再生の位置を合わせるとき。Web MIDI API（演奏データの章）で外へ送ることを考えるとき |
+| middy との接点 | 今はない。再生の時計は `AudioContext.currentTime`（`frontend/src/features/player/TimelinePlayer.ts`）で、外と合わせない。SMF の拍子のメタイベントは拍を MIDI クロックの数で書く（`backend/internal/music/smf/smf.go` の `timeSignatureBytes`。4 分音符を 24 クロックとして書く）。`docs/product/vision.md` の「やらないこと」に Web MIDI 出力がある |
+| 確認日 | 2026-11-09 |
+
+### Open Sound Control（OSC）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | opensoundcontrol.stanford.edu（OSC を CNMAT で作った Matt Wright と Adrian Freed による。サイトは編集者が保守する）。標準化の団体を名乗っていない |
+| 何を決めているか | アプリや機器の間でリアルタイムにメッセージを送るための、伝送に依存しない符号化。アドレスは利用者が URL のような階層で決め、時刻のタグを持てる |
+| 一次情報 | https://opensoundcontrol.stanford.edu/ 。仕様は https://opensoundcontrol.stanford.edu/spec-1_0.html 。登録なしで読める（サイトは CC BY） |
+| 状態 | 形式の仕様は 1.0（2002 年）。1.1 は仕様の形では出ておらず、NIME 2009 の論文を 1.1 の考えの正式な記述とするとある（https://opensoundcontrol.stanford.edu/spec-1_1.html ） |
+| 当たるべき場面 | 他のアプリや機器と、ネットワーク越しに制御や同期のメッセージをやりとりすることを考えるとき |
+| middy との接点 | 今はない |
+| 確認日 | 2026-11-09 |
+
+### Ableton Link
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | Ableton（会社）。標準化の団体の仕様ではなく、Ableton が配る技術とライブラリ |
+| 何を決めているか | ローカルネットワーク上の複数のアプリで、拍・テンポ・位相と開始・停止を合わせる技術。参加するアプリは自動で見つけ合い、どれでもテンポを変えられる。Link Audio は、さらに音声のチャンネルを共有する |
+| 一次情報 | 概念の説明は https://ableton.github.io/link/ 。ソースは https://github.com/Ableton/link （README は https://raw.githubusercontent.com/Ableton/link/master/README.md で開いた）。iOS 向けは LinkKit SDK（https://ableton.github.io/linkkit 。開いていない）。GPLv2+ と独自のライセンスの二重ライセンスで、独自のアプリに組み込むには Ableton に連絡するとある |
+| 状態 | ライブラリは C++ のソースで配られている。Link Audio が Link を広げたものとしてある |
+| 当たるべき場面 | 他のアプリや機器とテンポ・拍を合わせて一緒に鳴らすことを考えるとき |
+| middy との接点 | 今はない。再生の時計は `AudioContext.currentTime`（`frontend/src/features/player/TimelinePlayer.ts`）で、外と合わせない |
+| 確認日 | 2026-11-09 |
+
 ## Web・API・安全
 
 ### OpenAPI Specification（OAS）
