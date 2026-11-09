@@ -176,7 +176,7 @@ describe('RhythmNotes inside the panel', () => {
       },
     };
     render(<ExplanationPanel timeline={withRhythm} positionTick={0} selectedHarmony={null} />);
-    const rhythm = screen.getByRole('heading', { name: 'リズム' }).parentElement!;
+    const rhythm = screen.getByRole('region', { name: 'リズム' });
     expect(within(rhythm).getByRole('region', { name: '伴奏: ストローク' })).toHaveTextContent(
       'シンコペーション',
     );

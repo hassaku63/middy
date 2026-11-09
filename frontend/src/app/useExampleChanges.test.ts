@@ -46,8 +46,8 @@ function heldFetch() {
 
 function setup() {
   const show = vi.fn();
-  const hook = renderHook(() => useExampleChanges(timeline, show, styles));
-  return { show, hook };
+  const view = renderHook(() => useExampleChanges(timeline, show, styles));
+  return { show, view };
 }
 
 describe('useExampleChanges (review)', () => {
@@ -55,51 +55,51 @@ describe('useExampleChanges (review)', () => {
 
   it('drops a style change and its note when an example opens meanwhile', async () => {
     const answer = heldFetch();
-    const { show, hook } = setup();
+    const { show, view } = setup();
     let pending: Promise<void> = Promise.resolve();
     act(() => {
-      pending = hook.result.current.changeStyle('rock');
+      pending = view.result.current.changeStyle('rock');
     });
-    act(() => hook.result.current.forget()); // the same example opened again
+    act(() => view.result.current.forget()); // the same example opened again
     await act(async () => {
       answer(json(200, { timeline: { ...timeline, tempoBpm: 120 } }));
       await pending;
     });
     expect(show).not.toHaveBeenCalled();
-    expect(hook.result.current.regroove.note).toBeNull();
+    expect(view.result.current.regroove.note).toBeNull();
   });
 
   it('drops the error of a key change that fails after another example opened', async () => {
     const answer = heldFetch();
-    const { hook } = setup();
+    const { view } = setup();
     let pending: Promise<void> = Promise.resolve();
     act(() => {
-      pending = hook.result.current.changeKey(2);
+      pending = view.result.current.changeKey(2);
     });
-    act(() => hook.result.current.forget());
+    act(() => view.result.current.forget());
     await act(async () => {
       answer(failure());
       await pending;
     });
-    expect(hook.result.current.keyChange.error).toBeNull();
+    expect(view.result.current.keyChange.error).toBeNull();
   });
 
   it('forgets a key error when a style is chosen', async () => {
     const answer = heldFetch();
-    const { hook } = setup();
+    const { view } = setup();
     let pending: Promise<void> = Promise.resolve();
     act(() => {
-      pending = hook.result.current.changeKey(2);
+      pending = view.result.current.changeKey(2);
     });
     await act(async () => {
       answer(failure());
       await pending;
     });
-    expect(hook.result.current.keyChange.error).toBe('キーを変えられませんでした');
+    expect(view.result.current.keyChange.error).toBe('キーを変えられませんでした');
     act(() => {
-      pending = hook.result.current.changeStyle('rock');
+      pending = view.result.current.changeStyle('rock');
     });
-    expect(hook.result.current.keyChange.error).toBeNull();
+    expect(view.result.current.keyChange.error).toBeNull();
     await act(async () => {
       answer(json(200, { timeline }));
       await pending;
@@ -108,10 +108,10 @@ describe('useExampleChanges (review)', () => {
 
   it('shows a change that finishes on the same example', async () => {
     const answer = heldFetch();
-    const { show, hook } = setup();
+    const { show, view } = setup();
     let pending: Promise<void> = Promise.resolve();
     act(() => {
-      pending = hook.result.current.changeKey(2);
+      pending = view.result.current.changeKey(2);
     });
     const inD = { ...timeline, key: { tonic: 2, mode: 'major' as const } };
     await act(async () => {

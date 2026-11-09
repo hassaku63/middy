@@ -33,6 +33,7 @@
 | `depguard`（Go） | 境界違反: `music` の I/O、`httpapi` からアダプタ直 import、`net/http` の漏れ | `make backend-lint` | `make check`, CI `backend` |
 | `funlen` 80 行 / `gocognit` 20 / `gocyclo` 15 | 肥大した関数（テストは除外） | `make backend-lint` | `make check`, CI `backend` |
 | ESLint 型つき strict と stylistic（typescript-eslint `strictTypeChecked`・`stylisticTypeChecked`。矢印の短縮形が返す `void` と、テンプレート文字列の数値は許す。型の形は `type` で書く）+ react-hooks | 典型的なバグ、要らない条件、非推奨の API、`void` の値の取り違え、書き方の不統一 | `make frontend-lint` | `make check`, CI `frontend` |
+| ESLint Testing Library（`eslint-plugin-testing-library` の `flat/react`。単体テストに。タイムラインの SVG のテストは、role のない図形をクラスで引くので `no-container`・`no-node-access` を外す） | 実装の詳細に結びついたテスト（`container` や DOM のたどり）、待たない非同期、慣例から外れた名前 | `make frontend-lint` | `make check`, CI `frontend` |
 | ESLint feature 境界 | feature 間 import、`../` での越境 | `make frontend-lint` | `make check`, CI `frontend` |
 | ESLint コンポーネント純粋性 | `*.tsx` での API 呼び出し・`fetch` / `AudioContext` / ストレージ / タイマー | `make frontend-lint` | `make check`, CI `frontend` |
 | knip（未使用の export・ファイル・依存、ADR-0007） | 削除や移動のあとに残った死んだコードと依存 | `make frontend-lint`（`npm run knip`）。設定は `frontend/knip.json` | `make check`, CI `frontend` |

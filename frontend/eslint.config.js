@@ -4,6 +4,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import testingLibrary from 'eslint-plugin-testing-library';
 import prettier from 'eslint-config-prettier';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -130,6 +131,21 @@ export default tseslint.config(
   {
     files: ['**/*.test.{ts,tsx}', 'src/test/**'],
     rules: { 'max-lines-per-function': 'off' },
+  },
+  // Testing Library's own rules for the unit tests (BL-153): queries by role,
+  // awaited async utilities, no container or node access.
+  {
+    files: ['src/**/*.test.{ts,tsx}'],
+    ...testingLibrary.configs['flat/react'],
+  },
+  {
+    // The timeline is an SVG drawing: its notes, hits and highlights have no
+    // role, so these tests find them by class (docs/dev/testing.md).
+    files: ['src/features/timeline/**/*.test.tsx'],
+    rules: {
+      'testing-library/no-container': 'off',
+      'testing-library/no-node-access': 'off',
+    },
   },
   {
     files: ['**/*.test.{ts,tsx}', 'src/test/**'],
