@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -125,7 +126,7 @@ func fillText(d Drums, ts music.TimeSignature, length music.Tick) string {
 	crashes := 0 // fills followed by another phrase, whose first beat gets a crash
 	for b := 0; music.Tick(b)*bar+fillFrom(ts) < length; b++ {
 		if phraseEnd(b) {
-			at = append(at, fmt.Sprint(b+1))
+			at = append(at, strconv.Itoa(b+1))
 			if music.Tick(b+1)*bar < length {
 				crashes++
 			}

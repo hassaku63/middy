@@ -3,6 +3,7 @@ package pattern
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -184,7 +185,7 @@ func explainPlacement(subject string, p placement, beats int) string {
 func beatNames(beats int) string {
 	names := make([]string, beats)
 	for i := range names {
-		names[i] = fmt.Sprint(i + 1)
+		names[i] = strconv.Itoa(i + 1)
 	}
 	return strings.Join(names, "・")
 }

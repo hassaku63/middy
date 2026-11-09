@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -222,7 +223,7 @@ func TestDegreeMapListsTheModesSevenChords(t *testing.T) {
 			numerals = append(numerals, d.RomanNumeral)
 			symbols = append(symbols, d.Symbol)
 			if d.Used {
-				used = append(used, fmt.Sprint(d.Degree))
+				used = append(used, strconv.Itoa(d.Degree))
 			}
 		}
 		if got := strings.Join(numerals, " "); got != tt.numerals {

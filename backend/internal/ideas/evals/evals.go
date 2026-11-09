@@ -8,6 +8,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -67,7 +68,7 @@ func Load() ([]Case, error) {
 		return nil, fmt.Errorf("evals: cases.json: %w", err)
 	}
 	if len(file.Cases) == 0 {
-		return nil, fmt.Errorf("evals: cases.json has no cases")
+		return nil, errors.New("evals: cases.json has no cases")
 	}
 	return file.Cases, nil
 }

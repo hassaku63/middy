@@ -26,6 +26,7 @@ linters:
     - nilerr
     - noctx
     - nolintlint
+    - perfsprint
     - sloglint
     - unparam
     - usestdlibvars
@@ -90,6 +91,10 @@ linters:
     sloglint:
       no-global: default
       forbidden-keys: [err]
+    # Keep fmt.Sprintf for string building: the explanation texts are
+    # sentence templates, and concatenation would cut them into pieces.
+    perfsprint:
+      strconcat: false
     revive:
       rules:
         - name: exported
