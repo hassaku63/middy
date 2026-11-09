@@ -1,8 +1,10 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -113,5 +115,43 @@ func TestIdeasStatusReview(t *testing.T) {
 	resp := postJSON(t, srv.URL+"/api/v1/ideas", `{"messages": []}`)
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Errorf("an empty conversation is a 400, got %d", resp.StatusCode)
+	}
+}
+
+// TestIdeasLogsUpstreamFailures (BL-144): a 502 leaves its cause in the
+// log, so a deployment can tell a timeout from a rejected key; the client
+// still gets only the code.
+func TestIdeasLogsUpstreamFailures(t *testing.T) {
+	tests := []struct {
+		name     string
+		client   llm.Client
+		wantCode string
+	}{
+		{"provider down", exhausted(), "llm_unavailable"},
+		{"unusable twice", fake.New(llm.Response{Text: "nope"}, llm.Response{Text: "still nope"}), "llm_invalid_output"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var logs bytes.Buffer
+			srv := httptest.NewServer(NewHandler(Deps{LLM: tt.client, Logger: slog.New(slog.NewJSONHandler(&logs, nil))}))
+			t.Cleanup(srv.Close)
+			resp := postJSON(t, srv.URL+"/api/v1/ideas", `{"messages":[{"role":"user","content":"x"}]}`)
+			if resp.StatusCode != http.StatusBadGateway {
+				t.Fatalf("status = %d, want 502", resp.StatusCode)
+			}
+			var line map[string]any
+			for _, l := range strings.Split(strings.TrimSpace(logs.String()), "\n") {
+				var m map[string]any
+				if json.Unmarshal([]byte(l), &m) == nil && m["msg"] == "ideas: upstream failed" {
+					line = m
+				}
+			}
+			if line == nil {
+				t.Fatalf("no upstream failure logged:\n%s", logs.String())
+			}
+			if line["level"] != "WARN" || line["code"] != tt.wantCode || strings.TrimSpace(fmt.Sprint(line["error"])) == "" {
+				t.Errorf("log line = %v, want WARN with code %q and the error", line, tt.wantCode)
+			}
+		})
 	}
 }
