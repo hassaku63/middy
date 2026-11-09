@@ -29,6 +29,9 @@ updates:
       # Types must track the Node major in `engines` (22), not the newest Node.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # 1.6.28 and later need TypeScript 6; held at 1.6.27 until then (BL-159).
+      - dependency-name: "@vitest/eslint-plugin"
+        versions: [">=1.6.28"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

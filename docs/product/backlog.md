@@ -18,7 +18,6 @@
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
 | BL-127 | **拡大の動き方を見比べる（次の A/B）** 拡大の部分が再生位置に合わせてどう動くかを 2 案で試せるようにし、所有者が選ぶ。所有者は B に傾いているので既定を B にし、A は `?zoom=page` か `?lab` の「拡大の動き（試験）」で見比べられる（B は停止中、拡大の下のスライダーで動かす）。両方を残したまま、所有者が決める。A: 今の小節スイッチ（4 小節ずつ切り替わる）。B: 再生位置を中央に保って自動で追随する（手で動かすための横スクロールバーが要るかを含めて検討する） | `?lab` で 2 案を切り替えられ、URL で共有できる。B は再生中に再生位置が拡大の中央に留まり、停止中は手で動かせる。所有者が 1 案を選んだら、選ばなかった案を消す。E2E が通る | M | BL-080 | In progress |
-| BL-153 | **lint: 依存の増える ESLint のプラグイン** (#226) React 本体、jsx-a11y、Testing Library、Vitest。1 つ = 1 PR | 同上。PR に ADR-0029 の決定 3 の根拠を書き、満たさないものは入れない | M | BL-152 | In progress |
 | BL-154 | **lint: shellcheck、actionlint、hadolint** (#226) 1 つ = 1 PR | 同上 | S | — | Ready |
 | BL-155 | **道具の陳腐化の定期の報告と、AI による検討** (#226) | 四半期の定期のジョブが報告の Issue を開く。そのあとに Claude の定期のタスクを作る（所有者の判断済み） | S | — | Ready |
 | BL-138 | **業界標準の索引: 和声・分析、音高・調律** (#213) 並行 | 同上。middy の記法と食い違う慣習は「middy との違い」として書く（直すかは別の Issue） | M | BL-136 | Ready |
@@ -39,6 +38,7 @@
 
 | ID | スライス | 要点 |
 | --- | --- | --- |
+| BL-159 | TypeScript 6 に上げ、`@vitest/eslint-plugin` の 1.6.27 の固定と Dependabot の除外を外す | 1.6.28 以降が TypeScript 6 を求める。TypeScript を 6 に上げる理由ができたら（typescript-eslint は 6.0 まで対応） |
 | BL-141 | 業界標準の索引の鮮度（#213 のスライス 6） | 確認日が古い項目が増えて、索引を当てにできなくなったら。確認日の古い項目を一覧にする小さなスクリプトか、見直しの手順 |
 | BL-067 | compose による開発ループ（bind mount と `docker compose watch` でホットリロード。ADR-0011）。発動条件: ツールチェーンなしで開発に参加する人が出た |
 | BL-051 | `music` のミューテーションテスト（`gremlins`）、四半期実行（ADR-0007）。発動条件: `music` が 3k 行 |
@@ -77,6 +77,7 @@
 | --- | --- | --- |
 | BL-148 | Go から静的配信と embed を外す（Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ、手元の E2E とスモークは `make up` に当てる。#206 の A-5） | 2026-11-09 |
 | BL-147 | E2E を compose で（`e2e.yml` が `web`・`api` のイメージを作り、compose で起動してスモークのあと Playwright を nginx 越しに当て、compose のログを残す。#206 の A-3） | 2026-11-09 |
+| BL-153 | 依存の増える ESLint のプラグイン（Testing Library と Vitest を入れた。React 本体と jsx-a11y は ADR-0029 の基準を満たさないので入れず、代わりを企画 #248 に。#226） | 2026-11-09 |
 | BL-152 | typescript-eslint の `strictTypeChecked`、次に `stylisticTypeChecked`（矢印の短縮形の `void`・テンプレートの数値は許し、型の形は `type` に揃える。ADR-0029、#226） | 2026-11-09 |
 | BL-157 | hook の `try` を失敗しうる呼び出しだけに狭める（`useKeyChange.ts`・`useRegroove.ts`。要求の組み立てと説明の文は `try` の外。自分の関数の例外が「〜できませんでした」に化けないことをテストで確かめる。#228） | 2026-11-09 |
 | BL-151 | Go の linter を 1 つずつ有効にする（`intrange`、`bodyclose`、`noctx`、`sloglint`、`unparam`、`forcetypeassert`、`gosec`、`perfsprint`、`exhaustive`、revive のエラーの規則。ADR-0029、#226） | 2026-11-09 |

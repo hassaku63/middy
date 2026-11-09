@@ -5,6 +5,7 @@ import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import testingLibrary from 'eslint-plugin-testing-library';
+import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -137,6 +138,12 @@ export default tseslint.config(
   {
     files: ['src/**/*.test.{ts,tsx}'],
     ...testingLibrary.configs['flat/react'],
+  },
+  // Vitest's own rules for the unit tests (BL-153): no identical titles, no
+  // focused or commented-out tests, expect called the right way.
+  {
+    files: ['src/**/*.test.{ts,tsx}'],
+    ...vitest.configs.recommended,
   },
   {
     // The timeline is an SVG drawing: its notes, hits and highlights have no
