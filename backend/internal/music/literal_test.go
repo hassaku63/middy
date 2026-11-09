@@ -20,6 +20,12 @@ func TestLiteralChordReadsTheLabelAsWritten(t *testing.T) {
 		{C, "vii°", Chord{Root: B, Quality: DiminishedTriad}},
 		{C, "bII", Chord{Root: Cs, Quality: MajorTriad}},
 		{E, "bVII", Chord{Root: D, Quality: MajorTriad}},
+		// Chords without a third, whatever the case (BL-132).
+		{C, "Vsus4", Chord{Root: G, Quality: Sus4}},
+		{C, "V7sus4", Chord{Root: G, Quality: Dominant7Sus4}},
+		{C, "I5", Chord{Root: C, Quality: Power}},
+		{C, "bVII5", Chord{Root: As, Quality: Power}},
+		{C, "vi5", Chord{Root: A, Quality: Power}},
 		// The same sound in any mode: D mixolydian's VII is D major's bVII.
 		{D, "bVII", Chord{Root: C, Quality: MajorTriad}},
 	}

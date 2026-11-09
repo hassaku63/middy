@@ -670,3 +670,26 @@ func TestPassingDiminishedInTheIntent(t *testing.T) {
 		t.Errorf("V7/V in A minor rejected: %v", err)
 	}
 }
+
+// TestOpenChordsAndBluesDominantsInTheIntent (BL-133): sus4, 7sus4, power
+// chords and a major key's blues dominants are labels the model may write;
+// a sus4 that needs a note outside the key is still refused.
+func TestOpenChordsAndBluesDominantsInTheIntent(t *testing.T) {
+	in := valid()
+	in.Candidates[0].Key = music.Key{Tonic: music.C, Mode: music.Major}
+	for _, prog := range [][]string{
+		{"I", "Vsus4", "V", "I"},
+		{"I", "IV", "V7sus4", "V7"},
+		{"I5", "bVII5", "IV5", "I5"},
+		{"I7", "IV7", "I7", "V7"},
+	} {
+		in.Candidates[0].Progression = prog
+		if err := in.Validate(); err != nil {
+			t.Errorf("%v rejected: %v", prog, err)
+		}
+	}
+	in.Candidates[0].Progression = []string{"I", "IVsus4", "I"}
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "IVsus4") {
+		t.Errorf("IVsus4 in C major needs Bb and must be refused, got %v", err)
+	}
+}

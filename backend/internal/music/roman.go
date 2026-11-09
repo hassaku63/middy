@@ -412,6 +412,9 @@ func literalQuality(upper bool, suffix string) ChordQuality {
 	case "+", "aug":
 		return AugmentedTriad
 	}
+	if q, ok := openQuality(suffix); ok { // no third, so the case says nothing
+		return q
+	}
 	if upper {
 		return MajorTriad
 	}
