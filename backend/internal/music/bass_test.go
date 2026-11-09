@@ -1,7 +1,6 @@
 package music
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -70,7 +69,7 @@ func TestSlashBassRejectsBadDegrees(t *testing.T) {
 		t.Errorf("IV: bass %v, err %v", step.Bass, err)
 	}
 	tl, err := FromProgression(Key{C, Major}, Progression{step}, 100)
-	if err != nil || tl.Harmony[0].Bass != nil || fmt.Sprint(len(tl.Tracks[0].Notes)) != "3" {
+	if err != nil || tl.Harmony[0].Bass != nil || len(tl.Tracks[0].Notes) != 3 {
 		t.Errorf("a plain IV stays three notes with no bass: %+v", tl.Harmony[0])
 	}
 }

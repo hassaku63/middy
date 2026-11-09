@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -201,7 +202,7 @@ func (c Candidate) validatePushes() []error {
 		case !slices.Contains(PushIDs, p):
 			errs = append(errs, fmt.Errorf("pushes[%d] must be one of %v, got %q", i, PushIDs, p))
 		case i == 0 && p != "none":
-			errs = append(errs, fmt.Errorf("pushes[0]: the first chord has nothing to push into; write none"))
+			errs = append(errs, errors.New("pushes[0]: the first chord has nothing to push into; write none"))
 		}
 	}
 	return errs
@@ -416,7 +417,7 @@ func (c Candidate) validateBeats(ts music.TimeSignature) []error {
 func startBeats(bar, b int) string {
 	var s []string
 	for p := 0; p < bar; p += b {
-		s = append(s, fmt.Sprint(p+1))
+		s = append(s, strconv.Itoa(p+1))
 	}
 	return strings.Join(s, " or ")
 }
