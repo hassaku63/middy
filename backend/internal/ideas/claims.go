@@ -196,27 +196,55 @@ func namedChordProblems(sentence string, keys []music.Key) []string {
 		if len(names) == 0 {
 			continue
 		}
-		run := []mention{m}
-		if len(names) > 1 {
-			run = runEndingAt(sentence, ms, j)
-			if len(run) < len(names) {
+		found, ok := checkNames(sentence, ms, j, names, keys)
+		if !ok || len(found) == 0 {
+			continue
+		}
+		// "C/G" is a slash chord or two names; it is wrong only if both
+		// readings are.
+		if len(names) == 1 && strings.Contains(names[0], "/") {
+			if alt, ok := checkNames(sentence, ms, j, strings.Split(names[0], "/"), keys); ok && len(alt) == 0 {
 				continue
 			}
-			run = run[len(run)-len(names):]
 		}
-		for i, name := range names {
-			if p := namedChordProblem(run[i].label, name, keys); p != "" {
-				problems = append(problems, p)
-			}
-		}
+		problems = append(problems, found...)
 	}
 	return problems
+}
+
+// checkNames pairs the names with the numerals they follow — one name with
+// ms[j], several with the run ending at ms[j] — and returns the names
+// their numerals contradict. It reports false when they cannot be paired.
+func checkNames(sentence string, ms []mention, j int, names []string, keys []music.Key) ([]string, bool) {
+	run := []mention{ms[j]}
+	if len(names) > 1 {
+		for _, n := range names {
+			if !chordName.MatchString(n) {
+				return nil, false
+			}
+		}
+		run = runEndingAt(sentence, ms, j)
+		if len(run) < len(names) {
+			return nil, false
+		}
+		run = run[len(run)-len(names):]
+	}
+	var problems []string
+	for i, name := range names {
+		if p := namedChordProblem(run[i].label, name, keys); p != "" {
+			problems = append(problems, p)
+		}
+	}
+	return problems, true
 }
 
 // chordNames reads the chord names in a bracket: one name followed by
 // other words ("F7、ブルースの属七") is that one name; a list of names
 // ("D–A–Bm–G") is the list. Anything else names no chord.
 func chordNames(inside string) []string {
+	if strings.Contains(inside, "の") {
+		return nil // "（D の V7）" names what the chord belongs to, not the chord
+	}
 	parts := nameSeparators.Split(strings.TrimSpace(inside), -1)
 	var names []string
 	for _, p := range parts {

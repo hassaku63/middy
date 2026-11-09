@@ -287,6 +287,26 @@ func TestReasonSpeaksOnlyOfWhatSounds(t *testing.T) {
 	}
 }
 
+// TestPromptAsksForClaimsTheChordsBearOut (BL-171, ADR-0034): the reason
+// and reply claim only what the candidate's chords show, name chords as
+// they sound, and use a progression's name only when its defining chords
+// are there. The definitions the prompt gives must be numerals the engine
+// reads, spelled as the prompt says.
+func TestPromptAsksForClaimsTheChordsBearOut(t *testing.T) {
+	p := SystemPrompt()
+	for _, want := range []string{"この候補の和音の並びで確かめられることだけ", "すぐ次に来るときだけ", "その呼び名を決めている和音の並びを含むときだけ", "実際の差のとおりに"} {
+		if !strings.Contains(p, want) {
+			t.Errorf("prompt lacks %q", want)
+		}
+	}
+	c := music.Key{Tonic: music.C, Mode: music.Major}
+	for label, symbol := range map[string]string{"subV7/vi": "Bb7", "V7/vi": "E7", "V7/IV": "C7", "IVmaj7": "Fmaj7", "vi7": "Am7", "iii": "Em"} {
+		if _, got, ok := chordOf(c, label); !ok || got != symbol {
+			t.Errorf("C major %s = %q (%v), the prompt says %s", label, got, ok, symbol)
+		}
+	}
+}
+
 // TestPromptSteersCelticAwayFromPopGrooves (BL-107, #131): the prompt lists
 // the reel and bodhrán patterns and keeps the eight-beat kit off Celtic examples.
 func TestPromptSteersCelticAwayFromPopGrooves(t *testing.T) {
