@@ -304,7 +304,7 @@ var drums = []Drums{
 
 func hats(step music.Tick, count, velocity int) []DrumHit {
 	out := make([]DrumHit, 0, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		out = append(out, DrumHit{music.Tick(i) * step, step / 2, ClosedHat, velocity})
 	}
 	return out
