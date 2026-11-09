@@ -5,6 +5,7 @@ import (
 	"math"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/hassaku63/middy/backend/internal/music"
 )
@@ -177,9 +178,11 @@ type Choice struct {
 	Grid *music.DrumGrid
 }
 
-// Render layers a Choice on a block-chord timeline. With no accompaniment
-// and no drums the timeline is returned unchanged (a feel alone has
-// nothing to swing); drums alone keep block chords.
+// Render layers a Choice on a block-chord timeline. With no accompaniment,
+// drums or grid, and a style with neither an instrument nor tensions, the
+// notes are returned unchanged with only the style recorded (a feel alone
+// has nothing to swing); drums alone, or such a style alone, keep block
+// chords.
 func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	info, err := findFeel(c.Feel)
 	if err != nil {
@@ -192,7 +195,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	if c.Accompaniment == "" && c.Drums == "" && c.Grid == nil && (st == nil || st.Program == nil) {
+	if plain(c, st) {
 		return styleOnly(tl, st), nil // block chords on the piano: nothing to render
 	}
 	accID := c.Accompaniment
@@ -211,7 +214,10 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		ts := tl.TimeSignature
 		return music.Timeline{}, fmt.Errorf("pattern: swing is for simple meters; %d/%d already divides each beat in three", ts.Numerator, ts.Denominator)
 	}
-	out, err := Apply(tl, acc, drums)
+	if acc.ID == "block" && drums == nil && !slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool { return h.Push != music.PushNone }) {
+		info, _ = findFeel(FeelStraight) // held block chords, unpushed, have no eighths to swing
+	}
+	out, err := apply(tl, acc, drums, st.tensions())
 	if err != nil {
 		return music.Timeline{}, err
 	}
@@ -251,6 +257,15 @@ func choiceDrums(c Choice, tl music.Timeline) (*Drums, error) {
 	return nil, nil
 }
 
+// plain is true when the choice changes nothing on block chords: no
+// patterns, and no style instrument or colouring.
+func plain(c Choice, st *Style) bool {
+	if c.Accompaniment != "" || c.Drums != "" || c.Grid != nil {
+		return false
+	}
+	return st == nil || (st.Program == nil && st.Tensions == nil)
+}
+
 // styleOnly records the style on a timeline it does not otherwise change,
 // so a rebuild in another key keeps it.
 func styleOnly(tl music.Timeline, st *Style) music.Timeline {
@@ -287,6 +302,9 @@ func applyStyle(tl music.Timeline, st *Style, acc Accompaniment) music.Timeline 
 		return tl
 	}
 	rs := &music.RhythmStyle{ID: st.ID, Name: st.Name}
+	if added := soundedTensions(tl, st.Tensions, acc); added != "" {
+		rs.Tensions = st.Name + "のスタイルなので、" + added + "（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。"
+	}
 	if st.Program != nil && acc.Program == 0 && len(tl.Tracks) > 0 {
 		tracks := slices.Clone(tl.Tracks)
 		tracks[0].Program = *st.Program
@@ -312,4 +330,43 @@ func swingText(sw Swing, beatBPM float64) string {
 		text += "遅いテンポほど深く、速いほど浅く跳ねるのがジャズの傾向で、この比はテンポに合わせている。"
 	}
 	return text
+}
+
+// soundedTensions says which of the style's tensions sounded: on chords
+// the pattern strikes with its chord voice, and only those the key and the
+// chord allowed (a ii7–Imaj7 adds no 13th, whatever the rule says). Empty
+// when none sounded.
+func soundedTensions(tl music.Timeline, t *Tensions, acc Accompaniment) string {
+	var ninth7, thirteenth, add9 bool
+	for _, h := range tl.Harmony {
+		if !slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceChord && x.Start < h.Duration }) {
+			continue
+		}
+		for _, pc := range tensionsOf(t, tl.Key, h) {
+			switch {
+			case h.Chord.Quality == music.MajorTriad:
+				add9 = true
+			case pc == h.Chord.Root.Add(9):
+				thirteenth = true
+			default:
+				ninth7 = true
+			}
+		}
+	}
+	var parts []string
+	if add9 {
+		parts = append(parts, "長三和音に 9 度を足して（add9）柔らかくし")
+	}
+	switch {
+	case ninth7 && thirteenth:
+		parts = append(parts, "七の和音に 9 度、属七には 13 度も足し")
+	case ninth7:
+		parts = append(parts, "七の和音に 9 度を足し")
+	case thirteenth:
+		parts = append(parts, "属七に 13 度を足し")
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.Join(parts, "、") + "ている"
 }

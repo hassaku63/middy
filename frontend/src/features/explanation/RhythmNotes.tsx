@@ -7,7 +7,14 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
     ['ドラム', rhythm.drums],
   ];
   // A style recorded on plain block chords has nothing to explain here.
-  if (!rhythm.accompaniment && !rhythm.drums && !rhythm.feel && !rhythm.style?.instrument)
+  const style = rhythm.style;
+  if (
+    !rhythm.accompaniment &&
+    !rhythm.drums &&
+    !rhythm.feel &&
+    !style?.instrument &&
+    !style?.tensions
+  )
     return null;
   return (
     <div className="explanation__rhythm" aria-label="リズム">
@@ -17,6 +24,7 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
           {rhythm.style.name}のスタイルなので、和音は{rhythm.style.instrument}で鳴らす。
         </p>
       )}
+      {rhythm.style?.tensions && <p className="explanation__text">{rhythm.style.tensions}</p>}
       {parts.map(([label, part]) =>
         part ? (
           <section key={label} aria-label={`${label}: ${part.name}`} className="explanation__part">
