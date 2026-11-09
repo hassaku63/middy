@@ -31,7 +31,7 @@ jobs:
             VERSION=${{ github.sha }}
             GO_VERSION=${{ steps.tv.outputs.go }}
             NODE_VERSION=${{ steps.tv.outputs.node }}
-          cache-from: type=gha
+          cache-from: type=gha,scope=api
       - name: Run the container
         run: |
           docker run -d --name app -p 8080:8080 middy:e2e

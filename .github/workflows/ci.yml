@@ -172,8 +172,8 @@ jobs:
             VERSION=${{ github.sha }}
             GO_VERSION=${{ steps.tv.outputs.go }}
             NODE_VERSION=${{ steps.tv.outputs.node }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
       - name: Build the web image
         uses: docker/build-push-action@v7
         with:
@@ -183,7 +183,10 @@ jobs:
           tags: middy-web:ci
           build-args: |
             NODE_VERSION=${{ steps.tv.outputs.node }}
-          cache-from: type=gha
+          cache-from: |
+            type=gha,scope=api
+            type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
       - name: Smoke test the stack
         # --wait returns once both HEALTHCHECKs report healthy.
         run: |

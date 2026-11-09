@@ -34,13 +34,14 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 
 # --- web: nginx and the SPA (ADR-0027) --------------------------------------
 # The image renders deploy/nginx/templates into conf.d at start from PORT and
-# API_UPSTREAM (a URL, e.g. http://api:8081). It runs as a non-root user.
+# API_UPSTREAM (a URL, e.g. http://api:8081) and RESOLVER (the DNS that
+# resolves it). It runs as a non-root user.
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS web
 COPY --from=frontend /src/frontend/dist /usr/share/nginx/html
 COPY deploy/nginx/templates/ /etc/nginx/templates/
-ENV PORT=8080
+ENV PORT=8080 RESOLVER=127.0.0.11
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=1s --retries=3 \
   CMD wget -q -O /dev/null "http://127.0.0.1:${PORT}/healthz" || exit 1
 
 # --- api: the Go server ------------------------------------------------------
@@ -51,6 +52,6 @@ ENV PORT=8080 LLM_PROVIDER=fake
 EXPOSE 8080
 USER nonroot:nonroot
 # distroless has no shell or curl; the server exposes a probe flag instead.
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=1s --retries=3 \
   CMD ["/app/server", "-healthcheck"]
 ENTRYPOINT ["/app/server"]

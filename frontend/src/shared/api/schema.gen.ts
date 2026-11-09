@@ -120,7 +120,7 @@ export interface components {
     /** @description すべてのエラー応答が使う共通エンベロープ */
     Error: {
       error: {
-        /** @description snake_case の安定した識別子（例 invalid_request） */
+        /** @description snake_case の安定した識別子（例 invalid_request）。前段の nginx（ADR-0027）が自分で答えるものは not_found、method_not_allowed、request_too_large（413）、api_unavailable（503。API に届かない） */
         code: string;
         /** @description 開発者向けの英語の説明。UI には出さず、画面の文言は code から選ぶ */
         message: string;

@@ -67,7 +67,8 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 ├── CLAUDE.md              # Claude Code 固有の補足（AGENTS.md を取り込む）
 ├── .tool-versions         # Go / Node / golangci-lint の版（CI・make doctor・Docker が読む）
 ├── Makefile               # make check = 唯一のゲート
-├── Dockerfile / compose.yaml  # 本番相当のイメージとローカル検証（ADR-0008）
+├── Dockerfile / compose.yaml  # 本番相当の 2 つのイメージ（web・api）とローカル検証（ADR-0027）
+├── deploy/nginx/          # web コンテナの nginx の設定
 ├── scripts/               # ドキュメント検査などの補助スクリプト
 ├── backend/               # Go API + 音楽理論エンジン
 │   ├── cmd/server/        # エントリポイント
