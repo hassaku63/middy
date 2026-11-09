@@ -101,7 +101,8 @@ linters:
     # not closed sets, so they are not treated as enums.
     exhaustive:
       default-signifies-exhaustive: true
-      ignore-types: "^github.com/hassaku63/middy/backend/internal/music\\.(Pitch|PitchClass)$"
+      ignore-types:
+        - "^github.com/hassaku63/middy/backend/internal/music\\.(Pitch|PitchClass)$"
     # Listing rules replaces revive's defaults, so each rule kept is named.
     revive:
       rules:
