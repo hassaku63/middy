@@ -70,6 +70,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-167 | `main` への push でも `ci-changes.sh` でジョブを選び（push の前の先頭と比べる）、`main` の実行は取り消さない（#266 の A、ADR-0032） | 2026-11-09 |
 | BL-164 | nginx が答える 404・405・413・503 も problem detail に（405 は `Allow` も返す）。フロントは problem detail だけを読む（ADR-0030） | 2026-11-09 |
 | BL-163 | API のエラー応答を RFC 9457 の problem detail に（`application/problem+json`、`type` は `docs/api/problems.md` の見出し、拡張メンバー `code`。OpenAPI の `Problem`。フロントは nginx が移るまで古い封筒も読む。ADR-0030） | 2026-11-09 |
 | BL-162 | E2E に axe-core のアクセシビリティの検査（主な画面を明るい・暗いテーマで。見つかった違反を直した: タイムラインの `svg` を `group` に、ピアノロールを支援技術から隠し、コードの選択肢の名前を見えている文字に合わせ、補足の文字と度数の地図のコントラストを上げた。#248） | 2026-11-09 |

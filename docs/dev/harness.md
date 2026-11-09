@@ -85,7 +85,7 @@
 
 ジョブはこれらをキャッシュから取り、ないときだけ取得元へ行く。すべてのジョブに `timeout-minutes` がある。
 
-PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`shell`・`docs`・`pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`shell`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
+PR と `main` への push では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`shell`・`docs` は毎回、`pr size` は PR だけ）。PR は base ブランチと、push は push の前の `main` の先頭と比べる（ADR-0032）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。PR では新しい push が古い実行を取り消し、`main` の実行は取り消さない。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`shell`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
 
 | 取得するもの | 取得元 | キャッシュ | 取得元が不調のとき |
 | --- | --- | --- | --- |
