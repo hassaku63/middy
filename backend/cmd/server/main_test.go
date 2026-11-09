@@ -51,7 +51,11 @@ func TestShutdownClosesWhatOutlivesTheBudget(t *testing.T) {
 	}))
 	ts.Start()
 	defer func() { close(release); ts.Close() }()
-	go func() { _, _ = http.Get(ts.URL) }() //nolint:noctx // test client
+	go func() { //nolint:noctx // test client
+		if resp, err := http.Get(ts.URL); err == nil {
+			_ = resp.Body.Close()
+		}
+	}()
 
 	<-started
 	if err := shutdown(ts.Config, slog.New(slog.NewJSONHandler(io.Discard, nil)), 50*time.Millisecond); err != nil {
