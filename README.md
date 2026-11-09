@@ -24,7 +24,7 @@
 
 ## クイックスタート
 
-前提: Go、Node.js、[golangci-lint](https://golangci-lint.run/)、[ShellCheck](https://www.shellcheck.net/)（`apt install shellcheck` / `brew install shellcheck`）。版は `.tool-versions` が唯一の情報源で、CI もそれを読みます（asdf / mise なら `asdf install` / `mise install`）。
+前提: Go、Node.js、[golangci-lint](https://golangci-lint.run/)、[ShellCheck](https://www.shellcheck.net/)（`apt install shellcheck` / `brew install shellcheck`）、[actionlint](https://github.com/rhysd/actionlint)（`go install github.com/rhysd/actionlint/cmd/actionlint@v<版>`）。版は `.tool-versions` が唯一の情報源で、CI もそれを読みます（asdf / mise なら `asdf install` / `mise install`）。
 
 ```bash
 make doctor         # 手元の版が .tool-versions と合っているか
@@ -56,7 +56,7 @@ LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... make up   # 実 LLM を使う場合
 .
 ├── AGENTS.md              # AI エージェント向けの正典（Claude / Codex / Copilot 共通）
 ├── CLAUDE.md              # Claude Code 固有の補足（AGENTS.md を取り込む）
-├── .tool-versions         # Go / Node / golangci-lint の版（CI・make doctor・Docker が読む）
+├── .tool-versions         # Go / Node / golangci-lint / actionlint の版（CI・make doctor・Docker が読む）
 ├── Makefile               # make check = 唯一のゲート
 ├── Dockerfile / compose.yaml  # 本番相当の 2 つのイメージ（web・api）とローカル検証（ADR-0027）
 ├── deploy/nginx/          # web コンテナの nginx の設定

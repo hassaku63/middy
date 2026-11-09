@@ -31,6 +31,7 @@
 | golangci-lint 標準セット + revive（`exported` とエラーの規則 5 つ）, gocritic, misspell | 典型的なバグと不統一、エラーの書き方（小文字で句点なしの文、`fmt.Errorf`、`err`/`Err` で始まる名前、最後に返す `error`、`return` のあとの `else`） | `make backend-lint` | `make check`, CI `backend` |
 | `bodyclose`（テストを除く）、`contextcheck`、`copyloopvar`、`dupl`、`errname`、`exhaustive`（`default` は網羅とみなす。`Pitch`・`PitchClass` は列挙として扱わない）、`forcetypeassert`、`gosec`（除外は行ごとに理由つき）、`intrange`、`nakedret`、`nilerr`、`noctx`、`nolintlint`、`perfsprint`（文字列の連結の提案は止める）、`sloglint`（グローバルの logger と `err` のキーを禁じる）、`unparam`、`usestdlibvars`（Go。ADR-0029。1 つずつ入れた） | HTTP の応答の本文の閉じ忘れ、context の取りこぼし、古いループ変数のコピー、重複コード、エラー型の命名、列挙の switch の取りこぼし、確かめない型アサーション、典型的な安全上の誤り（権限、整数の縮小変換など）、整数の range で書けるループ、裸の return、`nil` を返して握りつぶすエラー、context のない HTTP の要求、注入されない logger、いつも同じ値の引数や戻り値、理由のない `//nolint`、書式の要らない `fmt` の呼び出し、標準ライブラリの定数の手書き | `make backend-lint` | `make check`, CI `backend` |
 | shellcheck（`scripts/*.sh`。意図した一重引用符などは、行ごとに理由つきで止める） | 失敗を見ない `cd`、引用符のない展開、使われない変数など、シェルの典型的な誤り | `make shell-lint` | `make check`, CI `shell` |
+| actionlint（`.github/workflows/*.yml`。`run:` のスクリプトは ShellCheck に渡す。版は `.tool-versions`） | ワークフローの書き間違い（式、イベント、ジョブの依存、権限）と、`run:` の中のシェルの誤り | `make actions-lint` | `make check`, CI `shell` |
 | `depguard`（Go） | 境界違反: `music` の I/O、`httpapi` からアダプタ直 import、`net/http` の漏れ | `make backend-lint` | `make check`, CI `backend` |
 | `funlen` 80 行 / `gocognit` 20 / `gocyclo` 15 | 肥大した関数（テストは除外） | `make backend-lint` | `make check`, CI `backend` |
 | ESLint 型つき strict と stylistic（typescript-eslint `strictTypeChecked`・`stylisticTypeChecked`。矢印の短縮形が返す `void` と、テンプレート文字列の数値は許す。型の形は `type` で書く）+ react-hooks | 典型的なバグ、要らない条件、非推奨の API、`void` の値の取り違え、書き方の不統一 | `make frontend-lint` | `make check`, CI `frontend` |
@@ -77,7 +78,7 @@
 | 検査 | 防ぐもの | 個別実行 | 場所 |
 | --- | --- | --- | --- |
 | `.tool-versions` を CI の setup-go / setup-node / golangci-lint-action と Docker のビルド引数が読む | CI と手元・コンテナの版ズレ | — | CI、`make image` / `make up` |
-| `make doctor` | 手元の Go / Node / golangci-lint の major.minor ズレ | `make doctor` | セッション開始時（`docs/dev/workflow.md`） |
+| `make doctor` | 手元の Go / Node / golangci-lint / actionlint の major.minor ズレ | `make doctor` | セッション開始時（`docs/dev/workflow.md`） |
 
 ## CI が外部から取得するもの（ADR-0016）
 

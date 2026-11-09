@@ -6,3 +6,4 @@
 golang 1.25.0
 nodejs 22.23.4
 golangci-lint 2.5.0
+actionlint 1.7.12
