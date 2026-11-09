@@ -220,26 +220,29 @@ func applyPatterns(tl music.Timeline, c intent.Candidate) (music.Timeline, error
 	return pattern.Render(tl, pattern.Choice{Accompaniment: c.Accompaniment, Drums: c.Drums, Grid: c.Grid(), Feel: pattern.Feel(c.Feel), Style: c.Style})
 }
 
+// validateMessages says what is wrong with a conversation. Imagine wraps
+// it in ErrInvalidConversation, which carries the package prefix, so the
+// messages here have none (#228).
 func validateMessages(messages []Message) error {
 	if len(messages) == 0 {
-		return errors.New("ideas: messages must not be empty")
+		return errors.New("messages must not be empty")
 	}
 	if len(messages) > MaxMessages {
-		return fmt.Errorf("ideas: at most %d messages, got %d", MaxMessages, len(messages))
+		return fmt.Errorf("at most %d messages, got %d", MaxMessages, len(messages))
 	}
 	for i, m := range messages {
 		if m.Role != llm.RoleUser && m.Role != llm.RoleAssistant {
-			return fmt.Errorf("ideas: messages[%d]: role must be user or assistant", i)
+			return fmt.Errorf("messages[%d]: role must be user or assistant", i)
 		}
 		if strings.TrimSpace(m.Content) == "" {
-			return fmt.Errorf("ideas: messages[%d]: content is empty", i)
+			return fmt.Errorf("messages[%d]: content is empty", i)
 		}
 		if n := len([]rune(m.Content)); n > MaxMessageRunes {
-			return fmt.Errorf("ideas: messages[%d]: content is too long (%d > %d characters)", i, n, MaxMessageRunes)
+			return fmt.Errorf("messages[%d]: content is too long (%d > %d characters)", i, n, MaxMessageRunes)
 		}
 	}
 	if messages[len(messages)-1].Role != llm.RoleUser {
-		return errors.New("ideas: the last message must be from the user")
+		return errors.New("the last message must be from the user")
 	}
 	return nil
 }
