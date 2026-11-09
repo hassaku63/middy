@@ -37,6 +37,7 @@
 | [0031](0031-codeql-advanced-setup.md) | CodeQL はワークフローで動かし、文書だけの変更では走らせない | Accepted |
 | [0032](0032-ci-on-main-by-changes.md) | main への push でも、変わったところに関係するジョブだけを走らせ、その実行は取り消さない | Accepted |
 | [0033](0033-problem-details-only-for-the-api.md) | problem detail は API の応答にだけ使い、アプリのファイルと画面のエラーは短い平文にする | Accepted |
+| [0034](0034-what-variation-is-an-error.md) | 提案のゆらぎは許し、答えの中の理論の誤りと食い違いは許さない | Accepted |
 
 ## いつ ADR を書くか
 

@@ -100,7 +100,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Function:    fn,
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
-			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -196,8 +196,10 @@ func bluesDegree(k Key, h HarmonyEvent) (int, bool) {
 
 // bluesText explains a blues dominant: the seventh it adds and that it
 // does not resolve. On IV that seventh is the key's flat third, the blue
-// note.
-func bluesText(k Key, p placed) string {
+// note. An I7 that moves on to the key's own IV is not said to stay put:
+// its seventh falls a semitone to IV's third, as V7/IV's would (ADR-0034,
+// decision 2: the explanation says what the chord actually does).
+func bluesText(k Key, p placed, following placed) string {
 	if !p.blues {
 		return ""
 	}
@@ -205,7 +207,11 @@ func bluesText(k Key, p placed) string {
 		seventh := k.spellDegree(3, -1) // the seventh of IV is the key's lowered third
 		return fmt.Sprintf(" ブルースの属七。IV に %s を重ねた属七で、%s は調の ♭3（ブルー・ノート）にあたる。どこかへ解決する和音ではなく、サブドミナントのまま鳴る。", seventh, seventh)
 	}
-	return fmt.Sprintf(" ブルースの属七。主和音に %s（♭7）を重ねた属七で、解決を求めずトニックのまま鳴る。V7/IV と同じ音だが、IV へ向かう働きではない。", k.spellDegree(7, -1))
+	seventh := k.spellDegree(7, -1)
+	if following.degree == 4 && following.applied == 0 && !following.borrowed {
+		return fmt.Sprintf(" ブルースの属七。主和音に %s（♭7）を重ねた属七で、機能はトニックのまま。次が IV なので、%s が IV の 3 度の %s へ半音で下り、同じ音の V7/IV のように IV を引き寄せて聞こえる。", seventh, seventh, k.spellDegree(6, 0))
+	}
+	return fmt.Sprintf(" ブルースの属七。主和音に %s（♭7）を重ねた属七で、解決を求めずトニックのまま鳴る。V7/IV と同じ音だが、IV へ向かう働きではない。", seventh)
 }
 
 // hasLeadingTone reports a V that carries the leading tone, the major
