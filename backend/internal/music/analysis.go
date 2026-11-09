@@ -104,7 +104,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		}
 	}
 	for i := range out.Harmony {
-		out.Harmony[i].Analysis.Explanation += bassText(tl.Key, out.Harmony, i) + pushText(out, i)
+		out.Harmony[i].Analysis.Explanation += openText(out.Harmony, i) + bassText(tl.Key, out.Harmony, i) + pushText(out, i)
 	}
 	out.Overview = overview(out)
 	return out, nil
@@ -211,6 +211,15 @@ func subtonicText(k Key, p, prev, following placed) string {
 // root). A diatonic root with the parallel minor's quality (Fm on IV in C
 // major) is borrowed too.
 func locate(k Key, c Chord) (degree int, borrowed bool, ok bool) {
+	if c.Quality.isOpen() { // checked note by note when the label was read (openStep)
+		if d, ok := degreeOf(k, c.Root); ok {
+			return d, false, true
+		}
+		if d, ok := degreeOf(Key{Tonic: k.Tonic, Mode: Minor}, c.Root); ok && k.Mode == Major {
+			return d, true, true
+		}
+		return 0, false, false
+	}
 	if d, ok := degreeOf(k, c.Root); ok {
 		if dia, err := k.Diatonic(d, len(c.Quality.Intervals()) == 4); err == nil && dia.Quality == c.Quality {
 			return d, false, true
@@ -488,4 +497,27 @@ func passingText(hs []HarmonyEvent, i int, p placed) string {
 		return ""
 	}
 	return " " + passingSentence
+}
+
+const (
+	susText        = " 3 度の代わりに 4 度を鳴らす掛留（sus4）。長調とも短調とも決まらない、宙に浮いた響きになる。"
+	susResolveText = "次の和音で 4 度が 3 度へ下がって解決する。"
+	powerText      = " 3 度を抜き、根音と 5 度だけを鳴らすパワーコード。長調か短調かを決める 3 度がないので、開いた力強い響きになる（ロックのギターに多い）。"
+)
+
+// openText explains an open chord (BL-132): a suspension, which resolves
+// when the next chord on the same root brings its third back, or a power
+// chord. "" for any other chord.
+func openText(hs []HarmonyEvent, i int) string {
+	c := hs[i].Chord
+	switch c.Quality {
+	case Power:
+		return powerText
+	case Sus4, Dominant7Sus4:
+		if i+1 < len(hs) && hs[i+1].Chord.Root == c.Root && !hs[i+1].Chord.Quality.isOpen() {
+			return susText + susResolveText
+		}
+		return susText
+	}
+	return ""
 }

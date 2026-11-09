@@ -28,6 +28,7 @@
 | [0022](0022-missing-files-are-404.md) | 存在しないファイルは 404 にし、SPA に振り分けるのは画面の URL だけにする | Accepted |
 | [0023](0023-tritone-substitutes.md) | 裏コードは `subV7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
 | [0024](0024-leading-tone-diminished.md) | 導音の減七は `vii°7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
+| [0025](0025-open-chords.md) | sus4・7sus4・パワーコードは「3 度のない和音」として足し、ブルースの属七は分ける | Accepted |
 
 ## いつ ADR を書くか
 
