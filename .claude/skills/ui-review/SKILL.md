@@ -15,7 +15,7 @@ description: 画面の画像とアクセシビリティツリーを撮り、画�
 
 ## 手順
 
-1. **画面を動かす。** 既存の E2E と同じ起動でよい（`make up`、または `docs/dev/testing.md` の手元の起動）。
+1. **画面を動かす。** E2E と同じく `make up` で起動する（`docs/dev/testing.md` の「通しの E2E」）。別の場所で動かしているなら `E2E_BASE_URL` でその URL を指し、手元の Chromium を使うなら `E2E_CHROMIUM_PATH` で実行ファイルを指す。
 2. **撮る。** `cd frontend && npm run ui:shots`。
    - 状態ごと（最初の画面、例を開いた、和音を固定した、2 往復目）に、1280×800 と 390×844、ライトとダークで、`frontend/ui-review-out/` に `*.png`（全体）と `*.aria.yaml`（アクセシビリティツリー）を書く。
    - 対象は `E2E_BASE_URL`（既定は :8080）。試験の配置は `UI_SHOTS_LAYOUT=layout=desk` で撮る。
