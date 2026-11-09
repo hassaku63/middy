@@ -11,7 +11,7 @@
 | [0005](0005-vertical-slices-and-backlog-discipline.md) | 縦スライスとバックログ規律による開発 | Accepted |
 | [0006](0006-documentation-freshness.md) | ドキュメントは現在の状態だけを書き、機械的検査と定期点検で鮮度を保つ | Accepted |
 | [0007](0007-decay-prevention.md) | 開発サイクルの劣化を、矯正・検知・削減の三層で防ぐ | Accepted |
-| [0008](0008-local-verification-and-containers.md) | 本番相当の配信形態を「単一 Go バイナリ」に決め、コンテナで検証可能にする | Accepted |
+| [0008](0008-local-verification-and-containers.md) | 本番相当の配信形態を「単一 Go バイナリ」に決め、コンテナで検証可能にする | 一部 Superseded（0011、0027） |
 | [0009](0009-generated-api-types.md) | TypeScript の API 型を OpenAPI から生成する | Accepted |
 | [0010](0010-ux-decisions-follow-product-intent.md) | UI の判断は、プロダクトの意思を根拠に共通の原則と手順で行う | Accepted |
 | [0011](0011-settings-only-from-launch-environment.md) | ローカル実行の設定と秘密情報は、起動時の環境変数だけで渡す | Accepted |
@@ -25,11 +25,12 @@
 | [0019](0019-tempo-counts-the-beat.md) | テンポは拍子の拍で数える | Accepted |
 | [0020](0020-slash-bass.md) | 分数コードのベースは和声に置き、度数で書く | Accepted |
 | [0021](0021-style-groove.md) | スタイルを選び直したときのグルーヴはエンジンが決める | Accepted |
-| [0022](0022-missing-files-are-404.md) | 存在しないファイルは 404 にし、SPA に振り分けるのは画面の URL だけにする | Accepted |
+| [0022](0022-missing-files-are-404.md) | 存在しないファイルは 404 にし、SPA に振り分けるのは画面の URL だけにする | Superseded（0027） |
 | [0023](0023-tritone-substitutes.md) | 裏コードは `subV7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
 | [0024](0024-leading-tone-diminished.md) | 導音の減七は `vii°7/x` と書き、セカンダリードミナントの一種として扱う | Accepted |
 | [0025](0025-open-chords.md) | sus4・7sus4・パワーコードは「3 度のない和音」として足し、ブルースの属七は分ける | Accepted |
 | [0026](0026-blues-dominants.md) | 長調の I7・IV7 は、ブルースの属七として受け付ける | Accepted |
+| [0027](0027-nginx-and-go-containers.md) | フロントは nginx のコンテナ、API は Go のコンテナにし、同一オリジンの 1 つのサービスとして配る | Accepted |
 
 ## いつ ADR を書くか
 
