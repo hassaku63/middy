@@ -34,7 +34,11 @@ func Write(tl music.Timeline) ([]byte, error) {
 	events := collectEvents(tl)
 	var last music.Tick
 	for _, e := range events {
-		writeVarLen(&track, uint32(e.tick-last))
+		delta := e.tick - last
+		if delta < 0 || delta > maxVarLen {
+			return nil, fmt.Errorf("smf: event at tick %d is %d ticks after the previous one; SMF allows 0..%d", e.tick, delta, maxVarLen)
+		}
+		writeVarLen(&track, uint32(delta)) //nolint:gosec // checked above: 0..maxVarLen
 		last = e.tick
 		track.Write(e.data)
 	}
@@ -45,9 +49,12 @@ func Write(tl music.Timeline) ([]byte, error) {
 	_ = binary.Write(&out, binary.BigEndian, uint32(6))
 	_ = binary.Write(&out, binary.BigEndian, uint16(0))      // format 0
 	_ = binary.Write(&out, binary.BigEndian, uint16(1))      // one track
-	_ = binary.Write(&out, binary.BigEndian, uint16(tl.PPQ)) // ticks per quarter
+	_ = binary.Write(&out, binary.BigEndian, uint16(tl.PPQ)) //nolint:gosec // ticks per quarter; checked above to fit 15 bits
+	if track.Len() > math.MaxUint32 {
+		return nil, fmt.Errorf("smf: track of %d bytes exceeds the 32-bit SMF chunk length", track.Len())
+	}
 	out.WriteString("MTrk")
-	_ = binary.Write(&out, binary.BigEndian, uint32(track.Len()))
+	_ = binary.Write(&out, binary.BigEndian, uint32(track.Len())) //nolint:gosec // checked above: fits 32 bits
 	out.Write(track.Bytes())
 	return out.Bytes(), nil
 }
@@ -96,9 +103,13 @@ func writeMeta(w *bytes.Buffer, delta uint32, typ byte, payload []byte) { //noli
 	writeVarLen(w, delta)
 	w.WriteByte(0xFF)
 	w.WriteByte(typ)
-	writeVarLen(w, uint32(len(payload)))
+	writeVarLen(w, uint32(len(payload))) //nolint:gosec // meta payloads here are a few bytes
 	w.Write(payload)
 }
+
+// maxVarLen is the largest MIDI variable-length quantity (four bytes of 7
+// bits), the longest gap SMF can put between two events.
+const maxVarLen = 0x0FFFFFFF
 
 // writeVarLen encodes a MIDI variable-length quantity (7 bits per byte,
 // high bit set on all but the last byte).
@@ -142,5 +153,5 @@ func keySignatureBytes(k music.Key) []byte {
 	if fifths >= 6 {
 		fifths -= 12
 	}
-	return []byte{byte(int8(fifths)), mi}
+	return []byte{byte(int8(fifths)), mi} //nolint:gosec // fifths is in -6..5
 }

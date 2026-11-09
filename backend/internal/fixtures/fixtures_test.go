@@ -23,7 +23,7 @@ func TestCommittedFixturesAreCurrent(t *testing.T) {
 		t.Fatal("no fixtures generated")
 	}
 	for name, want := range files {
-		got, err := os.ReadFile(filepath.Join(frontendDir, name))
+		got, err := os.ReadFile(filepath.Join(frontendDir, name)) //nolint:gosec // the repository's own fixture files
 		if err != nil {
 			t.Fatalf("%s: %v (run `make fixtures`)", name, err)
 		}

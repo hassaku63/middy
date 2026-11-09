@@ -57,7 +57,7 @@ func probe(url string, timeout time.Duration) error {
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req) //nolint:gosec // loopback probe of our own server
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
