@@ -51,6 +51,7 @@
 | AGENTS.md / CLAUDE.md の行数予算（150） | 読まれない指示書 | `make docs-check` | `make check`, CI `docs` |
 | 鮮度レポート（In progress 放置、Next / Later / Ideas に 90 日以上ある backlog 項目、120 日未更新の文書、腐りやすい言い回し） | 古い記述と、決めないまま溜まる backlog | `bash scripts/docs-staleness.sh` | 月次 `docs gardening` |
 | 再実行で通った CI の一覧（直近 30 日） | flaky なテスト・ジョブの放置 | `bash scripts/flaky-report.sh <owner/repo>`（`gh` が必要） | 月次 `docs gardening` |
+| 道具と依存の陳腐化の報告（直接の npm・Go の依存のうち、非推奨のもの、365 日以上公開のないもの、大きな版が遅れているもの。golangci-lint の版。見直しの確認項目） | 古びた道具と依存の放置（ADR-0029 の決定 5） | `bash scripts/tool-staleness.sh` | 四半期 `tool review`（`tool-review` の Issue）。Claude の定期のタスクがその Issue を読み、一次情報で調べて企画の Issue にする（実装はしない） |
 
 ## ビルドと配備（ADR-0008）
 

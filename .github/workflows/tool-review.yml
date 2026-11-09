@@ -1,0 +1,52 @@
+# Quarterly review of the tools and dependencies (ADR-0029, decision 5).
+#
+# Reports deprecated, long-quiet and lagging dependencies and tools from the
+# package registries (scripts/tool-staleness.sh), and opens or updates one
+# tracking issue with the review checklist. No LLM involved; a Claude
+# scheduled task reads the issue and turns what it finds into proposals.
+name: tool review
+
+on:
+  schedule:
+    - cron: '23 2 2 1,4,7,10 *' # 02:23 UTC on the 2nd of each quarter
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: .tool-versions
+          cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - working-directory: frontend
+        run: npm ci
+      - name: Report
+        run: bash scripts/tool-staleness.sh > report.md
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "自動生成: tool review ($(date -u +%Y-%m-%d))。ADR-0029 の決定 5。レジストリの事実だけを並べる。どうするかは、この Issue を読む見直しが決める。"
+            cat report.md
+          } > body.md
+          title="tool review: $(date -u +%Y)-Q$(( ($(date -u +%-m) - 1) / 3 + 1 ))"
+          existing=$(gh issue list --label tool-review --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file body.md
+          else
+            gh label create tool-review --description "quarterly tool and dependency review" --color 5319E7 2>/dev/null || true
+            gh issue create --title "$title" --label tool-review --body-file body.md
+          fi
