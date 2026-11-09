@@ -21,7 +21,6 @@
 | BL-154 | **lint: shellcheck、actionlint、hadolint** (#226) 1 つ = 1 PR | 同上 | S | — | In progress |
 | BL-138 | **業界標準の索引: 和声・分析、音高・調律** (#213) 並行 | 同上。middy の記法と食い違う慣習は「middy との違い」として書く（直すかは別の Issue） | M | BL-136 | Ready |
 | BL-139 | **業界標準の索引: 音源・音声、ブラウザ、同期** (#213) 並行 | 同上 | M | BL-136 | Ready |
-| BL-140 | **業界標準の索引: Web・API・安全、アクセシビリティ・国際化** (#213) 並行 | 同上 | S | BL-136 | Ready |
 
 ## Next
 
@@ -74,6 +73,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-140 | 業界標準の索引の Web・API・安全とアクセシビリティ・国際化（OpenAPI、JSON Schema、RFC 9111、RFC 9457、CSP、OWASP ASVS、WCAG、WAI-ARIA、Unicode の音楽記号、CLDR。一次情報で確かめた。ASVS の公式サイトは届かず、リポジトリの README で確かめた。#213） | 2026-11-09 |
 | BL-161 | Go を 1.27.3、golangci-lint を 2.15.0 に上げ、govulncheck を v1.9.0 に（Go 1.25 は保守が終わり、標準ライブラリの脆弱性 36 件にコードが届いていた。新しい linter の指摘 14 件も直すか理由つきで外した） | 2026-11-09 |
 | BL-160 | 週次の security audit の govulncheck を v1.7.0 に固定（`@latest` の v1.8.0 以降が Go 1.26 を求め、Go 1.25 では毎回失敗していた） | 2026-11-09 |
 | BL-148 | Go から静的配信と embed を外す（Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ、手元の E2E とスモークは `make up` に当てる。#206 の A-5） | 2026-11-09 |
