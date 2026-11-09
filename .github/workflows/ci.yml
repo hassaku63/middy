@@ -138,16 +138,36 @@ jobs:
       - name: bundle size budget
         run: bash ../scripts/check-bundle-size.sh dist
 
-  # The shell scripts every job and `make check` call. Runs on every pull
-  # request: it takes seconds, and shellcheck comes with the runner image.
+  # The shell scripts every job and `make check` call, and the workflows
+  # themselves. Runs on every pull request: it takes seconds. shellcheck
+  # comes with the runner image; actionlint is built at the version in
+  # .tool-versions and cached by it.
   shell:
-    name: shell (shellcheck)
+    name: shell and workflows (shellcheck, actionlint)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - run: shellcheck --version
-      - run: make shell-lint
+      - name: actionlint version from .tool-versions
+        id: tv
+        run: echo "actionlint=$(awk '$1 == "actionlint" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
+      - name: actionlint binary cache
+        id: al-bin
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/actionlint
+          key: actionlint-${{ runner.os }}-${{ runner.arch }}-${{ steps.tv.outputs.actionlint }}
+      - uses: actions/setup-go@v7
+        if: steps.al-bin.outputs.cache-hit != 'true'
+        with:
+          go-version-file: .tool-versions
+          cache: false
+      - name: Install actionlint (cache miss only)
+        if: steps.al-bin.outputs.cache-hit != 'true'
+        run: GOBIN="$HOME/.local/actionlint" go install "github.com/rhysd/actionlint/cmd/actionlint@v${{ steps.tv.outputs.actionlint }}"
+      - run: echo "$HOME/.local/actionlint" >> "$GITHUB_PATH"
+      - run: shellcheck --version && actionlint -version
+      - run: make shell-lint actions-lint
 
   docs:
     name: docs (links, paths, index)

@@ -18,7 +18,7 @@ VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev
 
 .PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor e2e smoke eval dev-backend dev-frontend run image up down \
         backend-test backend-lint backend-fmt backend-fmt-check backend-build \
-        frontend-test frontend-lint shell-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
+        frontend-test frontend-lint shell-lint actions-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
 
 help: ## Show this help
@@ -45,7 +45,7 @@ e2e: ## Playwright scenarios against a running stack (E2E_BASE_URL, default http
 
 smoke: ## Smoke-test a running stack (SMOKE_URL, default http://localhost:8080; see `make up`)
 	bash scripts/smoke.sh $(or $(SMOKE_URL),http://localhost:8080)
-lint: backend-lint frontend-lint shell-lint ## Run all linters
+lint: backend-lint frontend-lint shell-lint actions-lint ## Run all linters
 fmt: backend-fmt frontend-fmt ## Format all code in place
 fmt-check: backend-fmt-check frontend-fmt-check ## Verify formatting without changing files
 build: frontend-build backend-build ## Build the frontend (frontend/dist) and the API server (backend/bin/server)
@@ -77,6 +77,10 @@ backend-test: ## Go tests with race detector and coverage (GOTEST_FLAGS)
 shell-lint: ## shellcheck the scripts (install: apt install shellcheck, or brew install shellcheck)
 	@command -v shellcheck >/dev/null || { echo "shellcheck not found: apt install shellcheck, or brew install shellcheck"; exit 1; }
 	shellcheck scripts/*.sh
+
+actions-lint: ## actionlint the GitHub workflows (install: go install github.com/rhysd/actionlint/cmd/actionlint@v<version in .tool-versions>)
+	@command -v actionlint >/dev/null || { echo "actionlint not found: go install github.com/rhysd/actionlint/cmd/actionlint@v$$(awk '$$1 == "actionlint" { print $$2 }' .tool-versions)"; exit 1; }
+	actionlint
 
 backend-lint: ## go vet + golangci-lint (the config is verified first, as CI does)
 	cd $(BACKEND) && go vet ./... && golangci-lint config verify && golangci-lint run ./...
