@@ -87,6 +87,8 @@
 
 PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`shell`・`docs`・`pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`shell`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
 
+CodeQL は `.github/workflows/codeql.yml` で動く（ADR-0031）。`docs/**` と `**/*.md` だけの変更では走らず、週に 1 回は全体を解析する。
+
 | 取得するもの | 取得元 | キャッシュ | 取得元が不調のとき |
 | --- | --- | --- | --- |
 | Go 本体（`.tool-versions` の版） | GitHub の `actions/go-versions` のリリース | ランナーのツールキャッシュを `actions/cache` で版ごとに | `setup-go` が go.dev から取る |
