@@ -419,3 +419,21 @@ func TestSwingWithoutAPatternIsNotShown(t *testing.T) {
 		t.Errorf("no pattern swings, yet the candidate says %q", got)
 	}
 }
+
+// TestAPhrygianAnswerIsExplained (BL-189): the model may answer in phrygian,
+// and the engine explains its II as the chord that marks the mode.
+func TestAPhrygianAnswerIsExplained(t *testing.T) {
+	text := answer(t, map[string]any{"tonic": 4, "mode": "phrygian"}, "フラメンコのイメージですね。",
+		"II から主和音へ半音で下りる、フリジアンの響きです。", "i", "II", "III", "II")
+	res, err := New(fake.New(llm.Response{Text: text})).Imagine(context.Background(), []Message{user("フラメンコ")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	c := res.Candidates[0]
+	if c.Timeline.Key.Mode != music.Phrygian || c.Timeline.Harmony[1].Symbol != "F" {
+		t.Fatalf("key %v, II = %q", c.Timeline.Key, c.Timeline.Harmony[1].Symbol)
+	}
+	if !strings.Contains(c.Timeline.Harmony[1].Analysis.Explanation, "フリジアン終止") {
+		t.Errorf("II lacks the phrygian cadence: %s", c.Timeline.Harmony[1].Analysis.Explanation)
+	}
+}

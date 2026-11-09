@@ -152,7 +152,7 @@ func (c Candidate) validateKeyAndTempo() []error {
 		errs = append(errs, fmt.Errorf("key.tonic must be 0..11, got %d", c.Key.Tonic))
 	}
 	if _, err := c.Key.Mode.MarshalText(); err != nil {
-		errs = append(errs, errors.New("key.mode must be major, minor, dorian or mixolydian"))
+		errs = append(errs, errors.New("key.mode must be major, minor, dorian, mixolydian or phrygian"))
 	}
 	if c.TempoBPM < MinTempoBPM || c.TempoBPM > MaxTempoBPM {
 		errs = append(errs, fmt.Errorf("tempoBpm must be %d..%d, got %v", MinTempoBPM, MaxTempoBPM, c.TempoBPM))
