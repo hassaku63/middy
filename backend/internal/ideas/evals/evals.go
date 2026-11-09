@@ -226,7 +226,7 @@ func Report(verdicts []Verdict) string {
 			status += " · reason names " + strings.Join(v.Silent, "/")
 		}
 		if v.Retry != "" {
-			status += " · retry: " + shorten(oneLine(v.Retry), 120)
+			status += " · retry: " + shorten(oneLine(v.Retry), 240)
 		}
 		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, oneLine(v.Title), v.Key, v.TempoBPM, meterNote(v.Meter)+patternsNote(v.Patterns), strings.Join(v.Progression, " "), status)
 	}
