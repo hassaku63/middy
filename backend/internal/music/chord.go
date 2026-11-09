@@ -22,6 +22,9 @@ const (
 	HalfDiminished7
 	MinorSixth  // minor triad with a major sixth; the borrowed ivm6 (BL-094)
 	Diminished7 // stacked minor thirds; the passing vii°7/x (BL-130)
+	Sus4        // the fourth in place of the third (BL-132)
+	Dominant7Sus4
+	Power // root and fifth only, no third (BL-132)
 )
 
 type qualityInfo struct {
@@ -42,6 +45,9 @@ var qualities = map[ChordQuality]qualityInfo{
 	HalfDiminished7: {"m7b5", "m7b5", []int{0, 3, 6, 10}, false},
 	MinorSixth:      {"min6", "m6", []int{0, 3, 7, 9}, false},
 	Diminished7:     {"dim7", "dim7", []int{0, 3, 6, 9}, false},
+	Sus4:            {"sus4", "sus4", []int{0, 5, 7}, true},
+	Dominant7Sus4:   {"dom7sus4", "7sus4", []int{0, 5, 7, 10}, true},
+	Power:           {"power", "5", []int{0, 7}, true},
 }
 
 // Qualities lists every chord quality the engine knows, in declaration
@@ -213,24 +219,23 @@ func RomanNumeralAlt(degree, accidental int, q ChordQuality) (string, error) {
 	if accidental == -1 {
 		base = "♭" + base
 	}
-	switch q {
-	case DiminishedTriad:
-		return base + "°", nil
-	case AugmentedTriad:
-		return base + "+", nil
-	case Major7:
-		return base + "maj7", nil
-	case Minor7, Dominant7:
-		return base + "7", nil
-	case HalfDiminished7:
-		return base + "ø7", nil
-	case Diminished7:
-		return base + "°7", nil
-	case MinorSixth:
-		return base + "m6", nil
-	default:
-		return base, nil
-	}
+	return base + numeralSuffix[q], nil
+}
+
+// numeralSuffix is what a roman numeral adds for a quality; triads of
+// either case add nothing.
+var numeralSuffix = map[ChordQuality]string{
+	DiminishedTriad: "°",
+	AugmentedTriad:  "+",
+	Major7:          "maj7",
+	Minor7:          "7",
+	Dominant7:       "7",
+	HalfDiminished7: "ø7",
+	MinorSixth:      "m6",
+	Diminished7:     "°7",
+	Sus4:            "sus4",
+	Dominant7Sus4:   "7sus4",
+	Power:           "5",
 }
 
 func toLowerASCII(s string) string {

@@ -325,7 +325,19 @@ export interface components {
      * @enum {string}
      */
     ChordQuality:
-      'maj' | 'min' | 'dim' | 'aug' | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'min6' | 'dim7';
+      | 'maj'
+      | 'min'
+      | 'dim'
+      | 'aug'
+      | 'maj7'
+      | 'min7'
+      | 'dom7'
+      | 'm7b5'
+      | 'min6'
+      | 'dim7'
+      | 'sus4'
+      | 'dom7sus4'
+      | 'power';
     Chord: {
       root: components['schemas']['PitchClass'];
       quality: components['schemas']['ChordQuality'];

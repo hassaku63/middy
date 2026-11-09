@@ -135,7 +135,7 @@ func TestChordJSON(t *testing.T) {
 	if err := json.Unmarshal(b, &back); err != nil || back != c {
 		t.Fatalf("round trip = %+v, %v", back, err)
 	}
-	if err := json.Unmarshal([]byte(`{"root":0,"quality":"sus4"}`), &back); err == nil {
+	if err := json.Unmarshal([]byte(`{"root":0,"quality":"sus2"}`), &back); err == nil {
 		t.Fatal("unknown quality must fail to unmarshal")
 	}
 }
