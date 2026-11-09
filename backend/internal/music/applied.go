@@ -152,7 +152,7 @@ func appliedStep(key Key, label string, beats int) (step Step, ok bool, err erro
 // than the tonic, unless sub: a substitute may aim at it), and targets
 // written in the wrong case.
 func checkTarget(key Key, label string, target int, upper bool, suffix string, accidental int, sub bool) error {
-	if accidental != 0 || (suffix != "" && suffix != "°" && suffix != "+" && suffix != "dim" && suffix != "aug") {
+	if !plainTarget(suffix, accidental) {
 		return fmt.Errorf("music: %q: write the target as the key's plain triad (V/ii, V7/IV)", label)
 	}
 	t, err := key.Diatonic(target, false)
@@ -160,16 +160,30 @@ func checkTarget(key Key, label string, target int, upper bool, suffix string, a
 		return err
 	}
 	rn, _ := RomanNumeral(target, t.Quality)
+	// A minor key's uppercase V is its harmonic-minor dominant (StepFromLabel),
+	// on the same root as v, so V7/V and V7/v name the same chord: take the
+	// first and spell it as the second (BL-131).
+	harmonicV := key.Mode == Minor && target == 5 && upper && suffix == ""
 	switch {
 	case target == 1 && !sub:
 		return fmt.Errorf("music: %q is the dominant itself; write \"V\" or \"V7\"", label)
 	case t.Quality != MajorTriad && t.Quality != MinorTriad:
 		return fmt.Errorf("music: %q is not available in %s: %s (%s) is not a major or minor chord, and is not approached by its own dominant",
 			label, key, rn, key.ChordSymbol(t))
-	case upper != t.Quality.isUpper() || suffix != "":
+	case !harmonicV && (upper != t.Quality.isUpper() || suffix != ""):
 		return fmt.Errorf("music: %q: the target is %s (%s) in %s; write the target as %q", label, rn, key.ChordSymbol(t), key, rn)
 	}
 	return nil
+}
+
+// plainTarget reports a target written as a triad: no accidental, no
+// seventh (a triad's own decoration is checked against the key later).
+func plainTarget(suffix string, accidental int) bool {
+	switch suffix {
+	case "", "°", "+", "dim", "aug":
+		return accidental == 0
+	}
+	return false
 }
 
 // appliedTargetOf recognises a chord as the secondary dominant of some

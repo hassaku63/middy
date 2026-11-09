@@ -169,7 +169,7 @@ func (c Candidate) validateProgression() []error {
 		// minor, I7 in major) is an error the model can act on, not
 		// something to fix quietly (ADR-0013).
 		if _, err := music.CanonicalLabel(c.Key, label); err != nil {
-			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s%s", i, err, c.suggestLabel(label), c.dominantHint(label), c.substituteHint(label)))
+			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s%s%s", i, err, c.suggestLabel(label), c.dominantHint(label), c.substituteHint(label), c.diminishedHint(label)))
 		}
 	}
 	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
@@ -264,6 +264,49 @@ func (c Candidate) substituteHint(label string) string {
 		try := "subV7/" + rn
 		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
 			return fmt.Sprintf(`; if you meant the tritone substitute resolving to %s, write %q`, rn, try)
+		}
+	}
+	return ""
+}
+
+// diminishedHint offers the passing diminished seventh a diminished seventh
+// written on a sharpened root most likely meant (BL-131): "#i°7" in C major
+// is C#dim7, which the key writes "vii°7/ii". "" for any other label.
+func (c Candidate) diminishedHint(label string) string {
+	trimmed := strings.TrimSpace(label)
+	rest, sharp := strings.CutPrefix(trimmed, "#")
+	if !sharp {
+		rest, sharp = strings.CutPrefix(trimmed, "♯")
+	}
+	lower := strings.ToLower(rest)
+	dim7 := strings.HasSuffix(lower, "°7") || strings.HasSuffix(lower, "o7") || strings.HasSuffix(lower, "dim7")
+	if !sharp || !dim7 {
+		return ""
+	}
+	degree, _, err := music.ParseRomanNumeral(rest)
+	if err != nil {
+		return ""
+	}
+	natural, err := c.Key.Degree(degree)
+	if err != nil {
+		return ""
+	}
+	for d := 1; d <= 7; d++ { // the sharpened root leads, a semitone below, to its target
+		pc, err := c.Key.Degree(d)
+		if err != nil || pc != natural.Add(2) {
+			continue
+		}
+		target, err := c.Key.Diatonic(d, false)
+		if err != nil {
+			return ""
+		}
+		rn, err := music.RomanNumeral(d, target.Quality)
+		if err != nil {
+			return ""
+		}
+		try := "vii°7/" + rn
+		if _, err := music.CanonicalLabel(c.Key, try); err == nil {
+			return fmt.Sprintf(`; if you meant the passing diminished seventh leading to %s, write %q`, rn, try)
 		}
 	}
 	return ""
