@@ -37,7 +37,7 @@
 | 発行元 | W3C Music Notation Community Group。W3C 標準ではなく、W3C の標準化の過程にもない（Community Group の最終報告） |
 | 何を決めているか | 楽譜をアプリの間で交換し、保存するための開かれた形式 |
 | 一次情報 | https://www.w3.org/2021/06/musicxml40/ （Version 4.0、2021-06-01 の最終報告）。編集中の版は、このページが示す https://w3c.github.io/musicxml/ 。登録なしで読める |
-| 状態 | 4.0 が最新の最終報告。同じ Community Group の MNX との比較の文書がある |
+| 状態 | このページは 4.0 の最終報告。より新しい版の有無は確かめていない。ページから、同じ Community Group の MNX との比較の文書に行ける |
 | 当たるべき場面 | 楽譜の書き出し・読み込みを考えるとき。和音記号の表記を決めるとき（「Chord Symbols and Diagrams」の章） |
 | middy との接点 | 今はない。和音の表記（`docs/architecture/domain-model.md`）と比べる候補 |
 | 確認日 | 2026-11-09 |
