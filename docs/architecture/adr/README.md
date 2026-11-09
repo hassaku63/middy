@@ -34,6 +34,7 @@
 | [0028](0028-one-required-check.md) | main の必須チェックは、`make check` に当たるジョブをまとめた 1 つだけにする | Accepted |
 | [0029](0029-lint-policy.md) | 推奨される lint は 1 つずつ入れ、道具そのものの陳腐化を定期的に検討する | Accepted |
 | [0030](0030-problem-details.md) | エラー応答は RFC 9457 の problem detail にする | Accepted |
+| [0031](0031-codeql-advanced-setup.md) | CodeQL はワークフローで動かし、文書だけの変更では走らせない | Accepted |
 
 ## いつ ADR を書くか
 
