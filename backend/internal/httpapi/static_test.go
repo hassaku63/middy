@@ -69,7 +69,7 @@ func TestStaticServesFilesWithCachePolicy(t *testing.T) {
 
 func TestStaticSPAFallback(t *testing.T) {
 	srv := newStaticServer(t, builtFrontend())
-	for _, p := range []string{"/projects/42", "/assets/missing.js", "/assets/sub", "/deep/../index.html"} {
+	for _, p := range []string{"/projects/42", "/deep/../index.html", "/"} {
 		t.Run(p, func(t *testing.T) {
 			resp := get(t, srv.URL+p)
 			body, _ := io.ReadAll(resp.Body)
@@ -78,6 +78,26 @@ func TestStaticSPAFallback(t *testing.T) {
 			}
 			if cc := resp.Header.Get("Cache-Control"); cc != "no-cache" {
 				t.Errorf("fallback must not be cached, got %q", cc)
+			}
+		})
+	}
+}
+
+// TestStaticMissingFileIs404 (ADR-0022): a build file that does not exist
+// (an old tab after a deploy) is missing, not the app's HTML.
+func TestStaticMissingFileIs404(t *testing.T) {
+	srv := newStaticServer(t, builtFrontend())
+	for _, p := range []string{"/assets/missing.js", "/assets/sub", "/assets", "/missing.css", "/icons/x.png"} {
+		t.Run(p, func(t *testing.T) {
+			resp := get(t, srv.URL+p)
+			if resp.StatusCode != http.StatusNotFound {
+				t.Fatalf("status = %d, want 404", resp.StatusCode)
+			}
+			if ct := resp.Header.Get("Content-Type"); contains(ct, "text/html") {
+				t.Errorf("a missing file must not be answered with HTML (%s)", ct)
+			}
+			if cc := resp.Header.Get("Cache-Control"); cc != "no-cache" {
+				t.Errorf("a 404 must not be cached, got %q", cc)
 			}
 		})
 	}
