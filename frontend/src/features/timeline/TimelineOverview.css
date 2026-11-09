@@ -1,0 +1,9 @@
+.timeline-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline.timeline--overview {
+  opacity: 0.85;
+}
