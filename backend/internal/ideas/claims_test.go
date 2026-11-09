@@ -1,0 +1,117 @@
+package ideas
+
+import (
+	"context"
+	"encoding/json"
+	"strings"
+	"testing"
+
+	"github.com/hassaku63/middy/backend/internal/llm"
+	"github.com/hassaku63/middy/backend/internal/llm/fake"
+)
+
+// marusa builds an answer with one C-major candidate on the Marunouchi
+// Sadistic loop (#272) and the given reason and reply.
+func marusa(t *testing.T, summary, reason string, progression ...string) string {
+	t.Helper()
+	return answer(t, map[string]any{"tonic": 0, "mode": "major"}, summary, reason, progression...)
+}
+
+func answer(t *testing.T, key map[string]any, summary, reason string, progression ...string) string {
+	t.Helper()
+	if len(progression) == 0 {
+		progression = []string{"IVmaj7", "V7/vi", "vi7", "I7", "IVmaj7", "V7/vi", "vi7", "subV7/vi"}
+	}
+	b, err := json.Marshal(map[string]any{
+		"summary": summary,
+		"mood":    []string{"都会的"},
+		"candidates": []map[string]any{{
+			"title": "丸サ", "key": key, "tempoBpm": 98,
+			"progression": progression, "beatsPerChord": 4, "reason": reason,
+		}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+// The answer of #272: a chord named wrongly and a motion that does not
+// happen are both retried, quoting the facts; a corrected answer is used.
+func TestClaimsTheChordsContradictAreRetried(t *testing.T) {
+	wrong := marusa(t, "丸サ進行のイメージですね。",
+		"同じ丸サ進行をスウィングさせた版です。最後の subV7/vi（F7）が半音下の vi7 へ滑り込み、ループの頭へ洒落た緊張感を与えます。")
+	right := marusa(t, "丸サ進行のイメージですね。",
+		"最後の subV7/vi（Bb7）は、本来は半音下の vi7 へ向かう裏コードですが、ここではループの頭の IVmaj7 へ戻って緊張を残します。")
+	client := fake.New(llm.Response{Text: wrong}, llm.Response{Text: right})
+	res, err := New(client).Imagine(context.Background(), []Message{user("丸の内サディスティック風の進行")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	for _, want := range []string{"subV7/vi を F7 と書いている", "この調の subV7/vi は Bb7", "subV7/vi が vi7 へ進む", "次は IVmaj7"} {
+		if !strings.Contains(res.Retry, want) {
+			t.Errorf("retry reason lacks %q: %q", want, res.Retry)
+		}
+	}
+	retry := client.Requests()[1].Messages
+	if got := retry[len(retry)-1].Content; !strings.Contains(got, "F7") || !strings.Contains(got, "IVmaj7") {
+		t.Errorf("the retry does not quote the problems: %q", got)
+	}
+	if res.Candidates[0].Reason != "最後の subV7/vi（Bb7）は、本来は半音下の vi7 へ向かう裏コードですが、ここではループの頭の IVmaj7 へ戻って緊張を残します。" {
+		t.Errorf("the corrected answer is not used: %q", res.Candidates[0].Reason)
+	}
+}
+
+// Claims the chords bear out, and wording the check cannot read, pass on
+// the first answer.
+func TestClaimsTheChordsBearOutAreNotRetried(t *testing.T) {
+	tests := []struct {
+		name, summary, reason string
+		progression           []string
+	}{
+		{"named and resolving", "丸サ進行ですね。",
+			"V7 を V7/vi（E7）に替えて vi7 へ強く引き込み、I7（C7）でブルージーに IVmaj7 へ戻る版です。", nil},
+		{"through another chord", "明るい循環。", "G ミクソリディアンの I–VII–IV–I。VII（F）から IV を経て I へ戻ります。", nil},
+		{"the loop back to the first chord", "丸サ。", "最後の I7 から頭の IVmaj7 へ戻ります。",
+			[]string{"IVmaj7", "V7/vi", "vi7", "I7"}},
+		{"a contrast with the usual motion", "丸サ。", "V7/vi は通常 vi へ解決するが、ここでは IVmaj7 へ進まない。", nil},
+		{"a numeral of another candidate", "丸サ。", "候補 1 の V7 の代わりに V7/vi を使い、vi7 に解決します。", nil},
+		{"letters inside words", "Vm7 と I7 の Swing。", "Imaj7 ではなく I7 を使い、Very lively に。", nil},
+		{"a numeral the engine cannot read", "丸サ進行は IVmaj7–III7–vi7–I7 と書かれることもあります。", "III7（E7）は V7/vi と同じ和音で、vi7 へ解決します。", nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			text := marusa(t, tt.summary, tt.reason, tt.progression...)
+			if tt.name == "through another chord" {
+				text = answer(t, map[string]any{"tonic": 7, "mode": "mixolydian"}, tt.summary, tt.reason, "I", "VII", "IV", "I")
+			}
+			res, err := New(fake.New(llm.Response{Text: text})).Imagine(context.Background(), []Message{user("x")})
+			if err != nil {
+				t.Fatalf("Imagine: %v", err)
+			}
+			if res.Retry != "" {
+				t.Errorf("retried: %q", res.Retry)
+			}
+		})
+	}
+}
+
+// The reply speaks of the image: a named chord must fit some candidate.
+func TestClaimsInTheReplyAreChecked(t *testing.T) {
+	text := marusa(t, "V7/vi（D7）で vi へ引き寄せる、都会的な進行ですね。", "丸サ進行の形です。")
+	_, err := New(fake.New(llm.Response{Text: text}, llm.Response{Text: text})).Imagine(context.Background(), []Message{user("x")})
+	if err == nil || !strings.Contains(err.Error(), "summary: V7/vi を D7 と書いているが、この調の V7/vi は E7") {
+		t.Fatalf("want the reply's wrong chord to fail twice, got %v", err)
+	}
+}
+
+func TestLabelsInSkipsWordsAndKeepsNumerals(t *testing.T) {
+	var got []string
+	for _, m := range labelsIn("Vm7 と Ivy、IVmaj7→V7/vi→vi7、subV7/vi（Bb7）、bVII と V7sus4") {
+		got = append(got, m.label)
+	}
+	want := []string{"IVmaj7", "V7/vi", "vi7", "subV7/vi", "bVII", "V7sus4"}
+	if strings.Join(got, " ") != strings.Join(want, " ") {
+		t.Errorf("labelsIn = %v, want %v", got, want)
+	}
+}

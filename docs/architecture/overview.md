@@ -28,7 +28,7 @@
 1. ユーザーがイメージ文を入力 → `POST /api/v1/ideas`
 2. `ideas.Service.Imagine` が `llm.Client.Complete` を構造化出力（`intent.Schema`）つきで呼ぶ
 3. `intent.Parse` が復号と検証を行う。不正なら、その答えと検証エラーを添えて **1 回だけ** 再試行する（エラー文は直し方を添える。1 文字消せば読めるラベルにはその候補、別の拍子の長さや型にはその拍子。#133）。それでも不正なら `ErrInvalidOutput`
-4. 候補ごとに `Candidate.ToProgression` → `music.FromProgression` → `music.Analyze` で分析済み `Timeline` を作る
+4. 候補ごとに `Candidate.ToProgression` → `music.FromProgression` → `music.Analyze` で分析済み `Timeline` を作る。返事と候補の理由に書かれた和音の主張（「ローマ数字（和音名）」と「X へ解決する・進む」）を、その候補の和音と照合し（`ideas/claims.go`、ADR-0034）、合わなければ 3 と同じく 1 回だけ再試行する
 5. JSON で返す。フロントは候補カードを表示し、選択されたものを `player` が再生、`timeline` が描画、`explanation` が解説
 6. 相談（チャット）は会話履歴（ユーザー発言と、assistant 側は前回の `summary`）を往復させ、同じ流れを繰り返す。サーバーは状態を持たない
 7. `LLM_PROVIDER=fake` のとき、台本のない fake は入力の気分語（雨・悲・夜…）から決定論的な見本 Intent を返すので、鍵なしで開発・E2E ができる
