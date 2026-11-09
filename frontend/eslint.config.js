@@ -94,7 +94,7 @@ const testHygieneRules = {
 export default tseslint.config(
   { ignores: ['dist', 'dev-dist', 'coverage', 'node_modules', 'src/**/*.gen.ts'] },
   js.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.strictTypeChecked,
   {
     languageOptions: {
       parserOptions: {
@@ -112,6 +112,12 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
+      // React handlers and test waits are written `() => setX(v)` and
+      // `waitFor(() => expect(...))`; nothing reads their result.
+      '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
+      // Numbers print the same everywhere; widths, bars and counts are put
+      // into labels and styles this way.
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
       // Size and complexity budgets (ADR-0007). Generous; a hit means "split".
       'max-lines': ['error', { max: 400, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
 import type { ChatTurn, Ideas } from './useIdeas';
@@ -63,7 +63,7 @@ export function ChatPanel({
       </li>
     );
 
-  const submit = (e: FormEvent) => {
+  const submit = (e: SubmitEvent) => {
     e.preventDefault();
     const t = text;
     setText('');
