@@ -31,7 +31,7 @@ for f in "$dist"/assets/*.css; do
   css_total=$((css_total + $(gz "$f")))
 done
 
-echo "bundle-size: largest JS $(kb $largest) kB ($largest_name), all JS $(kb $js_total) kB, CSS $(kb $css_total) kB (gzip)"
+echo "bundle-size: largest JS $(kb "$largest") kB ($largest_name), all JS $(kb "$js_total") kB, CSS $(kb "$css_total") kB (gzip)"
 status=0
 check() { # name actual-bytes budget-kb
   if [ "$2" -gt $(( $3 * 1024 )) ]; then

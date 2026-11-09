@@ -10,7 +10,7 @@
 #
 # Usage: scripts/docs-staleness.sh [max-doc-age-days] [max-backlog-age-days]
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 max_age="${1:-120}"
 max_backlog_age="${2:-90}"
@@ -21,7 +21,7 @@ section() { printf '\n### %s\n\n' "$1"; }
 in_progress=$(grep -E '^\| BL-[0-9]{3} .*\| In progress \|' docs/product/backlog.md | grep -oE 'BL-[0-9]{3}' || true)
 if [ -n "$in_progress" ]; then
   section "In progress のまま残っている backlog 項目"
-  printf -- '- %s\n' $in_progress
+  while IFS= read -r id; do printf -- '- %s\n' "$id"; done <<<"$in_progress"
 fi
 
 # Backlog rows that have sat unchanged in a waiting section. git blame gives
@@ -60,5 +60,6 @@ fi
 markers=$(grep -nE '予定|現在 ?[0-9]|TODO|まだ(実装|存在)' --include='*.md' -r docs AGENTS.md README.md 2>/dev/null | grep -vE '^docs/(dev/docs-hygiene\.md|architecture/adr/)' | grep -v '「予定」' || true)
 if [ -n "$markers" ]; then
   section "腐りやすい言い回しを含む行（実態と照合する）"
+  # shellcheck disable=SC2016 # the backticks are Markdown, not a command
   printf '%s\n' "$markers" | sed -E 's/^/- `/; s/$/`/'
 fi

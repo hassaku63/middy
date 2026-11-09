@@ -30,6 +30,7 @@
 | gofmt / goimports / Prettier | 書式のばらつき | `make fmt-check` | `make check`, CI |
 | golangci-lint 標準セット + revive（`exported` とエラーの規則 5 つ）, gocritic, misspell | 典型的なバグと不統一、エラーの書き方（小文字で句点なしの文、`fmt.Errorf`、`err`/`Err` で始まる名前、最後に返す `error`、`return` のあとの `else`） | `make backend-lint` | `make check`, CI `backend` |
 | `bodyclose`（テストを除く）、`contextcheck`、`copyloopvar`、`dupl`、`errname`、`exhaustive`（`default` は網羅とみなす。`Pitch`・`PitchClass` は列挙として扱わない）、`forcetypeassert`、`gosec`（除外は行ごとに理由つき）、`intrange`、`nakedret`、`nilerr`、`noctx`、`nolintlint`、`perfsprint`（文字列の連結の提案は止める）、`sloglint`（グローバルの logger と `err` のキーを禁じる）、`unparam`、`usestdlibvars`（Go。ADR-0029。1 つずつ入れた） | HTTP の応答の本文の閉じ忘れ、context の取りこぼし、古いループ変数のコピー、重複コード、エラー型の命名、列挙の switch の取りこぼし、確かめない型アサーション、典型的な安全上の誤り（権限、整数の縮小変換など）、整数の range で書けるループ、裸の return、`nil` を返して握りつぶすエラー、context のない HTTP の要求、注入されない logger、いつも同じ値の引数や戻り値、理由のない `//nolint`、書式の要らない `fmt` の呼び出し、標準ライブラリの定数の手書き | `make backend-lint` | `make check`, CI `backend` |
+| shellcheck（`scripts/*.sh`。意図した一重引用符などは、行ごとに理由つきで止める） | 失敗を見ない `cd`、引用符のない展開、使われない変数など、シェルの典型的な誤り | `make shell-lint` | `make check`, CI `shell` |
 | `depguard`（Go） | 境界違反: `music` の I/O、`httpapi` からアダプタ直 import、`net/http` の漏れ | `make backend-lint` | `make check`, CI `backend` |
 | `funlen` 80 行 / `gocognit` 20 / `gocyclo` 15 | 肥大した関数（テストは除外） | `make backend-lint` | `make check`, CI `backend` |
 | ESLint 型つき strict と stylistic（typescript-eslint `strictTypeChecked`・`stylisticTypeChecked`。矢印の短縮形が返す `void` と、テンプレート文字列の数値は許す。型の形は `type` で書く）+ react-hooks | 典型的なバグ、要らない条件、非推奨の API、`void` の値の取り違え、書き方の不統一 | `make frontend-lint` | `make check`, CI `frontend` |
@@ -81,7 +82,7 @@
 
 ジョブはこれらをキャッシュから取り、ないときだけ取得元へ行く。すべてのジョブに `timeout-minutes` がある。
 
-PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`docs` と `pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
+PR では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`shell`・`docs`・`pr size` は毎回）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。`main` への push では全部が走る。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`shell`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
 
 | 取得するもの | 取得元 | キャッシュ | 取得元が不調のとき |
 | --- | --- | --- | --- |

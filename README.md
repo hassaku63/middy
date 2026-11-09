@@ -24,7 +24,7 @@
 
 ## クイックスタート
 
-前提: Go、Node.js、[golangci-lint](https://golangci-lint.run/)。版は `.tool-versions` が唯一の情報源で、CI もそれを読みます（asdf / mise なら `asdf install` / `mise install`）。
+前提: Go、Node.js、[golangci-lint](https://golangci-lint.run/)、[ShellCheck](https://www.shellcheck.net/)（`apt install shellcheck` / `brew install shellcheck`）。版は `.tool-versions` が唯一の情報源で、CI もそれを読みます（asdf / mise なら `asdf install` / `mise install`）。
 
 ```bash
 make doctor         # 手元の版が .tool-versions と合っているか

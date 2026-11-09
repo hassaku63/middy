@@ -15,6 +15,7 @@ since=$(date -u -d "-${days} days" +%Y-%m-%d 2>/dev/null || date -u -v-"${days}"
 # proxies reject the numeric-id URLs in the Link header.
 runs=""
 for page in $(seq 1 10); do
+  # shellcheck disable=SC2016 # a jq program; the backticks are Markdown
   chunk=$(gh api "repos/$repo/actions/runs?created=%3E%3D${since}&per_page=100&page=${page}" \
     --jq '.workflow_runs[] | select(.run_attempt > 1 and .conclusion == "success")
           | "- \(.name) `\(.head_branch)` attempt \(.run_attempt): \(.html_url)"' 2>/dev/null) || {

@@ -11,7 +11,7 @@
 #   GO_TEST_JSON=<go test -json output>   VITEST_JSON=<vitest json report>
 # The step that produced the file owns pass / fail; the report only reads it.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 backend_budget=60
 frontend_budget=30
