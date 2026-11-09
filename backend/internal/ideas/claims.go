@@ -94,30 +94,88 @@ func namedRoot(letter, accidental string) music.PitchClass {
 	return pc
 }
 
-// checkClaims returns the claims in the answer that its candidates
-// contradict, as sentences the retry can quote.
-func checkClaims(res Result) []string {
-	var problems []string
-	for i, c := range res.Candidates {
-		where := fmt.Sprintf("candidates[%d].reason", i)
-		problems = append(problems, namedChordProblems(where, c.Reason, []music.Key{c.Key})...)
-		problems = append(problems, motionProblems(where, c.Reason, c)...)
+// claimProblem is a sentence of the answer that its chords contradict.
+// Candidate is the candidate whose reason holds it, or -1 for the reply.
+type claimProblem struct {
+	candidate int
+	sentence  string
+	message   string
+}
+
+func (p claimProblem) String() string {
+	where := "summary"
+	if p.candidate >= 0 {
+		where = fmt.Sprintf("candidates[%d].reason", p.candidate)
 	}
+	return where + ": " + p.message
+}
+
+// checkClaims returns the sentences of the answer that its candidates
+// contradict, with what the retry should be told.
+func checkClaims(res Result) []claimProblem {
+	var problems []claimProblem
 	keys := make([]music.Key, 0, len(res.Candidates))
-	for _, c := range res.Candidates {
+	for i, c := range res.Candidates {
 		keys = append(keys, c.Key)
+		for _, s := range sentences(c.Reason) {
+			for _, m := range namedChordProblems(s, []music.Key{c.Key}) {
+				problems = append(problems, claimProblem{i, s, m})
+			}
+			for _, m := range motionProblems(s, c) {
+				problems = append(problems, claimProblem{i, s, m})
+			}
+		}
 	}
 	// The reply speaks of the image, not of one candidate: a named chord
 	// must fit at least one candidate's key.
-	return append(problems, namedChordProblems("summary", res.Reply, keys)...)
+	for _, s := range sentences(res.Reply) {
+		for _, m := range namedChordProblems(s, keys) {
+			problems = append(problems, claimProblem{-1, s, m})
+		}
+	}
+	return problems
 }
 
-// namedChordProblems checks "numeral（chord）": the chord's root must be
-// the numeral's root in one of the keys.
-func namedChordProblems(where, text string, keys []music.Key) []string {
+// withoutContradictions drops the contradicted sentences from the answer:
+// what is left the chords bear out (ADR-0034, decision 5). Used when the
+// retried answer still contradicts its chords, rather than failing a turn
+// whose music is sound.
+func withoutContradictions(res Result, problems []claimProblem) Result {
+	out := res
+	out.Candidates = append([]Candidate(nil), res.Candidates...)
+	for _, p := range problems {
+		if p.candidate < 0 {
+			out.Reply = strings.TrimSpace(strings.Replace(out.Reply, p.sentence, "", 1))
+			continue
+		}
+		c := &out.Candidates[p.candidate]
+		c.Reason = strings.TrimSpace(strings.Replace(c.Reason, p.sentence, "", 1))
+	}
+	return out
+}
+
+// sentences splits a text after each "。", keeping the mark, so that a
+// sentence can be removed from the text as it was written.
+func sentences(text string) []string {
+	var out []string
+	for text != "" {
+		i := strings.Index(text, "。")
+		if i < 0 {
+			out = append(out, text)
+			break
+		}
+		out = append(out, text[:i+len("。")])
+		text = text[i+len("。"):]
+	}
+	return out
+}
+
+// namedChordProblems checks "numeral（chord）" in a sentence: the chord's
+// root must be the numeral's root in one of the keys.
+func namedChordProblems(sentence string, keys []music.Key) []string {
 	var problems []string
-	for _, m := range labelsIn(text) {
-		g := namedChord.FindStringSubmatch(text[m.end:])
+	for _, m := range labelsIn(sentence) {
+		g := namedChord.FindStringSubmatch(sentence[m.end:])
 		if g == nil {
 			continue
 		}
@@ -137,31 +195,29 @@ func namedChordProblems(where, text string, keys []music.Key) []string {
 			want = append(want, symbol)
 		}
 		if readable && !fits {
-			problems = append(problems, fmt.Sprintf("%s: %s を %s と書いているが、この調の %s は %s", where, m.label, g[1], m.label, strings.Join(want, " / ")))
+			problems = append(problems, fmt.Sprintf("%s を %s と書いているが、この調の %s は %s", m.label, g[1], m.label, strings.Join(want, " / ")))
 		}
 	}
 	return problems
 }
 
-// motionProblems checks "source … target へ（解決する、進む…）" in each
+// motionProblems checks "source … target へ（解決する、進む…）" in a
 // sentence: the source is the nearest numeral before the target, and some
 // chord written as the source must be followed by one on the target's
 // root (the last chord is followed by the first, as the example loops).
-func motionProblems(where, text string, c Candidate) []string {
+func motionProblems(sentence string, c Candidate) []string {
+	if hedged.MatchString(sentence) {
+		return nil // "V7 は本来 I へ解決するが…": a contrast, not a claim about this example
+	}
 	var problems []string
-	for _, sentence := range strings.Split(text, "。") {
-		if hedged.MatchString(sentence) {
-			continue // "V7 は本来 I へ解決するが…": a contrast, not a claim about this example
+	ms := labelsIn(sentence)
+	for j := 1; j < len(ms); j++ {
+		if !motionVerb.MatchString(sentence[ms[j].end:]) {
+			continue
 		}
-		ms := labelsIn(sentence)
-		for j := 1; j < len(ms); j++ {
-			if !motionVerb.MatchString(sentence[ms[j].end:]) {
-				continue
-			}
-			source, target := ms[j-1].label, ms[j].label
-			if next, contradicted := nextChords(c, source, target); contradicted {
-				problems = append(problems, fmt.Sprintf("%s: %s が %s へ進むと書いているが、この候補で %s の次は %s", where, source, target, source, strings.Join(next, " / ")))
-			}
+		source, target := ms[j-1].label, ms[j].label
+		if next, contradicted := nextChords(c, source, target); contradicted {
+			problems = append(problems, fmt.Sprintf("%s が %s へ進むと書いているが、この候補で %s の次は %s", source, target, source, strings.Join(next, " / ")))
 		}
 	}
 	return problems

@@ -113,7 +113,7 @@ func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, erro
 	if err != nil {
 		return Result{}, err
 	}
-	res.Retry = retried
+	res.Retry = retried + res.Retry
 	return res, nil
 }
 
@@ -146,9 +146,14 @@ func (s *Service) retry(ctx context.Context, req llm.Request, first error) (Resu
 		return Result{}, first
 	}
 	res, err := s.ask(ctx, req)
+	var contradiction contradictionError
 	switch {
 	case err == nil:
 		return res, nil
+	case errors.As(err, &contradiction):
+		kept := withoutContradictions(contradiction.res, contradiction.problems)
+		kept.Retry = "\nthe retried answer still contradicted its chords; dropped: " + contradiction.reason
+		return kept, nil
 	case errors.As(err, &invalid):
 		return Result{}, fmt.Errorf("%w: %s", ErrInvalidOutput, invalid.reason)
 	case errors.Is(err, llm.ErrRefused):
@@ -186,10 +191,31 @@ func (s *Service) ask(ctx context.Context, req llm.Request) (Result, error) {
 		return Result{}, err
 	}
 	if problems := checkClaims(res); len(problems) > 0 {
-		return Result{}, invalidOutputError{raw: resp.Text, reason: strings.Join(problems, "\n")}
+		reasons := make([]string, len(problems))
+		for i, p := range problems {
+			reasons[i] = p.String()
+		}
+		return Result{}, contradictionError{
+			invalidOutputError: invalidOutputError{raw: resp.Text, reason: strings.Join(reasons, "\n")},
+			res:                res,
+			problems:           problems,
+		}
 	}
 	return res, nil
 }
+
+// contradictionError is an answer whose music is sound but whose words
+// claim harmony its chords contradict. A retry is asked for as for any
+// invalid answer; if the retried answer still contradicts itself, the
+// contradicted sentences are dropped instead of failing the turn.
+type contradictionError struct {
+	invalidOutputError
+	res      Result
+	problems []claimProblem
+}
+
+// Unwrap lets the retry treat it as the invalid answer it is.
+func (e contradictionError) Unwrap() error { return e.invalidOutputError }
 
 // render turns every candidate into an analysed timeline. A candidate the
 // engine cannot render is a bug in intent.Validate, not user error.

@@ -97,11 +97,26 @@ func TestClaimsTheChordsBearOutAreNotRetried(t *testing.T) {
 }
 
 // The reply speaks of the image: a named chord must fit some candidate.
-func TestClaimsInTheReplyAreChecked(t *testing.T) {
-	text := marusa(t, "V7/vi（D7）で vi へ引き寄せる、都会的な進行ですね。", "丸サ進行の形です。")
-	_, err := New(fake.New(llm.Response{Text: text}, llm.Response{Text: text})).Imagine(context.Background(), []Message{user("x")})
-	if err == nil || !strings.Contains(err.Error(), "summary: V7/vi を D7 と書いているが、この調の V7/vi は E7") {
-		t.Fatalf("want the reply's wrong chord to fail twice, got %v", err)
+// When the retried answer still contradicts its chords, the turn is not
+// failed: the contradicted sentences are dropped and the rest is kept.
+func TestClaimsStillContradictedAfterTheRetryAreDropped(t *testing.T) {
+	text := marusa(t, "都会的な進行ですね。V7/vi（D7）で vi へ引き寄せます。",
+		"丸サ進行の形です。最後の subV7/vi が vi7 へ滑り込みます。ループの頭へ戻ります。")
+	res, err := New(fake.New(llm.Response{Text: text}, llm.Response{Text: text})).Imagine(context.Background(), []Message{user("x")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	if res.Reply != "都会的な進行ですね。" {
+		t.Errorf("reply = %q", res.Reply)
+	}
+	if got := res.Candidates[0].Reason; got != "丸サ進行の形です。ループの頭へ戻ります。" {
+		t.Errorf("reason = %q", got)
+	}
+	if !strings.Contains(res.Retry, "summary: V7/vi を D7 と書いているが、この調の V7/vi は E7") || !strings.Contains(res.Retry, "dropped") {
+		t.Errorf("retry = %q", res.Retry)
+	}
+	if len(res.Candidates[0].Timeline.Harmony) != 8 {
+		t.Errorf("the music is kept: %d chords", len(res.Candidates[0].Timeline.Harmony))
 	}
 }
 
