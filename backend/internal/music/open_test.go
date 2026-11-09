@@ -73,3 +73,39 @@ func TestOpenChordsAreExplained(t *testing.T) {
 		t.Errorf("bVII5 is borrowed from the parallel minor: %+v", a)
 	}
 }
+
+// A flat that names the key's own degree is that degree (#109): D
+// mixolydian's bVII5 is its VII5 (C5), A minor's bVI5 its VI5 (F5).
+func TestOpenChordsOnAFlatThatIsTheKeysOwnDegree(t *testing.T) {
+	tests := []struct {
+		key   Key
+		label string
+		want  string
+		root  PitchClass
+	}{
+		{Key{D, Mixolydian}, "bVII5", "VII5", C},
+		{Key{A, Minor}, "bVI5", "VI5", F},
+		{Key{A, Minor}, "bVIIsus4", "VIIsus4", G},
+	}
+	for _, tt := range tests {
+		got, err := CanonicalLabel(tt.key, tt.label)
+		if err != nil || got != tt.want {
+			t.Errorf("CanonicalLabel(%s, %q) = %q, %v; want %q", tt.key, tt.label, got, err, tt.want)
+			continue
+		}
+		step, err := StepFromLabel(tt.key, tt.label, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tl, err := FromProgression(tt.key, Progression{step}, 90)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if tl.Harmony[0].Chord.Root != tt.root {
+			t.Errorf("%q in %s has root %v, want %v", tt.label, tt.key, tl.Harmony[0].Chord.Root, tt.root)
+		}
+	}
+	if _, err := CanonicalLabel(Key{D, Mixolydian}, "bII5"); err == nil {
+		t.Error("bII5 is not D mixolydian's own degree and must be refused")
+	}
+}

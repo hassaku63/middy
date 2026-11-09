@@ -331,6 +331,13 @@ func (q ChordQuality) isOpen() bool {
 // chord on a lowered root in a major key, against the parallel minor).
 func openStep(key Key, label string, step Step, q ChordQuality, accidental int) (Step, error) {
 	scale := key
+	if accidental == -1 && key.Mode != Major {
+		// A flat that names one of the key's own degrees, read against the
+		// major scale as lead sheets do: mixolydian's bVII5 is its VII5 (#109).
+		if d, ok := degreeOf(key, Key{Tonic: key.Tonic, Mode: Major}.Scale()[step.Degree-1].Add(-1)); ok {
+			step.Degree, accidental = d, 0
+		}
+	}
 	if accidental == -1 && key.Mode == Major && q == Power {
 		scale = Key{Tonic: key.Tonic, Mode: Minor}
 		step.Borrowed = true
@@ -411,6 +418,9 @@ func literalQuality(upper bool, suffix string) ChordQuality {
 		return DiminishedTriad
 	case "+", "aug":
 		return AugmentedTriad
+	}
+	if q, ok := openQuality(suffix); ok { // no third, so the case says nothing
+		return q
 	}
 	if upper {
 		return MajorTriad

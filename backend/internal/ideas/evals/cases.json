@@ -2,7 +2,7 @@
   "_doc": "Evaluation set for the intent prompt (ADR-0007, backlog BL-015). Each case is an image a learner might type and the coarse properties a good first candidate should have. Keep expectations loose: they catch regressions (a rainy image coming back fast and major), not taste.",
   "cases": [
     {"id": "rainy-sunday", "image": "雨の日曜の午後みたいな曲", "mode": "either", "tempoMax": 100},
-    {"id": "departure-morning", "image": "出発の朝、晴れていて少しわくわくする", "mode": "major", "tempoMin": 90, "wants": ["II", "II7", "III", "III7"]},
+    {"id": "departure-morning", "image": "出発の朝、晴れていて少しわくわくする", "mode": "major", "tempoMin": 90, "wants": ["II", "II7", "III", "III7", "Vsus4", "V7sus4", "Isus4"]},
     {"id": "night-walk", "image": "夜の帰り道、少し寂しい", "mode": "minor", "tempoMax": 110},
     {"id": "summer-festival", "image": "夏祭りの屋台の賑わい", "mode": "major", "tempoMin": 100},
     {"id": "first-snow", "image": "初雪が静かに降る夜", "mode": "either", "tempoMax": 90},
@@ -28,7 +28,7 @@
     {"id": "celtic-reel", "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "major/dorian/mixolydian", "modeInAny": "dorian/mixolydian", "tempoMin": 100, "style": "celtic"},
     {"id": "blues-shuffle", "image": "煙たいバーで鳴るスロー・ブルース", "mode": "either", "tempoMax": 100, "wants": ["I7", "IV7"]},
     {"id": "flamenco", "image": "フラメンコのギター。情熱的で、足を踏み鳴らす", "mode": "either", "wants": ["bII"]},
-    {"id": "rock-anthem", "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major/mixolydian", "tempoMin": 110, "wants": ["bVII", "bVI"]},
+    {"id": "rock-anthem", "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major/mixolydian", "tempoMin": 110, "wants": ["bVII", "bVI", "I5", "IV5", "V5", "bVII5"]},
     {"id": "jpop-royal-road", "image": "J-pop の王道のサビ。切なくて盛り上がる", "mode": "major", "wants": ["iii", "iii7"]},
     {"id": "bossa-cafe", "image": "リオの午後、ボサノバのギターと小さなカフェ", "mode": "major", "wants": ["Imaj7", "IVmaj7", "ii7"], "style": "bossa"},
     {"id": "waltz-ball", "image": "ウィーンの舞踏会で踊るワルツ", "mode": "major", "meter": "3/4"},
