@@ -167,7 +167,7 @@ func borrowedQuality(key Key, degree int, seventh bool, suffix string, accidenta
 // and the raised sixth of melodic minor or dorian), and the Neapolitan bII.
 // All are major triads; the label is written against the minor key's own
 // scale, with a flat only for the Neapolitan root, which is not in it.
-func minorBorrowedQuality(degree int, seventh, upper bool, suffix string, accidental int) (ChordQuality, bool) {
+func minorBorrowedQuality(degree int, seventh, upper bool, suffix string, accidental int) (ChordQuality, bool) { //nolint:unparam // the same shape as borrowedQuality; outsideStep takes either
 	if seventh || !upper || suffix != "" {
 		return 0, false
 	}

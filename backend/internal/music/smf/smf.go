@@ -89,7 +89,10 @@ func collectEvents(tl music.Timeline) []event {
 	return events
 }
 
-func writeMeta(w *bytes.Buffer, delta uint32, typ byte, payload []byte) {
+// writeMeta writes one meta event. Every SMF event starts with its delta
+// time, so the parameter mirrors the format even though today's meta
+// events all sit at the start or right after the last note.
+func writeMeta(w *bytes.Buffer, delta uint32, typ byte, payload []byte) { //nolint:unparam // the delta is part of every SMF event
 	writeVarLen(w, delta)
 	w.WriteByte(0xFF)
 	w.WriteByte(typ)
