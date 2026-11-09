@@ -25,6 +25,8 @@ type Style struct {
 	Instrument string `json:"instrument,omitempty"`
 	// Grooves is the style's own groove in each of GrooveMeters (BL-087).
 	Grooves []Groove `json:"grooves"`
+	// Tensions, when set, is how the style colours its chords (BL-125).
+	Tensions *Tensions `json:"tensions,omitempty"`
 }
 
 // GrooveMeters are the meters a style lists a groove for.
@@ -93,6 +95,7 @@ var styles = []Style{
 		Accompaniments: []string{"ballad", "arpeggio", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "drone"},
 		Drums:          []string{"ballad", "waltz", "six-eight"},
 		Feels:          []Feel{FeelStraight},
+		Tensions:       &Tensions{Add9: true, Text: "長三和音に 9 度を足して（add9）柔らかくしている"},
 	},
 	{
 		ID: "rock", Name: "ロック", Description: "ギターのストロークと 8 ビートで、強く前に進む。",
@@ -106,12 +109,14 @@ var styles = []Style{
 		Accompaniments: []string{"comp", "walking", "arpeggio", "ballad", "waltz", "arpeggio-3"},
 		Drums:          []string{"jazz-ride", "jazz-waltz"},
 		Feels:          []Feel{FeelSwing, FeelStraight},
+		Tensions:       &Tensions{Ninths: true, Thirteenths: true, Text: "七の和音に 9 度、属七には 13 度も足している"},
 	},
 	{
 		ID: "bossa", Name: "ボサノバ", Description: "ブラジルの穏やかなリズム。表と裏が交互に来るキックの上で、和音を軽く流す。",
 		Accompaniments: []string{"arpeggio", "comp", "ballad"},
 		Drums:          []string{"bossa"},
 		Feels:          []Feel{FeelStraight},
+		Tensions:       &Tensions{Ninths: true, Text: "七の和音に 9 度を足している"},
 		Program:        program(24), Instrument: "ナイロン弦ギター",
 	},
 	{
@@ -121,6 +126,14 @@ var styles = []Style{
 		Feels:          []Feel{FeelStraight},
 		Program:        program(46), Instrument: "ハープ",
 	},
+}
+
+// tensions is the style's colouring; none without a style.
+func (s *Style) tensions() *Tensions {
+	if s == nil {
+		return nil
+	}
+	return s.Tensions
 }
 
 // Styles lists the style catalogue, each with its grooves.
@@ -133,6 +146,10 @@ func Styles() []Style {
 		if p := out[i].Program; p != nil {
 			out[i].Program = program(*p)
 		}
+		if t := out[i].Tensions; t != nil {
+			copied := *t // callers must not change the catalogue's rule
+			out[i].Tensions = &copied
+		}
 		out[i].Grooves = nil
 		for _, ts := range GrooveMeters {
 			out[i].Grooves = append(out[i].Grooves, out[i].Groove(ts))
@@ -141,9 +158,9 @@ func Styles() []Style {
 	return out
 }
 
-// FindStyle returns the style with the id.
+// FindStyle returns the style with the id, a copy the caller may change.
 func FindStyle(id string) (Style, error) {
-	for _, s := range styles {
+	for _, s := range Styles() {
 		if s.ID == id {
 			return s, nil
 		}

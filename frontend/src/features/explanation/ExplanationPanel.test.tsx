@@ -189,3 +189,16 @@ describe('RhythmNotes style (BL-110)', () => {
     expect(screen.getByText('ケルトのスタイルなので、和音はハープで鳴らす。')).toBeInTheDocument();
   });
 });
+
+describe('RhythmNotes tensions (BL-125)', () => {
+  it('says which tensions the style added to the chords', () => {
+    const sentence =
+      'ジャズのスタイルなので、七の和音に 9 度、属七には 13 度も足している（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。';
+    const styled: Timeline = {
+      ...timeline,
+      rhythm: { style: { id: 'jazz', name: 'ジャズ', tensions: sentence } },
+    };
+    render(<ExplanationPanel timeline={styled} positionTick={0} selectedHarmony={null} />);
+    expect(screen.getByText(sentence)).toBeInTheDocument();
+  });
+});

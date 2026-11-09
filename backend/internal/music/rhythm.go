@@ -23,6 +23,9 @@ type RhythmStyle struct {
 	ID         string `json:"id"`
 	Name       string `json:"name"`
 	Instrument string `json:"instrument,omitempty"`
+	// Tensions says what the style added to the chords (BL-125), when any
+	// sounded.
+	Tensions string `json:"tensions,omitempty"`
 }
 
 // RhythmFeel explains how the eighths are played.

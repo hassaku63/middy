@@ -31,6 +31,7 @@
 | スウィング比 (Swing ratio) | スウィングで組にした 2 音の長さの比。2 : 1 は 3 連符、3 : 1 は付点と短い音。遅いテンポほど深く、速いほど浅くなる傾向がある | `pattern.Swing`, `DefaultSwingRatio` |
 | ボイスリーディング (Voice leading) | 和音が替わるとき、各声部をなるべく近い音へ動かすこと。middy は前の和音から動きが最小の転回形を選ぶ | `music.LeadVoicings` |
 | ウォーキング・ベース (Walking bass) | ベースが 4 分音符で歩き、和音の最後の拍で次の和音の根音へ半音で入る弾き方。ジャズの 4 ビート | `pattern.VoiceWalk`, `walkLine` |
+| テンション (Tension) | 七の和音の上に重ねる 9 度・11 度・13 度の音。middy ではスタイルが足し、調の音階にある音だけを使う。ローマ数字には書かない | `pattern.Tensions` |
 | フィル (Fill) | フレーズの終わりで、ドラムがいつもの型を崩して次へつなぐ短い連打。middy は 4 小節ごとに入れる | `pattern.fillHits` |
 | 押し (Push, anticipation) | 和音を拍の頭より 8 分か 16 分早く弾き、そのまま次の小節へつなぐこと。和音は元の拍に属したまま、音だけが前に出る | `music.Push`, `PushNotes`, `HarmonyEvent.Push` |
 | シンコペーション (Syncopation) | 拍の裏で鳴った音のあと、次の拍の頭が鳴らないこと。音が拍をまたいで前に押し出される（Longuet-Higgins & Lee） | `pattern.classify`, `RhythmPart.Syncopated` |

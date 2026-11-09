@@ -282,6 +282,15 @@ components:
         feels: { type: array, items: { $ref: '#/components/schemas/Feel' } }
         program: { type: integer, description: 鍵盤を既定とする型をこの GM の音色で鳴らす（BL-110）。省略時は型のまま }
         instrument: { type: string, description: その楽器の名前 }
+        tensions:
+          type: object
+          description: スタイルの和音の色付け（BL-125、ADR-0012 の決定 4）。エンジンが足し、ローマ数字は 7 度まで
+          required: [text]
+          properties:
+            ninths: { type: boolean, description: 長七・短七・属七に 9 度 }
+            thirteenths: { type: boolean, description: 属七に 13 度 }
+            add9: { type: boolean, description: 長三和音に 9 度 }
+            text: { type: string }
         grooves:
           type: array
           description: 拍子ごとのこのスタイルのグルーヴ（BL-087）。例のスタイルを選び直すと、和声はそのままでこれで作り直す
@@ -716,6 +725,7 @@ components:
         id: { type: string }
         name: { type: string }
         instrument: { type: string, description: スタイルが和音に与えた楽器の名前。型が自分の楽器を持つときは省略 }
+        tensions: { type: string, description: スタイルが和音に足したテンションの説明（BL-125）。鳴ったときだけ }
     RhythmFeel:
       description: ストレートでないときのノリの説明。決定論的に生成される
       type: object
