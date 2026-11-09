@@ -3,7 +3,6 @@ package httpapi
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -17,7 +16,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	h := NewHandler(Deps{
 		LLM:    fake.New(),
-		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Logger: slog.New(slog.DiscardHandler),
 	})
 	srv := httptest.NewServer(h)
 	t.Cleanup(srv.Close)
@@ -108,7 +107,7 @@ func TestRequestLoggerTurnsAPanicIntoTheErrorEnvelope(t *testing.T) {
 }
 
 func TestRequestLoggerLeavesAStartedResponseAlone(t *testing.T) {
-	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	logger := slog.New(slog.DiscardHandler)
 	h := requestLogger(logger, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		panic("late")
@@ -121,7 +120,7 @@ func TestRequestLoggerLeavesAStartedResponseAlone(t *testing.T) {
 }
 
 func TestRequestLoggerReachesTheRealWriter(t *testing.T) {
-	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	logger := slog.New(slog.DiscardHandler)
 	h := requestLogger(logger, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		if err := http.NewResponseController(w).Flush(); err != nil {
 			t.Errorf("Flush through the logger: %v", err)

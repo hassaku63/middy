@@ -24,7 +24,7 @@ func builtFrontend() fstest.MapFS {
 
 func newStaticServer(t *testing.T, static fstest.MapFS) *httptest.Server {
 	t.Helper()
-	deps := Deps{LLM: fake.New(), Logger: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	deps := Deps{LLM: fake.New(), Logger: slog.New(slog.DiscardHandler)}
 	if static != nil {
 		deps.Static = static
 	}
