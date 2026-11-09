@@ -47,7 +47,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // The backend owns everything under /api; see backend/internal/httpapi.
-      '/api': { target: 'http://localhost:8080', changeOrigin: true },
+      // API_UPSTREAM is the same name the nginx front reads (#206), so the
+      // dev loop can point at an API on another port (PORT=8081).
+      '/api': { target: process.env.API_UPSTREAM ?? 'http://localhost:8080', changeOrigin: true },
     },
   },
   test: {

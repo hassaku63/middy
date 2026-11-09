@@ -54,7 +54,7 @@ build: frontend-build backend-embed backend-build ## Build the single binary: vi
 dev-backend: ## Run the API server; settings come only from the environment (ADR-0011)
 	cd $(BACKEND) && go run ./cmd/server
 
-dev-frontend: ## Run the Vite dev server (proxies /api to :8080)
+dev-frontend: ## Run the Vite dev server (proxies /api to API_UPSTREAM, default http://localhost:8080)
 	cd $(FRONTEND) && npm run dev
 
 run: ## Run the built single binary (UI + API on :8080); build first with `make build`
