@@ -18,6 +18,7 @@ import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
 import { LabControls } from './LabControls';
 import { useZoomTrial } from './useZoomTrial';
+import { useLayoutTrial } from './useLayoutTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
 import { useAnswerOpening } from './useAnswerOpening';
@@ -49,6 +50,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
   const zoom = useZoomTrial();
+  const layout = useLayoutTrial();
 
   const show = (tl: Timeline) => {
     player.stop();
@@ -81,18 +83,8 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     setOrigin(p.source);
   };
 
-  return (
-    <main className="app">
-      <header className="app__header">
-        <h1>middy</h1>
-        <p>曲のイメージから例を鳴らして、その成り立ちを見る。</p>
-      </header>
-      <PwaBanner pwa={pwa} />
-      {backend === 'down' && pwa.online && (
-        <p role="status" className="app__notice">
-          バックエンドに接続できません。少し待ってから再読み込みしてください。
-        </p>
-      )}
+  const conversation = (
+    <>
       <ProjectList projects={projects} onOpen={openProject} />
 
       <ChatPanel
@@ -104,53 +96,89 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         openExample={openExample}
         patterns={patterns}
       />
+    </>
+  );
 
-      {timeline && (
-        <section className="app__timeline" aria-label="結果">
-          <div className="app__toolbar">
-            <PlayerControls timeline={timeline} player={player} />
-            <KeySelect
-              tonic={timeline.key.tonic}
-              mode={timeline.key.mode}
-              busy={keyChange.busy || regroove.busy}
-              error={keyChange.error}
-              onChange={(t) => void changeKey(t)}
-            />
-            <StyleSelect
-              styles={patterns.styles}
-              current={timeline.rhythm?.style?.id}
-              busy={regroove.busy || keyChange.busy}
-              error={regroove.error}
-              note={regroove.note}
-              onChange={(id) => void changeStyle(id)}
-            />
-            <DownloadMidiButton timeline={timeline} />
-            {origin && (
-              <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />
-            )}
-            {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
-            {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-            <LabControls zoom={zoom} />
-          </div>
-          {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
-          <div className="app__stage">
-            <TimelineOverview
-              follow={zoom.follow}
-              timeline={timeline}
-              positionTick={player.positionTick}
-              playing={player.state === 'playing'}
-              selectedHarmony={selectedHarmony}
-              onSelectHarmony={setSelectedHarmony}
-            />
-            <ExplanationPanel
-              timeline={timeline}
-              positionTick={player.positionTick}
-              selectedHarmony={selectedHarmony}
-              onClearSelection={() => setSelectedHarmony(null)}
-            />
-          </div>
-        </section>
+  const result = timeline && (
+    <section className="app__timeline" aria-label="結果">
+      <div className="app__toolbar">
+        <PlayerControls timeline={timeline} player={player} />
+        <KeySelect
+          tonic={timeline.key.tonic}
+          mode={timeline.key.mode}
+          busy={keyChange.busy || regroove.busy}
+          error={keyChange.error}
+          onChange={(t) => void changeKey(t)}
+        />
+        <StyleSelect
+          styles={patterns.styles}
+          current={timeline.rhythm?.style?.id}
+          busy={regroove.busy || keyChange.busy}
+          error={regroove.error}
+          note={regroove.note}
+          onChange={(id) => void changeStyle(id)}
+        />
+        <DownloadMidiButton timeline={timeline} />
+        {origin && <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />}
+        {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
+        {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
+        <LabControls zoom={zoom} layout={layout} />
+      </div>
+      {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
+      <div className="app__stage">
+        <TimelineOverview
+          follow={zoom.follow}
+          timeline={timeline}
+          positionTick={player.positionTick}
+          playing={player.state === 'playing'}
+          selectedHarmony={selectedHarmony}
+          onSelectHarmony={setSelectedHarmony}
+        />
+        <ExplanationPanel
+          timeline={timeline}
+          positionTick={player.positionTick}
+          selectedHarmony={selectedHarmony}
+          onClearSelection={() => setSelectedHarmony(null)}
+        />
+      </div>
+    </section>
+  );
+
+  return (
+    <main className={layout.desk ? 'app app--desk' : 'app'}>
+      <AppHeader pwa={pwa} backendDown={backend === 'down'} />
+      {layout.desk ? (
+        // Desk (BL-184, #279): the conversation in a left column beside the
+        // stage on wide screens; stacked as today below 1024 px.
+        <div className="app__columns">
+          <div className="app__side">{conversation}</div>
+          <div className="app__main">{result}</div>
+        </div>
+      ) : (
+        <>
+          {conversation}
+          {result}
+        </>
       )}
     </main>
+  );
+}
+
+/** The title, the PWA banner and, when the backend is unreachable, a word. */
+function AppHeader({ pwa, backendDown }: { pwa: ReturnType<typeof usePwa>; backendDown: boolean }) {
+  return (
+    <>
+      <header className="app__header">
+        <h1>middy</h1>
+        <p>曲のイメージから例を鳴らして、その成り立ちを見る。</p>
+      </header>
+      <PwaBanner pwa={pwa} />
+      {/* Normal is silent; only an unreachable backend is worth a word (BL-065). */}
+      {backendDown && pwa.online && (
+        <p role="status" className="app__notice">
+          バックエンドに接続できません。少し待ってから再読み込みしてください。
+        </p>
+      )}
+    </>
   );
 }

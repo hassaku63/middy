@@ -35,6 +35,13 @@ test('the explanation of a pinned chord has no axe violations', async ({ page })
   expect(await violations(page)).toEqual([]);
 });
 
+test('the desk layout under trial has no axe violations (BL-184)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/?layout=desk');
+  await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  expect(await violations(page)).toEqual([]);
+});
+
 test.describe('in the dark theme', () => {
   test.use({ colorScheme: 'dark' });
 

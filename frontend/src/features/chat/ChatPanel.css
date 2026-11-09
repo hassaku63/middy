@@ -1,4 +1,5 @@
-.chat {
+.chat,
+.chat__scroll {
   display: flex;
   flex-direction: column;
   gap: 12px;

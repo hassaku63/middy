@@ -72,37 +72,40 @@ export function ChatPanel({
 
   return (
     <section className="chat" aria-label="イメージから">
-      {earlier.length > 0 && (
-        <details className="chat__earlier">
-          <summary>これまでのやり取り（{earlierCount}）</summary>
-          <ol className="chat__log" aria-label="これまでの会話">
-            {earlier.map(renderTurn)}
-          </ol>
-        </details>
-      )}
-      <ol className="chat__log" aria-label="会話">
-        {latest.map((turn, i) => renderTurn(turn, earlier.length + i))}
-        {ideas.busy && (
-          <li className="chat__turn chat__turn--assistant" aria-live="polite">
-            <p>考え中…</p>
-          </li>
+      {/* What scrolls when the conversation has a column of its own (BL-184). */}
+      <div className="chat__scroll">
+        {earlier.length > 0 && (
+          <details className="chat__earlier">
+            <summary>これまでのやり取り（{earlierCount}）</summary>
+            <ol className="chat__log" aria-label="これまでの会話">
+              {earlier.map(renderTurn)}
+            </ol>
+          </details>
         )}
-      </ol>
-      {ideas.error && (
-        <p role="alert" className="chat__error">
-          {ideas.error}
-        </p>
-      )}
-      {ideas.turns.length === 0 && (
-        <p className="chat__hint">
-          曲のイメージを言葉で伝えると、合いそうな調・テンポ・コード進行を提案します。例:{' '}
-          {SUGGESTIONS.map((s) => (
-            <button key={s} type="button" className="chat__suggestion" onClick={() => setText(s)}>
-              {s}
-            </button>
-          ))}
-        </p>
-      )}
+        <ol className="chat__log" aria-label="会話">
+          {latest.map((turn, i) => renderTurn(turn, earlier.length + i))}
+          {ideas.busy && (
+            <li className="chat__turn chat__turn--assistant" aria-live="polite">
+              <p>考え中…</p>
+            </li>
+          )}
+        </ol>
+        {ideas.error && (
+          <p role="alert" className="chat__error">
+            {ideas.error}
+          </p>
+        )}
+        {ideas.turns.length === 0 && (
+          <p className="chat__hint">
+            曲のイメージを言葉で伝えると、合いそうな調・テンポ・コード進行を提案します。例:{' '}
+            {SUGGESTIONS.map((s) => (
+              <button key={s} type="button" className="chat__suggestion" onClick={() => setText(s)}>
+                {s}
+              </button>
+            ))}
+          </p>
+        )}
+      </div>
       <form className="chat__form" onSubmit={submit} aria-label="イメージの入力">
         <input
           type="text"

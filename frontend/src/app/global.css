@@ -88,3 +88,71 @@ main {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+.app--desk .app__columns,
+.app--desk .app__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* The desk under trial (BL-184, #279): on wide screens the page is one
+   screen tall; the conversation is a left column that scrolls on its own,
+   its input pinned at the bottom, beside the stage, which scrolls on its
+   own too. Narrower screens keep today's stacked order. */
+@media (min-width: 1024px) {
+  main.app--desk {
+    max-width: 1440px;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .app--desk .app__columns {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .app--desk .app__main {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* The column is one screen tall: saved projects and the conversation
+     above, which scrolls on its own, and the input below it, always in
+     view and never over a card. */
+  .app--desk .app__side {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app--desk .app__side > .chat {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .app--desk .chat__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .app--desk .chat__form {
+    flex-wrap: wrap;
+  }
+
+  /* 320 px is too narrow for the input and its buttons on one line. */
+  .app--desk .chat__form input {
+    flex-basis: 100%;
+  }
+
+  .app--desk .chat__form button {
+    white-space: nowrap;
+  }
+
+  .app--desk .chat__candidates {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
