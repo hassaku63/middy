@@ -17,7 +17,7 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
   )
     return null;
   return (
-    <div className="explanation__rhythm" aria-label="リズム">
+    <section className="explanation__rhythm" aria-label="リズム">
       <h3 className="explanation__subtitle">リズム</h3>
       {rhythm.style?.instrument && (
         <p className="explanation__text">
@@ -43,6 +43,6 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
           <p className="explanation__text">{rhythm.feel.explanation}</p>
         </section>
       )}
-    </div>
+    </section>
   );
 }

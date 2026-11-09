@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { IdeaCandidate } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
@@ -76,16 +76,19 @@ describe('CandidateCard style (BL-119)', () => {
 
 describe('CandidateCard order (BL-073)', () => {
   it('puts the switch before the reason: title, progression, switch, reason', () => {
-    const { container } = render(
+    render(
       <CandidateCard candidate={{ ...base, reason: '理由の文' }} open={false} onOpen={vi.fn()} />,
     );
-    const article = container.querySelector('article');
-    const order = Array.from(article?.children ?? []).map((el) =>
-      el.tagName === 'BUTTON' ? 'switch' : el.className,
-    );
-    expect(order.indexOf('candidate__title')).toBeLessThan(order.indexOf('candidate__progression'));
-    expect(order.indexOf('candidate__progression')).toBeLessThan(order.indexOf('switch'));
-    expect(order.indexOf('switch')).toBeLessThan(order.indexOf('candidate__reason'));
-    expect(screen.getByText('理由の文')).toBeInTheDocument();
+    const card = within(screen.getByRole('article'));
+    const order = [
+      card.getByRole('heading'),
+      card.getByText(base.progression.join(' - ')),
+      card.getByRole('button', { name: 'この候補を開く' }),
+      card.getByText('理由の文'),
+    ];
+    // Each part comes after the one before it in the document.
+    for (const [i, el] of order.slice(1).entries()) {
+      expect(order[i]!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
   });
 });
