@@ -38,6 +38,7 @@
 
 | ID | スライス | 要点 |
 | --- | --- | --- |
+| BL-161 | Go 1.26 に上げ、govulncheck の v1.7.0 の固定（`security.yml`）を外す | golang.org/x/vuln の v1.8.0 以降が Go 1.26 を求める。Go を上げる理由ができたら、または Go 1.25 のサポートが終わる前に |
 | BL-159 | TypeScript 6 に上げ、`@vitest/eslint-plugin` の 1.6.27 の固定と Dependabot の除外を外す | 1.6.28 以降が TypeScript 6 を求める。TypeScript を 6 に上げる理由ができたら（typescript-eslint は 6.0 まで対応） |
 | BL-141 | 業界標準の索引の鮮度（#213 のスライス 6） | 確認日が古い項目が増えて、索引を当てにできなくなったら。確認日の古い項目を一覧にする小さなスクリプトか、見直しの手順 |
 | BL-067 | compose による開発ループ（bind mount と `docker compose watch` でホットリロード。ADR-0011）。発動条件: ツールチェーンなしで開発に参加する人が出た |
@@ -75,6 +76,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-160 | 週次の security audit の govulncheck を v1.7.0 に固定（`@latest` の v1.8.0 以降が Go 1.26 を求め、Go 1.25 では毎回失敗していた） | 2026-11-09 |
 | BL-148 | Go から静的配信と embed を外す（Go は `/api` だけを答え、ほかは JSON の 404。`static.go`・`internal/web`・`backend-embed` を消し、`make run` は API だけ、手元の E2E とスモークは `make up` に当てる。#206 の A-5） | 2026-11-09 |
 | BL-147 | E2E を compose で（`e2e.yml` が `web`・`api` のイメージを作り、compose で起動してスモークのあと Playwright を nginx 越しに当て、compose のログを残す。#206 の A-3） | 2026-11-09 |
 | BL-153 | 依存の増える ESLint のプラグイン（Testing Library と Vitest を入れた。React 本体と jsx-a11y は ADR-0029 の基準を満たさないので入れず、代わりを企画 #248 に。#226） | 2026-11-09 |
