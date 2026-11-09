@@ -92,7 +92,7 @@ describe('exportMidi', () => {
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(bytes);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('/api/v1/export/midi');
-    expect((init.headers as Record<string, string>)['Accept']).toBe('audio/midi');
+    expect((init.headers as Record<string, string>).Accept).toBe('audio/midi');
     expect(JSON.parse(init.body as string)).toEqual({ timeline });
   });
 });

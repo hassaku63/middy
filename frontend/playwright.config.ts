@@ -9,16 +9,16 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Unit tests live in src/ and run with Vitest; this config only sees e2e/.
  */
-const baseURL = process.env['E2E_BASE_URL'] ?? 'http://localhost:8080';
-const executablePath = process.env['E2E_CHROMIUM_PATH'];
+const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:8080';
+const executablePath = process.env.E2E_CHROMIUM_PATH;
 
 export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  retries: process.env['CI'] ? 1 : 0,
-  reporter: process.env['CI'] ? [['list'], ['html', { open: 'never' }]] : [['list']],
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL,
     trace: 'retain-on-failure',
