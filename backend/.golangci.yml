@@ -102,10 +102,19 @@ linters:
     exhaustive:
       default-signifies-exhaustive: true
       ignore-enum-types: "^github.com/hassaku63/middy/backend/internal/music\\.(Pitch|PitchClass)$"
+    # Listing rules replaces revive's defaults, so each rule kept is named.
     revive:
       rules:
         - name: exported
           arguments: ["disableStutteringCheck"]
+        # Errors: lower-case messages without punctuation, fmt.Errorf over
+        # errors.New(fmt.Sprintf), Err-prefixed sentinels, error returned
+        # last, and no else after a return.
+        - name: error-strings
+        - name: errorf
+        - name: error-naming
+        - name: error-return
+        - name: indent-error-flow
 
 # Show every finding, not the first 3 of each kind: a lint PR fixes them all
 # (ADR-0029).
