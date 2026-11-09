@@ -167,7 +167,11 @@ func graduationSample() map[string]any {
 // runs use to reach a feature without a key: swing, a pushed chord, length,
 // half time. Each keeps the answer one intent.Validate takes.
 func applyKeywords(text string, in map[string]any) {
-	first := in["candidates"].([]map[string]any)[0]
+	candidates, ok := in["candidates"].([]map[string]any)
+	if !ok || len(candidates) == 0 {
+		return
+	}
+	first := candidates[0]
 	// A swing word swings the first candidate (BL-076), so the whole chain
 	// can be exercised without a key.
 	if hasAny(text, "スウィング", "ジャズ", "跳ね", "swing", "jazz") && swingable(first) {
@@ -197,17 +201,26 @@ func applyKeywords(text string, in map[string]any) {
 // lengthen plays the candidate's progression (and its per-chord beats)
 // four times over.
 func lengthen(c map[string]any) {
-	prog := c["progression"].([]string)
+	prog, ok := c["progression"].([]string)
+	if !ok {
+		return
+	}
 	c["progression"] = slices.Concat(prog, prog, prog, prog)
 	if beats, ok := c["beats"].([]int); ok {
 		c["beats"] = slices.Concat(beats, beats, beats, beats)
 	}
-	c["title"] = c["title"].(string) + "（長め）"
+	if title, ok := c["title"].(string); ok {
+		c["title"] = title + "（長め）"
+	}
 }
 
 // pushLast pushes the candidate's last chord an eighth early.
 func pushLast(c map[string]any) {
-	pushes := make([]string, len(c["progression"].([]string)))
+	prog, ok := c["progression"].([]string)
+	if !ok || len(prog) == 0 {
+		return
+	}
+	pushes := make([]string, len(prog))
 	for i := range pushes {
 		pushes[i] = "none"
 	}

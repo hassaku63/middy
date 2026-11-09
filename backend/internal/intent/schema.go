@@ -142,7 +142,10 @@ func diagnosticSchema() json.RawMessage {
 	if err := json.Unmarshal(Schema, &root); err != nil {
 		panic("intent: Schema is not JSON: " + err.Error())
 	}
-	props := root["properties"].(map[string]any)
+	props, ok := root["properties"].(map[string]any)
+	if !ok {
+		panic("intent: Schema has no properties object")
+	}
 	props["unconstrained"] = map[string]any{
 		"type":        "string",
 		"description": "評価のための欄。このイメージのために使いたかったが、指示された語彙やカタログで表せないために使わなかったもの（和音、音階やモード、リズム、拍子など）を 1〜3 文で。表せる語彙で書けたものは含めない。なければ「なし」。音には使われない",

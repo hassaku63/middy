@@ -94,20 +94,20 @@ func TestCompleteBuildsTheRequestAndReadsTheAnswer(t *testing.T) {
 	if rec.body["model"] != DefaultModel || rec.body["max_tokens"] != float64(512) {
 		t.Errorf("model/max_tokens = %v / %v", rec.body["model"], rec.body["max_tokens"])
 	}
-	system := rec.body["system"].([]any)[0].(map[string]any)
+	system := as[map[string]any](t, as[[]any](t, rec.body["system"])[0])
 	if system["text"] != "you are a tutor" || system["cache_control"] == nil {
 		t.Errorf("system block should carry the prompt and a cache breakpoint: %v", system)
 	}
-	msgs := rec.body["messages"].([]any)
-	if len(msgs) != 3 || msgs[1].(map[string]any)["role"] != "assistant" {
+	msgs := as[[]any](t, rec.body["messages"])
+	if len(msgs) != 3 || as[map[string]any](t, msgs[1])["role"] != "assistant" {
 		t.Errorf("messages not mapped: %v", msgs)
 	}
-	oc := rec.body["output_config"].(map[string]any)
+	oc := as[map[string]any](t, rec.body["output_config"])
 	if oc["effort"] != "low" {
 		t.Errorf("effort = %v, want low", oc["effort"])
 	}
-	format := oc["format"].(map[string]any)
-	if format["type"] != "json_schema" || format["schema"].(map[string]any)["type"] != "object" {
+	format := as[map[string]any](t, oc["format"])
+	if format["type"] != "json_schema" || as[map[string]any](t, format["schema"])["type"] != "object" {
 		t.Errorf("structured output format not sent: %v", format)
 	}
 	if _, has := rec.body["thinking"]; has {
@@ -208,4 +208,14 @@ func TestErrorsDoNotCarryTheKey(t *testing.T) {
 			t.Errorf("%s: the error carries the key: %v", name, err)
 		}
 	}
+}
+
+// as asserts v's dynamic type and fails the test with what it found.
+func as[T any](t *testing.T, v any) T {
+	t.Helper()
+	got, ok := v.(T)
+	if !ok {
+		t.Fatalf("got %T, want %T", v, got)
+	}
+	return got
 }

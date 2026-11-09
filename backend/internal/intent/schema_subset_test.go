@@ -80,11 +80,11 @@ func TestDiagnosticSchemaStaysWithinTheSubset(t *testing.T) {
 	for _, problem := range checkSubset("$", root) {
 		t.Error(problem)
 	}
-	props := root["properties"].(map[string]any)
+	props := as[map[string]any](t, root["properties"])
 	if _, ok := props["unconstrained"]; !ok {
 		t.Fatal("the diagnostic schema must ask for the unconstrained field")
 	}
-	for _, req := range root["required"].([]any) {
+	for _, req := range as[[]any](t, root["required"]) {
 		if req == "unconstrained" {
 			t.Fatal("unconstrained must stay optional")
 		}
@@ -96,4 +96,14 @@ func TestDiagnosticSchemaStaysWithinTheSubset(t *testing.T) {
 	if _, ok := prod["properties"].(map[string]any)["unconstrained"]; ok {
 		t.Fatal("the production schema must not ask for it")
 	}
+}
+
+// as asserts v's dynamic type and fails the test with what it found.
+func as[T any](t *testing.T, v any) T {
+	t.Helper()
+	got, ok := v.(T)
+	if !ok {
+		t.Fatalf("got %T, want %T", v, got)
+	}
+	return got
 }
