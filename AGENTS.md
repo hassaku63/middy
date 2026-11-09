@@ -78,7 +78,7 @@ cd frontend && npx vitest run src/app                             # 単体で回
 
 ## 7. ドキュメントの鮮度（ADR-0006）
 
-- 文書は **現在の状態だけ** を書く。経緯は git log と ADR にだけ残す。
+- 文書は **現在の状態だけ** を書く。経緯は git log と ADR にだけ残す。Issue と PR の本文も同じで、見解の変化や訂正はコメントで足す（`docs/dev/workflow.md` の「Issue の使い方」）。
 - 事実は 1 箇所にだけ書き、他は参照する。数値・日付・「予定」リストをコピーしない。将来のことは backlog の BL-ID で指す。
 - `make docs-check` が、リンク切れ・存在しないパス・索引漏れ・存在しない BL-ID を落とす。Go のテストがルートと `docs/api/openapi.yaml` の一致を落とす。
 - backlog の Done 表は現在と直前のマイルストーン分だけ残す。古い ID への参照が落ちたら、その文書を書き直す合図。
