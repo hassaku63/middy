@@ -8,7 +8,7 @@
 #   docker build --target api -t middy-api .
 
 ARG NODE_VERSION=22
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.27
 
 # --- frontend ---------------------------------------------------------------
 FROM node:${NODE_VERSION}-alpine AS frontend

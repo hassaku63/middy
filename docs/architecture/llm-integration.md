@@ -25,7 +25,7 @@ type Client interface {
 
 ## Anthropic アダプタ（`internal/llm/anthropic`）
 
-- SDK: `github.com/anthropics/anthropic-sdk-go/v2`（Go 1.25 以上を要求するため、`.tool-versions` も 1.25）。生 HTTP は書かない。
+- SDK: `github.com/anthropics/anthropic-sdk-go/v2`（Go 1.25 以上を要求する。Go の版は `.tool-versions`）。生 HTTP は書かない。
 - モデル: 既定 `claude-opus-5-5`（`ANTHROPIC_MODEL` で上書き）。意図解釈は短い出力なので、コストが問題になったら評価セット（BL-015）で `claude-sonnet-5-5` を比較してから切り替える。
 - 構造化出力: `llm.Request.OutputSchema` を `output_config.format`（`json_schema`）として送る。`tool_choice` の強制は使わない。API は JSON Schema のサブセットだけを受け付け、それ以外のキーワードはリクエスト時に 400 になる（fake では検出できない）。`intent.Schema` は `TestSchemaUsesOnlySupportedKeywords` で守る。
 - 思考: パラメータは省略（モデル既定の adaptive）。`output_config.effort` は `low`（`Config.Effort` で変更可）。

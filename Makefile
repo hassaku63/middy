@@ -78,8 +78,8 @@ shell-lint: ## shellcheck the scripts (install: apt install shellcheck, or brew 
 	@command -v shellcheck >/dev/null || { echo "shellcheck not found: apt install shellcheck, or brew install shellcheck"; exit 1; }
 	shellcheck scripts/*.sh
 
-backend-lint: ## go vet + golangci-lint
-	cd $(BACKEND) && go vet ./... && golangci-lint run ./...
+backend-lint: ## go vet + golangci-lint (the config is verified first, as CI does)
+	cd $(BACKEND) && go vet ./... && golangci-lint config verify && golangci-lint run ./...
 
 backend-fmt: ## gofmt in place
 	cd $(BACKEND) && gofmt -w .
