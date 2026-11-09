@@ -21,6 +21,7 @@ middy のドキュメント索引。**新しいドキュメントを追加した
 | [architecture/llm-integration.md](architecture/llm-integration.md) | LLM の役割、プロンプト/構造化出力の方針、実装メモ |
 | [architecture/adr/](architecture/adr/README.md) | Architecture Decision Records |
 | [api/openapi.yaml](api/openapi.yaml) | HTTP API 契約（OpenAPI 3.1） |
+| [api/problems.md](api/problems.md) | エラー応答（RFC 9457 の problem detail）の種類の一覧。`type` が指す先（ADR-0030） |
 
 ## 設計（画面と体験をどう決めるか）
 

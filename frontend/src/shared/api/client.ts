@@ -49,20 +49,29 @@ export class ApiError extends Error {
   }
 }
 
-type ErrorEnvelope = { error: { code: string; message: string } };
-
-/** True for the API's error body; a proxy's or server's own error page is not one. */
-function isErrorEnvelope(body: unknown): body is ErrorEnvelope {
-  if (typeof body !== 'object' || body === null || !('error' in body)) return false;
+/**
+ * The code and developer message of an error body: an RFC 9457 problem
+ * detail (ADR-0030), or the envelope nginx still answers with until it
+ * moves too (BL-164). Null for anything else, such as a proxy's own page.
+ */
+function readError(body: unknown): { code: string; message: string } | null {
+  if (typeof body !== 'object' || body === null) return null;
+  if ('code' in body && typeof body.code === 'string' && 'detail' in body) {
+    return { code: body.code, message: typeof body.detail === 'string' ? body.detail : '' };
+  }
+  if (!('error' in body)) return null;
   const error: unknown = body.error;
-  return (
+  if (
     typeof error === 'object' &&
     error !== null &&
     'code' in error &&
     typeof error.code === 'string' &&
     'message' in error &&
     typeof error.message === 'string'
-  );
+  ) {
+    return { code: error.code, message: error.message };
+  }
+  return null;
 }
 
 /**
@@ -148,7 +157,10 @@ async function requestJson<T>(path: string, opts: RequestOptions): Promise<T> {
 
 /** Performs the request and turns non-2xx responses into ApiError. */
 async function request(path: string, opts: RequestOptions): Promise<Response> {
-  const headers: Record<string, string> = { Accept: opts.accept ?? 'application/json' };
+  // Errors come as problem details whatever the success type is (ADR-0030).
+  const headers: Record<string, string> = {
+    Accept: `${opts.accept ?? 'application/json'}, application/problem+json`,
+  };
   const init: RequestInit = { method: opts.method ?? 'GET', headers };
   if (opts.body !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -159,10 +171,10 @@ async function request(path: string, opts: RequestOptions): Promise<Response> {
     let code = 'http_error';
     let message = `${res.status} ${res.statusText}`;
     try {
-      const body: unknown = await res.json();
-      if (isErrorEnvelope(body)) {
-        code = body.error.code;
-        message = body.error.message;
+      const error = readError(await res.json());
+      if (error) {
+        code = error.code;
+        message = error.message;
       }
     } catch {
       // Non-JSON error body: keep the HTTP status message.

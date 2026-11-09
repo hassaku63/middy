@@ -117,14 +117,21 @@ export interface components {
       /** @description ビルド時に埋め込まれるバージョン。開発時は "dev" */
       version: string;
     };
-    /** @description すべてのエラー応答が使う共通エンベロープ */
-    Error: {
-      error: {
-        /** @description snake_case の安定した識別子（例 invalid_request）。前段の nginx（ADR-0027）が自分で答えるものは not_found、method_not_allowed、request_too_large（413）、api_unavailable（503。API に届かない） */
-        code: string;
-        /** @description 開発者向けの英語の説明。UI には出さず、画面の文言は code から選ぶ */
-        message: string;
-      };
+    /** @description すべてのエラー応答が使う RFC 9457 の problem detail（application/problem+json、ADR-0030）。 種類の一覧は docs/api/problems.md。前段の nginx（ADR-0027）が自分で答える 404・405・413・503 も同じ形 */
+    Problem: {
+      /**
+       * Format: uri
+       * @description 問題の種類。docs/api/problems.md の、その種類の見出しを指す絶対 URI
+       */
+      type: string;
+      /** @description 種類ごとに決まった短い英語の要約 */
+      title: string;
+      /** @description HTTP のステータスコード（応答と同じ） */
+      status: number;
+      /** @description この出来事に固有の、開発者向けの英語の説明。UI には出さない */
+      detail: string;
+      /** @description 拡張メンバー。種類の snake_case の識別子（type の見出しと同じ。例 invalid_request）。画面の文言は code から選ぶ */
+      code: string;
     };
     FromProgressionRequest: {
       key: components['schemas']['Key'];
@@ -608,14 +615,14 @@ export interface operations {
       /**
        * @description `invalid_json`（本文が JSON として読めない、未知のフィールド、未知の mode）
        *     または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm が 10〜1000 の外）。
-       *     不正なローマ数字は全件まとめて message に列挙される
+       *     不正なローマ数字は全件まとめて detail に列挙される
        */
       400: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
       /** @description `internal_error`（作ったタイムラインを分析できなかった。エンジンの不具合で、原因はサーバーのログにだけ残る） */
@@ -624,7 +631,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
     };
@@ -679,7 +686,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
       /** @description `internal_error`（検証を通ったタイムラインを書き出せなかった。エンコーダの不具合で、原因はサーバーのログにだけ残る） */
@@ -688,7 +695,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
     };
@@ -731,7 +738,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
       /** @description `llm_declined`（プロバイダの安全機構が再試行後も拒否した。言い回しを変えれば通ることが多い） */
@@ -740,7 +747,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
       /** @description `internal_error`（検証を通った答えから例を作れなかった。エンジンの不具合） */
@@ -749,7 +756,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
       /** @description `llm_unavailable`（プロバイダに到達できない）または `llm_invalid_output`（再試行後も使えない答え） */
@@ -758,7 +765,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['Error'];
+          'application/problem+json': components['schemas']['Problem'];
         };
       };
     };

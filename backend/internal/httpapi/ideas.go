@@ -28,7 +28,7 @@ func handleIdeas(svc *ideas.Service, logger *slog.Logger) http.HandlerFunc {
 		res, err := svc.Imagine(r.Context(), req.Messages)
 		switch {
 		case err == nil:
-			writeJSON(w, http.StatusOK, res)
+			writeJSON(w, res)
 		case errors.Is(err, ideas.ErrLLMUnavailable):
 			logger.WarnContext(r.Context(), "ideas: upstream failed", "code", "llm_unavailable", "error", err)
 			writeError(w, http.StatusBadGateway, "llm_unavailable", "the language model could not be reached; try again")

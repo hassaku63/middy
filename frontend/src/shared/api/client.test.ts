@@ -27,7 +27,26 @@ describe('fetchHealth', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/health', expect.anything());
   });
 
-  it('throws ApiError using the error envelope', async () => {
+  it('throws ApiError using the problem detail (ADR-0030)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(400, {
+        type: 'https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#invalid_request',
+        title: 'Invalid request',
+        status: 400,
+        detail: 'progression must not be empty',
+        code: 'invalid_request',
+      }),
+    );
+
+    await expect(fetchHealth(fetchMock)).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 400,
+      code: 'invalid_request',
+      message: 'progression must not be empty',
+    } satisfies Partial<ApiError>);
+  });
+
+  it('throws ApiError using the envelope nginx still answers with (BL-164)', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(jsonResponse(503, { error: { code: 'unavailable', message: 'down' } }));
@@ -53,7 +72,12 @@ describe('fetchHealth', () => {
     });
   });
 
-  it.each([null, { error: 'oops' }, { error: { code: 1, message: 'x' } }])(
+  it.each([
+    null,
+    { error: 'oops' },
+    { error: { code: 1, message: 'x' } },
+    { code: 1, detail: 'x' },
+  ])(
     'falls back to the HTTP status for JSON that is not the error envelope: %j (review)',
     async (body) => {
       const fetchMock = vi
@@ -92,7 +116,9 @@ describe('exportMidi', () => {
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(bytes);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('/api/v1/export/midi');
-    expect((init.headers as Record<string, string>).Accept).toBe('audio/midi');
+    expect((init.headers as Record<string, string>).Accept).toBe(
+      'audio/midi, application/problem+json',
+    );
     expect(JSON.parse(init.body as string)).toEqual({ timeline });
   });
 });

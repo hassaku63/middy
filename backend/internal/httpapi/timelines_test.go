@@ -92,15 +92,15 @@ func TestFromProgressionErrors(t *testing.T) {
 			if resp.StatusCode != http.StatusBadRequest {
 				t.Fatalf("status = %d, want 400", resp.StatusCode)
 			}
-			var body errorResponse
+			var body problem
 			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 				t.Fatalf("decode: %v", err)
 			}
-			if body.Error.Code != tt.wantCode || !strings.Contains(body.Error.Message, tt.wantMsg) {
-				t.Fatalf("error = %+v, want code %q containing %q", body.Error, tt.wantCode, tt.wantMsg)
+			if body.Code != tt.wantCode || !strings.Contains(body.Detail, tt.wantMsg) {
+				t.Fatalf("error = %+v, want code %q containing %q", body, tt.wantCode, tt.wantMsg)
 			}
-			if tt.name == "bad numerals reported together" && !strings.Contains(body.Error.Message, "progression[2]") {
-				t.Fatalf("both bad labels should be reported: %q", body.Error.Message)
+			if tt.name == "bad numerals reported together" && !strings.Contains(body.Detail, "progression[2]") {
+				t.Fatalf("both bad labels should be reported: %q", body.Detail)
 			}
 		})
 	}
@@ -155,10 +155,10 @@ func TestFromProgressionWithPatterns(t *testing.T) {
 	if bad.StatusCode != http.StatusBadRequest {
 		t.Fatalf("unknown pattern status = %d", bad.StatusCode)
 	}
-	var e errorResponse
+	var e problem
 	_ = json.NewDecoder(bad.Body).Decode(&e)
-	if e.Error.Code != "invalid_request" || !strings.Contains(e.Error.Message, "techno") {
-		t.Fatalf("error = %+v", e.Error)
+	if e.Code != "invalid_request" || !strings.Contains(e.Detail, "techno") {
+		t.Fatalf("error = %+v", e)
 	}
 }
 
@@ -310,11 +310,11 @@ func TestFromProgressionDrumGrid(t *testing.T) {
 		"drumGrid": {"division": 2, "voices": {"kick": "x...", "cowbell": "x......."}},
 		"progression": [{"numeral": "I"}]
 	}`)
-	var e errorResponse
+	var e problem
 	if err := json.NewDecoder(bad.Body).Decode(&e); err != nil {
 		t.Fatal(err)
 	}
-	if bad.StatusCode != http.StatusBadRequest || !strings.Contains(e.Error.Message, `voices["kick"]`) || !strings.Contains(e.Error.Message, "cowbell") {
+	if bad.StatusCode != http.StatusBadRequest || !strings.Contains(e.Detail, `voices["kick"]`) || !strings.Contains(e.Detail, "cowbell") {
 		t.Errorf("a bad grid should be a 400 naming both problems: %d %+v", bad.StatusCode, e)
 	}
 }

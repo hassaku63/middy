@@ -70,17 +70,17 @@ paths:
           description: |
             `invalid_json`（本文が JSON として読めない、未知のフィールド、未知の mode）
             または `invalid_request`（進行が空、ローマ数字が不正、beats < 1、tempoBpm が 10〜1000 の外）。
-            不正なローマ数字は全件まとめて message に列挙される
+            不正なローマ数字は全件まとめて detail に列挙される
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         '500':
           description: "`internal_error`（作ったタイムラインを分析できなかった。エンジンの不具合で、原因はサーバーのログにだけ残る）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
   /patterns:
     get:
       tags: [patterns]
@@ -123,15 +123,15 @@ paths:
         '400':
           description: "`invalid_json` または `invalid_request`（`Timeline.Validate` の失敗）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         '500':
           description: "`internal_error`（検証を通ったタイムラインを書き出せなかった。エンコーダの不具合で、原因はサーバーのログにだけ残る）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
   /ideas:
     post:
       tags: [ideas]
@@ -162,27 +162,27 @@ paths:
         '400':
           description: "`invalid_json`、または `invalid_request`（空・20 件超・1000 文字超・最後が user でない）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         '422':
           description: "`llm_declined`（プロバイダの安全機構が再試行後も拒否した。言い回しを変えれば通ることが多い）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         '500':
           description: "`internal_error`（検証を通った答えから例を作れなかった。エンジンの不具合）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
         '502':
           description: "`llm_unavailable`（プロバイダに到達できない）または `llm_invalid_output`（再試行後も使えない答え）"
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
     Health:
@@ -195,21 +195,29 @@ components:
         version:
           type: string
           description: ビルド時に埋め込まれるバージョン。開発時は "dev"
-    Error:
-      description: すべてのエラー応答が使う共通エンベロープ
+    Problem:
+      description: >-
+        すべてのエラー応答が使う RFC 9457 の problem detail（application/problem+json、ADR-0030）。
+        種類の一覧は docs/api/problems.md。前段の nginx（ADR-0027）が自分で答える 404・405・413・503 も同じ形
       type: object
-      required: [error]
+      required: [type, title, status, detail, code]
       properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              description: snake_case の安定した識別子（例 invalid_request）。前段の nginx（ADR-0027）が自分で答えるものは not_found、method_not_allowed、request_too_large（413）、api_unavailable（503。API に届かない）
-            message:
-              type: string
-              description: 開発者向けの英語の説明。UI には出さず、画面の文言は code から選ぶ
+        type:
+          type: string
+          format: uri
+          description: 問題の種類。docs/api/problems.md の、その種類の見出しを指す絶対 URI
+        title:
+          type: string
+          description: 種類ごとに決まった短い英語の要約
+        status:
+          type: integer
+          description: HTTP のステータスコード（応答と同じ）
+        detail:
+          type: string
+          description: この出来事に固有の、開発者向けの英語の説明。UI には出さない
+        code:
+          type: string
+          description: 拡張メンバー。種類の snake_case の識別子（type の見出しと同じ。例 invalid_request）。画面の文言は code から選ぶ
 
     FromProgressionRequest:
       type: object

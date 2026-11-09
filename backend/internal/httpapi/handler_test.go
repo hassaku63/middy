@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -79,28 +80,40 @@ func TestUnknownRouteIs404(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		var e errorResponse
+		var e problem
 		decodeErr := json.NewDecoder(resp.Body).Decode(&e)
 		_ = resp.Body.Close()
-		if resp.StatusCode != http.StatusNotFound || decodeErr != nil || e.Error.Code != "not_found" {
+		if resp.StatusCode != http.StatusNotFound || decodeErr != nil || e.Code != "not_found" {
 			t.Errorf("%s %s = %d %+v (%v), want 404 not_found", tc.method, tc.path, resp.StatusCode, e, decodeErr)
 		}
 	}
 }
 
-func TestWriteErrorEnvelope(t *testing.T) {
+// TestWriteErrorIsAProblemDetail: an RFC 9457 problem detail, with the
+// type's code as an extension member (ADR-0030).
+func TestWriteErrorIsAProblemDetail(t *testing.T) {
 	rec := httptest.NewRecorder()
 	writeError(rec, http.StatusBadRequest, "invalid_request", "bad input")
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	var body errorResponse
+	if ct := rec.Header().Get("Content-Type"); ct != "application/problem+json" {
+		t.Fatalf("Content-Type = %q, want application/problem+json", ct)
+	}
+	var body map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body.Error.Code != "invalid_request" || body.Error.Message != "bad input" {
-		t.Fatalf("unexpected body %+v", body)
+	want := map[string]any{
+		"type":   "https://github.com/hassaku63/middy/blob/main/docs/api/problems.md#invalid_request",
+		"title":  "Invalid request",
+		"status": float64(http.StatusBadRequest),
+		"detail": "bad input",
+		"code":   "invalid_request",
+	}
+	if !reflect.DeepEqual(body, want) {
+		t.Fatalf("body = %v, want %v", body, want)
 	}
 }
 
@@ -116,8 +129,8 @@ func TestRequestLoggerTurnsAPanicIntoTheErrorEnvelope(t *testing.T) {
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want 500", rec.Code)
 	}
-	var body errorResponse
-	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil || body.Error.Code != "internal_error" {
+	var body problem
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil || body.Code != "internal_error" {
 		t.Fatalf("body = %s (%v), want the internal_error envelope", rec.Body.String(), err)
 	}
 	for _, want := range []string{`"panic":"engine bug"`, `"status":500`, `"duration_ms"`} {
@@ -158,8 +171,8 @@ func TestKnownPathWithAnotherMethodIs405(t *testing.T) {
 	if resp.StatusCode != http.StatusMethodNotAllowed || resp.Header.Get("Allow") != http.MethodPost {
 		t.Fatalf("GET /ideas = %d (Allow %q), want 405 with Allow POST", resp.StatusCode, resp.Header.Get("Allow"))
 	}
-	var body errorResponse
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil || body.Error.Code != "method_not_allowed" {
+	var body problem
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil || body.Code != "method_not_allowed" {
 		t.Fatalf("body = %+v (%v), want the method_not_allowed envelope", body, err)
 	}
 	if resp := get(t, srv.URL+"/api/v1/nope"); resp.StatusCode != http.StatusNotFound {

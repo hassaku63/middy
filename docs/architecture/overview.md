@@ -102,8 +102,8 @@ src/test       Vitest セットアップ
 
 | 関心事 | 方針 |
 | --- | --- |
-| エラー | API は常に `{"error":{"code","message"}}`。Go 側は `errors.Join` で検証エラーをまとめる |
-| ログ | `log/slog` JSON。リクエストログはミドルウェアで 1 行（状態と所要時間）。ハンドラの panic は同じミドルウェアがエラーの封筒（500 `internal_error`）に変えて記録する。`/ideas` が LLM の失敗で 502 を返すときは、原因のエラーを `WARN` で 1 行残す（応答はコードだけ） |
+| エラー | RFC 9457 の problem detail（`application/problem+json`。`type`・`title`・`status`・`detail` と拡張メンバー `code`）。種類の一覧は `docs/api/problems.md`（ADR-0030）。Go 側は `errors.Join` で検証エラーをまとめる |
+| ログ | `log/slog` JSON。リクエストログはミドルウェアで 1 行（状態と所要時間）。ハンドラの panic は同じミドルウェアが problem detail（500 `internal_error`）に変えて記録する。`/ideas` が LLM の失敗で 502 を返すときは、原因のエラーを `WARN` で 1 行残す（応答はコードだけ） |
 | 設定 | 環境変数のみ。`config.Load(getenv)` で全部読む。既定値で起動できる |
 | 秘密情報 | `ANTHROPIC_API_KEY` は環境変数。ログに出さない（アダプタのエラー文に鍵が入らないことをテストで確かめる） |
 | 認証 | なし（アカウントは Ideas）。導入時は httpapi のミドルウェアとして追加 |

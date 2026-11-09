@@ -18,6 +18,7 @@
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
 | BL-127 | **拡大の動き方を見比べる（次の A/B）** 拡大の部分が再生位置に合わせてどう動くかを 2 案で試せるようにし、所有者が選ぶ。所有者は B に傾いているので既定を B にし、A は `?zoom=page` か `?lab` の「拡大の動き（試験）」で見比べられる（B は停止中、拡大の下のスライダーで動かす）。両方を残したまま、所有者が決める。A: 今の小節スイッチ（4 小節ずつ切り替わる）。B: 再生位置を中央に保って自動で追随する（手で動かすための横スクロールバーが要るかを含めて検討する） | `?lab` で 2 案を切り替えられ、URL で共有できる。B は再生中に再生位置が拡大の中央に留まり、停止中は手で動かせる。所有者が 1 案を選んだら、選ばなかった案を消す。E2E が通る | M | BL-080 | In progress |
+| BL-164 | **nginx が答えるエラーも problem detail に** (ADR-0030) 404・405・413・503 の 4 種類。フロントの古い封筒を読む部分を消す | nginx の 4 種類が `application/problem+json` で `type`・`title`・`status`・`detail`・`code` を返す。`scripts/smoke.sh` が確かめる。`client.ts` が problem detail だけを読む | S | BL-163 | Ready |
 
 ## Next
 
@@ -70,6 +71,7 @@
 
 | ID | スライス | 完了日 |
 | --- | --- | --- |
+| BL-163 | API のエラー応答を RFC 9457 の problem detail に（`application/problem+json`、`type` は `docs/api/problems.md` の見出し、拡張メンバー `code`。OpenAPI の `Problem`。フロントは nginx が移るまで古い封筒も読む。ADR-0030） | 2026-11-09 |
 | BL-162 | E2E に axe-core のアクセシビリティの検査（主な画面を明るい・暗いテーマで。見つかった違反を直した: タイムラインの `svg` を `group` に、ピアノロールを支援技術から隠し、コードの選択肢の名前を見えている文字に合わせ、補足の文字と度数の地図のコントラストを上げた。#248） | 2026-11-09 |
 | BL-139 | 業界標準の索引の音源・音声、ブラウザの音と PWA、同期・連携（SoundFont 2、DLS、SFZ、WAV と BWF、BS.1770 と R 128、Web Audio API、Media Session API、Web App Manifest、Service Workers、MIDI Clock と MTC、OSC、Ableton Link。一次情報で確かめた。SoundFont 2 は一次情報に届かず未確認。#213） | 2026-11-09 |
 | BL-154 | shellcheck、actionlint、hadolint を入れる（スクリプトの `cd` の失敗、引用符、間接展開を直し、Dockerfile のヘルスチェックを JSON の形に、`api` の `USER` を数字の UID にした。hadolint は CI だけ。#226） | 2026-11-09 |

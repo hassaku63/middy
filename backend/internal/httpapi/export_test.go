@@ -77,12 +77,12 @@ func TestExportMIDIErrors(t *testing.T) {
 			if resp.StatusCode != http.StatusBadRequest {
 				t.Fatalf("status = %d, want 400", resp.StatusCode)
 			}
-			var e errorResponse
+			var e problem
 			if err := json.NewDecoder(resp.Body).Decode(&e); err != nil {
 				t.Fatal(err)
 			}
-			if e.Error.Code != tt.wantCode || !strings.Contains(e.Error.Message, tt.wantMsg) {
-				t.Fatalf("error = %+v", e.Error)
+			if e.Code != tt.wantCode || !strings.Contains(e.Detail, tt.wantMsg) {
+				t.Fatalf("error = %+v", e)
 			}
 		})
 	}
