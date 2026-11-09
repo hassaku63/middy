@@ -46,19 +46,6 @@ describe('fetchHealth', () => {
     } satisfies Partial<ApiError>);
   });
 
-  it('throws ApiError using the envelope nginx still answers with (BL-164)', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(jsonResponse(503, { error: { code: 'unavailable', message: 'down' } }));
-
-    await expect(fetchHealth(fetchMock)).rejects.toMatchObject({
-      name: 'ApiError',
-      status: 503,
-      code: 'unavailable',
-      message: 'down',
-    } satisfies Partial<ApiError>);
-  });
-
   it('falls back to the HTTP status when the error body is not JSON', async () => {
     const fetchMock = vi
       .fn()
@@ -76,9 +63,10 @@ describe('fetchHealth', () => {
     null,
     { error: 'oops' },
     { error: { code: 1, message: 'x' } },
+    { error: { code: 'unavailable', message: 'the envelope before ADR-0030' } },
     { code: 1, detail: 'x' },
   ])(
-    'falls back to the HTTP status for JSON that is not the error envelope: %j (review)',
+    'falls back to the HTTP status for JSON that is not a problem detail: %j (review)',
     async (body) => {
       const fetchMock = vi
         .fn()
@@ -162,9 +150,7 @@ describe('imagine', () => {
   it('maps 502 envelopes to ApiError', async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(
-        jsonResponse(502, { error: { code: 'llm_unavailable', message: 'down' } }),
-      );
+      .mockResolvedValue(jsonResponse(502, { code: 'llm_unavailable', detail: 'down' }));
     await expect(imagine([{ role: 'user', content: 'x' }], fetchMock)).rejects.toMatchObject({
       status: 502,
       code: 'llm_unavailable',

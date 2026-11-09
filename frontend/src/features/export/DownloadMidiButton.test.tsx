@@ -41,12 +41,9 @@ describe('DownloadMidiButton', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({ error: { code: 'invalid_request', message: 'ppq must be positive' } }),
-          {
-            status: 400,
-          },
-        ),
+        new Response(JSON.stringify({ code: 'invalid_request', detail: 'ppq must be positive' }), {
+          status: 400,
+        }),
       ),
     );
     const saveFile = vi.fn();

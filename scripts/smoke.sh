@@ -70,13 +70,15 @@ fetch missing /assets/does-not-exist.js
 check "a missing file is 404" status missing 404
 check "a missing file says not_found" body missing '"not_found"'
 check "a missing file is not cached" header missing cache-control no-cache
+check "a missing file is a problem detail" header missing content-type application/problem+json
 
 fetch assetsdir /assets
 check "/assets itself is 404" status assetsdir 404
 
 fetch post /some/screen -X POST
 check "a POST to a screen URL is 405" status post 405
-check "a POST to a screen URL is JSON" header post content-type application/json
+check "a POST to a screen URL is a problem detail" header post content-type application/problem+json
+check "a POST to a screen URL says what is allowed" header post allow "GET, HEAD"
 
 fetch screen /some/screen
 check "a screen URL is 200" status screen 200
