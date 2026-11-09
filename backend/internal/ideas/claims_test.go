@@ -96,6 +96,43 @@ func TestClaimsTheChordsBearOutAreNotRetried(t *testing.T) {
 	}
 }
 
+// A run of numerals named name by name in one bracket is checked one to
+// one (the evaluation of #283 read "I–V–vi–IV（D–A–Bm–G）" as IV named D).
+func TestClaimsNamingARunAreCheckedNameByName(t *testing.T) {
+	d := map[string]any{"tonic": 2, "mode": "major"}
+	am := map[string]any{"tonic": 9, "mode": "minor"}
+	tests := []struct {
+		name        string
+		key         map[string]any
+		reason      string
+		progression []string
+		retry       string // "" for none
+	}{
+		{"a run named right", d, "王道の I–V–vi–IV（D–A–Bm–G）を 8 ビートで回します。", []string{"I", "V", "vi", "IV"}, ""},
+		{"arrows and sevenths", d, "Imaj7→vi7→ii7→V7（Dmaj7→Bm7→Em7→A7）の循環です。", []string{"Imaj7", "vi7", "ii7", "V7"}, ""},
+		{"a minor run", am, "i–VII–VI–V（Am–G–F–E）のアンダルシア終止です。", []string{"i", "VII", "VI", "V"}, ""},
+		{"a run named wrong", d, "I–V–vi–IV（D–A–Bm–F）を回します。", []string{"I", "V", "vi", "IV"}, "IV を F と書いているが、この調の IV は G"},
+		{"more names than numerals", d, "I–V（D–A–Bm）で始まります。", []string{"I", "V", "vi", "IV"}, ""},
+		{"a name and words", d, "IV（G、明るい下属和音）へ広がります。", []string{"I", "V", "vi", "IV"}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			text := answer(t, tt.key, "x。", tt.reason, tt.progression...)
+			right := answer(t, tt.key, "x。", "素直な進行です。", tt.progression...)
+			res, err := New(fake.New(llm.Response{Text: text}, llm.Response{Text: right})).Imagine(context.Background(), []Message{user("x")})
+			if err != nil {
+				t.Fatalf("Imagine: %v", err)
+			}
+			if tt.retry == "" && res.Retry != "" {
+				t.Errorf("retried: %q", res.Retry)
+			}
+			if tt.retry != "" && !strings.Contains(res.Retry, tt.retry) {
+				t.Errorf("retry = %q, want %q", res.Retry, tt.retry)
+			}
+		})
+	}
+}
+
 // The reply speaks of the image: a named chord must fit some candidate.
 // When the retried answer still contradicts its chords, the turn is not
 // failed: the contradicted sentences are dropped and the rest is kept.
