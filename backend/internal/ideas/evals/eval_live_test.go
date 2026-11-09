@@ -38,7 +38,12 @@ func TestLiveEval(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
-	verdicts := Run(ctx, ideas.NewDiagnostic(client), cases)
+	// The answers get two thirds of the budget; the independent reviewer
+	// (BL-172) the rest. A review cut short is reported as not run.
+	runCtx, cancelRun := context.WithTimeout(ctx, budget*2/3)
+	defer cancelRun()
+	verdicts := Run(runCtx, ideas.NewDiagnostic(client), cases)
+	ReviewAll(ctx, client, verdicts)
 	fmt.Println(Report(verdicts))
 	failed := 0
 	for _, v := range verdicts {

@@ -106,6 +106,10 @@ type Verdict struct {
 	// Silent lists the words in the candidates' reasons that name what
 	// middy never plays (#128); reported, not failed.
 	Silent []string
+	// ReviewInput is what the independent reviewer sees of the answer
+	// (review.go); Review is its verdict, when it ran (BL-172).
+	ReviewInput string
+	Review      *Review
 }
 
 // silentVocabulary names what the examples never sound: instruments beyond
@@ -161,6 +165,7 @@ func Judge(c Case, res ideas.Result) Verdict {
 	}
 	v.WantsHit = v.WantsIn == 1
 	v.Silent = silentWords(reasons)
+	v.ReviewInput = reviewInput(c.Image, res)
 
 	v.Problems = append(v.Problems, judgeFirst(c, first)...)
 	if problem := judgeModeInAny(c.ModeInAny, modes); problem != "" {
@@ -229,10 +234,12 @@ func Report(verdicts []Verdict) string {
 		if v.Retry != "" {
 			status += " · retry: " + shorten(oneLine(v.Retry), 240)
 		}
+		status += reviewNote(v.Review)
 		fmt.Fprintf(&b, "| %s | %s (%s, %.0f BPM%s) | %s | %s |\n", v.Case.ID, oneLine(v.Title), v.Key, v.TempoBPM, meterNote(v.Meter)+patternsNote(v.Patterns), strings.Join(v.Progression, " "), status)
 	}
 	fmt.Fprintf(&b, "\n%d / %d passed\n", pass, len(verdicts))
 	b.WriteString(breadthReport(verdicts))
+	b.WriteString(reviewReport(verdicts))
 	return b.String()
 }
 

@@ -38,6 +38,11 @@
     {"id": "irish-jig", "image": "アイルランドのパブで踊るジグ。フィドルがタタタ・タタタと跳ねる", "mode": "major/dorian/mixolydian", "meter": "6/8", "tempoMin": 90, "style": "celtic"},
     {"id": "rock-drive", "image": "放課後の部室で鳴らす、勢いのあるロックバンドの曲。サビの前で前のめりに入る", "mode": "either", "tempoMin": 110, "style": "rock"},
     {"id": "half-time", "image": "サビで急にテンポが半分になったように感じる、重たいハーフタイムのロック", "mode": "either", "style": "rock"},
-    {"id": "autumn-leaves", "image": "紅葉が散っていく静かな公園", "mode": "either", "tempoMax": 100}
+    {"id": "autumn-leaves", "image": "紅葉が散っていく静かな公園", "mode": "either", "tempoMax": 100},
+    {"id": "marusa", "image": "丸の内サディスティック風の進行", "mode": "major", "wants": ["III7"]},
+    {"id": "just-the-two", "image": "Just the Two of Us 進行で、夜の街っぽくおしゃれに", "mode": "major", "wants": ["III7"]},
+    {"id": "canon", "image": "カノン進行で穏やかな曲を作りたい", "mode": "major", "wants": ["iii"]},
+    {"id": "komuro", "image": "小室進行で切なく疾走するサビ", "mode": "either", "tempoMin": 110},
+    {"id": "two-five-one", "image": "ジャズの ii–V–I を聴いて覚えたい", "mode": "major", "wants": ["ii7"]}
   ]
 }
