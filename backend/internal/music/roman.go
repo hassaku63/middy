@@ -62,6 +62,9 @@ func chordStep(key Key, label string, beats int) (Step, error) {
 		return Step{}, err
 	}
 	step := Step{Degree: degree, Seventh: seventh, Beats: beats}
+	if q, ok := openQuality(suffix); ok {
+		return openStep(key, label, step, q, accidental)
+	}
 	if key.Mode == Minor && degree == 5 && upper && accidental == 0 {
 		q := MajorTriad
 		if seventh {
@@ -174,7 +177,7 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 	lower := strings.ToLower(label)
 
 	// Longest suffixes first so that "maj7" is not read as "7".
-	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug"} {
+	for _, suf := range []string{"7sus4", "sus4", "maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug", "5"} {
 		if strings.HasSuffix(lower, suf) {
 			lower = strings.TrimSuffix(lower, suf)
 			seventh = strings.Contains(suf, "7")
@@ -232,7 +235,8 @@ func CanonicalLabel(key Key, label string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if upper != quality.isUpper() || !suffixAllows(suffix, seventh, quality) {
+	caseMatters := !quality.isOpen() // an open chord has no third for the case to name
+	if caseMatters && upper != quality.isUpper() || !suffixAllows(suffix, seventh, quality) {
 		symbol := key.spellDegree(step.Degree, step.Accidental) + quality.Symbol()
 		return "", fmt.Errorf("music: %q would sound as %s (%s) in %s; write %q", strings.TrimSpace(label), symbol, canonical, key, canonical)
 	}
@@ -270,22 +274,64 @@ func suffixAllows(suffix string, seventh bool, q ChordQuality) bool {
 	switch suffix {
 	case "":
 		return !seventh && q != Major7 && q != Dominant7 && q != Minor7 && q != HalfDiminished7
-	case "maj7":
-		return q == Major7
 	case "7":
 		return q == Dominant7 || q == Minor7 || q == HalfDiminished7
-	case "m7":
-		return q == Minor7
-	case "ø7", "m7b5":
-		return q == HalfDiminished7
-	case "m6":
-		return q == MinorSixth
-	case "°", "dim":
-		return q == DiminishedTriad
-	case "+", "aug":
-		return q == AugmentedTriad
 	}
-	return false
+	want, ok := suffixQuality[suffix]
+	return ok && q == want
+}
+
+// suffixQuality is the one quality an explicit suffix names.
+var suffixQuality = map[string]ChordQuality{
+	"maj7": Major7, "m7": Minor7, "ø7": HalfDiminished7, "m7b5": HalfDiminished7, "m6": MinorSixth,
+	"°": DiminishedTriad, "dim": DiminishedTriad, "+": AugmentedTriad, "aug": AugmentedTriad,
+	"sus4": Sus4, "7sus4": Dominant7Sus4, "5": Power,
+}
+
+// Open chords (BL-132, ADR-0025): sus4 and 7sus4 sound the fourth in place
+// of the third, and the power chord (5) sounds the root and fifth only.
+// Without a third they are neither major nor minor, so the numeral's case
+// does not matter: it is written uppercase (Vsus4, I5). They are allowed on
+// a degree whose notes all lie in the key; a power chord may also stand on
+// the parallel minor's lowered roots (bIII5, bVI5, bVII5), as rock writes.
+
+// openQuality names the open chord a suffix asks for.
+func openQuality(suffix string) (ChordQuality, bool) {
+	switch suffix {
+	case "sus4":
+		return Sus4, true
+	case "7sus4":
+		return Dominant7Sus4, true
+	case "5":
+		return Power, true
+	}
+	return 0, false
+}
+
+// isOpen reports a chord without a third: a suspended or power chord.
+func (q ChordQuality) isOpen() bool {
+	return q == Sus4 || q == Dominant7Sus4 || q == Power
+}
+
+// openStep checks an open chord's notes against the key (or, for a power
+// chord on a lowered root in a major key, against the parallel minor).
+func openStep(key Key, label string, step Step, q ChordQuality, accidental int) (Step, error) {
+	scale := key
+	if accidental == -1 && key.Mode == Major && q == Power {
+		scale = Key{Tonic: key.Tonic, Mode: Minor}
+		step.Borrowed = true
+	} else if accidental != 0 {
+		return Step{}, fmt.Errorf("music: %q is not available in %s: open chords stand on the key's own degrees (a power chord also on bIII, bVI, bVII)", strings.TrimSpace(label), key)
+	}
+	root := key.Scale()[step.Degree-1].Add(accidental)
+	for _, iv := range q.Intervals() {
+		if !scale.Contains(root.Add(iv)) {
+			return Step{}, fmt.Errorf("music: %q is not available in %s: %s is not in the key", strings.TrimSpace(label), key, key.PitchClassName(root.Add(iv)))
+		}
+	}
+	step.Quality = &q
+	step.Accidental = accidental
+	return step, nil
 }
 
 // parseLabel is parseRomanNumeral plus the suffix and the leading
@@ -300,7 +346,7 @@ func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, 
 		accidental = 1
 	}
 	lower := strings.ToLower(trimmed)
-	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug"} {
+	for _, suf := range []string{"7sus4", "sus4", "maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug", "5"} {
 		if strings.HasSuffix(lower, suf) {
 			suffix = suf
 			break

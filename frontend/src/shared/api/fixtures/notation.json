@@ -460,6 +460,27 @@
     },
     {
       "chord": {
+        "root": 0,
+        "quality": "sus4"
+      },
+      "symbol": "Csus4"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "dom7sus4"
+      },
+      "symbol": "C7sus4"
+    },
+    {
+      "chord": {
+        "root": 0,
+        "quality": "power"
+      },
+      "symbol": "C5"
+    },
+    {
+      "chord": {
         "root": 1,
         "quality": "maj"
       },
@@ -527,6 +548,27 @@
         "quality": "dim7"
       },
       "symbol": "C#dim7"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "sus4"
+      },
+      "symbol": "C#sus4"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "dom7sus4"
+      },
+      "symbol": "C#7sus4"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "power"
+      },
+      "symbol": "C#5"
     },
     {
       "chord": {
@@ -600,6 +642,27 @@
     },
     {
       "chord": {
+        "root": 2,
+        "quality": "sus4"
+      },
+      "symbol": "Dsus4"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "dom7sus4"
+      },
+      "symbol": "D7sus4"
+    },
+    {
+      "chord": {
+        "root": 2,
+        "quality": "power"
+      },
+      "symbol": "D5"
+    },
+    {
+      "chord": {
         "root": 3,
         "quality": "maj"
       },
@@ -667,6 +730,27 @@
         "quality": "dim7"
       },
       "symbol": "D#dim7"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "sus4"
+      },
+      "symbol": "D#sus4"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "dom7sus4"
+      },
+      "symbol": "D#7sus4"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "power"
+      },
+      "symbol": "D#5"
     },
     {
       "chord": {
@@ -740,6 +824,27 @@
     },
     {
       "chord": {
+        "root": 4,
+        "quality": "sus4"
+      },
+      "symbol": "Esus4"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "dom7sus4"
+      },
+      "symbol": "E7sus4"
+    },
+    {
+      "chord": {
+        "root": 4,
+        "quality": "power"
+      },
+      "symbol": "E5"
+    },
+    {
+      "chord": {
         "root": 5,
         "quality": "maj"
       },
@@ -807,6 +912,27 @@
         "quality": "dim7"
       },
       "symbol": "Fdim7"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "sus4"
+      },
+      "symbol": "Fsus4"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "dom7sus4"
+      },
+      "symbol": "F7sus4"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "power"
+      },
+      "symbol": "F5"
     },
     {
       "chord": {
@@ -880,6 +1006,27 @@
     },
     {
       "chord": {
+        "root": 6,
+        "quality": "sus4"
+      },
+      "symbol": "F#sus4"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "dom7sus4"
+      },
+      "symbol": "F#7sus4"
+    },
+    {
+      "chord": {
+        "root": 6,
+        "quality": "power"
+      },
+      "symbol": "F#5"
+    },
+    {
+      "chord": {
         "root": 7,
         "quality": "maj"
       },
@@ -947,6 +1094,27 @@
         "quality": "dim7"
       },
       "symbol": "Gdim7"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "sus4"
+      },
+      "symbol": "Gsus4"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "dom7sus4"
+      },
+      "symbol": "G7sus4"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "power"
+      },
+      "symbol": "G5"
     },
     {
       "chord": {
@@ -1020,6 +1188,27 @@
     },
     {
       "chord": {
+        "root": 8,
+        "quality": "sus4"
+      },
+      "symbol": "G#sus4"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "dom7sus4"
+      },
+      "symbol": "G#7sus4"
+    },
+    {
+      "chord": {
+        "root": 8,
+        "quality": "power"
+      },
+      "symbol": "G#5"
+    },
+    {
+      "chord": {
         "root": 9,
         "quality": "maj"
       },
@@ -1087,6 +1276,27 @@
         "quality": "dim7"
       },
       "symbol": "Adim7"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "sus4"
+      },
+      "symbol": "Asus4"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "dom7sus4"
+      },
+      "symbol": "A7sus4"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "power"
+      },
+      "symbol": "A5"
     },
     {
       "chord": {
@@ -1160,6 +1370,27 @@
     },
     {
       "chord": {
+        "root": 10,
+        "quality": "sus4"
+      },
+      "symbol": "A#sus4"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "dom7sus4"
+      },
+      "symbol": "A#7sus4"
+    },
+    {
+      "chord": {
+        "root": 10,
+        "quality": "power"
+      },
+      "symbol": "A#5"
+    },
+    {
+      "chord": {
         "root": 11,
         "quality": "maj"
       },
@@ -1227,6 +1458,27 @@
         "quality": "dim7"
       },
       "symbol": "Bdim7"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "sus4"
+      },
+      "symbol": "Bsus4"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "dom7sus4"
+      },
+      "symbol": "B7sus4"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "power"
+      },
+      "symbol": "B5"
     }
   ],
   "romanNumerals": [
