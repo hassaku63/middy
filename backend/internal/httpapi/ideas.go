@@ -16,7 +16,9 @@ type ideasRequest struct {
 // handleIdeas runs one conversational turn of scenario S2 and returns the
 // reply with rendered candidates. Provider trouble is a 502, not a 500:
 // the server is fine, the upstream is not. A safety refusal is a 422.
-func handleIdeas(svc *ideas.Service) http.HandlerFunc {
+// Upstream failures are logged with their cause, so a deployment can
+// tell a timeout from a rejected key; the client only gets the code.
+func handleIdeas(svc *ideas.Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ideasRequest
 		if err := decodeJSON(r, &req); err != nil {
@@ -28,8 +30,10 @@ func handleIdeas(svc *ideas.Service) http.HandlerFunc {
 		case err == nil:
 			writeJSON(w, http.StatusOK, res)
 		case errors.Is(err, ideas.ErrLLMUnavailable):
+			logger.WarnContext(r.Context(), "ideas: upstream failed", "code", "llm_unavailable", "error", err)
 			writeError(w, http.StatusBadGateway, "llm_unavailable", "the language model could not be reached; try again")
 		case errors.Is(err, ideas.ErrInvalidOutput):
+			logger.WarnContext(r.Context(), "ideas: upstream failed", "code", "llm_invalid_output", "error", err)
 			writeError(w, http.StatusBadGateway, "llm_invalid_output", "the language model gave an unusable answer twice; try rephrasing")
 		case errors.Is(err, ideas.ErrDeclined):
 			// Not an upstream fault: the request was understood and refused.
@@ -39,7 +43,7 @@ func handleIdeas(svc *ideas.Service) http.HandlerFunc {
 		default:
 			// An answer that passed validation but could not be built is
 			// the engine's fault, not the caller's.
-			slog.ErrorContext(r.Context(), "ideas: could not build the examples", "error", err)
+			logger.ErrorContext(r.Context(), "ideas: could not build the examples", "error", err)
 			writeError(w, http.StatusInternalServerError, "internal_error", "the examples could not be built; try again")
 		}
 	}
