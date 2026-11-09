@@ -18,6 +18,7 @@ import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
 import { LabControls } from './LabControls';
 import { useDegreeMapTrial } from './useDegreeMapTrial';
+import { useZoomTrial } from './useZoomTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
 import { useAnswerOpening } from './useAnswerOpening';
@@ -49,6 +50,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
   const degreeMap = useDegreeMapTrial();
+  const zoom = useZoomTrial();
 
   const show = (tl: Timeline) => {
     player.stop();
@@ -130,11 +132,12 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             )}
             {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
             {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-            <LabControls degreeMap={degreeMap} />
+            <LabControls degreeMap={degreeMap} zoom={zoom} />
           </div>
           {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
           <div className="app__stage">
             <TimelineOverview
+              follow={zoom.follow}
               timeline={timeline}
               positionTick={player.positionTick}
               playing={player.state === 'playing'}

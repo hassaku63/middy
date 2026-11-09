@@ -37,3 +37,24 @@ test('a short timeline is drawn once, whole', async ({ page }) => {
   await expect(result.locator('svg.timeline--overview')).toHaveCount(0);
   await expect(result.getByRole('img', { name: 'タイムライン' })).toHaveCount(1);
 });
+
+test('BL-127 trial: ?lab switches the detail to follow the playhead, kept in the URL', async ({
+  page,
+}) => {
+  await page.goto('/?lab');
+  await page.getByLabel('イメージ', { exact: true }).fill('長い雨の日');
+  await page.getByRole('button', { name: '送る' }).click();
+  const result = page.getByRole('region', { name: '結果' });
+  await expect(result).toContainText('候補: 窓辺の雨（長め）');
+  await expect(result.getByRole('slider', { name: '拡大の位置' })).toHaveCount(0);
+
+  await page.getByLabel('拡大の動き（試験）').selectOption('follow');
+  await expect(page).toHaveURL(/zoom=follow/);
+  // Stopped, a slider moves the detail; the overview's outline follows it.
+  const slider = result.getByRole('slider', { name: '拡大の位置' });
+  await slider.fill(String(8 * 1920));
+  await expect(result.locator('svg.timeline--overview .timeline__highlight')).toHaveAttribute(
+    'x',
+    String(40 + 8 * 160 - 320),
+  );
+});
