@@ -22,6 +22,7 @@ linters:
     - intrange
     - nakedret
     - nilerr
+    - noctx
     - nolintlint
     - usestdlibvars
   exclusions:

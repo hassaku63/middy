@@ -51,8 +51,12 @@ func TestShutdownClosesWhatOutlivesTheBudget(t *testing.T) {
 	}))
 	ts.Start()
 	defer func() { close(release); ts.Close() }()
-	go func() { //nolint:noctx // test client
-		if resp, err := http.Get(ts.URL); err == nil {
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		if resp, err := http.DefaultClient.Do(req); err == nil {
 			_ = resp.Body.Close()
 		}
 	}()
