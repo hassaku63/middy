@@ -52,6 +52,7 @@
 | `frontend/src/app` | アプリシェル・ルーティング | |
 | `frontend/src/features/<name>` | 機能ごとの縦スライス（UI + hooks + 状態） | 機能間で直接 import しない。共有は `shared` へ（ESLint で強制）。`*.tsx` は API 呼び出しや `fetch` / `AudioContext` 等の副作用を持たず、hook に置く（ESLint で強制） |
 | `frontend/src/shared` | API クライアント、共通 UI、ユーティリティ | |
+| `deploy/nginx` | `web` コンテナの nginx の設定（ADR-0027） | 配信の規則を変えたら `scripts/smoke.sh` の期待値も同じ PR で直す |
 | `docs/api/openapi.yaml` | API 契約 | ハンドラ変更と同じ PR で更新 |
 
 - Go: 標準 `net/http`（Go 1.22+ のメソッド付きパターン）、`log/slog`、`errors.Join`。フレームワークは使わない。

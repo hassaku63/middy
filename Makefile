@@ -60,10 +60,11 @@ dev-frontend: ## Run the Vite dev server (proxies /api to API_UPSTREAM, default 
 run: ## Run the built single binary (UI + API on :8080); build first with `make build`
 	$(BACKEND)/bin/server
 
-image: ## Build the production container image (middy:local) with the toolchain from .tool-versions
-	docker build --build-arg VERSION=$(VERSION) --build-arg GO_VERSION=$(GO_VERSION) --build-arg NODE_VERSION=$(NODE_VERSION) -t middy:local .
+image: ## Build the two production images (middy-api:local, middy-web:local; ADR-0027) with the toolchain from .tool-versions
+	docker build --target api --build-arg VERSION=$(VERSION) --build-arg GO_VERSION=$(GO_VERSION) --build-arg NODE_VERSION=$(NODE_VERSION) -t middy-api:local .
+	docker build --target web --build-arg NODE_VERSION=$(NODE_VERSION) -t middy-web:local .
 
-up: ## Build and run the production-like stack with docker compose (http://localhost:8080; settings from the environment)
+up: ## Build and run the production-like stack (nginx + API) with docker compose (http://localhost:8080; settings from the environment)
 	VERSION=$(VERSION) GO_VERSION=$(GO_VERSION) NODE_VERSION=$(NODE_VERSION) docker compose up --build
 
 down: ## Stop the compose stack
