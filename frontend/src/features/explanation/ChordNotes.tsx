@@ -1,11 +1,5 @@
-import type { Cadence, HarmonicFunction, HarmonyEvent } from '@/shared/api/client';
-import { harmonySymbol } from '@/shared/lib/notation';
-
-const FUNCTION_LABEL: Record<HarmonicFunction, string> = {
-  T: 'トニック',
-  S: 'サブドミナント',
-  D: 'ドミナント',
-};
+import type { Cadence, HarmonyEvent } from '@/shared/api/client';
+import { FUNCTION_NAME, harmonySymbol } from '@/shared/lib/notation';
 
 const CADENCE_LABEL: Record<Cadence, string> = {
   authentic: '正格終止',
@@ -33,7 +27,7 @@ export function ChordNotes({ event, pinned, onClearSelection }: Props) {
         </h2>
         {analysis && (
           <span className={`explanation__function is-${analysis.function}`}>
-            {analysis.function} · {FUNCTION_LABEL[analysis.function]}
+            {analysis.function} · {FUNCTION_NAME[analysis.function]}
           </span>
         )}
         {analysis?.cadence && (

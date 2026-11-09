@@ -6,6 +6,7 @@
 import type {
   Chord,
   ChordQuality,
+  HarmonicFunction,
   HarmonyEvent,
   Key,
   Pitch,
@@ -61,3 +62,10 @@ export function pitchName(pitch: Pitch): string {
 export function chordSymbol(chord: Chord): string {
   return `${pitchClassName(chord.root)}${QUALITY_SUFFIX[chord.quality]}`;
 }
+
+/** The Japanese name of a harmonic function, as the explanations say it. */
+export const FUNCTION_NAME: Record<HarmonicFunction, string> = {
+  T: 'トニック',
+  S: 'サブドミナント',
+  D: 'ドミナント',
+};

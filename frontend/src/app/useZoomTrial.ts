@@ -7,9 +7,9 @@ import { useCallback, useState } from 'react';
  * link keeps it. The one the owner does not choose goes.
  */
 export function useZoomTrial() {
-  const [follow, setFollow] = useState(
-    () => new URLSearchParams(window.location.search).get('zoom') === 'follow',
-  );
+  const params = new URLSearchParams(window.location.search);
+  const [follow, setFollow] = useState(() => params.get('zoom') === 'follow');
+  const lab = params.has('lab');
 
   const choose = useCallback((next: boolean) => {
     setFollow(next);
@@ -19,5 +19,5 @@ export function useZoomTrial() {
     window.history.replaceState(null, '', url);
   }, []);
 
-  return { follow, choose };
+  return { follow, choose, lab };
 }
