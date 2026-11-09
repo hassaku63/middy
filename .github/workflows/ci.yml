@@ -143,7 +143,7 @@ jobs:
   # comes with the runner image; actionlint is built at the version in
   # .tool-versions and cached by it.
   shell:
-    name: shell and workflows (shellcheck, actionlint)
+    name: shell, workflows and Dockerfile (shellcheck, actionlint, hadolint)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -168,6 +168,8 @@ jobs:
       - run: echo "$HOME/.local/actionlint" >> "$GITHUB_PATH"
       - run: shellcheck --version && actionlint -version
       - run: make shell-lint actions-lint
+      # The pinned hadolint image; docker comes with the runner image.
+      - run: make dockerfile-lint
 
   docs:
     name: docs (links, paths, index)

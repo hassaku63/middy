@@ -25,6 +25,12 @@ report nodejs "$(want nodejs)" "$(node --version 2>/dev/null)"
 report golangci-lint "$(want golangci-lint)" "$(golangci-lint version 2>/dev/null | sed -nE 's/.*version v?([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')"
 report actionlint "$(want actionlint)" "$(actionlint -version 2>/dev/null | head -1 | sed 's/^v//')"
 
+if command -v hadolint >/dev/null 2>&1; then
+  echo "✓ hadolint: $(hadolint --version 2>/dev/null | head -1) (optional; make dockerfile-lint uses it, or docker)"
+else
+  echo "- hadolint: not installed (optional; make dockerfile-lint uses docker instead)"
+fi
+
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   echo "✓ docker: $(docker version --format '{{.Server.Version}}' 2>/dev/null) (optional; needed for make up / make image)"
 else
