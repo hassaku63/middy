@@ -158,6 +158,42 @@ describe('App (docs/product/experience.md)', () => {
     expect(screen.getByText('保存した例: 練習 1')).toBeInTheDocument();
   });
 
+  it('keeps what the user opened while the answer was on its way (BL-064)', async () => {
+    let answer: (r: Response) => void = () => undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        url.endsWith('/health')
+          ? Promise.resolve(json(200, { status: 'ok', version: 'dev' }))
+          : url.endsWith('/patterns')
+            ? Promise.resolve(json(200, { accompaniments: [], drums: [], feels: [], styles: [] }))
+            : new Promise<Response>((resolve) => (answer = resolve)),
+      ),
+    );
+    const store = new MemoryProjectStore();
+    await store.save({
+      id: 'p1',
+      name: '前の例',
+      createdAt: 1,
+      updatedAt: 1,
+      timeline: analysed,
+      source: { kind: 'idea', image: '雪', candidateTitle: '雪' },
+    });
+    const user = userEvent.setup();
+    render(<App createEngine={fakeEngine} projectStore={store} />);
+
+    await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
+    await user.click(screen.getByRole('button', { name: '送る' }));
+    await user.click(await screen.findByText('保存した例（1）'));
+    await user.click(screen.getByRole('button', { name: '開く' }));
+    expect(screen.getByText('保存した例: 前の例')).toBeInTheDocument();
+
+    answer(json(200, ideasReply));
+    expect(await screen.findByRole('article', { name: '窓辺の雨' })).toBeInTheDocument();
+    expect(screen.getByText('保存した例: 前の例')).toBeInTheDocument();
+    expect(screen.queryByText('候補: 窓辺の雨')).not.toBeInTheDocument();
+  });
+
   it('reports an unreachable backend', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network')));
     render(<App createEngine={fakeEngine} />);

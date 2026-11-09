@@ -138,6 +138,16 @@ describe('TimelineView', () => {
     }
   });
 
+  it('marks nothing as sounding while stopped, though the playhead sits at the start', () => {
+    const { container } = render(
+      <TimelineView timeline={timeline} positionTick={0} playing={false} />,
+    );
+    expect(container.querySelector('.timeline__chord.is-active')).toBeNull();
+    expect(container.querySelector('[aria-current="true"]')).toBeNull();
+    expect(container.querySelector('.is-sounding')).toBeNull();
+    expect(container.querySelector('.timeline__playhead')).not.toBeNull();
+  });
+
   it('renders an empty timeline as a single empty bar', () => {
     const empty: Timeline = { ...timeline, tracks: [], harmony: [] };
     render(<TimelineView timeline={empty} positionTick={0} />);
