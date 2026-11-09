@@ -5,7 +5,7 @@
 #
 # Usage: scripts/check-pr-size.sh <base-ref> [head-ref]
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 base="${1:?base ref required}"
 head="${2:-HEAD}"

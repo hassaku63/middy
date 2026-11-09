@@ -29,7 +29,8 @@ image='^(backend/|frontend/|Dockerfile|\.dockerignore|compose\.yaml|deploy/|scri
 eval='^(backend/internal/(ideas|intent|llm|music)/|backend/go\.(mod|sum)|\.github/workflows/eval\.yml|Makefile)'
 
 touches() { grep -qE "$1" <<<"$changed"; }
-for job in backend frontend image; do
-  if touches "$all" || touches "${!job}"; then echo "$job=true"; else echo "$job=false"; fi
-done
+job() { if touches "$all" || touches "$2"; then echo "$1=true"; else echo "$1=false"; fi; }
+job backend "$backend"
+job frontend "$frontend"
+job image "$image"
 if touches "$eval"; then echo "eval=true"; else echo "eval=false"; fi

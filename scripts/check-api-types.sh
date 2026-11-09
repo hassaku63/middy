@@ -4,7 +4,7 @@
 # in frontend/ and commit the result. Also catches an OpenAPI document
 # that no longer parses.
 set -uo pipefail
-cd "$(dirname "$0")/../frontend"
+cd "$(dirname "$0")/../frontend" || exit 1
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

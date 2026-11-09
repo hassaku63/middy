@@ -13,7 +13,7 @@
 # No dependencies beyond bash, grep, sed, find. Must stay portable (macOS/Linux).
 set -uo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 problems=$(mktemp)
 trap 'rm -f "$problems"' EXIT
@@ -49,6 +49,7 @@ done < <(md_files)
 # Paths that are gitignored (backend/.env, .claude/settings.local.json) are
 # intentionally absent from the checkout and therefore allowed.
 while IFS= read -r file; do
+  # shellcheck disable=SC2016 # the backticks are Markdown, matched literally
   grep -oE '`(backend|frontend|docs|scripts|\.github|\.claude)/[^` ]*`' "$file" 2>/dev/null \
     | tr -d '`' | sort -u | while IFS= read -r path; do
     case "$path" in

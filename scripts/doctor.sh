@@ -3,7 +3,7 @@
 # Major.minor must match for Go and Node (patch may differ); golangci-lint
 # must match major.minor too because lint rules change between minors.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 want() { awk -v tool="$1" '$1 == tool { print $2 }' .tool-versions; }
 minor() { echo "$1" | sed -E 's/^v//; s/^([0-9]+\.[0-9]+).*/\1/'; }

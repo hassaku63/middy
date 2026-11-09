@@ -138,6 +138,17 @@ jobs:
       - name: bundle size budget
         run: bash ../scripts/check-bundle-size.sh dist
 
+  # The shell scripts every job and `make check` call. Runs on every pull
+  # request: it takes seconds, and shellcheck comes with the runner image.
+  shell:
+    name: shell (shellcheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - run: shellcheck --version
+      - run: make shell-lint
+
   docs:
     name: docs (links, paths, index)
     runs-on: ubuntu-latest
@@ -211,13 +222,13 @@ jobs:
 
   # The one required check on main (ADR-0028, #219). It covers what
   # `make check` covers: the jobs that pick (changes), test and lint the code
-  # (backend, frontend) and check the docs. A skipped job passes; a failed or
+  # (backend, frontend), lint the scripts (shell) and check the docs. A skipped job passes; a failed or
   # cancelled one fails this. `always()` keeps it from being skipped, and so
   # counted as passed, when a job it needs fails. image and pr-size are left
   # out on purpose: see the ADR.
   required:
     name: required (make check)
-    needs: [changes, backend, frontend, docs]
+    needs: [changes, backend, frontend, shell, docs]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
