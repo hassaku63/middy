@@ -307,6 +307,25 @@ func TestPromptAsksForClaimsTheChordsBearOut(t *testing.T) {
 	}
 }
 
+// TestPromptTellsTheSlashDegreeFromTheInversion (BL-188, #272): the slash
+// is the key's degree, not the chord's; the prompt's examples are what the
+// engine builds.
+func TestPromptTellsTheSlashDegreeFromTheInversion(t *testing.T) {
+	if p := SystemPrompt(); !strings.Contains(p, "転回形）と取り違えない") {
+		t.Error("prompt lacks the warning about the slash degree")
+	}
+	c := music.Key{Tonic: music.C, Mode: music.Major}
+	f := music.Key{Tonic: music.F, Mode: music.Major}
+	for _, tc := range []struct {
+		key           music.Key
+		label, symbol string
+	}{{c, "V/7", "G/B"}, {c, "V/3", "G/E"}, {f, "V/3", "C/A"}} {
+		if _, got, ok := chordOf(tc.key, tc.label); !ok || got != tc.symbol {
+			t.Errorf("%v %s = %q (%v), the prompt says %s", tc.key, tc.label, got, ok, tc.symbol)
+		}
+	}
+}
+
 // TestPromptSteersCelticAwayFromPopGrooves (BL-107, #131): the prompt lists
 // the reel and bodhrán patterns and keeps the eight-beat kit off Celtic examples.
 func TestPromptSteersCelticAwayFromPopGrooves(t *testing.T) {
