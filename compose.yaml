@@ -35,7 +35,7 @@ services:
       target: api
       args:
         VERSION: ${VERSION:-compose}
-        GO_VERSION: ${GO_VERSION:-1.25}
+        GO_VERSION: ${GO_VERSION:-1.27}
         NODE_VERSION: ${NODE_VERSION:-22}
     image: middy-api:${TAG:-local}
     expose:

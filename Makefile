@@ -82,8 +82,8 @@ actions-lint: ## actionlint the GitHub workflows (install: go install github.com
 	@command -v actionlint >/dev/null || { echo "actionlint not found: go install github.com/rhysd/actionlint/cmd/actionlint@v$$(awk '$$1 == "actionlint" { print $$2 }' .tool-versions)"; exit 1; }
 	actionlint
 
-backend-lint: ## go vet + golangci-lint
-	cd $(BACKEND) && go vet ./... && golangci-lint run ./...
+backend-lint: ## go vet + golangci-lint (the config is verified first, as CI does)
+	cd $(BACKEND) && go vet ./... && golangci-lint config verify && golangci-lint run ./...
 
 backend-fmt: ## gofmt in place
 	cd $(BACKEND) && gofmt -w .

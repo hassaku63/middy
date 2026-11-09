@@ -17,7 +17,7 @@
 | 層 | 採用 | 理由（詳細は [ADR-0002](docs/architecture/adr/0002-tech-stack.md)） |
 | --- | --- | --- |
 | フロントエンド | React 19 + TypeScript + Vite, Vitest, vite-plugin-pwa | 再生・ピアノロール・チャット UI はブラウザ側が主戦場 |
-| バックエンド | Go 1.24, 標準 `net/http`, `log/slog` | 高速なビルド/テスト、少ない依存、AI が自律的に回しやすい |
+| バックエンド | Go（版は `.tool-versions`）, 標準 `net/http`, `log/slog` | 高速なビルド/テスト、少ない依存、AI が自律的に回しやすい |
 | 音楽理論エンジン | Go `backend/internal/music`（純粋関数） | 決定論・テーブル駆動テスト |
 | LLM | Anthropic Claude（`backend/internal/llm` 経由、既定は `fake`） | 構造化出力でパラメータを得る |
 | API 契約 | OpenAPI 3.1（`docs/api/openapi.yaml`） | フロント・バックの唯一の合意点 |

@@ -1,5 +1,7 @@
 package music
 
+import "strings"
+
 // Spelling by key (backlog BL-079, ADR-0013). A pitch class has several
 // names (A# and Bb); the key decides which one is right. The rule here is
 // the one notation uses: find the key's parent major, spell that scale on
@@ -64,18 +66,13 @@ func (k Key) scaleNames() [7]string {
 func spell(letter byte, pc PitchClass) string {
 	diff := int(pc.Normalize()) - int(letterPitch[letter])
 	diff = ((diff+6)%12+12)%12 - 6 // into -6..5
-	name := string(letter)
 	switch {
 	case diff > 0:
-		for range diff {
-			name += "#"
-		}
+		return string(letter) + strings.Repeat("#", diff)
 	case diff < 0:
-		for range -diff {
-			name += "b"
-		}
+		return string(letter) + strings.Repeat("b", -diff)
 	}
-	return name
+	return string(letter)
 }
 
 // TonicName spells the tonic as the key's signature wants it: "Bb" for
