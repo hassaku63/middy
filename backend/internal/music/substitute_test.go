@@ -52,7 +52,7 @@ func TestTritoneSubstitutesAreLimitedToRealOnes(t *testing.T) {
 	}{
 		{Key{C, Major}, "subV7/vii°", "not a major or minor chord"},
 		{Key{A, Minor}, "subV7/ii°", "not a major or minor chord"},
-		{Key{C, Major}, "subV/I", "only V, V7 and subV7"},
+		{Key{C, Major}, "subV/I", "only V, V7, subV7 and vii°7"},
 		{Key{C, Major}, "subV7/II", "write the target as \"ii\""},
 	}
 	for _, tt := range tests {

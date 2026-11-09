@@ -29,7 +29,11 @@ describe('fixtures from backend/internal/fixtures', () => {
     for (const { chord, symbol } of notation.chords) {
       expect(chordSymbol(chord as Chord)).toBe(symbol);
     }
-    expect(notation.chords).toHaveLength(12 * 9);
+    // One per root and quality the engine knows (music.Qualities()), so a
+    // new quality cannot slip past the mirror in notation.ts.
+    const qualities = new Set(notation.chords.map(({ chord }) => (chord as Chord).quality));
+    expect(qualities.size).toBeGreaterThanOrEqual(10);
+    expect(notation.chords).toHaveLength(12 * qualities.size);
   });
 
   it('roman numeral fixtures carry diatonic chords for C major and A minor', () => {

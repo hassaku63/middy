@@ -33,6 +33,7 @@
 | ウォーキング・ベース (Walking bass) | ベースが 4 分音符で歩き、和音の最後の拍で次の和音の根音へ半音で入る弾き方。ジャズの 4 ビート | `pattern.VoiceWalk`, `walkLine` |
 | テンション (Tension) | 七の和音の上に重ねる 9 度・11 度・13 度の音。middy ではスタイルが足し、調の音階にある音だけを使う。ローマ数字には書かない | `pattern.Tensions` |
 | 裏コード (Tritone substitution) | V7 の代わりに置く、根音が三全音離れた属七。3 度と 7 度が同じなので同じように解決し、根音が半音上から降りる。middy では `subV7/x` と書く（C major の `subV7/I` は D♭7） | `music.Step.Substitute` |
+| パッシング・ディミニッシュ (Passing diminished) | 半音ずつ上がるベースの途中に置く減七。次の和音の導音の上に積み、そこへ半音で解決する。middy では `vii°7/x` と書く（C major の I – `vii°7/ii` – ii は C – C#°7 – Dm） | `music.Step.LeadingTone` |
 | フィル (Fill) | フレーズの終わりで、ドラムがいつもの型を崩して次へつなぐ短い連打。middy は 4 小節ごとに入れる | `pattern.fillHits` |
 | 押し (Push, anticipation) | 和音を拍の頭より 8 分か 16 分早く弾き、そのまま次の小節へつなぐこと。和音は元の拍に属したまま、音だけが前に出る | `music.Push`, `PushNotes`, `HarmonyEvent.Push` |
 | シンコペーション (Syncopation) | 拍の裏で鳴った音のあと、次の拍の頭が鳴らないこと。音が拍をまたいで前に押し出される（Longuet-Higgins & Lee） | `pattern.classify`, `RhythmPart.Syncopated` |

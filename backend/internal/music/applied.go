@@ -20,26 +20,54 @@ import (
 // same way, its root falling a semitone onto x's. Unlike V7/x it may aim at
 // the tonic: subV7/I (Db7 in C major) is the commonest.
 
-// appliedChord returns the secondary dominant of target in k, or its
-// tritone substitute.
-func (k Key) appliedChord(target int, seventh, sub bool) (Chord, error) {
+// Leading-tone diminished sevenths (BL-130, ADR-0024): vii°7/x is the
+// diminished seventh on x's leading tone, a semitone below x. Between two
+// chords a whole step apart it passes (I – vii°7/ii – ii: the root climbs
+// C, C#, D).
+
+// appliedKind is which applied chord a step is.
+type appliedKind int
+
+const (
+	dominantOf   appliedKind = iota // V/x, V7/x
+	substituteOf                    // subV7/x
+	leadingOf                       // vii°7/x
+)
+
+func appliedKindOf(s Step) appliedKind {
+	switch {
+	case s.Substitute:
+		return substituteOf
+	case s.LeadingTone:
+		return leadingOf
+	}
+	return dominantOf
+}
+
+// appliedChord returns the applied chord of target in k: its secondary
+// dominant, the tritone substitute of that, or its leading-tone diminished
+// seventh.
+func (k Key) appliedChord(target int, seventh bool, kind appliedKind) (Chord, error) {
 	t, err := k.Diatonic(target, false)
 	if err != nil {
 		return Chord{}, err
+	}
+	switch kind {
+	case substituteOf:
+		return Chord{Root: t.Root.Add(1), Quality: Dominant7}, nil
+	case leadingOf:
+		return Chord{Root: t.Root.Add(-1), Quality: Diminished7}, nil
 	}
 	q := MajorTriad
 	if seventh {
 		q = Dominant7
 	}
-	if sub {
-		return Chord{Root: t.Root.Add(1), Quality: Dominant7}, nil
-	}
 	return Chord{Root: t.Root.Add(7), Quality: q}, nil
 }
 
-// appliedNumeral writes "V/ii", "V7/IV", "subV7/I": the target as the
-// key's triad.
-func (k Key) appliedNumeral(target int, seventh, sub bool) (string, error) {
+// appliedNumeral writes "V/ii", "V7/IV", "subV7/I", "vii°7/ii": the target
+// as the key's triad.
+func (k Key) appliedNumeral(target int, seventh bool, kind appliedKind) (string, error) {
 	t, err := k.Diatonic(target, false)
 	if err != nil {
 		return "", err
@@ -49,8 +77,10 @@ func (k Key) appliedNumeral(target int, seventh, sub bool) (string, error) {
 		return "", err
 	}
 	switch {
-	case sub:
+	case kind == substituteOf:
 		return "subV7/" + rn, nil
+	case kind == leadingOf:
+		return "vii°7/" + rn, nil
 	case seventh:
 		return "V7/" + rn, nil
 	}
@@ -59,12 +89,17 @@ func (k Key) appliedNumeral(target int, seventh, sub bool) (string, error) {
 
 // spellApplied names the applied root on the letter a fifth above the
 // target's letter, so C# minor's V/v is D#, not Eb; a substitute's root on
-// the letter a second above, so C major's subV7/I is Db, not C#.
-func (k Key) spellApplied(target int, sub bool) string {
+// the letter a second above, so C major's subV7/I is Db, not C#; a
+// leading-tone chord's on the letter a seventh above (a second below), so
+// C major's vii°7/ii is C#, not Db.
+func (k Key) spellApplied(target int, kind appliedKind) string {
 	name := k.scaleNames()[target-1]
 	start := strings.IndexByte(string(letters), name[0])
-	if sub {
+	switch kind {
+	case substituteOf:
 		return spell(letters[(start+1)%7], k.Scale()[target-1].Add(1))
+	case leadingOf:
+		return spell(letters[(start+6)%7], k.Scale()[target-1].Add(-1))
 	}
 	root := k.Scale()[target-1].Add(7)
 	return spell(letters[(start+4)%7], root)
@@ -78,16 +113,20 @@ func appliedStep(key Key, label string, beats int) (step Step, ok bool, err erro
 	if !found {
 		return Step{}, false, nil
 	}
-	var seventh, sub bool
+	var seventh bool
+	kind := dominantOf
 	switch strings.TrimSpace(head) {
 	case "V":
 	case "V7":
 		seventh = true
 	case "subV7":
-		seventh, sub = true, true
+		seventh, kind = true, substituteOf
+	case "vii°7", "viio7", "viidim7":
+		seventh, kind = true, leadingOf
 	default:
-		return Step{}, true, fmt.Errorf("music: %q: only V, V7 and subV7 can be applied to another chord (V/x, V7/x, subV7/x)", trimmed)
+		return Step{}, true, fmt.Errorf("music: %q: only V, V7, subV7 and vii°7 can be applied to another chord (V/x, V7/x, subV7/x, vii°7/x)", trimmed)
 	}
+	sub := kind == substituteOf
 	target, _, upper, suffix, accidental, err := parseLabel(tail)
 	if err != nil {
 		return Step{}, true, err
@@ -95,7 +134,7 @@ func appliedStep(key Key, label string, beats int) (step Step, ok bool, err erro
 	if err := checkTarget(key, trimmed, target, upper, suffix, accidental, sub); err != nil {
 		return Step{}, true, err
 	}
-	chord, err := key.appliedChord(target, seventh, sub)
+	chord, err := key.appliedChord(target, seventh, kind)
 	if err != nil {
 		return Step{}, true, err
 	}
@@ -106,7 +145,7 @@ func appliedStep(key Key, label string, beats int) (step Step, ok bool, err erro
 				trimmed, key, own, key.ChordSymbol(chord), own)
 		}
 	}
-	return Step{Degree: target, Seventh: seventh, Beats: beats, Applied: true, Substitute: sub}, true, nil
+	return Step{Degree: target, Seventh: seventh, Beats: beats, Applied: true, Substitute: sub, LeadingTone: kind == leadingOf}, true, nil
 }
 
 // checkTarget rejects targets that are not a major or minor triad (other
@@ -160,6 +199,24 @@ func substituteTargetOf(k Key, c Chord) (int, bool) {
 	}
 	target, ok := degreeOf(k, c.Root.Add(-1))
 	if !ok {
+		return 0, false
+	}
+	t, err := k.Diatonic(target, false)
+	if err != nil || (t.Quality != MajorTriad && t.Quality != MinorTriad) {
+		return 0, false
+	}
+	return target, true
+}
+
+// leadingTargetOf recognises a chord as the leading-tone diminished seventh
+// of some degree: a diminished seventh a semitone below a major or minor
+// triad other than the tonic.
+func leadingTargetOf(k Key, c Chord) (int, bool) {
+	if c.Quality != Diminished7 {
+		return 0, false
+	}
+	target, ok := degreeOf(k, c.Root.Add(1))
+	if !ok || target == 1 {
 		return 0, false
 	}
 	t, err := k.Diatonic(target, false)

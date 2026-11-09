@@ -174,7 +174,7 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 	lower := strings.ToLower(label)
 
 	// Longest suffixes first so that "maj7" is not read as "7".
-	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "7", "°", "dim", "+", "aug"} {
+	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug"} {
 		if strings.HasSuffix(lower, suf) {
 			lower = strings.TrimSuffix(lower, suf)
 			seventh = strings.Contains(suf, "7")
@@ -214,7 +214,7 @@ func CanonicalLabel(key Key, label string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return key.appliedNumeral(step.Degree, step.Seventh, step.Substitute)
+		return key.appliedNumeral(step.Degree, step.Seventh, appliedKindOf(step))
 	}
 	_, seventh, upper, suffix, _, err := parseLabel(label)
 	if err != nil {
@@ -300,7 +300,7 @@ func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, 
 		accidental = 1
 	}
 	lower := strings.ToLower(trimmed)
-	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "7", "°", "dim", "+", "aug"} {
+	for _, suf := range []string{"maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug"} {
 		if strings.HasSuffix(lower, suf) {
 			suffix = suf
 			break
@@ -345,6 +345,8 @@ func literalQuality(upper bool, suffix string) ChordQuality {
 			return Dominant7
 		}
 		return Minor7
+	case "°7", "o7", "dim7":
+		return Diminished7
 	case "°", "dim":
 		return DiminishedTriad
 	case "+", "aug":

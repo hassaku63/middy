@@ -8,8 +8,9 @@ import (
 // ChordQuality is the interval structure of a chord above its root.
 type ChordQuality int
 
-// Supported chord qualities: four triads and four sevenths. This set covers
-// every diatonic chord in major and natural minor keys.
+// Supported chord qualities: four triads, five sevenths and the minor sixth.
+// The triads and the first four sevenths cover every diatonic chord in
+// major and natural minor keys; the rest serve borrowed and applied chords.
 const (
 	MajorTriad ChordQuality = iota
 	MinorTriad
@@ -19,7 +20,8 @@ const (
 	Minor7
 	Dominant7
 	HalfDiminished7
-	MinorSixth // minor triad with a major sixth; the borrowed ivm6 (BL-094)
+	MinorSixth  // minor triad with a major sixth; the borrowed ivm6 (BL-094)
+	Diminished7 // stacked minor thirds; the passing vii°7/x (BL-130)
 )
 
 type qualityInfo struct {
@@ -39,6 +41,7 @@ var qualities = map[ChordQuality]qualityInfo{
 	Dominant7:       {"dom7", "7", []int{0, 4, 7, 10}, true},
 	HalfDiminished7: {"m7b5", "m7b5", []int{0, 3, 6, 10}, false},
 	MinorSixth:      {"min6", "m6", []int{0, 3, 7, 9}, false},
+	Diminished7:     {"dim7", "dim7", []int{0, 3, 6, 9}, false},
 }
 
 // Qualities lists every chord quality the engine knows, in declaration
@@ -221,6 +224,8 @@ func RomanNumeralAlt(degree, accidental int, q ChordQuality) (string, error) {
 		return base + "7", nil
 	case HalfDiminished7:
 		return base + "ø7", nil
+	case Diminished7:
+		return base + "°7", nil
 	case MinorSixth:
 		return base + "m6", nil
 	default:

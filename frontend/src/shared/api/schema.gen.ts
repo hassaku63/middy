@@ -235,7 +235,7 @@ export interface components {
        *     大文字・小文字と七の和音の種類は、調から決まる和音と一致しなければならない
        *     （D minor の IV は「iv として鳴る」として 400。ADR-0013）。例外は短調の大文字 V / V7 で、
        *     和声的短音階のドミナントになる。長調では同主短調からの借用（iv, ivm6, ♭VI, ♭VII など）、
-       *     どの調でもセカンダリードミナント（V/x, V7/x）と裏コード（subV7/x）を書ける（`docs/architecture/domain-model.md`）
+       *     どの調でもセカンダリードミナント（V/x, V7/x）と裏コード（subV7/x）と導音の減七（vii°7/x）を書ける（`docs/architecture/domain-model.md`）
        * @example I
        * @example ii
        * @example V7
@@ -244,6 +244,7 @@ export interface components {
        * @example bVII
        * @example V7/V
        * @example subV7/I
+       * @example vii°7/ii
        */
       numeral: string;
       /** @description 拍子の拍の数で数えた長さ（4/4・3/4 では四分音符、6/8 では付点四分音符で 1 小節は 2 拍）。省略時は 1 小節 */
@@ -323,7 +324,8 @@ export interface components {
      * @description min6 は短三和音に長 6 度を足した和音（長調で借用する ivm6）
      * @enum {string}
      */
-    ChordQuality: 'maj' | 'min' | 'dim' | 'aug' | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'min6';
+    ChordQuality:
+      'maj' | 'min' | 'dim' | 'aug' | 'maj7' | 'min7' | 'dom7' | 'm7b5' | 'min6' | 'dim7';
     Chord: {
       root: components['schemas']['PitchClass'];
       quality: components['schemas']['ChordQuality'];
@@ -392,10 +394,12 @@ export interface components {
       cadence?: 'authentic' | 'plagal' | 'half' | 'deceptive' | 'modal';
       /** @description 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false */
       borrowed?: boolean;
-      /** @description セカンダリードミナント（V/x、V7/x）と裏コード（subV7/x）が向かう先の度数。それ以外の和音では省略 */
+      /** @description セカンダリードミナント（V/x、V7/x）、裏コード（subV7/x）、導音の減七（vii°7/x）が向かう先の度数。それ以外の和音では省略 */
       appliedTo?: number;
       /** @description 裏コード（subV7/x、トライトーン代理。BL-128）のとき true。省略時 false */
       substitute?: boolean;
+      /** @description 向かう先の導音の上の減七（vii°7/x。BL-130）のとき true。省略時 false */
+      leadingTone?: boolean;
       /** @description UI にそのまま表示できる 1〜2 文の日本語 */
       explanation: string;
     };
