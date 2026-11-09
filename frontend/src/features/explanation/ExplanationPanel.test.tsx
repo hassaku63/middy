@@ -123,6 +123,22 @@ describe('OverviewNotes inside the panel', () => {
     expect(screen.getByLabelText('全体と流れ')).toHaveTextContent('最後は V7 から I への正格終止');
   });
 
+  it('shows the degree map by default (BL-099)', () => {
+    const withDegrees: Timeline = {
+      ...timeline,
+      overview: {
+        whole: 'C major（長調）。',
+        flow: '2 個の和音で 2 小節。',
+        degrees: [
+          { degree: 1, romanNumeral: 'I', symbol: 'C', function: 'T', used: true },
+          { degree: 5, romanNumeral: 'V', symbol: 'G', function: 'D', used: true },
+        ],
+      },
+    };
+    render(<ExplanationPanel timeline={withDegrees} positionTick={0} selectedHarmony={null} />);
+    expect(screen.getByRole('list', { name: '度数の地図' })).toBeInTheDocument();
+  });
+
   it('is absent for a timeline without an overview', () => {
     render(<ExplanationPanel timeline={timeline} positionTick={0} selectedHarmony={null} />);
     expect(screen.queryByLabelText('全体と流れ')).toBeNull();

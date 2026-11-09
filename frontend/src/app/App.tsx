@@ -17,7 +17,6 @@ import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useBackendHealth } from './useBackendHealth';
 import { LabControls } from './LabControls';
-import { useDegreeMapTrial } from './useDegreeMapTrial';
 import { useZoomTrial } from './useZoomTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
@@ -49,7 +48,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const patterns = usePatterns(backend !== 'down');
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
-  const degreeMap = useDegreeMapTrial();
   const zoom = useZoomTrial();
 
   const show = (tl: Timeline) => {
@@ -132,7 +130,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
             )}
             {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
             {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-            <LabControls degreeMap={degreeMap} zoom={zoom} />
+            <LabControls zoom={zoom} />
           </div>
           {/* Side by side on wide screens: hear, watch and read at once (BL-061). */}
           <div className="app__stage">
@@ -149,7 +147,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
               positionTick={player.positionTick}
               selectedHarmony={selectedHarmony}
               onClearSelection={() => setSelectedHarmony(null)}
-              showDegreeMap={degreeMap.on}
             />
           </div>
         </section>

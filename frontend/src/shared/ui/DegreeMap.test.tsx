@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { DegreeChord, HarmonyEvent } from '@/shared/api/client';
 import { DegreeMap } from './DegreeMap';
-import { currentDegree } from './explainedIndex';
+import { currentDegree } from './currentDegree';
 
 const dorian: DegreeChord[] = [
   { degree: 1, romanNumeral: 'i', symbol: 'Dm', function: 'T', used: true },

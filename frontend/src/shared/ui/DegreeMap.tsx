@@ -1,5 +1,7 @@
 import type { DegreeChord, HarmonyEvent } from '@/shared/api/client';
-import { currentDegree } from './explainedIndex';
+import { FUNCTION_NAME } from '@/shared/lib/notation';
+import { currentDegree } from './currentDegree';
+import './DegreeMap.css';
 
 export type DegreeMapProps = {
   degrees: DegreeChord[];
@@ -7,13 +9,12 @@ export type DegreeMapProps = {
   event: HarmonyEvent | undefined;
 };
 
-const FUNCTION_NAME = { T: 'トニック', S: 'サブドミナント', D: 'ドミナント' } as const;
-
 /**
- * The degree map under trial (BL-099): the seven chords of the example's
- * mode in a band, coloured by function. The ones the example plays stand
- * out, and the one being explained lights up, so the learner sees where in
- * the mode the music is. The data is the engine's (Overview.degrees).
+ * The degree map (BL-099): the seven chords of the example's mode in a
+ * band, coloured by function. The ones the example plays stand out, and
+ * the one being explained lights up, so the learner sees where in the mode
+ * the music is. The data is the engine's (Overview.degrees). It takes no
+ * place of its own, so any screen can put it where it fits.
  */
 export function DegreeMap({ degrees, event }: DegreeMapProps) {
   if (degrees.length === 0) return null;
