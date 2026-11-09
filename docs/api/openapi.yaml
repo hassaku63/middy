@@ -368,8 +368,8 @@ components:
             大文字・小文字と七の和音の種類は、調から決まる和音と一致しなければならない
             （D minor の IV は「iv として鳴る」として 400。ADR-0013）。例外は短調の大文字 V / V7 で、
             和声的短音階のドミナントになる。長調では同主短調からの借用（iv, ivm6, ♭VI, ♭VII など）、
-            どの調でもセカンダリードミナント（V/x, V7/x）を書ける（`docs/architecture/domain-model.md`）
-          examples: [I, ii, V7, IVmaj7, 'vii°', bVII, V7/V]
+            どの調でもセカンダリードミナント（V/x, V7/x）と裏コード（subV7/x）を書ける（`docs/architecture/domain-model.md`）
+          examples: [I, ii, V7, IVmaj7, 'vii°', bVII, V7/V, subV7/I]
         beats:
           type: integer
           minimum: 1
@@ -615,7 +615,10 @@ components:
           type: integer
           minimum: 1
           maximum: 7
-          description: セカンダリードミナント（V/x、V7/x）が向かう先の度数。それ以外の和音では省略
+          description: セカンダリードミナント（V/x、V7/x）と裏コード（subV7/x）が向かう先の度数。それ以外の和音では省略
+        substitute:
+          type: boolean
+          description: 裏コード（subV7/x、トライトーン代理。BL-128）のとき true。省略時 false
         explanation:
           type: string
           description: UI にそのまま表示できる 1〜2 文の日本語

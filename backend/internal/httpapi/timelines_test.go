@@ -313,3 +313,27 @@ func TestFromProgressionDrumGrid(t *testing.T) {
 		t.Errorf("a bad grid should be a 400 naming both problems: %d %+v", bad.StatusCode, e)
 	}
 }
+
+// TestFromProgressionTakesATritoneSubstitute (BL-128): subV7/x goes through
+// the API, is spelled in the key and analysed as a substitute, and keeps
+// its label for a rebuild in another key.
+func TestFromProgressionTakesATritoneSubstitute(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"},
+		"tempoBpm": 120,
+		"progression": [{"numeral": "ii7"}, {"numeral": "subV7/I"}, {"numeral": "Imaj7"}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, body)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	sub := body.Timeline.Harmony[1]
+	if sub.RomanNumeral != "subV7/I" || sub.Symbol != "Db7" || sub.Analysis == nil || !sub.Analysis.Substitute || sub.Analysis.AppliedTo != 1 {
+		t.Fatalf("subV7/I = %+v %+v", sub, sub.Analysis)
+	}
+}

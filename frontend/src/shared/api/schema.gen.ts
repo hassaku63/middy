@@ -235,7 +235,7 @@ export interface components {
        *     大文字・小文字と七の和音の種類は、調から決まる和音と一致しなければならない
        *     （D minor の IV は「iv として鳴る」として 400。ADR-0013）。例外は短調の大文字 V / V7 で、
        *     和声的短音階のドミナントになる。長調では同主短調からの借用（iv, ivm6, ♭VI, ♭VII など）、
-       *     どの調でもセカンダリードミナント（V/x, V7/x）を書ける（`docs/architecture/domain-model.md`）
+       *     どの調でもセカンダリードミナント（V/x, V7/x）と裏コード（subV7/x）を書ける（`docs/architecture/domain-model.md`）
        * @example I
        * @example ii
        * @example V7
@@ -243,6 +243,7 @@ export interface components {
        * @example vii°
        * @example bVII
        * @example V7/V
+       * @example subV7/I
        */
       numeral: string;
       /** @description 拍子の拍の数で数えた長さ（4/4・3/4 では四分音符、6/8 では付点四分音符で 1 小節は 2 拍）。省略時は 1 小節 */
@@ -391,8 +392,10 @@ export interface components {
       cadence?: 'authentic' | 'plagal' | 'half' | 'deceptive' | 'modal';
       /** @description 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false */
       borrowed?: boolean;
-      /** @description セカンダリードミナント（V/x、V7/x）が向かう先の度数。それ以外の和音では省略 */
+      /** @description セカンダリードミナント（V/x、V7/x）と裏コード（subV7/x）が向かう先の度数。それ以外の和音では省略 */
       appliedTo?: number;
+      /** @description 裏コード（subV7/x、トライトーン代理。BL-128）のとき true。省略時 false */
+      substitute?: boolean;
       /** @description UI にそのまま表示できる 1〜2 文の日本語 */
       explanation: string;
     };

@@ -214,7 +214,7 @@ func CanonicalLabel(key Key, label string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return key.appliedNumeral(step.Degree, step.Seventh)
+		return key.appliedNumeral(step.Degree, step.Seventh, step.Substitute)
 	}
 	_, seventh, upper, suffix, _, err := parseLabel(label)
 	if err != nil {

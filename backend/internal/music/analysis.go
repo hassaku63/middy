@@ -49,7 +49,10 @@ type Analysis struct {
 	Borrowed bool `json:"borrowed,omitempty"`
 	// AppliedTo is the degree a secondary dominant pulls towards (BL-074);
 	// zero for every other chord.
-	AppliedTo   int    `json:"appliedTo,omitempty"`
+	AppliedTo int `json:"appliedTo,omitempty"`
+	// Substitute is true when that dominant is a tritone substitute
+	// (subV7/x, BL-128).
+	Substitute  bool   `json:"substitute,omitempty"`
 	Explanation string `json:"explanation"`
 }
 
@@ -74,7 +77,8 @@ func Analyze(tl Timeline) (Timeline, error) {
 				Degree:      p.degree,
 				Function:    Dominant,
 				AppliedTo:   p.applied,
-				Explanation: explainApplied(tl.Key, *h, p.applied, next(tl.Harmony, i)),
+				Substitute:  p.sub,
+				Explanation: explainApplied(tl.Key, *h, p, next(tl.Harmony, i)),
 			}
 			continue
 		}
@@ -108,6 +112,7 @@ type placed struct {
 	degree   int
 	borrowed bool
 	applied  int  // the target degree of a secondary dominant, else 0
+	sub      bool // that dominant is a tritone substitute (subV7/x)
 	leading  bool // a V that carries the leading tone (major triad or dominant seventh)
 }
 
@@ -117,7 +122,15 @@ func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 		// The same sound can be two chords: C major in C minor is the
 		// borrowed I (a Picardy third) or V/iv, the dominant of iv. The label
 		// says which the author meant.
-		if chordLabel, _, _ := splitBass(h.RomanNumeral); strings.Contains(chordLabel, "/") {
+		chordLabel, _, _ := splitBass(h.RomanNumeral)
+		if strings.HasPrefix(chordLabel, "subV") {
+			if target, ok := substituteTargetOf(k, h.Chord); ok {
+				d, _ := degreeOf(k, h.Chord.Root)
+				out[i] = placed{degree: d, applied: target, sub: true}
+				continue
+			}
+		}
+		if strings.Contains(chordLabel, "/") {
 			if target, ok := appliedTargetOf(k, h.Chord); ok {
 				d, _ := degreeOf(k, h.Chord.Root)
 				out[i] = placed{degree: d, applied: target}
@@ -127,6 +140,11 @@ func place(k Key, hs []HarmonyEvent) ([]placed, error) {
 		if target, ok := locateApplied(k, h.Chord); ok {
 			d, _ := degreeOf(k, h.Chord.Root)
 			out[i] = placed{degree: d, applied: target}
+			continue
+		}
+		if target, ok := locateSubstitute(k, h.Chord); ok {
+			d, _ := degreeOf(k, h.Chord.Root)
+			out[i] = placed{degree: d, applied: target, sub: true}
 			continue
 		}
 		d, borrowed, ok := locate(k, h.Chord)
@@ -390,6 +408,15 @@ func locateApplied(k Key, c Chord) (int, bool) {
 	return appliedTargetOf(k, c)
 }
 
+// locateSubstitute reports a tritone substitute among the chords nothing
+// else explains (an unlabelled one; a label decides first, in place).
+func locateSubstitute(k Key, c Chord) (int, bool) {
+	if _, _, ok := locate(k, c); ok {
+		return 0, false
+	}
+	return substituteTargetOf(k, c)
+}
+
 // next returns the chord after i, if any.
 func next(hs []HarmonyEvent, i int) *Chord {
 	if i+1 >= len(hs) {
@@ -399,16 +426,26 @@ func next(hs []HarmonyEvent, i int) *Chord {
 }
 
 const (
-	appliedText   = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主音のように聞かせて、そこへ強く引き寄せる。"
-	resolvesText  = "次の %s へ解決する。"
-	deflectedText = "ここでは %s へは進まず、引き寄せをかわす。"
+	appliedText = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主音のように聞かせて、そこへ強く引き寄せる。"
+	// %s（%s）: the substitute; %s（%s）: the target; %s（%s）: the dominant it replaces; %s: the target.
+	substituteText = "%s（%s）は、%s（%s）へ向かう裏コード（トライトーン代理）。%s（%s）の代わりに、根音が三全音離れた属七を置いている。同じ三全音（3 度と 7 度）を持つので同じように引き寄せ、根音は半音上から %s の根音へ降りる。"
+	resolvesText   = "次の %s へ解決する。"
+	deflectedText  = "ここでは %s へは進まず、引き寄せをかわす。"
 )
 
-func explainApplied(k Key, h HarmonyEvent, target int, following *Chord) string {
+func explainApplied(k Key, h HarmonyEvent, p placed, following *Chord) string {
+	target := p.applied
 	t, _ := k.Diatonic(target, false)
 	rn, _ := RomanNumeral(target, t.Quality)
 	symbol := k.ChordSymbol(t)
 	s := fmt.Sprintf(appliedText, h.RomanNumeral, symbolOf(k, h), rn, symbol, symbol)
+	if p.sub {
+		dominant := "V7"
+		if target != 1 {
+			dominant, _ = k.appliedNumeral(target, true, false)
+		}
+		s = fmt.Sprintf(substituteText, h.RomanNumeral, symbolOf(k, h), rn, symbol, dominant, k.spellApplied(target, false)+"7", symbol)
+	}
 	switch {
 	case following == nil:
 	case following.Root == t.Root:

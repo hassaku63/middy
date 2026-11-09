@@ -31,6 +31,10 @@ type Step struct {
 	// Applied makes the step the secondary dominant of Degree (V/x, V7/x
 	// with Seventh; BL-074) instead of the chord on it.
 	Applied bool `json:"applied,omitempty"`
+	// Substitute, with Applied and Seventh, makes it the tritone substitute
+	// of that dominant (subV7/x, BL-128, ADR-0023): the dominant seventh a
+	// semitone above Degree.
+	Substitute bool `json:"substitute,omitempty"`
 }
 
 // Progression is an ordered list of steps, e.g. I-V-vi-IV. It is key-agnostic:
@@ -49,6 +53,19 @@ func (p Progression) Validate() error {
 	return errors.Join(errs...)
 }
 
+// appliedProblems lists what is wrong with step i as a secondary dominant
+// or its tritone substitute.
+func (s Step) appliedProblems(i int) []error {
+	var errs []error
+	if s.Applied && (s.Accidental != 0 || s.Quality != nil || s.Borrowed) {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: an applied chord has no accidental, quality or borrowing of its own", i))
+	}
+	if s.Substitute && (!s.Applied || !s.Seventh) {
+		errs = append(errs, fmt.Errorf("music: steps[%d]: a tritone substitute is an applied dominant seventh (subV7/x)", i))
+	}
+	return errs
+}
+
 // problems lists what is wrong with step i.
 func (s Step) problems(i int) []error {
 	var errs []error
@@ -61,9 +78,7 @@ func (s Step) problems(i int) []error {
 	if s.Accidental != 0 && s.Accidental != -1 {
 		errs = append(errs, fmt.Errorf("music: steps[%d]: accidental must be 0 or -1, got %d", i, s.Accidental))
 	}
-	if s.Applied && (s.Accidental != 0 || s.Quality != nil || s.Borrowed) {
-		errs = append(errs, fmt.Errorf("music: steps[%d]: an applied chord has no accidental, quality or borrowing of its own", i))
-	}
+	errs = append(errs, s.appliedProblems(i)...)
 	if err := s.Push.check(i); err != nil {
 		errs = append(errs, err)
 	}
@@ -184,15 +199,15 @@ func stepChord(key Key, s Step) (Chord, string, string, error) {
 // chordOfStep resolves the chord, numeral and symbol without the bass.
 func chordOfStep(key Key, s Step) (Chord, string, string, error) {
 	if s.Applied {
-		chord, err := key.appliedChord(s.Degree, s.Seventh)
+		chord, err := key.appliedChord(s.Degree, s.Seventh, s.Substitute)
 		if err != nil {
 			return Chord{}, "", "", err
 		}
-		numeral, err := key.appliedNumeral(s.Degree, s.Seventh)
+		numeral, err := key.appliedNumeral(s.Degree, s.Seventh, s.Substitute)
 		if err != nil {
 			return Chord{}, "", "", err
 		}
-		return chord, numeral, key.spellApplied(s.Degree) + chord.Quality.Symbol(), nil
+		return chord, numeral, key.spellApplied(s.Degree, s.Substitute) + chord.Quality.Symbol(), nil
 	}
 	chord, err := key.Diatonic(s.Degree, s.Seventh)
 	if err != nil {
