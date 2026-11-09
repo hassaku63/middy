@@ -12,6 +12,16 @@ linters:
     - funlen
     - gocognit
     - gocyclo
+    # Widely recommended checks that found nothing when they were turned on
+    # (ADR-0029, BL-150). They keep it that way.
+    - contextcheck
+    - copyloopvar
+    - dupl
+    - errname
+    - nakedret
+    - nilerr
+    - nolintlint
+    - usestdlibvars
   exclusions:
     rules:
       - path: _test\.go
