@@ -44,6 +44,10 @@ test('the desk layout under trial has no axe violations (BL-184)', async ({ page
   await result.getByRole('option', { name: 'VII G' }).click();
   await expect(result.getByRole('region', { name: 'コードの解説' })).toHaveClass(/is-pinned/);
   expect(await violations(page)).toEqual([]);
+  // A second answer: the first one becomes the list of earlier examples (BL-186).
+  await openExample(page, 'もう少し明るく', '朝の光');
+  await expect(page.getByRole('list', { name: 'これまでの例' })).toBeVisible();
+  expect(await violations(page)).toEqual([]);
 });
 
 test.describe('in the dark theme', () => {

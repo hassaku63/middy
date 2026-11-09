@@ -108,3 +108,44 @@ test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', asyn
   await page.keyboard.press('ArrowLeft');
   await expect(frame).toHaveClass(/is-following/);
 });
+
+/**
+ * BL-186 (#279): on the desk, earlier exchanges become one line per
+ * example. Four exchanges fit without scrolling; an earlier example opens
+ * in one step and comes back with the chord that was pinned; 1／2／3 open
+ * the latest answer's examples.
+ */
+test('the column lists earlier examples and brings one back as it was left (BL-186)', async ({
+  page,
+}) => {
+  await page.goto('/?layout=desk');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  await result.getByRole('option', { name: 'VII G' }).click();
+  await openExample(page, 'もう少し明るく', '朝の光');
+  await openExample(page, '夜の帰り道', '窓辺の雨');
+  await openExample(page, '晴れた朝', '朝の光');
+
+  const earlier = page.getByRole('list', { name: 'これまでの例' });
+  const lines = earlier.getByRole('button');
+  await expect(lines).toHaveCount(6);
+  for (const line of await lines.all()) await expect(line).toBeInViewport({ ratio: 1 });
+
+  // The same name in two exchanges, told apart by the exchange's number.
+  await earlier.getByRole('button', { name: /^1 回目：\s*窓辺の雨/ }).click();
+  await expect(result).toContainText('候補: 窓辺の雨');
+  const frame = result.getByRole('region', { name: 'コードの解説' });
+  await expect(frame).toHaveClass(/is-pinned/);
+  await expect(frame.getByRole('heading', { level: 2 })).toContainText('VII');
+  await expect(earlier.getByRole('button', { name: /^1 回目：\s*窓辺の雨/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  // The keys open the latest answer's examples, not the earlier ones.
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('2');
+  await expect(result).toContainText('候補: 出発の朝');
+  await page.keyboard.press('1');
+  await expect(result).toContainText('候補: 朝の光');
+  await expect(frame).toHaveClass(/is-following/);
+});

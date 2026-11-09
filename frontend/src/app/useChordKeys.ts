@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { HarmonyEvent } from '@/shared/api/client';
 import { explainedIndex } from '@/features/explanation/explainedIndex';
 
@@ -17,9 +17,16 @@ type Options = {
  * stay with the field.
  */
 export function useChordKeys({ enabled, harmony, positionTick, selected, onSelect }: Options) {
+  // The playhead moves every frame; read it at the key press instead of
+  // adding the listener again on every render.
+  const now = useRef({ positionTick, selected, onSelect });
+  useEffect(() => {
+    now.current = { positionTick, selected, onSelect };
+  });
   useEffect(() => {
     if (!enabled || harmony.length === 0) return;
     const onKey = (e: KeyboardEvent) => {
+      const { positionTick, selected, onSelect } = now.current;
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       if (typing(e.target)) return;
       if (e.key === 'Escape') {
@@ -37,11 +44,11 @@ export function useChordKeys({ enabled, harmony, positionTick, selected, onSelec
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [enabled, harmony, positionTick, selected, onSelect]);
+  }, [enabled, harmony]);
 }
 
-/** A field where arrows move the caret or the value. */
-function typing(target: EventTarget | null) {
+/** A field where keys type or move the caret or the value. */
+export function typing(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   return (
     target.isContentEditable ||
