@@ -47,7 +47,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
 
   /** The player, or null when the hook unmounted while the device resumed. */
   const ensurePlayer = useCallback(async () => {
-    if (!engineRef.current) engineRef.current = createEngine();
+    engineRef.current ??= createEngine();
     const engine = engineRef.current;
     await engine.resume();
     if (engineRef.current !== engine) return null; // closed while resuming

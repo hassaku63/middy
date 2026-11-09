@@ -95,6 +95,7 @@ export default tseslint.config(
   { ignores: ['dist', 'dev-dist', 'coverage', 'node_modules', 'src/**/*.gen.ts'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
   {
     languageOptions: {
       parserOptions: {
@@ -118,6 +119,8 @@ export default tseslint.config(
       // Numbers print the same everywhere; widths, bars and counts are put
       // into labels and styles this way.
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      // Object shapes are written as `type` throughout; keep them so.
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       // Size and complexity budgets (ADR-0007). Generous; a hit means "split".
       'max-lines': ['error', { max: 400, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
