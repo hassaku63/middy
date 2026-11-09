@@ -61,6 +61,51 @@ func TestBluesDominantsAreNotSecondaryDominants(t *testing.T) {
 	}
 }
 
+// An I7 must not be said to stay put when the next chord is IV: its
+// seventh falls to IV's third, as in the Marunouchi Sadistic loop
+// (IVmaj7 – V7/vi – vi7 – I7 – IVmaj7, #272, ADR-0034). Elsewhere it is
+// still the blues dominant that does not resolve.
+func TestBluesI7SaysWhatItDoesBeforeIV(t *testing.T) {
+	c := Key{C, Major}
+	tests := []struct {
+		name    string
+		labels  []string
+		at      int
+		want    []string
+		notWant []string
+	}{
+		{"into IVmaj7", []string{"IVmaj7", "V7/vi", "vi7", "I7", "IVmaj7"}, 3,
+			[]string{"ブルースの属七", "トニックのまま", "次が IV", "Bb が IV の 3 度の A へ半音で下り"}, []string{"IV へ向かう働きではない"}},
+		{"into the blues IV7", []string{"I7", "IV7", "I7"}, 0,
+			[]string{"次が IV", "IV の 3 度の A"}, []string{"IV へ向かう働きではない"}},
+		{"into V7", []string{"I7", "IV7", "I7", "V7"}, 2,
+			[]string{"解決を求めずトニックのまま鳴る", "IV へ向かう働きではない"}, []string{"次が IV"}},
+		{"last chord", []string{"IV7", "V7", "I7"}, 2,
+			[]string{"IV へ向かう働きではない"}, []string{"次が IV"}},
+		{"into the borrowed iv", []string{"I7", "iv", "I"}, 0,
+			[]string{"IV へ向かう働きではない"}, []string{"次が IV"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tl := analysed(t, c, 4, tt.labels...)
+			a := tl.Harmony[tt.at].Analysis
+			if a.Function != Tonic || a.AppliedTo != 0 {
+				t.Errorf("%s: function %s, applied to %d; want tonic, not applied", tt.labels[tt.at], a.Function, a.AppliedTo)
+			}
+			for _, w := range tt.want {
+				if !strings.Contains(a.Explanation, w) {
+					t.Errorf("explanation lacks %q: %q", w, a.Explanation)
+				}
+			}
+			for _, w := range tt.notWant {
+				if strings.Contains(a.Explanation, w) {
+					t.Errorf("explanation says %q: %q", w, a.Explanation)
+				}
+			}
+		})
+	}
+}
+
 // The same sound written V7/IV is still the dominant of IV.
 func TestV7OfIVIsStillASecondaryDominant(t *testing.T) {
 	c := Key{C, Major}
