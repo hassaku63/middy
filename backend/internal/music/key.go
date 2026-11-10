@@ -8,9 +8,9 @@ import (
 
 // Mode is a scale type: which note of a diatonic scale is heard as the
 // centre. Major (ionian) and Minor (aeolian) came first; Dorian and
-// Mixolydian were added for Celtic, rock and modal jazz (ADR-0015).
-// Phrygian and Lydian slot in with three lines: intervals, parent offset,
-// characteristic degree.
+// Mixolydian were added for Celtic, rock and modal jazz (ADR-0015), and
+// Phrygian for flamenco (BL-134). Lydian would slot in the same way:
+// intervals, parent offset, characteristic degree.
 type Mode int
 
 // Supported modes.
@@ -19,9 +19,10 @@ const (
 	Minor           // natural minor (aeolian)
 	Dorian          // minor with a major sixth
 	Mixolydian      // major with a minor seventh
+	Phrygian        // minor with a minor second
 )
 
-var modeNames = map[Mode]string{Major: "major", Minor: "minor", Dorian: "dorian", Mixolydian: "mixolydian"}
+var modeNames = map[Mode]string{Major: "major", Minor: "minor", Dorian: "dorian", Mixolydian: "mixolydian", Phrygian: "phrygian"}
 
 // Modes lists every supported mode in declaration order.
 func Modes() []Mode {
@@ -38,12 +39,13 @@ var modeIntervals = map[Mode][7]int{
 	Minor:      {0, 2, 3, 5, 7, 8, 10},
 	Dorian:     {0, 2, 3, 5, 7, 9, 10},
 	Mixolydian: {0, 2, 4, 5, 7, 9, 10},
+	Phrygian:   {0, 1, 3, 5, 7, 8, 10},
 }
 
 // characteristicDegree is the scale degree that tells the mode apart from
 // the major or minor key it resembles: dorian's major sixth, mixolydian's
-// minor seventh. Zero for major and minor.
-var characteristicDegree = map[Mode]int{Dorian: 6, Mixolydian: 7}
+// minor seventh, phrygian's minor second. Zero for major and minor.
+var characteristicDegree = map[Mode]int{Dorian: 6, Mixolydian: 7, Phrygian: 2}
 
 // Characteristic returns the mode's characteristic scale degree, or 0.
 func (m Mode) Characteristic() int {

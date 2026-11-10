@@ -68,7 +68,7 @@ func TestKeyJSON(t *testing.T) {
 		t.Fatal("unknown mode must fail to unmarshal")
 	}
 	// The error names what to write instead, so a retry can fix it (review).
-	if !strings.Contains(err.Error(), "use one of [major minor dorian mixolydian]") {
+	if !strings.Contains(err.Error(), "use one of [major minor dorian mixolydian phrygian]") {
 		t.Errorf("error lacks the supported modes: %v", err)
 	}
 }
