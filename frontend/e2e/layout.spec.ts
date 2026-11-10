@@ -154,3 +154,33 @@ for (const { width, height, columns } of [
     });
   });
 }
+
+/**
+ * ADR-0041 (#353): on a wide screen the page uses its width up to QHD and
+ * the timeline's height is capped, so that the timeline and the frame of
+ * the sounding chord are in view together while it plays.
+ */
+for (const { width, height } of [
+  { width: 1920, height: 1080 },
+  { width: 2560, height: 1440 },
+]) {
+  test.describe(`playing at ${width}×${height}`, () => {
+    test.use({ viewport: { width, height } });
+
+    test('the timeline and the chord frame are in view together', async ({ page }) => {
+      await page.goto('/');
+      const { result } = await openExample(page, '雨の日曜の午後', '遠い記憶');
+      await page.getByRole('button', { name: '再生' }).click();
+      await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
+      const timeline = result.getByRole('group', { name: 'タイムライン' });
+      await inViewport(page, timeline);
+      await inViewport(page, result.getByRole('region', { name: 'コードの解説' }));
+      const box = await timeline.boundingBox();
+      expect(box?.height ?? Infinity).toBeLessThanOrEqual(height * 0.45 + 1);
+      // The page grows past the old 1440 px.
+      const stage = await result.boundingBox();
+      expect(stage?.width ?? 0).toBeGreaterThan(1440 - 340);
+      await page.getByRole('button', { name: '停止' }).click();
+    });
+  });
+}

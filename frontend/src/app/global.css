@@ -89,9 +89,13 @@ main {
   container: stage / inline-size;
 }
 
-/* Stretched to the stage, not stopped at the drawing's own width. */
+/* Stretched to the stage, not stopped at the drawing's own width, but no
+   taller than 45 % of the screen, so that the chord's frame below stays in
+   view on a wide screen (ADR-0041, #353). The drawing keeps its
+   proportions: the width stops where the height would pass the cap. */
 .app__stage .timeline {
   width: 100%;
+  max-width: calc(45vh * var(--timeline-aspect));
 }
 
 .app__below {
@@ -135,8 +139,9 @@ main {
    its input pinned at the bottom, beside the stage, which scrolls on its
    own too. Narrower screens keep today's stacked order. */
 @media (min-width: 1024px) {
+  /* Wide screens use their width up to QHD (ADR-0041). */
   main.app--desk {
-    max-width: 1440px;
+    max-width: 2560px;
     height: 100vh;
     box-sizing: border-box;
   }
