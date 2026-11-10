@@ -95,6 +95,7 @@ export function TimelineView({
         onSelect={onSelectHarmony}
         focusable={!decorative}
         marks={marks}
+        ppq={timeline.ppq}
       />
       <PianoRoll notes={notes} layout={layout} positionTick={sounding} />
       <DrumLane notes={drumNotes} layout={layout} positionTick={sounding} />

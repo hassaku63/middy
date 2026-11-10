@@ -138,6 +138,22 @@ describe('TimelineView', () => {
     }
   });
 
+  it('marks where a pushed chord starts to sound, left of its block (#385)', () => {
+    const pushed: Timeline = {
+      ...timeline,
+      harmony: timeline.harmony.map((h, i) => (i === 1 ? { ...h, push: 'eighth' as const } : h)),
+    };
+    const { container } = render(<TimelineView timeline={pushed} positionTick={0} />);
+    const tabs = container.querySelectorAll('.timeline__push');
+    expect(tabs).toHaveLength(1);
+    const block = container.querySelectorAll('.timeline__chord > rect:first-child')[1];
+    const tab = tabs[0];
+    const tabX = Number(tab?.getAttribute('x'));
+    const tabEnd = tabX + Number(tab?.getAttribute('width'));
+    expect(tabEnd).toBeCloseTo(Number(block?.getAttribute('x')));
+    expect(tabX).toBeLessThan(tabEnd);
+  });
+
   it('tells the foot hi-hat from the closed hi-hat (#385)', () => {
     const jazz: Timeline = {
       ...timeline,
