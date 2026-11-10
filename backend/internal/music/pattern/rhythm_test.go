@@ -148,3 +148,26 @@ func TestSixteenthStrum(t *testing.T) {
 		}
 	}
 }
+
+// TestOffBeatMeansTheEighthOffBeat (#390 T3): 裏拍 is the eighth off-beat,
+// so a figure with no hit there does not credit 裏拍 with its push.
+func TestOffBeatMeansTheEighthOffBeat(t *testing.T) {
+	tl := blockTimeline(t, music.FourFour)
+	explain := func(c Choice) string {
+		out, err := Render(tl, c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.Rhythm.Drums.Explanation
+	}
+	if e := explain(Choice{Drums: "sixteen-beat"}); strings.Contains(e, "裏拍が軽い推進力") || !strings.Contains(e, "拍の頭以外の細かい音が軽い推進力") {
+		t.Errorf("sixteen-beat:\n%s", e)
+	}
+	out, err := Render(tl, Choice{Accompaniment: "reel"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := out.Rhythm.Accompaniment.Explanation; !strings.Contains(e, "裏拍（8 分の裏）が") {
+		t.Errorf("the reel glosses 裏拍:\n%s", e)
+	}
+}
