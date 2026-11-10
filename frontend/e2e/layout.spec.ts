@@ -107,9 +107,11 @@ test.describe('the boundary between the conversation and the example', () => {
 });
 
 /**
- * #353: the explanations go side by side by the width the stage has, not
- * the window's, and a line of an explanation stays a sentence (at most 40
- * characters, WCAG 1.4.8 for CJK) at any width.
+ * #353, #360: the arrangement follows the width the stage has, not the
+ * window's. Wide, the chord's frame is a band above the timeline and the
+ * notes one column below; narrow, both below the timeline. A line of an
+ * explanation stays a sentence (at most 40 characters, WCAG 1.4.8 for
+ * CJK) at any width.
  */
 async function longestLine(page: Page) {
   return page.evaluate(() =>
@@ -122,31 +124,34 @@ async function longestLine(page: Page) {
   );
 }
 
-for (const { width, height, columns } of [
-  { width: 960, height: 1080, columns: 2 },
-  { width: 1024, height: 800, columns: 1 },
-  { width: 1280, height: 800, columns: 2 },
-  { width: 1920, height: 1080, columns: 2 },
-  { width: 2560, height: 1440, columns: 2 },
+for (const { width, height, band } of [
+  { width: 960, height: 1080, band: true },
+  { width: 1024, height: 800, band: false },
+  { width: 1280, height: 800, band: true },
+  { width: 1920, height: 1080, band: true },
+  { width: 2560, height: 1440, band: true },
 ]) {
   test.describe(`at ${width}×${height}`, () => {
     test.use({ viewport: { width, height } });
 
-    test(`the explanations in ${columns} column(s), lines of 40 characters at most`, async ({
+    test(`the chord frame ${band ? 'above' : 'below'} the timeline, lines of 40 characters at most`, async ({
       page,
     }) => {
       await page.goto('/');
       const { result } = await openExample(page, '雨の日曜の午後', '遠い記憶');
+      const timeline = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
       const frame = await result.getByRole('region', { name: 'コードの解説' }).boundingBox();
       const notes = await result.getByRole('region', { name: '解説', exact: true }).boundingBox();
-      expect(frame && notes).toBeTruthy();
-      if (!frame || !notes) return;
-      if (columns === 2) {
-        expect(frame.x + frame.width).toBeLessThanOrEqual(notes.x);
+      expect(timeline && frame && notes).toBeTruthy();
+      if (!timeline || !frame || !notes) return;
+      const below = (a: { y: number; height: number }, b: { y: number }) =>
+        b.y >= a.y + a.height - 1;
+      if (band) {
+        expect(below(frame, timeline)).toBe(true);
       } else {
-        expect(Math.abs(frame.x - notes.x)).toBeLessThan(2);
-        expect(notes.y).toBeGreaterThanOrEqual(frame.y + frame.height);
+        expect(below(timeline, frame)).toBe(true);
       }
+      expect(below(band ? timeline : frame, notes)).toBe(true);
       expect(await longestLine(page)).toBeLessThanOrEqual(40.5);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,

@@ -67,6 +67,47 @@
   max-width: 100%;
 }
 
+/* The flow of functions (#360): a column per function, T → S → D → T,
+   reading left to right like the timeline. A column holds two rows at
+   most; a third chord (minor's T: i, III, VI) starts a second column, so
+   the map stays two cells tall. */
+.degree-map--flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+}
+
+.degree-map__column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.degree-map__function {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.degree-map__chords {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: 3.4rem;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.degree-map__arrow {
+  align-self: center;
+  padding-top: 1rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 @media (prefers-color-scheme: light) {
   /* On the light page a pale cell needs dark text; a full-colour one light. */
   .degree-map__chord {

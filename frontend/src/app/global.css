@@ -77,11 +77,12 @@ main {
   padding-top: 20px;
 }
 
-/* The stage (BL-061, #279): the timeline across its whole width, and the
-   chord's frame and the other explanations below it. The stage is a
-   container, so the explanations go side by side by the width the stage
-   has, not the window's: beside the conversation at 1024 px it is too
-   narrow for two (#353). */
+/* The stage (BL-061, #279): the timeline across its whole width, the
+   chord's frame (with the degree map) and the whole example's notes. The
+   stage is a container, so the arrangement follows the width the stage
+   has, not the window's (#353): narrow, all below the timeline; wide, the
+   frame is a band above the timeline, next to the chord lane at the top
+   of the drawing, and the notes one column below (#360, ADR-0044). */
 .app__stage {
   display: flex;
   flex-direction: column;
@@ -106,8 +107,11 @@ main {
 
 @container stage (min-width: 760px) {
   .app__below {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
+    display: contents;
+  }
+
+  .app__below > .explanation--frame {
+    order: -1;
   }
 }
 

@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { Timeline } from '@/shared/api/client';
+import type { DegreeChord, Timeline } from '@/shared/api/client';
 import { ChordFrame } from './ChordFrame';
 
 const timeline = {
+  key: { tonic: 0, mode: 'major' },
   harmony: [
     {
       start: 0,
@@ -66,5 +67,62 @@ describe('ChordFrame (BL-185)', () => {
       />,
     );
     expect(screen.getByText(/← → で前後のコードへ/)).toBeInTheDocument();
+  });
+});
+
+/** C major's seven triads, as the engine lays them out (BL-099). */
+const cMajor: DegreeChord[] = [
+  { degree: 1, romanNumeral: 'I', symbol: 'C', function: 'T', used: true },
+  { degree: 2, romanNumeral: 'ii', symbol: 'Dm', function: 'S' },
+  { degree: 3, romanNumeral: 'iii', symbol: 'Em', function: 'T' },
+  { degree: 4, romanNumeral: 'IV', symbol: 'F', function: 'S' },
+  { degree: 5, romanNumeral: 'V', symbol: 'G', function: 'D', used: true },
+  { degree: 6, romanNumeral: 'vi', symbol: 'Am', function: 'T' },
+  { degree: 7, romanNumeral: 'vii°', symbol: 'Bdim', function: 'D' },
+];
+
+const withMap = (mode: Timeline['key']['mode']): Timeline => ({
+  ...timeline,
+  key: { tonic: 0, mode },
+  overview: { whole: '', flow: '', degrees: cMajor },
+});
+
+describe('ChordFrame and the degree map (#360, ADR-0044)', () => {
+  it('lays the map out as the flow of functions in major and minor, lighting the chord', () => {
+    render(
+      <ChordFrame
+        timeline={withMap('major')}
+        positionTick={0}
+        selectedHarmony={null}
+        onClearSelection={vi.fn()}
+      />,
+    );
+    const frame = screen.getByRole('region', { name: 'コードの解説' });
+    const map = within(frame).getByRole('group', { name: '度数の地図（機能の流れ）' });
+    const column = (name: string) =>
+      within(within(map).getByRole('list', { name }))
+        .getAllByRole('listitem')
+        .map((li) => li.textContent);
+    expect(column('トニック')).toEqual(['IC', 'iiiEm', 'viAm']);
+    expect(column('サブドミナント')).toEqual(['iiDm', 'IVF']);
+    expect(column('ドミナント')).toEqual(['VG', 'vii°Bdim']);
+    expect(within(map).getByLabelText('V（G）、ドミナント、この例で使う')).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+
+  it('keeps degree order in a mode, where functions do not hold', () => {
+    render(
+      <ChordFrame
+        timeline={withMap('dorian')}
+        positionTick={0}
+        selectedHarmony={null}
+        onClearSelection={vi.fn()}
+      />,
+    );
+    const frame = screen.getByRole('region', { name: 'コードの解説' });
+    expect(within(frame).getByRole('list', { name: '度数の地図' })).toBeInTheDocument();
+    expect(within(frame).queryByRole('group', { name: /機能の流れ/ })).toBeNull();
   });
 });
