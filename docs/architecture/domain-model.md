@@ -50,7 +50,7 @@ Timeline
 - `Harmony` は音を出さない注釈。解説レイヤー（和声機能、ケーデンス）はここに情報を足す。
 - `Validate()` は API 境界で必ず呼ぶ。内部の関数は妥当な Timeline を前提にしてよい。
 - `LengthTicks()` は最後のノート／注釈の終端。
-- `TempoBPM` は拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8 では付点 4 分。ADR-0019）。秒や MIDI のテンポは 4 分音符で数えるので、`QuarterBPM()` で換算する（6/8 の 60 は 90）。
+- `TempoBPM` は拍子の拍が 1 分に何回か（4/4・3/4 では 4 分音符、6/8・12/8 では付点 4 分。ADR-0019）。秒や MIDI のテンポは 4 分音符で数えるので、`QuarterBPM()` で換算する（6/8 の 60 は 90）。
 
 ### 進行
 
@@ -58,7 +58,7 @@ Timeline
 - `StepFromLabel(key, label, beats)` — ローマ数字の文字列から `Step` を作る唯一の入口（API と intent が使う）。短調の大文字 `V` / `V7` を和声的短音階のドミナントにする規則はここにある
 - `Progression []Step` — 調に依存しない進行テンプレート。`Validate()` は全ステップの問題をまとめて返す
 - `FromProgression(key, prog, tempoBPM)` — 進行を調で解決し、ブロックコード 1 トラック（GM ピアノ, ch.0, `ChordVelocity`=80）と `Harmony` 注釈を持つ `Timeline` を返す。和音は `LeadVoicings` で前の和音から声部の動きが最小になるように置く（BL-086）。最初の和音は `ChordOctave`=4 の密集した基本形、次からはその和音の転回形のうち最低音が C4〜B4（最初の和音の基本形と同じ範囲）に入るもので（オクターブ 3 のベースが必ず和音の下になる）、声部の動き（同じ数の音なら声部ごとの半音の差の和、違えば各音から最も近い前の音までの和）が最小のもの。同点なら最低音が中央の C に近いもの。ii7–V7–Imaj7 では上声が半音か全音ずつ動く。リズム・ボイシングのパターンはこの上に重ねる（BL-020, 021）
-- `FromProgressionIn(ts, key, prog, tempoBPM)` — 同じことを別の拍子で行う（4/4、3/4、6/8。ADR-0017）。`Step.Beats` は拍子の拍で数える（4/4 と 3/4 では 4 分音符、6/8 では付点 4 分。`BeatTicks(ts, ppq)`）。6/8 のような複合拍子（`TimeSignature.Compound()`）は、拍が 8 分音符 3 つに分かれ、1 小節を 2 拍と数える（`BeatsPerBar()`）。`FromProgression` は 4/4 のこれ
+- `FromProgressionIn(ts, key, prog, tempoBPM)` — 同じことを別の拍子で行う（4/4、3/4、6/8、12/8。ADR-0017）。`Step.Beats` は拍子の拍で数える（4/4 と 3/4 では 4 分音符、6/8 と 12/8 では付点 4 分。`BeatTicks(ts, ppq)`）。6/8 や 12/8 のような複合拍子（`TimeSignature.Compound()`）は、拍が 8 分音符 3 つに分かれ、1 小節を 6/8 は 2 拍、12/8 は 4 拍と数える（`BeatsPerBar()`）。`FromProgression` は 4/4 のこれ
 
 ### 分析（解説データ）
 

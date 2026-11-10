@@ -226,6 +226,32 @@ func TestFromProgressionInSixEight(t *testing.T) {
 	}
 }
 
+// TestFromProgressionInTwelveEight (#308): a numeral without beats lasts
+// one bar of 12/8, four dotted-quarter beats (2880 ticks).
+func TestFromProgressionInTwelveEight(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 50,
+		"timeSignature": {"numerator": 12, "denominator": 8},
+		"progression": [{"numeral": "I7"}, {"numeral": "IV7", "beats": 2}, {"numeral": "I7", "beats": 2}]
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, b)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	var durations []music.Tick
+	for _, h := range body.Timeline.Harmony {
+		durations = append(durations, h.Duration)
+	}
+	if got := fmt.Sprint(durations); got != "[2880 1440 1440]" {
+		t.Errorf("durations = %s, want one bar and two half bars", got)
+	}
+}
+
 // TestFromProgressionKeepsTheStyle (BL-110): a style puts a keyboard
 // pattern on its instrument and is recorded on the timeline, so a key
 // change can send it back.

@@ -119,8 +119,8 @@ func FromProgression(key Key, prog Progression, tempoBPM float64) (Timeline, err
 
 // SupportedMeter reports whether the engine renders ts (ADR-0017).
 func SupportedMeter(ts TimeSignature) error {
-	if ts != FourFour && ts != ThreeFour && ts != SixEight {
-		return fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4, 6/8)", ts.Numerator, ts.Denominator)
+	if ts != FourFour && ts != ThreeFour && ts != SixEight && ts != TwelveEight {
+		return fmt.Errorf("music: meter %d/%d is not supported yet (4/4, 3/4, 6/8, 12/8)", ts.Numerator, ts.Denominator)
 	}
 	return nil
 }

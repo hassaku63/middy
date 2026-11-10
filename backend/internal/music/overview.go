@@ -218,8 +218,9 @@ func bars(tl Timeline) string {
 
 // meterText describes a meter other than the default 4/4 (ADR-0017).
 var meterText = map[TimeSignature]string{
-	ThreeFour: "3 拍子（3/4）で、1 拍目が強く 2・3 拍目が弱い。ワルツのように 1 小節ごとに回る。",
-	SixEight:  "6/8 拍子で、付点 4 分の 2 拍に数え、それぞれの拍が 8 分音符 3 つに分かれる。1 拍目が強く、ゆりかごのように 1 小節に 2 回揺れる。",
+	ThreeFour:   "3 拍子（3/4）で、1 拍目が強く 2・3 拍目が弱い。ワルツのように 1 小節ごとに回る。",
+	SixEight:    "6/8 拍子で、付点 4 分の 2 拍に数え、それぞれの拍が 8 分音符 3 つに分かれる。1 拍目が強く、ゆりかごのように 1 小節に 2 回揺れる。",
+	TwelveEight: "12/8 拍子で、付点 4 分の 4 拍に数え、それぞれの拍が 8 分音符 3 つに分かれる。1 拍目と 3 拍目が強く、スロー・ブルースや 3 連のバラードのように、3 連符で揺れながらゆったり進む。",
 }
 
 // degreeOfEvent is the chord's scale degree; 0 for a secondary dominant,

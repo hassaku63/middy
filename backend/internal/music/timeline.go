@@ -12,12 +12,14 @@ type Tick int
 // DefaultPPQ is the pulses-per-quarter-note resolution used by middy.
 const DefaultPPQ = 480
 
-// The meters the engine renders (ADR-0017): 4/4, 3/4 for the waltz, and
-// the compound 6/8 for lullabies and jigs.
+// The meters the engine renders (ADR-0017): 4/4, 3/4 for the waltz, the
+// compound 6/8 for lullabies and jigs, and the compound 12/8 for the slow
+// blues and the triplet ballad (#308).
 var (
-	FourFour  = TimeSignature{Numerator: 4, Denominator: 4}
-	ThreeFour = TimeSignature{Numerator: 3, Denominator: 4}
-	SixEight  = TimeSignature{Numerator: 6, Denominator: 8}
+	FourFour    = TimeSignature{Numerator: 4, Denominator: 4}
+	ThreeFour   = TimeSignature{Numerator: 3, Denominator: 4}
+	SixEight    = TimeSignature{Numerator: 6, Denominator: 8}
+	TwelveEight = TimeSignature{Numerator: 12, Denominator: 8}
 )
 
 // Compound reports whether ts is a compound meter (6/8, 9/8, 12/8): its
