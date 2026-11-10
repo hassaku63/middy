@@ -18,6 +18,7 @@ middy のドキュメント索引。**新しいドキュメントを追加した
 | --- | --- |
 | [architecture/overview.md](architecture/overview.md) | システム構成、境界、ディレクトリ配置、データフロー |
 | [architecture/domain-model.md](architecture/domain-model.md) | 音楽ドメインの語彙と型（Pitch, Key, Chord, Timeline, ...） |
+| [architecture/pattern-catalogue.schema.json](architecture/pattern-catalogue.schema.json) | 型のカタログの JSON Schema（エディタ向け。決まりの正典は `pattern.Catalogue.Validate`） |
 | [architecture/llm-integration.md](architecture/llm-integration.md) | LLM の役割、プロンプト/構造化出力の方針、実装メモ |
 | [architecture/adr/](architecture/adr/README.md) | Architecture Decision Records |
 | [api/openapi.yaml](api/openapi.yaml) | HTTP API 契約（OpenAPI 3.1） |
@@ -36,6 +37,7 @@ middy のドキュメント索引。**新しいドキュメントを追加した
 | [dev/workflow.md](dev/workflow.md) | AI/人間共通の開発ループ、完了の定義、ガードレール、PR の作法 |
 | [dev/conventions.md](dev/conventions.md) | Go / TypeScript のコーディング規約、命名、エラー処理、ログ |
 | [dev/testing.md](dev/testing.md) | テスト戦略（何をどのレイヤーでテストするか） |
+| [dev/patterns.md](dev/patterns.md) | 型の足し方（伴奏・ドラム・スタイルのカタログの JSON、検査、ゴールデン、評価） |
 | [dev/harness.md](dev/harness.md) | 開発ハーネスの全検査の一覧（目的・実行方法・場所）と見直しの規則 |
 | [dev/docs-hygiene.md](dev/docs-hygiene.md) | ドキュメントを腐らせないための原則、機械的検査、自己点検手順、月次の庭仕事 |
 | [glossary.md](glossary.md) | 用語集（音楽用語・プロダクト用語） |
