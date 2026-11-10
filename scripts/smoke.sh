@@ -36,6 +36,19 @@ fetch() {
 status() { [ "$(cat "$tmp/$1.s")" = "$2" ]; }
 header() { grep -qi "^$2:.*$3" "$tmp/$1.h"; }
 body() { grep -q "$2" "$tmp/$1"; }
+headers_once() { [ "$(grep -ci "^$2:" "$tmp/$1.h")" = 1 ]; }
+
+# secure <name> <what>: the security headers and the CSP (#206 A-4), each
+# once, on a response of any kind.
+secure() {
+  local name="$1" what="$2" h
+  for h in x-content-type-options referrer-policy x-frame-options permissions-policy strict-transport-security content-security-policy; do
+    check "$what has $h once" headers_once "$name" "$h"
+  done
+  check "$what is not sniffed" header "$name" x-content-type-options nosniff
+  check "$what cannot be framed" header "$name" content-security-policy "frame-ancestors 'none'"
+  check "$what runs only this origin's scripts" header "$name" content-security-policy "script-src 'self';"
+}
 
 # The server may still be starting.
 for _ in $(seq 1 30); do
@@ -52,6 +65,7 @@ fetch index /
 check "/ is HTML" header index content-type text/html
 check "/ holds the app root" body index '<div id="root">'
 check "/ is revalidated" header index cache-control no-cache
+secure index "/"
 
 fetch sw /sw.js
 check "sw.js is revalidated" header sw cache-control no-cache
@@ -71,6 +85,7 @@ check "a missing file is 404" status missing 404
 check "a missing file says not found" body missing 'not found'
 check "a missing file is not cached" header missing cache-control no-cache
 check "a missing file is plain text" header missing content-type text/plain
+secure missing "a missing file"
 
 fetch assetsdir /assets
 check "/assets itself is 404" status assetsdir 404
@@ -88,6 +103,7 @@ fetch api404 /api/v1/nope
 check "an unknown API path is 404" status api404 404
 check "an unknown API path is a problem detail" header api404 content-type application/problem+json
 check "an unknown API path says not_found" body api404 '"code":"not_found"'
+secure api404 "an unknown API path"
 
 head -c 70000 /dev/zero | tr '\0' 'a' >"$tmp/big.json"
 fetch big /api/v1/ideas -X POST -H 'Content-Type: application/json' --data-binary "@$tmp/big.json"
