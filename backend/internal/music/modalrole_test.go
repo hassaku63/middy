@@ -91,7 +91,7 @@ func TestModalRolesInTheAnalysis(t *testing.T) {
 
 	dorian := analyze(Key{D, Dorian}, "i", "vi°", "VII", "i")
 	dim, sub := dorian.Harmony[1].Analysis, dorian.Harmony[2].Analysis
-	want := "三全音（F と B）を含むので、同じ音でできた C major に引き寄せられやすく、ドリアンの中心がぼやける。"
+	want := "特徴音も含むが、三全音（全音 3 つ分離れた F と B）を含むので、同じ音でできた C major に引き寄せられやすく、ドリアンの中心がぼやける。"
 	if dim.Role != RoleTritone || !strings.Contains(dim.Explanation, want) || strings.Contains(dim.Explanation, "明るく聞こえる理由") {
 		t.Errorf("vi° blurs dorian towards C major:\n%s", dim.Explanation)
 	}
@@ -112,7 +112,7 @@ func TestModalRolesInTheAnalysis(t *testing.T) {
 	// degree map keeps the triad's role.
 	vamp := analyze(Key{D, Dorian}, "i7", "IV7", "IV", "i7")
 	iv7, iv := vamp.Harmony[1].Analysis, vamp.Harmony[2].Analysis
-	want = "和音に 7 度の音を足すと三全音（F と B）ができるので、同じ音でできた C major に引き寄せられやすく、ドリアンの中心がぼやける。三和音の IV（G）のほうがドリアンらしく聞こえる。"
+	want = "和音に 7 度の音を足すと三全音（全音 3 つ分離れた F と B）ができるので、同じ音でできた C major に引き寄せられやすく、ドリアンの中心がぼやける。三和音の IV（G）のほうがドリアンらしく聞こえる。"
 	if iv7.Role != RoleTritone || !strings.Contains(iv7.Explanation, want) ||
 		strings.Contains(iv7.Explanation, "三全音を含まない") || strings.Contains(iv7.Explanation, "明るく聞こえる理由") {
 		t.Errorf("IV7 adds the tritone:\n%s", iv7.Explanation)

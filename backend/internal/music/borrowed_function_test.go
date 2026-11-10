@@ -40,7 +40,7 @@ func TestBorrowedFunctions(t *testing.T) {
 			[]string{"サブドミナント（S）", "長調の中では iv と同じく", "サブドミナント・マイナー", "短調の中の VI は、トニックの代わりになる"},
 			[]string{"調の中心"}},
 		{"♭VII before I is a weak dominant", []string{"I", "bVI", "bVII", "I"}, 2, Dominant,
-			[]string{"導音を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント"}, nil},
+			[]string{"を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント"}, nil},
 		{"♭VII before IV is subdominant", []string{"I", "bVII", "IV", "I"}, 1, Subdominant,
 			[]string{"サブドミナント（S）", "次の IV へ進み"}, []string{"ドミナント（D）"}},
 		{"♭III5 is the parallel minor's tonic side", []string{"I", "bIII5", "IV", "I"}, 1, Tonic,

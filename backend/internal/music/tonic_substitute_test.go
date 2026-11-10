@@ -48,11 +48,11 @@ func TestTonicSubstitutesAndWeakDominants(t *testing.T) {
 		{"minor VI stands in for i", Key{A, Minor}, []string{"i", "VI", "iv", "i"}, 1,
 			[]string{"i と 2 つの音を共有する"}, []string{"調の中心"}},
 		{"minor v has no leading tone", Key{A, Minor}, []string{"i", "iv", "v", "i"}, 2,
-			[]string{"ただし導音を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"}, nil},
+			[]string{"ただし導音（主音の半音下の音）を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"}, nil},
 		{"harmonic V has it", Key{A, Minor}, []string{"i", "iv", "V", "i"}, 2,
 			nil, []string{"導音を持たないので"}},
 		{"VII with no context", Key{A, Minor}, []string{"i", "VI", "III", "VII"}, 3,
-			[]string{"導音を持たないので、V ほど強くは i へ引き寄せない。"}, nil},
+			[]string{"導音（主音の半音下の音）を持たないので、V ほど強くは i へ引き寄せない。"}, nil},
 	}
 	for _, c := range cases {
 		got := analyze(c.key, c.labels...)[c.at]

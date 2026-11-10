@@ -45,7 +45,7 @@ var modeCharacter = map[Mode]string{
 	Major:      "明るく安定して聞こえる。",
 	Minor:      "自然短音階で、暗く内向きに聞こえる。",
 	Dorian:     "短調に似ているが、音階の第 6 音が半音高いので、暗さの中に明るさが混ざる。",
-	Mixolydian: "長調に似ているが、音階の第 7 音が半音低く導音がないので、開放的に聞こえる。",
+	Mixolydian: "長調に似ているが、音階の第 7 音が半音低く導音（主音の半音下の音）がないので、開放的に聞こえる。",
 	Phrygian:   "短調に似ているが、音階の第 2 音が半音低いので、さらに暗く、スペインのフラメンコのような張りつめた響きになる。",
 }
 
@@ -118,7 +118,7 @@ func whole(tl Timeline) string {
 		}
 	case k.Mode == Minor:
 		if used := distinct(tl, func(h HarmonyEvent) bool { return isHarmonicMinorDominant(k, h.Chord) }); len(used) > 0 {
-			s += fmt.Sprintf("%sは和声的短音階の形で、導音が主和音へ強く引き寄せる。", joinChords(k, used))
+			s += fmt.Sprintf("%sは和声的短音階の形で、導音（主音の半音下の音）が主和音へ強く引き寄せる。", joinChords(k, used))
 		}
 		if used := distinct(tl, func(h HarmonyEvent) bool { return h.Analysis != nil && h.Analysis.Borrowed }); len(used) > 0 {
 			s += fmt.Sprintf("この例では %sが短調の外から借りた和音（同主長調の I・IV、ナポリの ♭II）。", joinChords(k, used))

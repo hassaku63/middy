@@ -115,9 +115,9 @@ func (k Key) parallelMajor() Key {
 const (
 	characteristicRoleText = "三全音を含まない特徴和音で、%sの響きをはっきりさせる。"
 	characteristicRootText = "特徴音が根音にあるので、主和音へ戻る終わり方によく使われる。"
-	tritoneRoleText        = "三全音（%s と %s）を含むので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。"
+	tritoneRoleText        = "%s三全音（全音 3 つ分離れた %s と %s）を含むので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。"
 	// seventhTritoneText: the triad has no tritone, the seventh adds it.
-	seventhTritoneText = "和音に 7 度の音を足すと三全音（%s と %s）ができるので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。三和音の %s（%s）のほうが%sらしく聞こえる。"
+	seventhTritoneText = "和音に 7 度の音を足すと三全音（全音 3 つ分離れた %s と %s）ができるので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。三和音の %s（%s）のほうが%sらしく聞こえる。"
 )
 
 // roleText says what a chord does in a mode, after its opening sentence
@@ -141,7 +141,14 @@ func roleText(k Key, h HarmonyEvent, degree int, role ModalRole) string {
 			name := modeName[k.Mode]
 			return " " + fmt.Sprintf(seventhTritoneText, k.PitchClassName(low), k.PitchClassName(high), k.parallelMajor(), name, numeral, k.ChordSymbol(triad), name)
 		}
-		return " " + fmt.Sprintf(tritoneRoleText, k.PitchClassName(low), k.PitchClassName(high), k.parallelMajor(), modeName[k.Mode])
+		// The tritone chord holds the characteristic tone too (dorian vi°
+		// has B): say so, so that "特徴音を含む" in the overview and "特徴和音
+		// ではない" here do not seem to clash (#390 T6).
+		also := ""
+		if tone, err := k.Degree(k.Mode.Characteristic()); err == nil && holds(h.Chord, tone) {
+			also = "特徴音も含むが、"
+		}
+		return " " + fmt.Sprintf(tritoneRoleText, also, k.PitchClassName(low), k.PitchClassName(high), k.parallelMajor(), modeName[k.Mode])
 	case RoleTonic, RoleOther:
 		// The opening sentence says the tonic is the centre; any other
 		// chord is said by its characteristic tone or its cadence.
