@@ -53,7 +53,12 @@ describe('fixtures from backend/internal/fixtures', () => {
     expect(tl.tempoBpm).toBe(90);
     expect(tl.harmony.map((h) => h.romanNumeral)).toEqual(['I', 'V', 'vi', 'IV']);
     expect(tl.harmony.map((h) => h.analysis?.function)).toEqual(['T', 'D', 'T', 'S']);
-    expect(tl.harmony[1]?.analysis?.cadence).toBe('half');
-    expect(tl.harmony[2]?.analysis?.cadence).toBe('deceptive');
+    // One phrase that ends on IV: V and vi inside it close nothing (#371).
+    expect(tl.harmony.map((h) => h.analysis?.cadence)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 });

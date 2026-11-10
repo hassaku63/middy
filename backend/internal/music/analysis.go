@@ -66,6 +66,75 @@ func borrowedFunctionText(k Key, p placed, fn Function) string {
 	return ""
 }
 
+// cadenceAt is the cadence the chord at i closes (#371, ADR-0051). A
+// cadence ends a phrase, so the arrival must be the last chord or end on
+// a phrase boundary (PhraseBars): V – I inside a phrase is one motion, and
+// a V that goes on is no half cadence. The tonic six-four before V (the
+// cadential six-four) decorates the V; it closes nothing.
+func cadenceAt(tl Timeline, ps []placed, i int) Cadence {
+	if i == 0 || !endsPhrase(tl, i) {
+		return NoCadence
+	}
+	cad := cadenceBetween(tl.Key.Mode, ps[i-1], ps[i])
+	if cad == Plagal && isCadentialSixFour(tl.Harmony, ps, i) {
+		return NoCadence
+	}
+	return cad
+}
+
+// endsPhrase reports whether the chord at i ends a phrase: it is the last,
+// or it ends on a phrase boundary.
+func endsPhrase(tl Timeline, i int) bool {
+	if i == len(tl.Harmony)-1 {
+		return true
+	}
+	phrase := BarTicks(tl.TimeSignature, tl.PPQ) * PhraseBars
+	h := tl.Harmony[i]
+	return phrase > 0 && (h.Start+h.Duration)%phrase == 0
+}
+
+// isCadentialSixFour reports whether the chord at i is the tonic with its
+// fifth in the bass, going on to V (I6/4 – V).
+func isCadentialSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
+	if i+1 >= len(ps) || ps[i].degree != 1 || ps[i].borrowed || ps[i].applied != 0 ||
+		ps[i+1].degree != 5 || ps[i+1].applied != 0 {
+		return false
+	}
+	pcs := hs[i].Chord.PitchClasses()
+	return len(pcs) >= 3 && bassOf(hs[i]).Normalize() == pcs[2].Normalize()
+}
+
+const (
+	cadentialSixFourSentence = "ここでは次の V を飾る和音（終止の四六）。主和音の音でできていても、働きは V の側（ドミナント）にあり、区切りにはならない。"
+	// imperfectAuthenticText: V – I with either chord inverted.
+	imperfectAuthenticText = "直前の V から I へ解決する正格終止。ただし、どちらかの和音のベースが根音でないので、基本形どうしより区切りは弱い。"
+)
+
+// cadentialSixFourText says what the cadential six-four does.
+func cadentialSixFourText(hs []HarmonyEvent, ps []placed, i int) string {
+	if !isCadentialSixFour(hs, ps, i) {
+		return ""
+	}
+	return " " + cadentialSixFourSentence
+}
+
+// cadenceSentence says the cadence the chord at i closes; an authentic
+// cadence with either chord inverted is the weaker, imperfect one.
+func cadenceSentence(hs []HarmonyEvent, i int, cad Cadence) string {
+	if cad == NoCadence {
+		return ""
+	}
+	if cad == Authentic && (inverted(hs[i-1]) || inverted(hs[i])) {
+		return imperfectAuthenticText
+	}
+	return cadenceText[cad]
+}
+
+// inverted reports whether the chord's bass is not its root.
+func inverted(h HarmonyEvent) bool {
+	return bassOf(h).Normalize() != h.Chord.Root.Normalize()
+}
+
 // Cadence names how the previous chord resolves into this one.
 type Cadence string
 
@@ -139,7 +208,10 @@ func Analyze(tl Timeline) (Timeline, error) {
 			following = ps[i+1]
 		}
 		fn := functionOf(tl.Key, p, following)
-		cad := cadenceBetween(tl.Key.Mode, prev, p)
+		if isCadentialSixFour(tl.Harmony, ps, i) {
+			fn = Dominant // it decorates the V (#371, ADR-0051)
+		}
+		cad := cadenceAt(tl, ps, i)
 		var role ModalRole
 		if !p.borrowed {
 			role = soundingRole(tl.Key, p.degree, h.Chord)
@@ -150,11 +222,11 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
 			Role:        role,
-			Explanation: explain(tl.Key, *h, p.degree, fn, cad, p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
-		out.Harmony[i].Analysis.Explanation += openText(out.Harmony, i) + bassText(tl.Key, out.Harmony, i) + pushText(out, i)
+		out.Harmony[i].Analysis.Explanation += openText(out.Harmony, i) + bassText(tl.Key, out.Harmony, i) + cadentialSixFourText(out.Harmony, ps, i) + pushText(out, i)
 	}
 	out.Overview = overview(out)
 	return out, nil
@@ -525,7 +597,7 @@ func openingText(key Key, degree int, fn Function, borrowed bool) string {
 	return fmt.Sprintf(modalDegreeText, modeName[key.Mode], degree)
 }
 
-func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borrowed bool, role ModalRole) string {
+func explain(key Key, h HarmonyEvent, degree int, fn Function, cadence string, borrowed bool, role ModalRole) string {
 	symbol := symbolOf(key, h)
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn, borrowed))
 	if key.Mode == Minor && degree == 5 && !borrowed && !holds(h.Chord, key.Tonic.Add(11)) {
@@ -546,8 +618,8 @@ func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borr
 	if isPhrygianSecond(key, h.Chord) {
 		s += " " + phrygianSecondText
 	}
-	if cad != NoCadence {
-		s += " " + cadenceText[cad]
+	if cadence != "" {
+		s += " " + cadence
 	}
 	return s
 }

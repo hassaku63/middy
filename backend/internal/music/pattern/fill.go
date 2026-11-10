@@ -8,9 +8,9 @@ import (
 	"github.com/hassaku63/middy/backend/internal/music"
 )
 
-// phraseBars is the length of a phrase the drums mark with a fill (BL-126,
-// ADR-0012 decision 5): four bars, the commonest phrase in songs.
-const phraseBars = 4
+// phraseBars is the length of a phrase the drums mark with a fill
+// (BL-126): the engine's phrase (music.PhraseBars).
+const phraseBars = music.PhraseBars
 
 type kit int
 

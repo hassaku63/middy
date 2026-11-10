@@ -54,6 +54,7 @@
 | [0048](0048-modal-roles-on-screen.md) | モードの地図を役割の列（主和音 → 特徴和音 → そのほか → 三全音）に分け、札と読み上げを役割の言葉にする | Accepted |
 | [0049](0049-sounding-chord-roles.md) | モードの解説の役割は鳴っている和音で決める（七の和音が三全音を足せば三全音の和音）。地図は三和音のまま | Accepted |
 | [0050](0050-borrowed-chord-functions.md) | 長調の借用和音の機能は同主短調での働きで決める（♭VI は S、♭VII は次が IV なら S、それ以外は弱い D） | Accepted |
+| [0051](0051-cadences-end-phrases.md) | 終止はフレーズ（4 小節）の終わりでだけ判定する。終止の四六は D で終止なし、転回形の V → I は弱い正格終止 | Accepted |
 
 ## いつ ADR を書くか
 

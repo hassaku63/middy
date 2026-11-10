@@ -623,7 +623,7 @@ components:
         cadence:
           type: string
           enum: [authentic, plagal, half, deceptive, modal]
-          description: 直前のコードからこのコードへの進行が作る終止。modal はドリアン・ミクソリディアンの VII → I。該当なしのときは省略
+          description: フレーズの終わり（最後の和音か、4 小節の区切りで終わる和音）で、直前のコードからこのコードへの進行が作る終止。modal はドリアン・ミクソリディアンの VII → I。フレーズの途中や該当なしのときは省略
         borrowed:
           type: boolean
           description: 同主短調から借りた和音（長調の iv・ivm6・ii°・♭VI・♭VII）のとき true。省略時 false

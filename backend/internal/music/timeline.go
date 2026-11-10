@@ -58,6 +58,11 @@ func (t Timeline) QuarterBPM() float64 {
 	return t.TempoBPM * float64(BeatTicks(t.TimeSignature, t.PPQ)) / float64(t.PPQ)
 }
 
+// PhraseBars is the length of a phrase in bars: four, the commonest in
+// songs (ADR-0012 decision 5). The drums mark its end with a fill
+// (BL-126), and a cadence is read only where one ends (#371, ADR-0051).
+const PhraseBars = 4
+
 // BarTicks is the length of one bar of ts at ppq ticks per quarter note.
 func BarTicks(ts TimeSignature, ppq int) Tick {
 	if ts.Denominator <= 0 {
