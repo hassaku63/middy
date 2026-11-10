@@ -210,3 +210,29 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
   await expect(result).toContainText('候補: 遠い記憶');
   await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
 });
+
+/**
+ * BL-218, under trial: with ?input=follow the desk's input comes right
+ * after the conversation, high up while the conversation is short, and
+ * stays in view at the column's foot once it fills the column. Pinned
+ * (today's), it waits at the foot from the start.
+ */
+test('the desk input rises into a short conversation and sticks at the foot of a long one (?input=follow)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const input = page.getByLabel('イメージ', { exact: true });
+
+  await page.goto('/?layout=desk');
+  expect((await input.boundingBox())?.y ?? 0).toBeGreaterThan(500);
+
+  await page.goto('/?layout=desk&input=follow');
+  expect((await input.boundingBox())?.y ?? 9999).toBeLessThan(400);
+
+  for (const image of ['雨の日曜の午後', 'もっと明るく', 'もう少し静かに']) {
+    await input.fill(image);
+    await page.getByRole('button', { name: '送る' }).click();
+    await expect(page.getByRole('region', { name: '結果' })).toBeVisible();
+  }
+  await expect(input).toBeInViewport();
+});

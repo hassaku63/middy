@@ -15,12 +15,14 @@
   /* The line between the conversation and the example (BL-212): a boundary
      between the two halves of the page, not a frame around either. */
   --rule: #4b5563;
+  /* The page itself, for what scrolls over it (the desk's input, BL-218). */
+  --page: #111827;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: #111827;
+  background: var(--page);
   color: #f3f4f6;
 }
 
@@ -28,10 +30,11 @@ body {
   :root {
     --text-muted: #4b5563;
     --rule: #d1d5db;
+    --page: #f9fafb;
   }
 
   body {
-    background: #f9fafb;
+    background: var(--page);
     color: #111827;
   }
 }
@@ -224,5 +227,31 @@ main {
   .app--desk .app__main:has(.app__timeline) {
     border-left: 1px solid var(--rule);
     padding-left: 20px;
+  }
+}
+
+/* The desk's input under trial (BL-218, ?input=follow): the column
+   scrolls as a whole and the input comes right after the conversation,
+   so it rises into the space a short one leaves; once the conversation
+   fills the column, the input sticks to the column's foot. */
+@media (min-width: 1024px) {
+  .app--input-follow .app__side {
+    overflow-y: auto;
+  }
+
+  .app--input-follow .app__side > .chat {
+    flex: none;
+  }
+
+  .app--input-follow .chat__scroll {
+    flex: none;
+    overflow: visible;
+  }
+
+  .app--input-follow .chat__composer {
+    position: sticky;
+    bottom: 0;
+    padding: 8px 0;
+    background: var(--page);
   }
 }

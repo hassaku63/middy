@@ -3,8 +3,8 @@ import type { useZoomTrial } from './useZoomTrial';
 
 /**
  * The switches of the screen trials, shown with ?lab: how the timeline's
- * detail moves (BL-127) and where the conversation sits (BL-184). They go
- * away with the trials.
+ * detail moves (BL-127), where the conversation sits (BL-184) and where
+ * its input sits (BL-218). They go away with the trials.
  */
 export function LabControls({
   zoom,
@@ -34,6 +34,18 @@ export function LabControls({
           <option value="wide">会話を左の列に、タイムラインを横いっぱいに</option>
         </select>
       </label>
+      {layout.desk && (
+        <label className="app__lab">
+          入力欄の位置（試験）
+          <select
+            value={layout.followInput ? 'follow' : 'pinned'}
+            onChange={(e) => layout.chooseInput(e.target.value === 'follow')}
+          >
+            <option value="pinned">列の下に固定</option>
+            <option value="follow">やり取りのすぐ下（空いていれば上に寄る）</option>
+          </select>
+        </label>
+      )}
     </>
   );
 }

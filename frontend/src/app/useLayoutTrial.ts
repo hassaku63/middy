@@ -21,6 +21,19 @@ export function useLayoutTrial() {
     return layouts.find((l) => l === asked) ?? 'stacked';
   });
   const lab = params.has('lab');
+  // Where the desk's input sits, under trial too (BL-218): pinned to the
+  // foot of the column (today's), or right after the conversation
+  // (?input=follow), so it rises into the space a short one leaves and
+  // sticks to the foot once the conversation fills the column.
+  const [followInput, setFollowInput] = useState(() => params.get('input') === 'follow');
+
+  const chooseInput = useCallback((follow: boolean) => {
+    setFollowInput(follow);
+    const url = new URL(window.location.href);
+    if (follow) url.searchParams.set('input', 'follow');
+    else url.searchParams.delete('input');
+    window.history.replaceState(null, '', url);
+  }, []);
 
   const choose = useCallback((next: Layout) => {
     setMode(next);
@@ -31,5 +44,13 @@ export function useLayoutTrial() {
   }, []);
 
   // The wide desk is a desk too: the left column, the frame and the keys.
-  return { mode, desk: mode !== 'stacked', wide: mode === 'wide', choose, lab };
+  return {
+    mode,
+    desk: mode !== 'stacked',
+    wide: mode === 'wide',
+    choose,
+    lab,
+    followInput,
+    chooseInput,
+  };
 }
