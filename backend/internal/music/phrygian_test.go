@@ -59,12 +59,12 @@ func TestPhrygianExplainsTheSecond(t *testing.T) {
 		t.Fatal(err)
 	}
 	ii := tl.Harmony[1].Analysis.Explanation
-	for _, want := range []string{"フリジアンの特徴音（主音から短 2 度の F）", "主音の半音上の長三和音（♭II）", "フリジアン終止"} {
+	for _, want := range []string{"フリジアンの特徴音（主音から短 2 度の F）", "主音の半音上の長三和音（♭II）", "フリジアンらしい終わり方", "「フリギア終止」と呼ぶのは短調の iv6 → V"} {
 		if !strings.Contains(ii, want) {
 			t.Errorf("II lacks %q: %s", want, ii)
 		}
 	}
-	if strings.Contains(tl.Harmony[2].Analysis.Explanation, "フリジアン終止") {
+	if strings.Contains(tl.Harmony[2].Analysis.Explanation, "フリジアンらしい終わり方") {
 		t.Errorf("III is not the phrygian second: %s", tl.Harmony[2].Analysis.Explanation)
 	}
 	if strings.Contains(tl.Harmony[0].Analysis.Explanation, "特徴音") {
@@ -72,5 +72,26 @@ func TestPhrygianExplainsTheSecond(t *testing.T) {
 	}
 	if w := tl.Overview.Whole; !strings.Contains(w, "E phrygian") || !strings.Contains(w, "2 度の音が半音低い") {
 		t.Errorf("the whole names the mode and its colour: %s", w)
+	}
+}
+
+// TestPhrygianSeventhIsNoModalCadence (#371 M3): the modal cadence is
+// dorian's and mixolydian's VII – I; phrygian's ♭vii – i is no cadence.
+func TestPhrygianSeventhIsNoModalCadence(t *testing.T) {
+	key := Key{E, Phrygian}
+	vii, err := StepFromLabel(key, "vii", 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	i, _ := StepFromLabel(key, "i", 4)
+	tl, err := FromProgression(key, Progression{vii, i}, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl, err = Analyze(tl); err != nil {
+		t.Fatal(err)
+	}
+	if a := tl.Harmony[1].Analysis; a.Cadence != NoCadence || strings.Contains(a.Explanation, "モーダル終止") {
+		t.Errorf("phrygian vii – i: %+v", a)
 	}
 }

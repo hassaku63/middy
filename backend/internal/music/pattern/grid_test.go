@@ -94,7 +94,7 @@ func TestBackbeatAndHalfTime(t *testing.T) {
 		}
 		return out.Rhythm.Drums.Explanation
 	}
-	if e := explain(Choice{Drums: "eight-beat"}); !strings.Contains(e, "2・4 拍目のスネアがバックビート") {
+	if e := explain(Choice{Drums: "eight-beat"}); !strings.Contains(e, "2・4 拍目のスネアがバックビート") || !strings.Contains(e, "弱拍の 2・4 拍目に重みが来て") {
 		t.Errorf("eight-beat: %s", e)
 	}
 	if e := explain(Choice{Drums: "ballad"}); !strings.Contains(e, "ハーフタイム") {

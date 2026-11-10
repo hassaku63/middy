@@ -125,7 +125,7 @@ func backbeatText(d Drums, ts music.TimeSignature) string {
 		b := on[n.note]
 		switch {
 		case b[2] && b[4]:
-			return fmt.Sprintf("2・4 拍目の%sがバックビート。拍の裏側に重みが来て、体が前後に揺れる。", n.name)
+			return fmt.Sprintf("2・4 拍目の%sがバックビート。弱拍の 2・4 拍目に重みが来て、体が前後に揺れる。", n.name)
 		case b[3] && !b[1] && !b[2] && !b[4]:
 			return fmt.Sprintf("%sが 3 拍目だけに来るハーフタイム。テンポの半分の速さで、ゆったり揺れて聞こえる。", n.name)
 		}
