@@ -117,7 +117,7 @@ const (
 	characteristicRootText = "特徴音が根音にあるので、主和音へ戻る終わり方によく使われる。"
 	tritoneRoleText        = "三全音（%s と %s）を含むので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。"
 	// seventhTritoneText: the triad has no tritone, the seventh adds it.
-	seventhTritoneText = "7 度の音を足すと三全音（%s と %s）ができるので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。三和音の %s（%s）のほうが%sらしく聞こえる。"
+	seventhTritoneText = "和音に 7 度の音を足すと三全音（%s と %s）ができるので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。三和音の %s（%s）のほうが%sらしく聞こえる。"
 )
 
 // roleText says what a chord does in a mode, after its opening sentence

@@ -44,9 +44,9 @@ type DegreeChord struct {
 var modeCharacter = map[Mode]string{
 	Major:      "明るく安定して聞こえる。",
 	Minor:      "自然短音階で、暗く内向きに聞こえる。",
-	Dorian:     "短調に似ているが、6 度の音が半音高いので、暗さの中に明るさが混ざる。",
-	Mixolydian: "長調に似ているが、7 度の音が半音低く導音がないので、開放的に聞こえる。",
-	Phrygian:   "短調に似ているが、2 度の音が半音低いので、さらに暗く、スペインのフラメンコのような張りつめた響きになる。",
+	Dorian:     "短調に似ているが、音階の第 6 音が半音高いので、暗さの中に明るさが混ざる。",
+	Mixolydian: "長調に似ているが、音階の第 7 音が半音低く導音がないので、開放的に聞こえる。",
+	Phrygian:   "短調に似ているが、音階の第 2 音が半音低いので、さらに暗く、スペインのフラメンコのような張りつめた響きになる。",
 }
 
 // reference is the mode a modal key is heard against: dorian and phrygian

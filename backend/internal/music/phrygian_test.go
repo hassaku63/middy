@@ -70,7 +70,7 @@ func TestPhrygianExplainsTheSecond(t *testing.T) {
 	if strings.Contains(tl.Harmony[0].Analysis.Explanation, "特徴音") {
 		t.Errorf("i (E G B) has no F: %s", tl.Harmony[0].Analysis.Explanation)
 	}
-	if w := tl.Overview.Whole; !strings.Contains(w, "E phrygian") || !strings.Contains(w, "2 度の音が半音低い") {
+	if w := tl.Overview.Whole; !strings.Contains(w, "E phrygian") || !strings.Contains(w, "音階の第 2 音が半音低い") {
 		t.Errorf("the whole names the mode and its colour: %s", w)
 	}
 }
