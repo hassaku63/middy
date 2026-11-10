@@ -36,3 +36,28 @@ func TestCadencesEndPhrases(t *testing.T) {
 		t.Errorf("the phrase ends on V: %+v", a)
 	}
 }
+
+// TestCadenceSentencesNameTheChords (#378 B4): the cadence sentence names
+// the two chords as the chord lane shows them, case and all.
+func TestCadenceSentencesNameTheChords(t *testing.T) {
+	cases := []struct {
+		key    Key
+		labels []string
+		want   string
+	}{
+		{Key{A, Minor}, []string{"i", "iv", "V", "VI"}, "V から主和音ではなく VI へ進む偽終止"},
+		{Key{A, Minor}, []string{"i", "VI", "iv", "i"}, "直前の iv から i へ落ち着く変格終止"},
+		{Key{A, Minor}, []string{"i", "iv", "V7", "i"}, "直前の V7 から i へ解決する正格終止"},
+		{Key{D, Dorian}, []string{"i", "v", "IV", "i"}, "直前の IV から i へ落ち着く変格終止"},
+		{Key{G, Mixolydian}, []string{"I", "IV", "v", "VII", "I"}, "直前の VII から I へ進むモーダル終止"},
+		{Key{C, Major}, []string{"I", "vi", "ii", "V"}, "直前の ii から V に着いて止まる半終止"},
+		{Key{C, Major}, []string{"I", "IV", "V", "I"}, "直前の V から I へ解決する正格終止。もっとも強い区切り。"},
+	}
+	for _, c := range cases {
+		tl := analysed(t, c.key, 4, c.labels...)
+		last := tl.Harmony[len(tl.Harmony)-1].Analysis.Explanation
+		if !strings.Contains(last, c.want) {
+			t.Errorf("%v %v: want %q in\n%s", c.key, c.labels, c.want, last)
+		}
+	}
+}
