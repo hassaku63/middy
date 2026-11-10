@@ -11,6 +11,8 @@ async function send(page: Page, image: string, path = '/') {
   await page.goto(path);
   await page.getByLabel('イメージ', { exact: true }).fill(image);
   await page.getByRole('button', { name: '送る' }).click();
+  // An answer opens nothing by itself (BL-219): open its first example.
+  await page.getByRole('article').first().getByRole('button').click();
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('group', { name: 'タイムライン' }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);

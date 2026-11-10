@@ -187,9 +187,9 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
   await page.getByLabel('イメージ', { exact: true }).fill('雨の日曜の午後');
   await page.getByRole('button', { name: '送る' }).click();
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result).toBeVisible();
-  // The answer opened its first example without a sound.
-  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+  // The answer opens nothing by itself (BL-219).
+  await expect(page.getByRole('article', { name: '遠い記憶' })).toBeVisible();
+  await expect(result).toHaveCount(0);
 
   await page.getByRole('article', { name: '遠い記憶' }).click();
   await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
@@ -212,27 +212,21 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
 });
 
 /**
- * BL-218, under trial: with ?input=follow the desk's input comes right
- * after the conversation, high up while the conversation is short, and
- * stays in view at the column's foot once it fills the column. Pinned
- * (today's), it waits at the foot from the start.
+ * BL-218, BL-222: the desk's input comes right after the conversation,
+ * high up while the conversation is short, and stays in view at the
+ * column's foot once it fills the column.
  */
-test('the desk input rises into a short conversation and sticks at the foot of a long one (?input=follow)', async ({
+test('the desk input rises into a short conversation and sticks at the foot of a long one', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const input = page.getByLabel('イメージ', { exact: true });
 
   await page.goto('/?layout=desk');
-  expect((await input.boundingBox())?.y ?? 0).toBeGreaterThan(500);
-
-  await page.goto('/?layout=desk&input=follow');
   expect((await input.boundingBox())?.y ?? 9999).toBeLessThan(400);
 
-  for (const image of ['雨の日曜の午後', 'もっと明るく', 'もう少し静かに']) {
-    await input.fill(image);
-    await page.getByRole('button', { name: '送る' }).click();
-    await expect(page.getByRole('region', { name: '結果' })).toBeVisible();
-  }
+  await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  await openExample(page, 'もっと明るく', '朝の光');
+  await openExample(page, 'もう少し静かに', '朝の光');
   await expect(input).toBeInViewport();
 });

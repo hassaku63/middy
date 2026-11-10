@@ -22,8 +22,10 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(card).toContainText('A minor');
   await expect(card).toContainText('i - VI - III - VII');
 
-  // The first example is open without another click (BL-064): one press of 再生 makes sound.
+  // Nothing is chosen until the user chooses (BL-219); pressing the card opens it.
   const result = page.getByRole('region', { name: '結果' });
+  await expect(result).toHaveCount(0);
+  await card.getByRole('button', { name: '窓辺の雨' }).click();
   await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
     /i.*Am/,
     /VI.*F/,
@@ -49,7 +51,9 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await page.getByLabel('イメージ', { exact: true }).fill('もっと晴れた感じに');
   await page.getByRole('button', { name: '送る' }).click();
   await expect(page.getByRole('article', { name: '朝の光' })).toBeVisible();
-  // A refined answer opens its first example again.
+  // A refined answer leaves the chosen example open; the user opens a new one.
+  await expect(result).toContainText('候補: 窓辺の雨');
+  await page.getByRole('article', { name: '朝の光' }).getByRole('button').click();
   await expect(result).toContainText('候補: 朝の光');
   await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
     /I.*C/,
@@ -65,6 +69,7 @@ test('a swing image swings the example and says so (BL-076)', async ({ page }) =
   await page.getByRole('button', { name: '送る' }).click();
   const card = page.getByRole('article', { name: '窓辺の雨' });
   await expect(card).toContainText('ノリ: スウィング');
+  await card.getByRole('button').click();
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('region', { name: 'ノリ: スウィング' })).toBeVisible();
 });
@@ -78,6 +83,7 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   const card = page.getByRole('article', { name: '緑の丘のリール' });
   await expect(card).toContainText('D dorian');
   await expect(card).toContainText('i - IV - i - VII');
+  await card.getByRole('button').click();
   const result = page.getByRole('region', { name: '結果' });
   // The dorian IV is a major chord, spelled for the key, and explained by its sixth.
   await result
