@@ -42,9 +42,10 @@ func TestLiveEval(t *testing.T) {
 	// (BL-172) the rest. A review cut short is reported as not run.
 	runCtx, cancelRun := context.WithTimeout(ctx, budget*2/3)
 	defer cancelRun()
-	verdicts := Run(runCtx, ideas.NewDiagnostic(client), cases)
-	ReviewAll(ctx, client, verdicts)
-	fmt.Println(Report(verdicts))
+	answers, reviewer := NewMeter(client), NewMeter(client)
+	verdicts := Run(runCtx, ideas.NewDiagnostic(answers), cases)
+	ReviewAll(ctx, reviewer, verdicts)
+	fmt.Println(Report(verdicts) + UsageReport(UsagePart{"答え（出し直しを含む）", answers}, UsagePart{"レビュアー", reviewer}))
 	failed := 0
 	for _, v := range verdicts {
 		if !v.Pass {
