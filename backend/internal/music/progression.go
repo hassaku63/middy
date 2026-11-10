@@ -156,17 +156,24 @@ func FromProgressionIn(ts TimeSignature, key Key, prog Progression, tempoBPM flo
 		chords[i], numerals[i], symbols[i] = chord, numeral, symbol
 	}
 	led := LeadVoicings(chords) // each chord voiced from the one before (BL-086)
+	basses := make([]*PitchClass, len(prog))
+	for i, s := range prog {
+		if s.Bass != nil {
+			pc := s.Bass.pitchClass(key)
+			basses[i] = &pc
+		}
+	}
+	// With a slash chord, every chord sounds its bass on one line (#385).
+	line := BassLine(chords, basses, led)
 	var cursor Tick
 	for i, s := range prog {
 		chord, numeral, symbol := chords[i], numerals[i], symbols[i]
 		duration := Tick(s.Beats) * beat
 
 		pitches := slices.Clone(led[i])
-		var bass *PitchClass
-		if s.Bass != nil {
-			pc := s.Bass.pitchClass(key)
-			bass = &pc
-			pitches = append([]Pitch{NewPitch(pc, ChordOctave-1)}, pitches...) // under the chord
+		bass := basses[i]
+		if line != nil {
+			pitches = append([]Pitch{line[i]}, pitches...) // under the chord
 		}
 		for _, p := range pitches {
 			track.Notes = append(track.Notes, NoteEvent{

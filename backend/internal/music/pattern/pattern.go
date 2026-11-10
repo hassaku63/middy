@@ -220,10 +220,15 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 	track := music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	led := music.LeadVoicings(chordsOf(tl.Harmony)) // BL-086
+	line := bassLine(tl.Harmony, led)
 	for i := range tl.Harmony {
 		adds := tensionsOf(tensions, tl.Key, tl.Harmony[i])
 		chord := colour(led[i], adds)
-		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, adds, bar)...)
+		var bass *music.Pitch
+		if line != nil {
+			bass = &line[i]
+		}
+		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, adds, bar, bass)...)
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
 	track.Notes = holdDrone(track.Notes, acc, tl.Key)              // after the pushes, which cut at each chord
@@ -236,7 +241,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 // chord, and the walking bass is filled in once its hits are known. An
 // arpeggio, which has no chord hit to colour, plays the style's first
 // tension in place of its octave (#307).
-func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, adds []music.PitchClass, bar music.Tick) []music.NoteEvent {
+func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, adds []music.PitchClass, bar music.Tick, bass *music.Pitch) []music.NoteEvent {
 	h := tl.Harmony[i]
 	voicing := h.Chord.Voicing(music.ChordOctave)
 	end := h.Start + h.Duration
@@ -257,7 +262,7 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 				continue
 			}
 			ps := hitPitches(tl.Key, acc, h, voicing, led, chord, adds, hit.Voice)
-			for _, p := range slashed(acc, h, ps, hit.Voice) {
+			for _, p := range slashed(acc, ps, hit.Voice, bass) {
 				n.Pitch = p
 				notes = append(notes, n)
 			}
@@ -298,23 +303,39 @@ func above(p music.Pitch, pc music.PitchClass) music.Pitch {
 	return p
 }
 
-// slashed makes a slash chord's bass sound in a pattern with no bass
-// voice of its own (BL-113): an arpeggio starts on it in place of the
-// root, and a pattern with neither (block, strum, drone) plays it under
-// the chord, as the plain block chords do.
-func slashed(acc Accompaniment, h music.HarmonyEvent, ps []music.Pitch, v Voice) []music.Pitch {
-	if h.Bass == nil || slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceBass || x.Voice == VoiceWalk }) {
+// slashed makes the bass line sound (BL-113, #385). In an example with a
+// slash chord, every chord plays its bass (the slash bass or the root) on
+// the line bassLine chose, so the line the explanation names is the line
+// that sounds and is drawn: a pattern's bass voice plays it, an arpeggio
+// starts on it in place of the root, and a pattern with neither (block,
+// strum, drone) plays it under the chord. Without a slash chord, bass is
+// nil and nothing changes.
+func slashed(acc Accompaniment, ps []music.Pitch, v Voice, bass *music.Pitch) []music.Pitch {
+	if bass == nil || slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceWalk }) {
 		return ps
 	}
-	bass := music.NewPitch(*h.Bass, music.ChordOctave-1)
+	hasBass := slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceBass })
 	hasRoot := slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceRoot })
 	switch {
+	case v == VoiceBass:
+		return []music.Pitch{*bass}
+	case hasBass:
+		return ps
 	case v == VoiceRoot:
-		return []music.Pitch{bass}
+		return []music.Pitch{*bass}
 	case v == VoiceChord && !hasRoot:
-		return append([]music.Pitch{bass}, ps...)
+		return append([]music.Pitch{*bass}, ps...)
 	}
 	return ps
+}
+
+// bassLine is music.BassLine over the timeline's harmony (#385).
+func bassLine(harmony []music.HarmonyEvent, led [][]music.Pitch) []music.Pitch {
+	basses := make([]*music.PitchClass, len(harmony))
+	for i, h := range harmony {
+		basses[i] = h.Bass
+	}
+	return music.BassLine(chordsOf(harmony), basses, led)
 }
 
 // holdDrone ties the drone across chord changes (BL-108): a drone note
