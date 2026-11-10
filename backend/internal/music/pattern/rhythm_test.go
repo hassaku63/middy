@@ -96,3 +96,29 @@ func TestRhythmSurvivesJSON(t *testing.T) {
 		t.Fatalf("drum hits = %d", got.Rhythm.Drums.Hits)
 	}
 }
+
+// TestSixteenBeat (#308): the sixteen-beat sits in pop and rock after their
+// eight-beat, and its explanation counts the kick on the last sixteenth of
+// beat 2 as finer than the offbeat, not as an offbeat.
+func TestSixteenBeat(t *testing.T) {
+	tl := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1, 4, 5, 1)
+	out, err := Render(tl, Choice{Accompaniment: "strum", Drums: "sixteen-beat"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ex := out.Rhythm.Drums.Explanation
+	for _, want := range []string{"拍の頭が 4 回", "細かい位置（16 分など）が 1 回", "2・4 拍目のスネアがバックビート"} {
+		if !strings.Contains(ex, want) {
+			t.Errorf("explanation lacks %q: %s", want, ex)
+		}
+	}
+	for _, id := range []string{"pop", "rock"} {
+		st, err := FindStyle(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if st.Drums[len(st.Drums)-1] != "sixteen-beat" || st.Groove(music.FourFour).Drums == "sixteen-beat" {
+			t.Errorf("%s: drums %v, groove %+v", id, st.Drums, st.Groove(music.FourFour))
+		}
+	}
+}

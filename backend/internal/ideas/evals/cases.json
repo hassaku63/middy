@@ -28,6 +28,7 @@
     {"id": "celtic-reel", "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "major/dorian/mixolydian", "modeInAny": "dorian/mixolydian", "tempoMin": 100, "style": "celtic"},
     {"id": "blues-shuffle", "image": "煙たいバーで鳴るスロー・ブルース", "mode": "either", "tempoMax": 100, "wants": ["I7", "IV7"]},
     {"id": "flamenco", "image": "フラメンコのギター。情熱的で、足を踏み鳴らす", "mode": "either", "wants": ["bII"]},
+    {"id": "sixteen-funk", "image": "16 分のハイハットで細かく刻む、都会的なファンク寄りのポップス", "mode": "either", "tempoMin": 90, "drums": "sixteen-beat"},
     {"id": "rock-anthem", "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major/mixolydian", "tempoMin": 110, "wants": ["bVII", "bVI", "I5", "IV5", "V5", "bVII5"]},
     {"id": "jpop-royal-road", "image": "J-pop の王道のサビ。切なくて盛り上がる", "mode": "major", "wants": ["iii", "iii7"]},
     {"id": "bossa-cafe", "image": "リオの午後、ボサノバのギターと小さなカフェ", "mode": "major", "wants": ["Imaj7", "IVmaj7", "ii7"], "style": "bossa"},
