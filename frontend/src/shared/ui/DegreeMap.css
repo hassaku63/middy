@@ -46,6 +46,20 @@
   font-weight: 600;
 }
 
+/* A chord played on the degree with tones outside the scale (#296): its
+   real name under the triad's, marked as altered by the leading sign. */
+.degree-map__altered {
+  font-size: 0.7rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.degree-map__altered::before {
+  content: '→ ';
+}
+
 .degree-map__symbol {
   font-size: 0.7rem;
   overflow: hidden;

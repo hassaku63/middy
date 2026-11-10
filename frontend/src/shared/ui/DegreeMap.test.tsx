@@ -58,4 +58,17 @@ describe('DegreeMap', () => {
       false,
     );
   });
+
+  it('names a chord played on the degree with tones outside the scale (#296)', () => {
+    const minor: DegreeChord[] = [
+      { degree: 1, romanNumeral: 'i', symbol: 'Em', function: 'T', used: true },
+      { degree: 5, romanNumeral: 'v', symbol: 'Bm', function: 'D', used: true, altered: ['B7'] },
+    ];
+    render(<DegreeMap degrees={minor} event={undefined} />);
+    const v = screen.getByLabelText(
+      'v（Bm）、ドミナント、この例では B7（音階の外の音を含む形）で使う',
+    );
+    expect(v).toHaveTextContent('vBmB7');
+    expect(screen.getByLabelText('i（Em）、トニック、この例で使う')).toHaveTextContent('iEm');
+  });
 });
