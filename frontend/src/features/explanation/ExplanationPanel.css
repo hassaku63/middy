@@ -5,6 +5,13 @@
   min-height: 96px;
 }
 
+/* A line of an explanation is read as a sentence, not a column: at most
+   40 characters, the WCAG 1.4.8 limit for CJK (#353). An em is the width
+   of one full-width character at the text's own size. */
+.explanation p {
+  max-width: 40em;
+}
+
 .explanation__overview {
   margin-bottom: 12px;
   padding-bottom: 10px;

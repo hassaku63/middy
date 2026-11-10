@@ -4,7 +4,7 @@ import { test, type Page } from '@playwright/test';
 import { openExample } from './helpers';
 
 /**
- * Screens for the ui-review skill (BL-183, #286): each state at two sizes
+ * Screens for the ui-review skill (BL-183, #286): each state at five sizes
  * and in both themes, as an image and as the accessibility tree. Not a
  * test: it runs only with UI_SHOTS set (`npm run ui:shots`), never in CI,
  * and writes to UI_SHOTS_DIR (default ui-review-out/, ignored by git).
@@ -15,6 +15,10 @@ const out = process.env.UI_SHOTS_DIR ?? 'ui-review-out';
 const sizes = [
   { name: 'desktop', width: 1280, height: 800 },
   { name: 'phone', width: 390, height: 844 },
+  // The width bands of #353: half a window, full HD and QHD.
+  { name: 'half', width: 960, height: 1080 },
+  { name: 'fhd', width: 1920, height: 1080 },
+  { name: 'qhd', width: 2560, height: 1440 },
 ];
 const layout = process.env.UI_SHOTS_LAYOUT ?? ''; // a query for a trial, e.g. "lab"
 

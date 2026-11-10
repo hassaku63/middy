@@ -54,7 +54,7 @@ export function Stage({ timeline, player, selectedHarmony, onSelectHarmony }: Pr
     />
   );
   return (
-    <div className="app__stage app__stage--wide">
+    <div className="app__stage">
       {overview}
       <div className="app__below">
         {frame}

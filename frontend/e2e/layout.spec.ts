@@ -105,3 +105,52 @@ test.describe('the boundary between the conversation and the example', () => {
     expect(await border(result, 'top')).toBe(0);
   });
 });
+
+/**
+ * #353: the explanations go side by side by the width the stage has, not
+ * the window's, and a line of an explanation stays a sentence (at most 40
+ * characters, WCAG 1.4.8 for CJK) at any width.
+ */
+async function longestLine(page: Page) {
+  return page.evaluate(() =>
+    Math.max(
+      ...Array.from(document.querySelectorAll('.explanation p'), (el) => {
+        const size = parseFloat(getComputedStyle(el).fontSize);
+        return el.getBoundingClientRect().width / size;
+      }),
+    ),
+  );
+}
+
+for (const { width, height, columns } of [
+  { width: 960, height: 1080, columns: 2 },
+  { width: 1024, height: 800, columns: 1 },
+  { width: 1280, height: 800, columns: 2 },
+  { width: 1920, height: 1080, columns: 2 },
+  { width: 2560, height: 1440, columns: 2 },
+]) {
+  test.describe(`at ${width}×${height}`, () => {
+    test.use({ viewport: { width, height } });
+
+    test(`the explanations in ${columns} column(s), lines of 40 characters at most`, async ({
+      page,
+    }) => {
+      await page.goto('/');
+      const { result } = await openExample(page, '雨の日曜の午後', '遠い記憶');
+      const frame = await result.getByRole('region', { name: 'コードの解説' }).boundingBox();
+      const notes = await result.getByRole('region', { name: '解説', exact: true }).boundingBox();
+      expect(frame && notes).toBeTruthy();
+      if (!frame || !notes) return;
+      if (columns === 2) {
+        expect(frame.x + frame.width).toBeLessThanOrEqual(notes.x);
+      } else {
+        expect(Math.abs(frame.x - notes.x)).toBeLessThan(2);
+        expect(notes.y).toBeGreaterThanOrEqual(frame.y + frame.height);
+      }
+      expect(await longestLine(page)).toBeLessThanOrEqual(40.5);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
+      );
+    });
+  });
+}
