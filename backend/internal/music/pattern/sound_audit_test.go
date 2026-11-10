@@ -81,3 +81,31 @@ func TestArpeggioSpellsTheSeventh(t *testing.T) {
 		t.Errorf("no tension sounded, yet the notes say one did: %+v", rt)
 	}
 }
+
+// TestTripletGridKeepsItsTriplets (#404 S3): a grid in triplets already
+// swings; a shuffle leaves its strokes on the triplets, where the
+// shuffled eighths of the chords fall too.
+func TestTripletGridKeepsItsTriplets(t *testing.T) {
+	tl := soundAuditTimeline(t, 4, "I7", "IV7")
+	g := grid(3, map[string]string{"kick": "x.. x.. x.. x..", "hat": "x.x x.x x.x x.x"})
+	out, err := Render(tl, Choice{Accompaniment: "pulse", Grid: &g, Feel: FeelShuffle})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var drums music.Track
+	for _, tr := range out.Tracks {
+		if tr.Channel == 9 {
+			drums = tr
+		}
+	}
+	for _, n := range drums.Notes {
+		if n.Start%160 != 0 {
+			t.Errorf("a triplet stroke moved off the triplets: %d", n.Start)
+		}
+	}
+	for _, n := range out.Tracks[0].Notes {
+		if pos := n.Start % 480; pos != 0 && pos != 320 {
+			t.Errorf("a shuffled chord hit is off the triplets: %d", n.Start)
+		}
+	}
+}

@@ -153,7 +153,12 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 	}
 	sw = sw.resolved(tl.TempoBPM)
 	tracks := make([]music.Track, len(tl.Tracks))
+	beat := music.BeatTicks(tl.TimeSignature, tl.PPQ)
 	for i, tr := range tl.Tracks {
+		if onTriplets(tr.Notes, beat) {
+			tracks[i] = tr
+			continue
+		}
 		notes := make([]music.NoteEvent, len(tr.Notes))
 		for j, n := range tr.Notes {
 			n.Start, n.Duration = sw.move(n.Start, n.Duration)
@@ -173,6 +178,17 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 	}
 	tl.Rhythm = &rhythm
 	return tl
+}
+
+// onTriplets reports a track already written in triplets (a grid of three
+// steps a beat): it swings by itself, and warping it by eighths would pull
+// the triplets apart, off the shuffled eighths of the other parts (#404
+// S3). A note between the eighths that falls on a triplet marks it.
+func onTriplets(notes []music.NoteEvent, beat music.Tick) bool {
+	return slices.ContainsFunc(notes, func(n music.NoteEvent) bool {
+		pos := n.Start % beat
+		return pos%(beat/2) != 0 && pos%(beat/3) == 0
+	})
 }
 
 // Choice is what a caller asks for by id: an accompaniment, drums, and a
