@@ -1,39 +1,19 @@
 import type { Layout, useLayoutTrial } from './useLayoutTrial';
-import type { useZoomTrial } from './useZoomTrial';
 
 /**
- * The switches of the screen trials, shown with ?lab: how the timeline's
- * detail moves (BL-127) and where the conversation sits (BL-184). They go
- * away with the trials.
+ * The switch of the screen trial, shown with ?lab: where the conversation
+ * sits (BL-184). It goes away with the trial.
  */
-export function LabControls({
-  zoom,
-  layout,
-}: {
-  zoom: ReturnType<typeof useZoomTrial>;
-  layout: ReturnType<typeof useLayoutTrial>;
-}) {
-  if (!zoom.lab) return null;
+export function LabControls({ layout }: { layout: ReturnType<typeof useLayoutTrial> }) {
+  if (!layout.lab) return null;
   return (
-    <>
-      <label className="app__lab">
-        拡大の動き（試験）
-        <select
-          value={zoom.follow ? 'follow' : 'page'}
-          onChange={(e) => zoom.choose(e.target.value === 'follow')}
-        >
-          <option value="page">4 小節ずつ切り替え</option>
-          <option value="follow">再生位置に追随</option>
-        </select>
-      </label>
-      <label className="app__lab">
-        画面の配置（試験）
-        <select value={layout.mode} onChange={(e) => layout.choose(e.target.value as Layout)}>
-          <option value="stacked">会話が上、結果が下</option>
-          <option value="desk">会話を左の列に</option>
-          <option value="wide">会話を左の列に、タイムラインを横いっぱいに</option>
-        </select>
-      </label>
-    </>
+    <label className="app__lab">
+      画面の配置（試験）
+      <select value={layout.mode} onChange={(e) => layout.choose(e.target.value as Layout)}>
+        <option value="stacked">会話が上、結果が下</option>
+        <option value="desk">会話を左の列に</option>
+        <option value="wide">会話を左の列に、タイムラインを横いっぱいに</option>
+      </select>
+    </label>
   );
 }

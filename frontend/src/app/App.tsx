@@ -16,7 +16,6 @@ import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useIdeas, type ChatTurn } from '@/features/chat/useIdeas';
 import { useBackendHealth } from './useBackendHealth';
 import { LabControls } from './LabControls';
-import { useZoomTrial } from './useZoomTrial';
 import { useLayoutTrial } from './useLayoutTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
@@ -52,7 +51,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const patterns = usePatterns(backend !== 'down');
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
-  const zoom = useZoomTrial();
   const layout = useLayoutTrial();
 
   const show = (tl: Timeline) => {
@@ -135,12 +133,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         {origin && <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />}
         {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
         {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-        <LabControls zoom={zoom} layout={layout} />
+        <LabControls layout={layout} />
       </div>
       <Stage
         timeline={timeline}
         player={player}
-        follow={zoom.follow}
         desk={layout.desk}
         wide={layout.wide}
         selectedHarmony={selectedHarmony}
