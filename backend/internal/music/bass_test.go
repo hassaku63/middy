@@ -149,3 +149,37 @@ func TestLiteralSlash(t *testing.T) {
 		t.Errorf("i/7 in A: %v %v %v", c, b, err)
 	}
 }
+
+// TestBassClash (#331): a sharp or flat that lands the bass on another
+// degree of the key's own scale is reported with both fixes; basses that
+// leave the scale (the line cliché's #7 and #6, V7/V/#4) are not.
+func TestBassClash(t *testing.T) {
+	aMinor := Key{Tonic: A, Mode: Minor}
+	cMajor := Key{Tonic: C, Mode: Major}
+	cases := []struct {
+		key   Key
+		label string
+		want  string // "" for no clash
+	}{
+		{aMinor, "iv/b6", `music: "iv/b6": the bass b6 in A minor is Fb, the same note as degree 5 (E); write "/5" for that note, or "/6" for F, the key's own 6`},
+		{aMinor, "i/b3", "the same note as degree 2 (B)"},
+		{aMinor, "i/#7", ""},
+		{aMinor, "i/#6", ""},
+		{aMinor, "iv/6", ""},
+		{aMinor, "V7", ""},
+		{cMajor, "V7/V/#4", ""},
+		{cMajor, "I/b7", ""},
+		{cMajor, "I/#7", "the same note as degree 1 (C)"},
+		{cMajor, "IV/b4", "the same note as degree 3 (E)"},
+		{cMajor, "I/9", ""}, // the label's own error
+	}
+	for _, c := range cases {
+		err := BassClash(c.key, c.label)
+		switch {
+		case c.want == "" && err != nil:
+			t.Errorf("%s in %s: unexpected %v", c.label, c.key, err)
+		case c.want != "" && (err == nil || !strings.Contains(err.Error(), c.want)):
+			t.Errorf("%s in %s: got %v, want %q", c.label, c.key, err, c.want)
+		}
+	}
+}
