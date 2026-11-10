@@ -137,6 +137,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         player={player}
         follow={zoom.follow}
         desk={layout.desk}
+        wide={layout.wide}
         selectedHarmony={selectedHarmony}
         onSelectHarmony={setSelectedHarmony}
       />

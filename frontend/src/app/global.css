@@ -72,6 +72,31 @@ main {
   }
 }
 
+/* The wide desk under trial (BL-197, #314): the timeline takes the whole
+   width of the stage, and the chord's frame and the other explanations
+   share the space below it, side by side on wide screens. */
+.app__stage--wide {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stretched to the stage, not stopped at the drawing's own width. */
+.app__stage--wide .timeline {
+  width: 100%;
+}
+
+.app__below {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .app__below {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
 /* The desk under trial (BL-185): the chord's frame above the timeline. */
 .app__score {
   display: flex;
