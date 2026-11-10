@@ -109,3 +109,38 @@ func TestTripletGridKeepsItsTriplets(t *testing.T) {
 		}
 	}
 }
+
+// TestShortChordsSound (#404 S2): a chord shorter than the pattern still
+// sounds all its notes, struck together on its first beat, and the notes
+// say so; a chord the pattern covers is not struck twice.
+func TestShortChordsSound(t *testing.T) {
+	tl := soundAuditTimeline(t, 1, "Imaj7", "vi7", "ii7", "V7")
+	for _, acc := range []string{"ballad", "arpeggio", "pulse", "strum"} {
+		out, err := Render(tl, Choice{Accompaniment: acc})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, h := range out.Harmony {
+			got := classesOver(out, i)
+			for _, pc := range h.Chord.PitchClasses() {
+				if !got[pc.Normalize()] {
+					t.Errorf("%s over a one-beat %s lacks %v: %v", acc, h.RomanNumeral, pc, got)
+				}
+			}
+		}
+	}
+	out, err := Render(tl, Choice{Accompaniment: "ballad"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := out.Rhythm.Accompaniment.Explanation; !strings.Contains(e, "型より短い和音") {
+		t.Errorf("the notes do not say the short chords were struck: %s", e)
+	}
+	full, err := Render(soundAuditTimeline(t, 4, "Imaj7", "V7"), Choice{Accompaniment: "ballad"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := full.Rhythm.Accompaniment.Explanation; strings.Contains(e, "型より短い和音") {
+		t.Errorf("whole-bar chords are said to be short: %s", e)
+	}
+}

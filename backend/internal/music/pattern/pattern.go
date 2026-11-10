@@ -202,9 +202,13 @@ func apply(tl music.Timeline, acc Accompaniment, dr *Drums, tensions *Tensions) 
 	}
 
 	out := tl
-	out.Tracks = []music.Track{chordTrack(tl, acc, tensions)}
+	chords, short := chordTrack(tl, acc, tensions)
+	out.Tracks = []music.Track{chords}
 	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc, ts)}
 	out.Rhythm.Accompaniment.Explanation += seventhText(tl.Harmony, acc)
+	if short {
+		out.Rhythm.Accompaniment.Explanation += shortChordText
+	}
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
 		out.Rhythm.Drums = describeDrums(*dr, ts)
@@ -216,9 +220,13 @@ func apply(tl music.Timeline, acc Accompaniment, dr *Drums, tensions *Tensions) 
 	return out, nil
 }
 
+// shortChordText says that a chord shorter than the pattern was struck
+// whole (strikeIfShort).
+const shortChordText = "型より短い和音は、頭でまとめて鳴らして、和音の音がすべて聞こえるようにしている。"
+
 // chordTrack realises the accompaniment over every harmony event.
-func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.Track {
-	track := music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
+func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) (track music.Track, short bool) {
+	track = music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	chords := chordsOf(tl.Harmony)
 	led := music.LeadVoicings(chords) // BL-086
@@ -230,12 +238,14 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 		if line != nil {
 			bass = &line[i]
 		}
-		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, adds, bar, bass)...)
+		notes, struck := chordNotes(tl, acc, i, led[i], chord, adds, bar, bass)
+		track.Notes = append(track.Notes, notes...)
+		short = short || struck
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
 	track.Notes = holdDrone(track.Notes, acc, tl.Key)              // after the pushes, which cut at each chord
 	sortNotes(track.Notes)
-	return track
+	return track, short
 }
 
 // chordNotes realises the accompaniment over chord i, a bar of the
@@ -243,7 +253,7 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 // chord, and the walking bass is filled in once its hits are known. An
 // arpeggio, which has no chord hit to colour, plays the style's first
 // tension in place of its octave (#307).
-func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, adds []music.PitchClass, bar music.Tick, bass *music.Pitch) []music.NoteEvent {
+func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, adds []music.PitchClass, bar music.Tick, bass *music.Pitch) ([]music.NoteEvent, bool) {
 	h := tl.Harmony[i]
 	voicing := h.Chord.Voicing(music.ChordOctave)
 	end := h.Start + h.Duration
@@ -274,10 +284,36 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 			}
 		}
 	}
+	notes, struck := strikeIfShort(notes, h, chord, acc)
 	for k, p := range walkLine(tl.Harmony, i, len(walks)) {
 		walks[k].Pitch = p
 	}
-	return append(notes, walks...)
+	return append(notes, walks...), struck
+}
+
+// strikeIfShort makes a chord sound that is too short for the pattern to
+// reach all its notes (a ballad's root alone on a one-beat chord): it
+// strikes the whole chord on its first beat, held to its end, so that
+// every chord the timeline names is heard (#404 S2). It reports whether it
+// did.
+func strikeIfShort(notes []music.NoteEvent, h music.HarmonyEvent, chord []music.Pitch, acc Accompaniment) ([]music.NoteEvent, bool) {
+	sounded := map[music.PitchClass]bool{}
+	for _, n := range notes {
+		sounded[n.Pitch.Class()] = true
+	}
+	if !slices.ContainsFunc(h.Chord.PitchClasses(), func(pc music.PitchClass) bool { return !sounded[pc.Normalize()] }) {
+		return notes, false
+	}
+	velocity := 80
+	if len(acc.Hits) > 0 {
+		velocity = acc.Hits[0].Velocity
+	}
+	for _, p := range chord {
+		if !slices.ContainsFunc(notes, func(n music.NoteEvent) bool { return n.Start == h.Start && n.Pitch == p }) {
+			notes = append(notes, music.NoteEvent{Pitch: p, Velocity: velocity, Start: h.Start, Duration: h.Duration})
+		}
+	}
+	return notes, true
 }
 
 // hitPitches is what one hit of the pattern plays over the chord: its
