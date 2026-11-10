@@ -149,3 +149,37 @@ func TestBatcherGivesUpWithItsContext(t *testing.T) {
 		t.Fatalf("want the batcher's deadline, got %v", err)
 	}
 }
+
+// TestBatcherCachesTheSystemPromptForAnHour (ADR-0039): a batch can outlast
+// the cache's 5 minutes, so its requests ask for the 1-hour cache.
+func TestBatcherCachesTheSystemPromptForAnHour(t *testing.T) {
+	var ttl string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			var body struct {
+				Requests []struct {
+					Params struct {
+						System []struct {
+							CacheControl struct {
+								TTL string `json:"ttl"`
+							} `json:"cache_control"`
+						} `json:"system"`
+					} `json:"params"`
+				} `json:"requests"`
+			}
+			raw, _ := io.ReadAll(r.Body)
+			_ = json.Unmarshal(raw, &body)
+			ttl = body.Requests[0].Params.System[0].CacheControl.TTL
+		}
+		writeBatch(w, 1, "in_progress")
+	}))
+	t.Cleanup(srv.Close)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	b := NewBatcher(ctx, newClient(t, srv.URL), time.Millisecond, 10*time.Millisecond)
+	_, _ = b.Complete(context.Background(), llm.Request{System: "you are a tutor", Messages: []llm.Message{{Role: llm.RoleUser, Content: "雨"}}})
+	if ttl != "1h" {
+		t.Fatalf("the system prompt must be cached for an hour in a batch, got ttl %q", ttl)
+	}
+}

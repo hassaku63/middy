@@ -181,3 +181,31 @@ func TestRunTogetherSendsEveryCaseAtOnce(t *testing.T) {
 		t.Fatalf("want all %d in flight and the verdicts in order: peak %d, %+v", len(cases), peak, got)
 	}
 }
+
+// TestBatchWanted (#334): EVAL_BATCH=auto batches only a run big enough
+// for the saving to matter; 1 and 0 force it; a bad value is an error
+// before anything is sent.
+func TestBatchWanted(t *testing.T) {
+	for _, c := range []struct {
+		env, minimum string
+		n            int
+		want         bool
+	}{
+		{"", "", 44, false},
+		{"0", "", 44, false},
+		{"1", "", 3, true},
+		{"auto", "", 44, true},
+		{"auto", "", 9, false},
+		{"auto", "", DefaultBatchMin, true},
+		{"auto", "5", 9, true},
+	} {
+		if got, err := BatchWanted(c.env, c.minimum, c.n); err != nil || got != c.want {
+			t.Errorf("EVAL_BATCH=%q EVAL_BATCH_MIN=%q with %d cases: %v %v, want %v", c.env, c.minimum, c.n, got, err, c.want)
+		}
+	}
+	for _, bad := range [][2]string{{"yes", ""}, {"auto", "many"}, {"auto", "0"}} {
+		if _, err := BatchWanted(bad[0], bad[1], 10); err == nil {
+			t.Errorf("EVAL_BATCH=%q EVAL_BATCH_MIN=%q must be an error", bad[0], bad[1])
+		}
+	}
+}
