@@ -36,6 +36,9 @@ type DegreeChord struct {
 	// so the map shows what sounds rather than only the diatonic triad
 	// (#296). A seventh or suspension inside the scale is not altered.
 	Altered []string `json:"altered,omitempty"`
+	// Role is what the chord does in a mode (#366, ADR-0047); empty in
+	// major and minor.
+	Role ModalRole `json:"role,omitempty"`
 }
 
 var modeCharacter = map[Mode]string{
@@ -86,7 +89,7 @@ func degrees(tl Timeline) []DegreeChord {
 		}
 		out = append(out, DegreeChord{
 			Degree: d, RomanNumeral: numeral, Symbol: tl.Key.ChordSymbol(c),
-			Function: functionByDegree[d], Used: used[d], Altered: altered[d],
+			Function: functionByDegree[d], Used: used[d], Altered: altered[d], Role: modalRole(tl.Key, d),
 		})
 	}
 	return out
