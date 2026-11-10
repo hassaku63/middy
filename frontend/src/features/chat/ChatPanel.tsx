@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from 'react';
+import { useState, type ReactNode, type SubmitEvent } from 'react';
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
 import { ExampleList } from './ExampleList';
@@ -19,6 +19,11 @@ export type ChatPanelProps = {
    * away (the desk under trial, BL-186).
    */
   list?: boolean;
+  /**
+   * Settings for choosing an example, shown below the input, where the
+   * examples are chosen (the switch for playing on choosing, BL-217).
+   */
+  options?: ReactNode;
 };
 
 const SUGGESTIONS = ['雨の日曜の午後', '出発の朝、晴れ', '夜の帰り道、少し寂しい'];
@@ -30,6 +35,7 @@ export function ChatPanel({
   openExample = null,
   patterns,
   list = false,
+  options,
 }: ChatPanelProps) {
   const [text, setText] = useState('');
 
@@ -140,6 +146,7 @@ export function ChatPanel({
           </button>
         )}
       </form>
+      {options && <div className="chat__options">{options}</div>}
     </section>
   );
 }
