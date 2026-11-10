@@ -142,24 +142,16 @@
   white-space: nowrap;
 }
 
-/* The frame of the desk under trial (BL-185): a header and four lines of
-   text, whatever the chord. Following has the amber of the sounding chord
-   on its edge, pinned the blue of the pinned one; the chord lane adds ▶
-   or ■ for those who do not see colour. */
+/* The chord's frame (BL-185): the degree map, then one chord's header and
+   six lines of text, whatever the chord (#360). Following has the amber
+   of the sounding chord on its edge, pinned the blue of the pinned one;
+   the chord lane adds ▶ or ■ for those who do not see colour. */
 .explanation--frame {
   position: relative;
   box-sizing: border-box;
-  /* The header row, then six lines of text (line-height 1.7): 141 kana
-     in the wide layout's half of the stage at 1280 px (#279). A narrower
-     stage scrolls the text inside the frame. */
-  height: calc(10.2em + 72px);
-  min-height: 0;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 1fr;
-  align-content: start;
-  column-gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   border-left: 4px solid #d97706;
 }
 
@@ -167,17 +159,56 @@
   border-left-color: #2563eb;
 }
 
+/* The chord's own part keeps its size: the header row, then six lines of
+   text (line-height 1.7). A longer text scrolls inside. */
+.explanation__chord {
+  height: calc(10.2em + 40px);
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  column-gap: 12px;
+}
+
 /* In the frame, the unpin button shares the header's row, so the text
-   keeps its six lines. */
-.explanation--frame > .explanation__text,
-.explanation--frame > .explanation__empty {
+   keeps its lines. */
+.explanation__chord > .explanation__text,
+.explanation__chord > .explanation__empty {
   grid-column: 1 / -1;
   margin-bottom: 0;
 }
 
-.explanation--frame > .explanation__unpin {
+.explanation__chord > .explanation__unpin {
   grid-row: 1;
   grid-column: 2;
   align-self: start;
   margin-top: 0;
+}
+
+/* On a wide stage the frame is a band above the timeline (#360): the map
+   on its left, the chord beside it, so the lit chord and its explanation
+   are next to each other. Beside the map at 1280 px a line holds about
+   32 characters, so five lines take the longest text (141, #279). */
+@container stage (min-width: 760px) {
+  .explanation--frame {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .explanation--frame > .degree-map {
+    flex: 0 0 auto;
+  }
+
+  .explanation--frame > .degree-map:not(.degree-map--flow) {
+    flex-basis: 24rem;
+  }
+
+  .explanation__chord {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: calc(8.5em + 40px);
+  }
 }

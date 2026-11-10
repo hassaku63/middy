@@ -79,10 +79,12 @@ test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', asyn
   await page.getByRole('button', { name: '停止' }).click();
   expect(heights.size).toBe(1);
   // 141 characters of the widest kind fit at 1280 px without scrolling.
+  // The chord's part of the frame scrolls a longer text (#360).
   const fits = await frame.evaluate((f) => {
     const text = f.querySelector('.explanation__text');
+    const part = f.querySelector('.explanation__chord');
     if (text) text.textContent = 'あ'.repeat(141);
-    return f.scrollHeight <= f.clientHeight;
+    return part !== null && part.scrollHeight <= part.clientHeight;
   });
   expect(fits).toBe(true);
 
@@ -146,12 +148,14 @@ test('the column lists earlier examples and brings one back as it was left (BL-1
 });
 
 /**
- * BL-197 (#314): the wide desk puts the timeline across the whole stage,
- * with the chord's frame and the other explanations side by side below it,
- * so the timeline is wider than on the desk. It spans the stage unless it
- * reaches its height cap, 45 % of the screen (ADR-0041).
+ * BL-197 (#314), #360 (ADR-0044): the timeline takes the whole stage; the
+ * chord's frame is a band above it, next to the chord lane at the top of
+ * the drawing, with the degree map on its left as the flow of functions;
+ * the notes on the whole example are one column below. The timeline spans
+ * the stage unless it reaches its height cap, 45 % of the screen
+ * (ADR-0041).
  */
-test('the timeline takes the whole stage, the explanations side by side below (BL-197)', async ({
+test('the chord frame is a band above the timeline, the map beside the chord (#360)', async ({
   page,
 }) => {
   await page.goto('/');
@@ -160,12 +164,21 @@ test('the timeline takes the whole stage, the explanations side by side below (B
   const timeline = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
   const capped = (timeline?.height ?? 0) >= 800 * 0.45 - 1;
   expect(stage && timeline && (timeline.width > stage.width * 0.9 || capped)).toBe(true);
-  const frame = await result.getByRole('region', { name: 'コードの解説' }).boundingBox();
+  const frameRegion = result.getByRole('region', { name: 'コードの解説' });
+  const frame = await frameRegion.boundingBox();
   const notes = await result.getByRole('region', { name: '解説', exact: true }).boundingBox();
-  expect(frame && timeline && frame.y >= timeline.y + timeline.height).toBe(true);
-  expect(
-    frame && notes && frame.x + frame.width <= notes.x && Math.abs(frame.y - notes.y) < 2,
-  ).toBe(true);
+  expect(frame && timeline && frame.y + frame.height <= timeline.y + 1).toBe(true);
+  expect(frame && stage && frame.width > stage.width * 0.95).toBe(true);
+  expect(notes && timeline && notes.y >= timeline.y + timeline.height - 1).toBe(true);
+  // A minor key: the map is the flow of functions, on the frame's left,
+  // level with the chord's heading.
+  const map = await frameRegion
+    .getByRole('group', { name: '度数の地図（機能の流れ）' })
+    .boundingBox();
+  const heading = await frameRegion.getByRole('heading', { level: 2 }).boundingBox();
+  expect(map && heading && map.x + map.width <= heading.x && heading.y < map.y + map.height).toBe(
+    true,
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
 });
 

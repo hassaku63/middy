@@ -15,8 +15,8 @@ export type ExplanationPanelProps = {
   onClearSelection?: () => void;
   /**
    * False when the chord's explanation has a frame of its own (ChordFrame,
-   * the desk under trial, BL-185); the panel then keeps the whole, the
-   * degree map and the rhythm.
+   * BL-185), which also holds the degree map (#360); the panel then keeps
+   * the whole and the rhythm.
    */
   chord?: boolean;
 };
@@ -37,13 +37,14 @@ export function ExplanationPanel({
   const index = explainedIndex(harmony, positionTick, selectedHarmony);
   const event = index >= 0 ? harmony[index] : undefined;
   const pinned = selectedHarmony !== null && index === selectedHarmony;
+  const overview = timeline?.overview;
 
   return (
     <section className="explanation" aria-label="解説">
-      {timeline?.overview && <OverviewNotes overview={timeline.overview} />}
-      {timeline?.overview && <DegreeMap degrees={timeline.overview.degrees} event={event} />}
+      {overview && <OverviewNotes overview={overview} />}
       {chord && (
         <>
+          {overview && <DegreeMap degrees={overview.degrees} event={event} />}
           <ChordStatus event={event} />
           {event ? (
             <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
