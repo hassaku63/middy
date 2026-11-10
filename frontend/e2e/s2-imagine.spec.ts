@@ -35,7 +35,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(result.getByTestId('drum-lane')).toBeVisible();
   await expect(result.getByRole('heading', { name: 'リズム' })).toBeVisible();
   await expect(card).toContainText('伴奏: アルペジオ');
-  await expect(card.getByRole('button', { name: '開いています' })).toHaveAttribute(
+  await expect(card.getByRole('button', { name: '窓辺の雨' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
@@ -94,10 +94,7 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   await expect(overview).toContainText('繰り返すと、VII から頭の i へのモーダル終止になる');
   await page.getByRole('button', { name: /固定を解除/ }).click();
   // Switching to the mixolydian example keeps the key selector in that mode.
-  await page
-    .getByRole('article', { name: '港町のジグ' })
-    .getByRole('button', { name: 'この候補を開く' })
-    .click();
+  await page.getByRole('article', { name: '港町のジグ' }).click();
   await expect(result.getByLabel('キー')).toHaveValue('7');
   await expect(
     result.getByLabel('キー').locator('option', { hasText: 'G mixolydian' }),
