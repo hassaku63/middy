@@ -148,7 +148,8 @@ test('the column lists earlier examples and brings one back as it was left (BL-1
 /**
  * BL-197 (#314): the wide desk puts the timeline across the whole stage,
  * with the chord's frame and the other explanations side by side below it,
- * so the timeline is wider than on the desk.
+ * so the timeline is wider than on the desk. It spans the stage unless it
+ * reaches its height cap, 45 % of the screen (ADR-0041).
  */
 test('the timeline takes the whole stage, the explanations side by side below (BL-197)', async ({
   page,
@@ -157,7 +158,8 @@ test('the timeline takes the whole stage, the explanations side by side below (B
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   const stage = await result.boundingBox();
   const timeline = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
-  expect(stage && timeline && timeline.width > stage.width * 0.9).toBe(true);
+  const capped = (timeline?.height ?? 0) >= 800 * 0.45 - 1;
+  expect(stage && timeline && (timeline.width > stage.width * 0.9 || capped)).toBe(true);
   const frame = await result.getByRole('region', { name: 'コードの解説' }).boundingBox();
   const notes = await result.getByRole('region', { name: '解説', exact: true }).boundingBox();
   expect(frame && timeline && frame.y >= timeline.y + timeline.height).toBe(true);

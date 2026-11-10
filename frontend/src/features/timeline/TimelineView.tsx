@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { ChordLane } from './ChordLane';
 import { DrumLane } from './DrumLane';
@@ -64,6 +64,7 @@ export function TimelineView({
     [timeline],
   );
 
+  const width = view?.width ?? layout.width;
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (
@@ -74,9 +75,11 @@ export function TimelineView({
       role="group"
       aria-label={label}
       aria-hidden={decorative || undefined}
-      width={view?.width ?? layout.width}
+      width={width}
       height={layout.height}
-      viewBox={`${view?.x ?? 0} 0 ${view?.width ?? layout.width} ${layout.height}`}
+      // The drawing's proportions, for CSS to cap the height (ADR-0041).
+      style={{ '--timeline-aspect': width / layout.height } as CSSProperties}
+      viewBox={`${view?.x ?? 0} 0 ${width} ${layout.height}`}
     >
       {Array.from({ length: layout.bars + 1 }, (_, i) => (
         <line
