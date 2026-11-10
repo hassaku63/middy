@@ -37,8 +37,8 @@ test: backend-test frontend-test ## Run all tests
 test-report: ## Slowest tests, totals and time budgets for both suites (scripts/test-report.sh)
 	bash scripts/test-report.sh
 
-eval: ## Run the prompt evaluation set against the real API (needs ANTHROPIC_API_KEY; EVAL_TAGS=meter,smoke narrows it and skips the reviewer unless EVAL_REVIEW=1; prints a Markdown table)
-	cd $(BACKEND) && go test -count=1 -timeout 20m -tags eval -run TestLiveEval -v ./internal/ideas/evals/
+eval: ## Run the prompt evaluation set against the real API (needs ANTHROPIC_API_KEY; EVAL_TAGS=meter,smoke narrows it and skips the reviewer unless EVAL_REVIEW=1; EVAL_BATCH=1 EVAL_TIMEOUT=90m sends Message Batches at half the price; prints a Markdown table)
+	cd $(BACKEND) && go test -count=1 -timeout $(or $(EVAL_TIMEOUT),20m) -tags eval -run TestLiveEval -v ./internal/ideas/evals/
 
 e2e: ## Playwright scenarios against a running stack (E2E_BASE_URL, default http://localhost:8080; see `make up`)
 	cd $(FRONTEND) && npx playwright test

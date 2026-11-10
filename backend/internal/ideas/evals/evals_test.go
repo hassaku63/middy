@@ -526,7 +526,7 @@ func TestRunAllWithNoLimitStillRuns(t *testing.T) {
 	cases := []Case{{ID: "a"}, {ID: "b"}, {ID: "c"}}
 	done := make(chan []Verdict, 1)
 	go func() {
-		done <- runAll(context.Background(), cases, 0, func(c Case) Verdict { return Verdict{Case: c, Pass: true} })
+		done <- runAll(context.Background(), cases, 0, true, func(c Case) Verdict { return Verdict{Case: c, Pass: true} })
 	}()
 	select {
 	case out := <-done:

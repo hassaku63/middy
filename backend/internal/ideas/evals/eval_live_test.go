@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
+	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/llm/anthropic"
 )
 
@@ -60,11 +61,20 @@ func TestLiveEval(t *testing.T) {
 	// (BL-172) the rest. A review cut short is reported as not run.
 	runCtx, cancelRun := context.WithTimeout(ctx, budget*2/3)
 	defer cancelRun()
-	answers, reviewer := NewMeter(client), NewMeter(client)
-	verdicts := Run(runCtx, ideas.NewDiagnostic(answers), cases)
+	// EVAL_BATCH=1 sends the requests as Message Batches, at half the
+	// price; the answers take minutes or more to come back, so give the run
+	// a longer -timeout (EVAL_TIMEOUT for make eval). ADR-0039.
+	var send llm.Client = client
+	run, reviewAll := Run, ReviewAll
+	if os.Getenv("EVAL_BATCH") == "1" {
+		send = anthropic.NewBatcher(ctx, client, 10*time.Second, 30*time.Second)
+		run, reviewAll = RunTogether, ReviewAllTogether
+	}
+	answers, reviewer := NewMeter(send), NewMeter(send)
+	verdicts := run(runCtx, ideas.NewDiagnostic(answers), cases)
 	reviewNote := ""
 	if review {
-		ReviewAll(ctx, reviewer, verdicts)
+		reviewAll(ctx, reviewer, verdicts)
 	} else {
 		reviewNote = SkipReview(verdicts)
 	}
