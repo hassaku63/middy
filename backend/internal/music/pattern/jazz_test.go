@@ -43,8 +43,12 @@ func TestJazzRideKeepsTimeOnTheRide(t *testing.T) {
 	if len(pedal) != 2 || !pedal[480] || !pedal[1440] {
 		t.Errorf("hi-hat pedal on 2 and 4: %v", pedal)
 	}
-	if e := got.Rhythm.Drums.Explanation; !strings.Contains(e, "1 小節にキックが 4 回") || strings.Contains(e, "スネア") {
-		t.Errorf("the explanation names only what plays (a kick, no snare): %s", e)
+	// The time is in the ride and the pedal hi-hat; the kick only feathers
+	// the beat, so it is not credited with the weight (#378).
+	if e := got.Rhythm.Drums.Explanation; !strings.Contains(e, "1 小節にライドが 6 回") ||
+		!strings.Contains(e, "足のハイハットが 2・4 拍目で閉じて") || !strings.Contains(e, "キックはごく弱く支えるだけ") ||
+		strings.Contains(e, "重心") || strings.Contains(e, "スネア") {
+		t.Errorf("the explanation names the ride and the hi-hat: %s", e)
 	}
 	if !strings.Contains(got.Rhythm.Drums.Description, "ライド") {
 		t.Errorf("the description names the ride: %s", got.Rhythm.Drums.Description)
@@ -105,6 +109,10 @@ func TestJazzWaltzRide(t *testing.T) {
 	}
 	if len(pedal) != 1 || !pedal[480] {
 		t.Errorf("hi-hat pedal on 2: %v", pedal)
+	}
+	if e := got.Rhythm.Drums.Explanation; !strings.Contains(e, "1 小節にライドが 4 回") ||
+		!strings.Contains(e, "足のハイハットが 2 拍目で閉じて") || strings.Contains(e, "重心") {
+		t.Errorf("the explanation names the ride and the hi-hat (#378): %s", e)
 	}
 	if _, err := Apply(progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1), mustAcc(t, "block"), &d); err == nil {
 		t.Error("the jazz waltz ride is a 3/4 pattern")

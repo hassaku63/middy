@@ -67,6 +67,14 @@ func describeAccompaniment(a Accompaniment, ts music.TimeSignature) *music.Rhyth
 // snare of a kit, or the low tom and side stick of a hand drum such as the
 // bodhrán. Hats and the light mid-tom eighths only mark time.
 func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
+	if rp := ridePart(d, ts); rp != nil {
+		return rp
+	}
+	return kitPart(d, ts)
+}
+
+// kitPart describes the kick and snare (or the hand drum) of a kit.
+func kitPart(d Drums, ts music.TimeSignature) *music.RhythmPart {
 	kit := make([]music.Tick, 0, len(d.Hits))
 	hand := make([]music.Tick, 0, len(d.Hits))
 	var kick, snare bool
@@ -103,6 +111,54 @@ func describeDrums(d Drums, ts music.TimeSignature) *music.RhythmPart {
 	}
 	rp := part(d.ID, d.Name, d.Description, kit, subject, ts)
 	rp.Explanation += backbeatText(d, ts) + densityText(d, ts) + nearestText(d, ts)
+	return rp
+}
+
+// feathered is the loudest a kick may be and still only "feather" the
+// beat, felt more than heard, as a swing drummer plays it (#378).
+const feathered = 50
+
+// ridePart describes a ride kit whose kick only feathers the beat (jazz
+// ride, jazz waltz): the time is in the ride and the pedal hi-hat, so it
+// counts the ride and says where the hi-hat closes, rather than crediting
+// the quiet kick with the groove's weight (#378).
+func ridePart(d Drums, ts music.TimeSignature) *music.RhythmPart {
+	var ride []music.Tick
+	hat := map[int]bool{}
+	kick := false
+	for _, h := range d.Hits {
+		switch h.Note {
+		case Ride, RideBell:
+			ride = append(ride, h.Start)
+		case PedalHat:
+			if h.Start%quarter == 0 {
+				hat[int(h.Start/quarter)+1] = true
+			}
+		case Kick:
+			if h.Velocity >= feathered {
+				return nil
+			}
+			kick = true
+		case Snare:
+			if h.Velocity >= 60 {
+				return nil
+			}
+		}
+	}
+	if len(ride) == 0 || !kick { // a ride grid alone is counted as it is
+		return nil
+	}
+	rp := part(d.ID, d.Name, d.Description, ride, "ライド", ts)
+	var beats []string
+	for b := 1; b <= ts.BeatsPerBar(); b++ {
+		if hat[b] {
+			beats = append(beats, strconv.Itoa(b))
+		}
+	}
+	if len(beats) > 0 {
+		rp.Explanation += fmt.Sprintf("足のハイハットが %s 拍目で閉じて、拍を刻む。", strings.Join(beats, "・"))
+	}
+	rp.Explanation += "キックはごく弱く支えるだけで、重さはライドとハイハットにある。"
 	return rp
 }
 

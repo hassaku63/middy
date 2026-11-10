@@ -95,7 +95,7 @@ Timeline
 - `pattern.Render(tl, Choice{Accompaniment, Drums, Grid, Feel, Swing, Style})` — id で選んで `Apply` し、ノリを掛ける。HTTP と `ideas` の入口。伴奏もドラムも格子もなく、スタイルが楽器も和音の色付けも持たなければ、音はそのままでスタイルだけを `Rhythm.Style` に記録して返す。ドラムだけ、または楽器か色付けを持つスタイルだけならブロックコードを使う。ドラムも押しもないブロックコードは伸ばすだけなのでスウィングを掛けない（6/8 でのスウィングはその前に拒む）
 - ノリ（`Feel`）: `swing` は、組にした音価（`Swing.Unit`。既定は 8 分、16 分も選べる）の 1 つ目を長く、2 つ目を短くする。長・短の比（`Swing.Ratio`、BL-084）は 1.0（ストレート）〜3.0 で、指定がなければテンポから決まる（`DefaultSwingRatio`: 60 BPM で 3、160 で 2、速いほど浅く 1.5 まで。0.1 刻み。ジャズのドラマーで測られた傾向、Friberg & Sundström 2002）。組の中で時間を伸び縮みさせる。組の前半は長い音まで伸び、後半は短い音に縮む。そのため、組の 1 つ目の音は長くなり、2 つ目で始まる音は遅れ、2 つ目で終わる長い音（押した和音の前の和音）はそこまで伸びてつながる。2 : 1 なら 3 連符の 3 つ目。組より細かい音（8 分のスウィングでの 16 分）も、順番と間隔を保ったまま同じように動く。`Rhythm.Feel` は比と音価を持ち、解説はその比を述べる。拍の位置の分析はテンプレートの位置で行うので、スウィングしても裏拍は裏拍として数える `shuffle` は 8 分音符を 3 連符の 1 つ目と 3 つ目で弾く（比 2 : 1 に固定し、テンポによらない。ADR-0036）。`swing` と同じく 6/8 では使わない。
 - 説明文（`Description`）は解説レイヤーと LLM がそのまま使う前提で、日本語で「何が起きるか」を書く
-- `music.Rhythm{Accompaniment, Drums *RhythmPart, Feel *RhythmFeel}` — `Apply` が `Timeline.Rhythm` に入れる解説データ。`RhythmPart` は 1 小節の打点を拍の頭 / 8 分の裏 / それより細かい位置に分類し（ドラムは骨格の打音。上の `pattern.Apply` を参照）、拍の裏で鳴ったあと次の拍の頭が鳴らない打点があれば `Syncopated`。`Explanation` は決定論的な日本語
+- `music.Rhythm{Accompaniment, Drums *RhythmPart, Feel *RhythmFeel}` — `Apply` が `Timeline.Rhythm` に入れる解説データ。`RhythmPart` は 1 小節の打点を拍の頭 / 8 分の裏 / それより細かい位置に分類し（ドラムは骨格の打音。キックがごく弱く支えるだけのライドの型（jazz-ride、jazz-waltz）は、ライドを数え、足のハイハットの拍を言う。#378。上の `pattern.Apply` を参照）、拍の裏で鳴ったあと次の拍の頭が鳴らない打点があれば `Syncopated`。`Explanation` は決定論的な日本語
 
 ### 未実装の語彙
 
