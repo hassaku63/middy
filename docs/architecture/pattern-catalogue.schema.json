@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hassaku63/middy/docs/architecture/pattern-catalogue.schema.json",
+  "title": "middy pattern catalogue",
+  "description": "The shape of backend/internal/music/pattern/data/{accompaniments,drums,styles}.json (ADR-0035). For editors: the rules that cross entries (ids in use, bar lengths, which patterns a style names) are checked by pattern.Catalogue.Validate, not here. Ticks are at 480 per quarter note.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "accompaniments": { "type": "array", "items": { "$ref": "#/$defs/accompaniment" } },
+    "drums": { "type": "array", "items": { "$ref": "#/$defs/drums" } },
+    "styles": { "type": "array", "items": { "$ref": "#/$defs/style" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "meter": {
+      "description": "The time signature the hits are written for. The engine plays 4/4, 3/4 and 6/8.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": { "enum": [3, 4, 6] },
+        "denominator": { "enum": [4, 8] }
+      }
+    },
+    "velocity": { "type": "integer", "minimum": 1, "maximum": 127 },
+    "accompaniment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "program", "hits"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "program": { "description": "General MIDI program, 0-based.", "type": "integer", "minimum": 0, "maximum": 127 },
+        "meter": { "$ref": "#/$defs/meter", "description": "Omitted: the template fits any meter, and a hit with duration 0 lasts to the end of the bar." },
+        "hits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["start", "duration", "voice", "velocity"],
+            "properties": {
+              "start": { "type": "integer", "minimum": 0 },
+              "duration": { "type": "integer", "minimum": 0 },
+              "voice": { "enum": ["chord", "bass", "root", "third", "fifth", "top", "octave", "drone", "walk"] },
+              "velocity": { "$ref": "#/$defs/velocity" }
+            }
+          }
+        }
+      }
+    },
+    "drums": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "meter", "hits"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "meter": { "$ref": "#/$defs/meter" },
+        "hits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["start", "duration", "note", "velocity"],
+            "properties": {
+              "start": { "type": "integer", "minimum": 0 },
+              "duration": { "type": "integer", "minimum": 1 },
+              "note": { "description": "General MIDI percussion key (36 kick, 38 snare, 42 closed hi-hat, ...).", "type": "integer", "minimum": 0, "maximum": 127 },
+              "velocity": { "$ref": "#/$defs/velocity" }
+            }
+          }
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "accompaniments", "drums", "feels"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "accompaniments": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "drums": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "feels": { "type": "array", "minItems": 1, "items": { "enum": ["straight", "swing"] } },
+        "program": { "type": "integer", "minimum": 0, "maximum": 127 },
+        "instrument": { "type": "string", "minLength": 1 },
+        "tensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "ninths": { "type": "boolean" },
+            "thirteenths": { "type": "boolean" },
+            "add9": { "type": "boolean" },
+            "text": { "type": "string", "minLength": 1 }
+          }
+        }
+      },
+      "dependentRequired": { "program": ["instrument"], "instrument": ["program"] }
+    }
+  }
+}

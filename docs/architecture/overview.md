@@ -44,7 +44,7 @@ internal/ideas      アプリケーションサービス（S2）: 会話 → LLM
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
 internal/intent     LLM が返す MusicalIntent の型・検証・JSON Schema（music にのみ依存）
 internal/music/smf  Timeline → Standard MIDI File のエンコーダ（music にのみ依存）
-internal/music/pattern  伴奏・ドラムの 1 小節テンプレートと、Harmony からトラックを作り直す Apply（music にのみ依存）
+internal/music/pattern  伴奏・ドラムの 1 小節テンプレートとスタイルのカタログ（data/*.json、ADR-0035）と、Harmony からトラックを作り直す Apply（music にのみ依存）
 internal/llm        ポート（interface）。adapters: fake, anthropic（公式 SDK）
 internal/config     環境変数
 ```

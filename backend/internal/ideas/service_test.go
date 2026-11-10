@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/hassaku63/middy/backend/internal/llm"
 	"github.com/hassaku63/middy/backend/internal/llm/fake"
 	"github.com/hassaku63/middy/backend/internal/music"
+	"github.com/hassaku63/middy/backend/internal/music/pattern"
 )
 
 const goodIntent = `{
@@ -435,5 +437,38 @@ func TestAPhrygianAnswerIsExplained(t *testing.T) {
 	}
 	if !strings.Contains(c.Timeline.Harmony[1].Analysis.Explanation, "フリジアン終止") {
 		t.Errorf("II lacks the phrygian cadence: %s", c.Timeline.Harmony[1].Analysis.Explanation)
+	}
+}
+
+// TestPromptNamesOnlyCatalogueIDs (BL-180, #207): where the prompt's own
+// text recommends a pattern by id ("accompaniment を reel"), the id is in
+// the catalogue, so adding or renaming a pattern cannot leave the prompt
+// pointing at nothing.
+func TestPromptNamesOnlyCatalogueIDs(t *testing.T) {
+	known := map[string]map[string]bool{"accompaniment": {}, "drums": {}, "feel": {}}
+	for _, a := range pattern.Accompaniments() {
+		known["accompaniment"][a.ID] = true
+	}
+	for _, d := range pattern.DrumPatterns() {
+		known["drums"][d.ID] = true
+	}
+	for _, f := range pattern.Feels() {
+		known["feel"][string(f.ID)] = true
+	}
+	named := regexp.MustCompile(`(accompaniment|drums|feel) を ([a-z0-9-]+)(?: か ([a-z0-9-]+))?`)
+	found := 0
+	for _, m := range named.FindAllStringSubmatch(SystemPrompt(), -1) {
+		for _, id := range m[2:] {
+			if id == "" {
+				continue
+			}
+			found++
+			if !known[m[1]][id] {
+				t.Errorf("the prompt names %s %q, which is not in the catalogue", m[1], id)
+			}
+		}
+	}
+	if found < 8 {
+		t.Errorf("found %d named ids; the pattern no longer reads the prompt", found)
 	}
 }
