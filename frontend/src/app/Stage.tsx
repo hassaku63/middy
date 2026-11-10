@@ -8,28 +8,18 @@ import { useChordKeys } from './useChordKeys';
 type Props = {
   timeline: Timeline;
   player: UsePlayer;
-  /** The desk under trial (BL-184): the chord's explanation in a frame above the timeline. */
-  desk: boolean;
-  /**
-   * The wide desk under trial (BL-197, #314): the timeline across the whole
-   * stage, the chord's frame and the other explanations side by side below.
-   */
-  wide?: boolean;
   selectedHarmony: number | null;
   onSelectHarmony: (index: number | null) => void;
 };
 
-/** What the example looks like: the timeline and its explanation (BL-061). */
-export function Stage({
-  timeline,
-  player,
-  desk,
-  wide = false,
-  selectedHarmony,
-  onSelectHarmony,
-}: Props) {
+/**
+ * What the example looks like (BL-061): the timeline across the whole
+ * stage, the chord's frame and the other explanations side by side below
+ * it (the wide layout the owner chose, #279).
+ */
+export function Stage({ timeline, player, selectedHarmony, onSelectHarmony }: Props) {
   useChordKeys({
-    enabled: desk,
+    enabled: true,
     harmony: timeline.harmony,
     positionTick: player.positionTick,
     selected: selectedHarmony,
@@ -43,7 +33,7 @@ export function Stage({
       playing={player.state === 'playing'}
       selectedHarmony={selectedHarmony}
       onSelectHarmony={onSelectHarmony}
-      marks={desk}
+      marks
     />
   );
   const frame = (
@@ -60,32 +50,16 @@ export function Stage({
       positionTick={player.positionTick}
       selectedHarmony={selectedHarmony}
       onClearSelection={clear}
-      chord={!desk}
+      chord={false}
     />
   );
-  if (wide) {
-    return (
-      <div className="app__stage app__stage--wide">
-        {overview}
-        <div className="app__below">
-          {frame}
-          {notes}
-        </div>
-      </div>
-    );
-  }
   return (
-    // Side by side on wide screens: hear, watch and read at once (BL-061).
-    <div className="app__stage">
-      {desk ? (
-        <div className="app__score">
-          {frame}
-          {overview}
-        </div>
-      ) : (
-        overview
-      )}
-      {notes}
+    <div className="app__stage app__stage--wide">
+      {overview}
+      <div className="app__below">
+        {frame}
+        {notes}
+      </div>
     </div>
   );
 }

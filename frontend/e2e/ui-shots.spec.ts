@@ -16,7 +16,7 @@ const sizes = [
   { name: 'desktop', width: 1280, height: 800 },
   { name: 'phone', width: 390, height: 844 },
 ];
-const layout = process.env.UI_SHOTS_LAYOUT ?? ''; // e.g. "layout=desk"
+const layout = process.env.UI_SHOTS_LAYOUT ?? ''; // a query for a trial, e.g. "lab"
 
 /** The states the result screen is reviewed in. */
 const states: { name: string; reach: (page: Page) => Promise<void> }[] = [

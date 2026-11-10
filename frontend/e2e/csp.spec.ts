@@ -8,7 +8,7 @@ import { openExample } from './helpers';
  * the MIDI, on both layouts. Runs against nginx (make up, or any server
  * that sends the header); without the header it only proves the paths.
  */
-for (const path of ['/', '/?layout=wide']) {
+for (const path of ['/']) {
   test(`the main paths raise no CSP violation (${path})`, async ({ page }) => {
     const violations: string[] = [];
     page.on('console', (m) => {

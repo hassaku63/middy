@@ -87,7 +87,8 @@ test.describe('the boundary between the conversation and the example', () => {
       side,
     );
 
-  test('stacked, a line runs across above the example', async ({ page }) => {
+  test('stacked below 1024 px, a line runs across above the example', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
     expect(await border(result, 'top')).toBeGreaterThan(0);
@@ -96,7 +97,7 @@ test.describe('the boundary between the conversation and the example', () => {
   test('side by side, the line stands between the columns, only once an example is open', async ({
     page,
   }) => {
-    await page.goto('/?layout=desk');
+    await page.goto('/');
     const main = page.locator('.app__main');
     expect(await border(main, 'left')).toBe(0);
     const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
