@@ -50,3 +50,11 @@ func TestMeterAddsUpEveryCall(t *testing.T) {
 		}
 	}
 }
+
+// TestSendNoteSaysHowTheRunWent (ADR-0039): the price of the usage table
+// depends on whether the run was batched, so the report says which.
+func TestSendNoteSaysHowTheRunWent(t *testing.T) {
+	if !strings.Contains(sendNote(true), "Message Batches") || !strings.Contains(sendNote(false), "1 件ずつ") {
+		t.Errorf("send notes: %q %q", sendNote(true), sendNote(false))
+	}
+}
