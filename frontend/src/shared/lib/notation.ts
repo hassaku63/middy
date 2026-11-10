@@ -9,6 +9,7 @@ import type {
   HarmonicFunction,
   HarmonyEvent,
   Key,
+  ModalRole,
   Pitch,
   PitchClass,
 } from '@/shared/api/client';
@@ -77,6 +78,22 @@ export function chordSymbol(chord: Chord): string {
  */
 export function isFunctional(mode: Key['mode']): boolean {
   return mode === 'major' || mode === 'minor';
+}
+
+/**
+ * The Japanese name of a chord's role in a mode (#366, ADR-0047), where
+ * functions do not hold. "other" has no name: it is shown by its degree
+ * alone.
+ */
+export const ROLE_NAME: Record<Exclude<ModalRole, 'other'>, string> = {
+  tonic: '主和音',
+  characteristic: '特徴和音',
+  tritone: '三全音の和音',
+};
+
+/** The role's name, or '' for a chord with no named role. */
+export function roleName(role: ModalRole | undefined): string {
+  return role && role !== 'other' ? ROLE_NAME[role] : '';
 }
 
 /** The Japanese name of a harmonic function, as the explanations say it. */

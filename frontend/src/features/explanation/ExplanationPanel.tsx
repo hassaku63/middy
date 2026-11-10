@@ -58,7 +58,8 @@ export function ExplanationPanel({
 
 /**
  * One chord's part of the panel: the degree map, the live line and the
- * notes. In a mode nothing is labelled by function (ADR-0045).
+ * notes. In a mode nothing is labelled by function; the chords are named by
+ * their role (ADR-0045, 0048).
  */
 function ExplainedChord({
   timeline,
@@ -75,7 +76,12 @@ function ExplainedChord({
   return (
     <>
       {timeline?.overview && (
-        <DegreeMap degrees={timeline.overview.degrees} event={event} functions={functional} />
+        <DegreeMap
+          degrees={timeline.overview.degrees}
+          event={event}
+          functions={functional}
+          roles={!functional}
+        />
       )}
       <ChordStatus event={event} functional={functional} />
       {event ? (

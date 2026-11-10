@@ -134,3 +134,97 @@ describe('ChordFrame and the degree map (#360, ADR-0044)', () => {
     expect(within(map).getByLabelText('I（C）、主和音、この例で使う')).toHaveClass('is-tonic');
   });
 });
+
+/** D dorian's triads with the engine's roles (ADR-0047). */
+const dDorian: DegreeChord[] = [
+  { degree: 1, romanNumeral: 'i', symbol: 'Dm', function: 'T', role: 'tonic', used: true },
+  { degree: 2, romanNumeral: 'ii', symbol: 'Em', function: 'S', role: 'characteristic' },
+  { degree: 3, romanNumeral: 'III', symbol: 'F', function: 'T', role: 'other' },
+  {
+    degree: 4,
+    romanNumeral: 'IV',
+    symbol: 'G',
+    function: 'S',
+    role: 'characteristic',
+    used: true,
+  },
+  { degree: 5, romanNumeral: 'v', symbol: 'Am', function: 'D', role: 'other' },
+  { degree: 6, romanNumeral: 'vi°', symbol: 'Bdim', function: 'T', role: 'tritone' },
+  { degree: 7, romanNumeral: 'VII', symbol: 'C', function: 'D', role: 'other' },
+];
+
+const dorianTimeline = {
+  key: { tonic: 2, mode: 'dorian' },
+  harmony: [
+    {
+      start: 0,
+      duration: 1920,
+      chord: { root: 7, quality: 'maj' },
+      romanNumeral: 'IV',
+      analysis: {
+        degree: 4,
+        function: 'S',
+        role: 'characteristic',
+        explanation: 'ドリアンの 4 度の和音。',
+      },
+    },
+    {
+      start: 1920,
+      duration: 1920,
+      chord: { root: 5, quality: 'maj' },
+      romanNumeral: 'III',
+      analysis: { degree: 3, function: 'T', role: 'other', explanation: 'ドリアンの 3 度の和音。' },
+    },
+  ],
+  overview: { whole: '', flow: '', degrees: dDorian },
+} as Timeline;
+
+describe('ChordFrame in a mode (#366, ADR-0048)', () => {
+  it('groups the map by role and names the chord by its role, in words', () => {
+    render(
+      <ChordFrame
+        timeline={dorianTimeline}
+        positionTick={0}
+        selectedHarmony={null}
+        onClearSelection={vi.fn()}
+      />,
+    );
+    const frame = screen.getByRole('region', { name: 'コードの解説' });
+    const map = within(frame).getByRole('group', { name: '度数の地図（和音の役割）' });
+    const group = (name: string) =>
+      within(within(map).getByRole('list', { name }))
+        .getAllByRole('listitem')
+        .map((li) => li.textContent);
+    expect(
+      within(map)
+        .getAllByRole('list')
+        .map((l) => l.getAttribute('aria-label')),
+    ).toEqual(['主和音', '特徴和音', 'そのほかの和音', '三全音の和音']);
+    expect(group('主和音')).toEqual(['iDm']);
+    expect(group('特徴和音')).toEqual(['iiEm', 'IVG']);
+    expect(group('そのほかの和音')).toEqual(['IIIF', 'vAm', 'VIIC']);
+    expect(group('三全音の和音')).toEqual(['vi°Bdim']);
+    expect(within(map).getByLabelText('IV（G）、特徴和音、この例で使う')).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    // The badge and the live line say the role, not a function.
+    expect(within(frame).getByText('特徴和音', { selector: '.explanation__role' })).toBeVisible();
+    expect(within(frame).getByText('IV G 特徴和音')).toHaveAttribute('aria-live', 'polite');
+    expect(within(frame).queryByText(/サブドミナント/)).toBeNull();
+  });
+
+  it('shows no role badge for a chord with no named role', () => {
+    render(
+      <ChordFrame
+        timeline={dorianTimeline}
+        positionTick={1920}
+        selectedHarmony={null}
+        onClearSelection={vi.fn()}
+      />,
+    );
+    const frame = screen.getByRole('region', { name: 'コードの解説' });
+    expect(within(frame).queryByText(/./, { selector: '.explanation__role' })).toBeNull();
+    expect(within(frame).getByText('III F')).toHaveAttribute('aria-live', 'polite');
+  });
+});

@@ -1,5 +1,5 @@
 import type { Cadence, HarmonyEvent } from '@/shared/api/client';
-import { FUNCTION_NAME, harmonySymbol } from '@/shared/lib/notation';
+import { FUNCTION_NAME, harmonySymbol, roleName } from '@/shared/lib/notation';
 
 const CADENCE_LABEL: Record<Cadence, string> = {
   authentic: '正格終止',
@@ -32,6 +32,12 @@ export function ChordNotes({ event, pinned, onClearSelection, functional = true 
             {analysis.function} · {FUNCTION_NAME[analysis.function]}
           </span>
         )}
+        {/* In a mode the chord is named by its role instead (ADR-0048). */}
+        {analysis && !functional && roleName(analysis.role) && (
+          <span className={`explanation__role is-role-${analysis.role}`}>
+            {roleName(analysis.role)}
+          </span>
+        )}
         {analysis?.cadence && (
           <span className="explanation__cadence">{CADENCE_LABEL[analysis.cadence]}</span>
         )}
@@ -50,23 +56,26 @@ export function ChordNotes({ event, pinned, onClearSelection, functional = true 
 
 /**
  * The one live region of the explanation (#274, WCAG 4.1.3): the sounding
- * or pinned chord's name and, in major and minor, its function, short enough to announce at the
- * pace of playback. The longer text is there to read, not announced.
+ * or pinned chord's name and its function (in major and minor) or its role
+ * (in a mode, ADR-0048), short enough to announce at the pace of playback. The longer text is there to read, not announced.
  */
 export function ChordStatus({
   event,
   functional = true,
 }: {
   event: HarmonyEvent | undefined;
-  /** Name the chord's function; false in a mode (ADR-0045). */
+  /** Name the chord's function; false in a mode, where its role is named (ADR-0045, 0048). */
   functional?: boolean;
 }) {
-  const fn = functional ? event?.analysis?.function : undefined;
+  const analysis = event?.analysis;
+  const name = analysis
+    ? functional
+      ? FUNCTION_NAME[analysis.function]
+      : roleName(analysis.role)
+    : '';
   return (
     <p className="explanation__live" aria-live="polite">
-      {event
-        ? `${event.romanNumeral} ${harmonySymbol(event)}${fn ? ` ${FUNCTION_NAME[fn]}` : ''}`
-        : ''}
+      {event ? `${event.romanNumeral} ${harmonySymbol(event)}${name ? ` ${name}` : ''}` : ''}
     </p>
   );
 }
