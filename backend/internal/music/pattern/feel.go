@@ -338,11 +338,20 @@ func swingText(sw Swing, beatBPM float64) string {
 // when none sounded.
 func soundedTensions(tl music.Timeline, t *Tensions, acc Accompaniment) string {
 	var ninth7, thirteenth, add9 bool
+	arp := arpeggiated(acc)
 	for _, h := range tl.Harmony {
-		if !slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == VoiceChord && x.Start < h.Duration }) {
+		voice := VoiceChord
+		if arp {
+			voice = VoiceOctave // an arpeggio plays the first tension in the octave's place (#307)
+		}
+		if !slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == voice && x.Start < h.Duration }) {
 			continue
 		}
-		for _, pc := range tensionsOf(t, tl.Key, h) {
+		pcs := tensionsOf(t, tl.Key, h)
+		if arp && len(pcs) > 1 {
+			pcs = pcs[:1]
+		}
+		for _, pc := range pcs {
 			switch {
 			case h.Chord.Quality == music.MajorTriad:
 				add9 = true

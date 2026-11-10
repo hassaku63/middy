@@ -221,8 +221,9 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
 	led := music.LeadVoicings(chordsOf(tl.Harmony)) // BL-086
 	for i := range tl.Harmony {
-		chord := colour(led[i], tensionsOf(tensions, tl.Key, tl.Harmony[i]))
-		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, bar)...)
+		adds := tensionsOf(tensions, tl.Key, tl.Harmony[i])
+		chord := colour(led[i], adds)
+		track.Notes = append(track.Notes, chordNotes(tl, acc, i, led[i], chord, adds, bar)...)
 	}
 	track.Notes = music.PushNotes(tl.Harmony, track.Notes, tl.PPQ) // before the feel (BL-085)
 	track.Notes = holdDrone(track.Notes, acc, tl.Key)              // after the pushes, which cut at each chord
@@ -232,8 +233,10 @@ func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.
 
 // chordNotes realises the accompaniment over chord i, a bar of the
 // template at a time from the chord's start; the led voicing plays the
-// chord, and the walking bass is filled in once its hits are known.
-func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, bar music.Tick) []music.NoteEvent {
+// chord, and the walking bass is filled in once its hits are known. An
+// arpeggio, which has no chord hit to colour, plays the style's first
+// tension in place of its octave (#307).
+func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.Pitch, adds []music.PitchClass, bar music.Tick) []music.NoteEvent {
 	h := tl.Harmony[i]
 	voicing := h.Chord.Voicing(music.ChordOctave)
 	end := h.Start + h.Duration
@@ -257,6 +260,9 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 			if hit.Voice == VoiceChord {
 				ps = chord // with the style's tensions (BL-125)
 			}
+			if hit.Voice == VoiceOctave && len(adds) > 0 && arpeggiated(acc) {
+				ps = []music.Pitch{above(voicing[0].Transpose(12), adds[0])}
+			}
 			for _, p := range slashed(acc, h, ps, hit.Voice) {
 				n.Pitch = p
 				notes = append(notes, n)
@@ -267,6 +273,22 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 		walks[k].Pitch = p
 	}
 	return append(notes, walks...)
+}
+
+// arpeggiated reports a pattern that spells its chords out with an octave
+// and never strikes them whole: the arpeggios, where a style's tension
+// takes the octave's place (#307).
+func arpeggiated(acc Accompaniment) bool {
+	return !slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceChord }) &&
+		slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceOctave })
+}
+
+// above is the lowest pitch of class pc at or above p.
+func above(p music.Pitch, pc music.PitchClass) music.Pitch {
+	for p.Class() != pc {
+		p++
+	}
+	return p
 }
 
 // slashed makes a slash chord's bass sound in a pattern with no bass
