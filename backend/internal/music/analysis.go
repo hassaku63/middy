@@ -344,7 +344,7 @@ func bluesText(k Key, p placed, following placed) string {
 	}
 	if p.degree == 4 {
 		seventh := k.spellDegree(3, -1) // the seventh of IV is the key's lowered third
-		return fmt.Sprintf(" ブルースの属七。IV に %s を重ねた属七で、%s は調の ♭3（ブルー・ノート）にあたる。どこかへ解決する和音ではなく、サブドミナントのまま鳴る。", seventh, seventh)
+		return fmt.Sprintf(" ブルースの属七。IV に %s を重ねた属七で、%s は調の ♭3（音階の第 3 音を半音下げた音、ブルー・ノート）にあたる。どこかへ解決する和音ではなく、サブドミナントのまま鳴る。", seventh, seventh)
 	}
 	seventh := k.spellDegree(7, -1)
 	if following.degree == 4 && following.applied == 0 && !following.borrowed {
