@@ -201,3 +201,19 @@ describe('ChatPanel', () => {
     expect(onOpen).toHaveBeenCalledWith(candidate);
   });
 });
+
+describe('ChatPanel options (BL-217)', () => {
+  it('shows the settings for choosing an example right after the input', () => {
+    render(
+      <ChatPanel
+        ideas={ideasWith({})}
+        onOpenCandidate={vi.fn()}
+        options={<label>候補を選んだら再生</label>}
+      />,
+    );
+    const form = screen.getByRole('form', { name: 'イメージの入力' });
+    const option = screen.getByText('候補を選んだら再生');
+    expect(form.compareDocumentPosition(option) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(form).not.toContainElement(option);
+  });
+});

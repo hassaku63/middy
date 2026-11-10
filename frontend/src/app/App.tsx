@@ -111,6 +111,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         openExample={openExample}
         patterns={patterns}
         list={layout.desk}
+        options={layout.desk && <HearOnOpenToggle hear={hear} />}
       />
     </>
   );
@@ -138,7 +139,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         {origin && <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />}
         {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
         {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-        {layout.desk && <HearOnOpenToggle hear={hear} />}
         <LabControls zoom={zoom} layout={layout} />
       </div>
       <Stage
