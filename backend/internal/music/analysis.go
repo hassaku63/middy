@@ -255,7 +255,7 @@ func subtonicText(k Key, p, prev, following placed) string {
 	case nextDeg == 1:
 		return " ここでは導音を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
 	}
-	return ""
+	return " 導音を持たないので、V ほど強くは i へ引き寄せない。"
 }
 
 // locate finds the chord's scale degree in the key, or, in a major key, in
@@ -448,14 +448,27 @@ func symbolOf(key Key, h HarmonyEvent) string {
 // its degree, and the sentences after it (the characteristic tone, the
 // cadence) say what it does.
 const (
-	modalTonicText  = "%sの主和音。調の中心で、落ち着いて聞こえる。"
-	modalDegreeText = "%sの %d 度の和音。"
+	modalTonicText = "%sの主和音。調の中心で、落ち着いて聞こえる。"
+	// tonicSubstituteText: iii and vi in major, III and VI in minor.
+	tonicSubstituteText = "トニック（T）の仲間。%s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
+	// naturalMinorDominantText: minor's v has no leading tone (#371).
+	naturalMinorDominantText = "ただし導音を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"
+	modalDegreeText          = "%sの %d 度の和音。"
 )
 
 // openingText is the first sentence of a chord's explanation: its
 // function in major and minor, its place in a mode.
-func openingText(key Key, degree int, fn Function) string {
+func openingText(key Key, degree int, fn Function, borrowed bool) string {
 	if key.Mode == Major || key.Mode == Minor {
+		// Only I is the centre; iii and vi (III and VI in minor) share two
+		// notes with it and stand in for it (#371).
+		if fn == Tonic && degree != 1 && !borrowed {
+			tonic := "I"
+			if key.Mode == Minor {
+				tonic = "i"
+			}
+			return fmt.Sprintf(tonicSubstituteText, tonic, tonic)
+		}
 		return functionText[fn]
 	}
 	if degree == 1 {
@@ -466,7 +479,10 @@ func openingText(key Key, degree int, fn Function) string {
 
 func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borrowed bool, role ModalRole) string {
 	symbol := symbolOf(key, h)
-	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn))
+	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn, borrowed))
+	if key.Mode == Minor && degree == 5 && !borrowed && !holds(h.Chord, key.Tonic.Add(11)) {
+		s += " " + naturalMinorDominantText
+	}
 	if borrowed {
 		s += " " + borrowedSentence(key, h)
 	}
