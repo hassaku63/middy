@@ -191,6 +191,10 @@ type Choice struct {
 	// Grid, when set, writes the drums out instead of naming them
 	// (BL-122); Drums must then be empty.
 	Grid *music.DrumGrid
+	// Tensions, when set, is the colour the candidate asked for in place of
+	// its style's: TensionsNone, TensionsNinths or TensionsNinths13
+	// (ADR-0037).
+	Tensions string
 }
 
 // Render layers a Choice on a block-chord timeline. With no accompaniment,
@@ -210,7 +214,11 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	if plain(c, st) {
+	tensions, err := chosenTensions(c, st)
+	if err != nil {
+		return music.Timeline{}, err
+	}
+	if plain(c, st, tensions) {
 		return styleOnly(tl, st), nil // block chords on the piano: nothing to render
 	}
 	accID := c.Accompaniment
@@ -232,11 +240,12 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if acc.ID == "block" && drums == nil && !slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool { return h.Push != music.PushNone }) {
 		info, _ = findFeel(FeelStraight) // held block chords, unpushed, have no eighths to swing
 	}
-	out, err := apply(tl, acc, drums, st.tensions())
+	out, err := apply(tl, acc, drums, tensions)
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	return withGrid(applyStyle(applyFeel(out, info, c.Swing), st, acc), c.Grid), nil
+	out = applyStyle(applyFeel(out, info, c.Swing), st, acc, c.Tensions == "")
+	return withGrid(withTensions(out, c.Tensions, tensions, acc), c.Grid), nil
 }
 
 // withGrid records the grid the drums were written as (BL-123), so a
@@ -274,11 +283,36 @@ func choiceDrums(c Choice, tl music.Timeline) (*Drums, error) {
 
 // plain is true when the choice changes nothing on block chords: no
 // patterns, and no style instrument or colouring.
-func plain(c Choice, st *Style) bool {
-	if c.Accompaniment != "" || c.Drums != "" || c.Grid != nil {
+func plain(c Choice, st *Style, tensions *Tensions) bool {
+	if c.Accompaniment != "" || c.Drums != "" || c.Grid != nil || tensions != nil {
 		return false
 	}
-	return st == nil || (st.Program == nil && st.Tensions == nil)
+	return st == nil || st.Program == nil
+}
+
+// chosenTensions is the colour the chords take: the one the candidate
+// asked for (ADR-0037), else its style's rule.
+func chosenTensions(c Choice, st *Style) (*Tensions, error) {
+	if c.Tensions != "" {
+		return requestedTensions(c.Tensions)
+	}
+	return st.tensions(), nil
+}
+
+// withTensions records the colour the candidate asked for (ADR-0037) and
+// what it added, so the notes say so and a rebuild sends it back.
+func withTensions(tl music.Timeline, id string, t *Tensions, acc Accompaniment) music.Timeline {
+	if id == "" || tl.Rhythm == nil {
+		return tl
+	}
+	rt := &music.RhythmTensions{ID: id}
+	if added := soundedTensions(tl, t, acc); added != "" {
+		rt.Explanation = "この例の色付けとして、" + added + "（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。"
+	}
+	rhythm := *tl.Rhythm
+	rhythm.Tensions = rt
+	tl.Rhythm = &rhythm
+	return tl
 }
 
 // styleOnly records the style on a timeline it does not otherwise change,
@@ -312,12 +346,12 @@ func styleOf(id string) (*Style, error) {
 // instrument and the pattern plays on the keyboard default, puts the
 // chords on that instrument (BL-110). A pattern with an instrument of its
 // own (a guitar strum, the drone's organ) keeps it.
-func applyStyle(tl music.Timeline, st *Style, acc Accompaniment) music.Timeline {
+func applyStyle(tl music.Timeline, st *Style, acc Accompaniment, styleColour bool) music.Timeline {
 	if st == nil || tl.Rhythm == nil {
 		return tl
 	}
 	rs := &music.RhythmStyle{ID: st.ID, Name: st.Name}
-	if added := soundedTensions(tl, st.Tensions, acc); added != "" {
+	if added := soundedTensions(tl, st.Tensions, acc); added != "" && styleColour {
 		rs.Tensions = st.Name + "のスタイルなので、" + added + "（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。"
 	}
 	if st.Program != nil && acc.Program == 0 && len(tl.Tracks) > 0 {

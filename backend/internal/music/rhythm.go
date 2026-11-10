@@ -15,6 +15,16 @@ type Rhythm struct {
 	// DrumGrid is the grid the drums were written as (BL-123); a rebuild
 	// sends it back. Drums.ID is then "grid".
 	DrumGrid *DrumGrid `json:"drumGrid,omitempty"`
+	// Tensions is the colour the candidate asked for (ADR-0037), in place
+	// of its style's; a rebuild in another key sends it back.
+	Tensions *RhythmTensions `json:"tensions,omitempty"`
+}
+
+// RhythmTensions is the colour a candidate asked for and what it added.
+// Explanation is empty when nothing sounded (no chord took a tension).
+type RhythmTensions struct {
+	ID          string `json:"id"`
+	Explanation string `json:"explanation,omitempty"`
 }
 
 // RhythmStyle names the style an example was rendered in and the

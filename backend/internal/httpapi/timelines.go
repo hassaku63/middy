@@ -35,6 +35,9 @@ type fromProgressionRequest struct {
 	// Style may choose the chords' instrument (BL-110); the key change sends
 	// back the style the example was rendered in.
 	Style string `json:"style,omitempty"`
+	// Tensions is the colour asked for in place of the style's (ADR-0037):
+	// "none", "9" or "9-13"; the key change sends it back.
+	Tensions string `json:"tensions,omitempty"`
 	// TimeSignature is 4/4 (default), 3/4 or 6/8; beats count in its beats (ADR-0017).
 	TimeSignature *music.TimeSignature `json:"timeSignature,omitempty"`
 }
@@ -81,7 +84,7 @@ func fromProgression(w http.ResponseWriter, r *http.Request, logger *slog.Logger
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Grid: req.DrumGrid, Feel: pattern.Feel(strings.ToLower(req.Feel)), Style: req.Style})
+	tl, err = pattern.Render(tl, pattern.Choice{Accompaniment: req.Accompaniment, Drums: req.Drums, Grid: req.DrumGrid, Feel: pattern.Feel(strings.ToLower(req.Feel)), Style: req.Style, Tensions: req.Tensions})
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
