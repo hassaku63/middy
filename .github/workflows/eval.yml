@@ -1,7 +1,10 @@
 # Real-API evaluation of a pull request (ADR-0018). Runs `make eval` on the
 # pull request's branch when someone with write access adds the `needs-eval`
 # label, posts the table as a comment and removes the label, so the label
-# can be added again after the next fix.
+# can be added again after the next fix. `needs-eval` runs every case; a
+# label `needs-eval:<tag>` (a tag of evals.Tags, e.g. `needs-eval:meter`)
+# runs only the cases with that tag and the smoke cases, to spend less
+# credit on a change that touches one aspect (#334).
 #
 # Guards (all required, ADR-0018):
 # - Only `pull_request`, never `pull_request_target`, and only for branches
@@ -23,14 +26,14 @@ permissions:
 # runs of other labels (which skip every job) in their own group, or they
 # would cancel an evaluation in progress.
 concurrency:
-  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'needs-eval' }}
+  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'needs-eval' || startsWith(github.event.label.name, 'needs-eval:') }}
   cancel-in-progress: true
 
 jobs:
   eval:
     name: eval (real API)
     if: >-
-      github.event.label.name == 'needs-eval' &&
+      (github.event.label.name == 'needs-eval' || startsWith(github.event.label.name, 'needs-eval:')) &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -61,14 +64,26 @@ jobs:
         with:
           go-version-file: .tool-versions
           cache-dependency-path: backend/go.sum
-      # The only step that sees the key.
+      # The only step that sees the key. The label is written by someone
+      # with write access, but it is still read as data: only a lowercase
+      # word passes on, and the eval rejects a tag it does not know.
       - name: make eval
         id: run
         if: steps.changes.outputs.eval == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LABEL: ${{ github.event.label.name }}
         run: |
           set -o pipefail
+          tag="${LABEL#needs-eval}"
+          tag="${tag#:}"
+          if [ -n "$tag" ]; then
+            if ! [[ "$tag" =~ ^[a-z]+$ ]]; then
+              echo "::error::the label's tag must be a lowercase word, got: $tag"
+              exit 1
+            fi
+            export EVAL_TAGS="$tag,smoke"
+          fi
           if [ -z "$ANTHROPIC_API_KEY" ]; then
             echo "::error::the eval environment has no ANTHROPIC_API_KEY"
             exit 1
@@ -93,7 +108,7 @@ jobs:
     needs: eval
     if: >-
       always() &&
-      github.event.label.name == 'needs-eval' &&
+      (github.event.label.name == 'needs-eval' || startsWith(github.event.label.name, 'needs-eval:')) &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -130,14 +145,16 @@ jobs:
           } > body.md
           # REST rather than `gh pr`, whose GraphQL calls can be refused for GITHUB_TOKEN.
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@body.md --silent
-      - name: Remove the needs-eval label
+      - name: Remove the label that started the run
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
+          LABEL: ${{ github.event.label.name }}
         run: |
           # A label that is already gone is fine; any other failure must show.
-          if ! gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/needs-eval" --silent 2> err.txt; then
+          # The name goes in the path, so its ":" is escaped.
+          if ! gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/${LABEL//:/%3A}" --silent 2> err.txt; then
             if grep -q "Label does not exist" err.txt; then
               echo "the label was already gone"
             else
