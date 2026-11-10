@@ -10,8 +10,8 @@ import (
 
 // strokeNames names the drum notes for a learner.
 var strokeNames = map[music.Pitch]string{
-	Kick: "キック", Snare: "スネア", SideStick: "クロススティック", ClosedHat: "ハイハット",
-	OpenHat: "オープンのハイハット", PedalHat: "ペダルのハイハット", Ride: "ライド", RideBell: "ライドのベル",
+	Kick: "キック", Snare: "スネア", SideStick: "サイドスティック", ClosedHat: "ハイハット",
+	OpenHat: "オープンのハイハット", PedalHat: "足のハイハット", Ride: "ライド", RideBell: "ライドのベル",
 	Crash: "クラッシュ", LowTom: "低いタム", MidTom: "中くらいのタム", HighTom: "高いタム",
 }
 
