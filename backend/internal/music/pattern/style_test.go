@@ -181,3 +181,55 @@ func TestStyleIsKeptWithoutPatterns(t *testing.T) {
 		t.Errorf("pop on block chords: %+v", out.Rhythm)
 	}
 }
+
+// TestLofiStyle (#308): the lofi style plays its 4/4 groove on an
+// electric piano over a half-time beat, and adds the 9th to its seventh
+// chords.
+func TestLofiStyle(t *testing.T) {
+	st, err := FindStyle("lofi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := st.Groove(music.FourFour)
+	if g.Accompaniment != "ballad" || g.Drums != "lofi" || g.Feel != FeelSwing {
+		t.Fatalf("lofi groove in 4/4: %+v", g)
+	}
+	acc, err := FindAccompaniment(g.Accompaniment)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := music.Key{Tonic: music.C, Mode: music.Major}
+	tl, err := music.FromProgression(c, music.Progression{
+		{Degree: 1, Seventh: true, Beats: 4},
+		{Degree: 6, Seventh: true, Beats: 4},
+		{Degree: 2, Seventh: true, Beats: 4},
+		{Degree: 5, Seventh: true, Beats: 4},
+	}, 80)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := Render(tl, g.Choice("lofi"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	dr := out.Rhythm.Drums
+	if dr == nil || !strings.Contains(dr.Explanation, "スネアが 3 拍目だけに来るハーフタイム") {
+		t.Fatalf("the drums are explained as half time: %+v", dr)
+	}
+	if acc.Program == 0 && out.Tracks[0].Program != 4 {
+		t.Errorf("the chords play on the electric piano: program %d", out.Tracks[0].Program)
+	}
+	if s := out.Rhythm.Style; s == nil || s.Instrument != "エレクトリック・ピアノ" || !strings.Contains(s.Tensions, "9 度") {
+		t.Errorf("the style names its instrument and tensions: %+v", s)
+	}
+	// Cmaj7 in the first bar sounds its 9th (D) with the chord.
+	var ninth bool
+	for _, n := range out.Tracks[0].Notes {
+		if n.Start < music.Tick(4*music.DefaultPPQ) && n.Pitch.Class() == music.D {
+			ninth = true
+		}
+	}
+	if !ninth {
+		t.Errorf("Cmaj7 adds the 9th: %v", out.Tracks[0].Notes)
+	}
+}

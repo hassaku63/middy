@@ -66,6 +66,20 @@
       "feels": ["straight"],
       "program": 46,
       "instrument": "ハープ"
+    },
+    {
+      "id": "lofi",
+      "name": "ローファイ",
+      "description": "軽く跳ねるハーフタイムのビートの上で、エレクトリック・ピアノが 9 度を足した和音をゆったり鳴らす、ローファイ・ヒップホップ。",
+      "accompaniments": ["ballad", "arpeggio"],
+      "drums": ["lofi", "ballad"],
+      "feels": ["swing", "straight"],
+      "program": 4,
+      "instrument": "エレクトリック・ピアノ",
+      "tensions": {
+        "ninths": true,
+        "text": "七の和音に 9 度を足している"
+      }
     }
   ]
 }
