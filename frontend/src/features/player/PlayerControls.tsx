@@ -1,6 +1,7 @@
 import type { Timeline } from '@/shared/api/client';
 import { formatPosition } from '@/shared/lib/timing';
 import type { UsePlayer } from './usePlayer';
+import './PlayerControls.css';
 
 type Props = {
   timeline: Timeline | null;
@@ -15,9 +16,12 @@ export function PlayerControls({ timeline, player }: Props) {
     : '-';
 
   return (
-    <div role="group" aria-label="再生">
+    <div role="group" aria-label="再生" className="player">
+      {/* The main operation once an example is open (experience.md): it
+          stands out from the toolbar's other buttons (#279). */}
       <button
         type="button"
+        className="player__play"
         onClick={() => {
           if (timeline) void player.play(timeline);
         }}

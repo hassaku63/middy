@@ -1,0 +1,36 @@
+/* Play is the screen's main operation once an example is open
+   (docs/product/experience.md, #279): a filled, larger button, so it is
+   the first thing the eye and the pointer find in the toolbar. White on
+   #1d4ed8 is 6.7:1 (WCAG 1.4.3). */
+.player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player__play {
+  min-height: 36px;
+  padding: 6px 20px;
+  border: 1px solid #1d4ed8;
+  border-radius: 6px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.player__play:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.player__play:disabled {
+  border-color: #6b7280;
+  background: #6b7280;
+  cursor: default;
+}
+
+.player__play:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
