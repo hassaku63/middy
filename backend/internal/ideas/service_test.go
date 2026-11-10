@@ -472,3 +472,24 @@ func TestPromptNamesOnlyCatalogueIDs(t *testing.T) {
 		t.Errorf("found %d named ids; the pattern no longer reads the prompt", found)
 	}
 }
+
+// TestPromptTellsWhichStylesAddTensions (#307): the model is told that the
+// engine adds tensions through the style, and which styles do, rather than
+// that tensions cannot be had.
+func TestPromptTellsWhichStylesAddTensions(t *testing.T) {
+	p := SystemPrompt()
+	if strings.Contains(p, "テンションは、エンジンが描画・分析できない") {
+		t.Error("the prompt still says tensions cannot be had")
+	}
+	for _, st := range pattern.Styles() {
+		line := ""
+		for _, l := range strings.Split(p, "\n") {
+			if strings.HasPrefix(l, "- "+st.ID+": ") {
+				line = l
+			}
+		}
+		if has := strings.Contains(line, "テンション: "); has != (st.Tensions != nil) {
+			t.Errorf("style %s: tension note %v, want %v: %s", st.ID, has, st.Tensions != nil, line)
+		}
+	}
+}
