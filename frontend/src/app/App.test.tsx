@@ -84,10 +84,12 @@ function stubBackend() {
 }
 
 /** Sends an image; the first example opens by itself (BL-064). */
+/** Sends an image and opens its first example, as the user does (BL-219). */
 async function sendImage(user: ReturnType<typeof userEvent.setup>, text = '雨の日曜') {
   await user.type(screen.getByLabelText('イメージ'), text);
   await user.click(screen.getByRole('button', { name: '送る' }));
   const card = await screen.findByRole('article', { name: '窓辺の雨' });
+  await user.click(within(card).getByRole('button', { name: '窓辺の雨' }));
   return { card, result: await screen.findByRole('region', { name: '結果' }) };
 }
 
@@ -108,7 +110,7 @@ describe('App docs/product/experience.md', () => {
     expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
   });
 
-  it('opens the first example as soon as it arrives, and lets the user pin a chord', async () => {
+  it('opens the example the user chooses, and lets the user pin a chord', async () => {
     stubBackend();
     const user = userEvent.setup();
     render(<App createEngine={fakeEngine} />);
@@ -159,6 +161,32 @@ describe('App docs/product/experience.md', () => {
 
     await user.click(within(list).getByRole('button', { name: '開く' }));
     expect(screen.getByText('保存した例: 練習 1')).toBeInTheDocument();
+  });
+
+  it('opens nothing by itself when an answer arrives, and keeps what the user chose (BL-219)', async () => {
+    stubBackend();
+    const user = userEvent.setup();
+    render(<App createEngine={fakeEngine} />);
+
+    await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
+    await user.click(screen.getByRole('button', { name: '送る' }));
+    const card = await screen.findByRole('article', { name: '窓辺の雨' });
+    // The user has chosen nothing yet: nothing is marked and nothing is open.
+    expect(within(card).getByRole('button', { name: '窓辺の雨' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
+
+    await user.click(within(card).getByRole('button', { name: '窓辺の雨' }));
+    expect(await screen.findByText('候補: 窓辺の雨')).toBeInTheDocument();
+
+    // A later answer adds its cards; the example the user chose stays open.
+    await user.type(screen.getByLabelText('イメージ'), 'もう少し明るく');
+    await user.click(screen.getByRole('button', { name: '送る' }));
+    await screen.findAllByRole('article', { name: '窓辺の雨' });
+    expect(screen.getByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1);
   });
 
   it('keeps what the user opened while the answer was on its way (BL-064)', async () => {
