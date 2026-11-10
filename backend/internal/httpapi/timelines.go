@@ -38,7 +38,7 @@ type fromProgressionRequest struct {
 	// Tensions is the colour asked for in place of the style's (ADR-0037):
 	// "none", "9" or "9-13"; the key change sends it back.
 	Tensions string `json:"tensions,omitempty"`
-	// TimeSignature is 4/4 (default), 3/4 or 6/8; beats count in its beats (ADR-0017).
+	// TimeSignature is 4/4 (default), 3/4, 6/8 or 12/8; beats count in its beats (ADR-0017).
 	TimeSignature *music.TimeSignature `json:"timeSignature,omitempty"`
 }
 

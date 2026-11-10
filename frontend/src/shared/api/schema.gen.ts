@@ -152,7 +152,7 @@ export interface components {
        * @enum {string}
        */
       tensions?: 'none' | '9' | '9-13';
-      /** @description 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017） */
+      /** @description 拍子。4/4、3/4、6/8、12/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（6/8 と 12/8 は付点 4 分。ADR-0017） */
       timeSignature?: components['schemas']['TimeSignature'];
     };
     /**

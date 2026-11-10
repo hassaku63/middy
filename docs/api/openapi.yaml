@@ -256,7 +256,7 @@ components:
           description: スタイルの規則の代わりに頼む色付け（ADR-0037）。none は足さない、9 は七の和音と長三和音に 9 度、9-13 はさらに属七に 13 度。足す音はエンジンが決める。省略時はスタイルの規則
         timeSignature:
           $ref: '#/components/schemas/TimeSignature'
-          description: 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017）
+          description: 拍子。4/4、3/4、6/8、12/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（6/8 と 12/8 は付点 4 分。ADR-0017）
     Feel:
       type: string
       enum: [straight, swing, shuffle]

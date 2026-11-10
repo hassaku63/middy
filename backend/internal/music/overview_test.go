@@ -159,6 +159,41 @@ func TestSixEightCountsTwoDottedQuarterBeats(t *testing.T) {
 	}
 }
 
+// TestTwelveEightCountsFourDottedQuarterBeats (#308): 12/8 is counted in
+// four dotted quarters, so a chord of 4 beats lasts a bar (2880 ticks) and
+// 2 beats half a bar; the overview says how the meter is counted.
+func TestTwelveEightCountsFourDottedQuarterBeats(t *testing.T) {
+	if err := SupportedMeter(TwelveEight); err != nil {
+		t.Fatal(err)
+	}
+	key := Key{C, Major}
+	prog := Progression{{Degree: 1, Beats: 4}, {Degree: 4, Beats: 2}, {Degree: 5, Beats: 2}, {Degree: 1, Beats: 4}}
+	tl, err := FromProgressionIn(TwelveEight, key, prog, 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var starts, durations []Tick
+	for _, h := range tl.Harmony {
+		starts = append(starts, h.Start)
+		durations = append(durations, h.Duration)
+	}
+	if fmt.Sprint(starts) != "[0 2880 4320 5760]" || fmt.Sprint(durations) != "[2880 1440 1440 2880]" {
+		t.Errorf("starts %v, durations %v", starts, durations)
+	}
+	tl, err = Analyze(tl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"付点 4 分の 4 拍", "4 個の和音で 3 小節"} {
+		if !strings.Contains(tl.Overview.Flow, want) {
+			t.Errorf("flow lacks %q: %s", want, tl.Overview.Flow)
+		}
+	}
+	if _, err := FromProgressionIn(TimeSignature{Numerator: 9, Denominator: 8}, key, prog, 50); err == nil {
+		t.Error("9/8 is not rendered yet")
+	}
+}
+
 func TestBeatsOfEachMeter(t *testing.T) {
 	tests := []struct {
 		ts          TimeSignature
@@ -188,7 +223,7 @@ func TestTempoCountsTheBeat(t *testing.T) {
 	for _, tt := range []struct {
 		ts   TimeSignature
 		want float64
-	}{{FourFour, 60}, {ThreeFour, 60}, {SixEight, 90}} {
+	}{{FourFour, 60}, {ThreeFour, 60}, {SixEight, 90}, {TwelveEight, 90}} {
 		tl := NewTimeline(Key{C, Major}, 60)
 		tl.TimeSignature = tt.ts
 		if got := tl.QuarterBPM(); got != tt.want {
