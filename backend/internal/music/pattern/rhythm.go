@@ -177,7 +177,7 @@ func backbeatText(d Drums, ts music.TimeSignature) string {
 	for _, n := range []struct {
 		note music.Pitch
 		name string
-	}{{Snare, "スネア"}, {SideStick, "クロススティック"}} {
+	}{{Snare, "スネア"}, {SideStick, "サイドスティック"}} {
 		b := on[n.note]
 		switch {
 		case b[2] && b[4]:
