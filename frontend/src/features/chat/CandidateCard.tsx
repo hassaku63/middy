@@ -37,7 +37,6 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
           ))}
         </p>
       )}
-      {open && <p className="candidate__state">開いています</p>}
       {/* Hear first, then read why (intent 4, BL-073): the reason comes last. */}
       <p className="candidate__reason">{reason}</p>
     </article>
