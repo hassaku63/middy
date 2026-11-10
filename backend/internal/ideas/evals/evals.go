@@ -25,7 +25,7 @@ var casesJSON []byte
 type Case struct {
 	ID    string `json:"id"`
 	Image string `json:"image"`
-	// Mode is "major", "minor", "dorian", "mixolydian", "either", or several
+	// Mode is "major", "minor", "dorian", "mixolydian", "phrygian", "either", or several
 	// of those joined with "/" when more than one would fit.
 	Mode     string  `json:"mode"`
 	TempoMin float64 `json:"tempoMin,omitempty"`
