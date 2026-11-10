@@ -91,7 +91,7 @@ src/test       Vitest セットアップ
 `web`（nginx とビルド済みの SPA）と `api`（Go）の 2 つのコンテナを、同一オリジンの 1 つのサービスとして配る。外に開くのは `web` だけで、`/api` を `api` に渡す。
 
 - **Go は API だけを答える。** `/api/v1` のルート以外は、画面の URL も含め、メソッドによらず JSON の 404（`not_found`）。既知のパスに別のメソッドが来たときは 405。
-- **配信の規則は nginx が持つ**（`deploy/nginx/templates/`）。ファイルがあればそれを返す。なければ、画面の URL には `index.html`（SPA フォールバック）、ファイルを指す URL（`/assets/*` や拡張子のあるもの）には JSON の 404 を返す（ADR-0022 の規則）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。
+- **配信の規則は nginx が持つ**（`deploy/nginx/templates/`）。ファイルがあればそれを返す。なければ、画面の URL には `index.html`（SPA フォールバック）、ファイルを指す URL（`/assets/*` や拡張子のあるもの）には JSON の 404 を返す（ADR-0022 の規則）。`/assets/*`（ハッシュ付き）は `immutable` で長期キャッシュ、`index.html` / `sw.js` / manifest は `no-cache`。すべての応答に、セキュリティヘッダと、同じオリジンだけを許す CSP を付ける（`deploy/nginx/snippets/security-headers.conf`、ADR-0040）。
 - 開発時は `make dev-backend` と `make dev-frontend`（Vite が `/api` を `API_UPSTREAM` へプロキシ）。`make build` は `vite build` と `go build`（`-ldflags` でバージョン埋め込み）をそれぞれ行い、`make run` は API だけを起動する。
 - **コンテナ**: `Dockerfile` から 2 つのイメージを `--target` で作る。
   - `web`: `nginx-unprivileged` とビルド済みの SPA。`deploy/nginx/templates/` を起動時に `PORT` と `API_UPSTREAM`（URL）で埋め、上の配信の規則に gzip と `/healthz` を足して配り、`/api` を Go へ渡す（読み取りの待ち 180 s、本文 4 MiB まで）。
