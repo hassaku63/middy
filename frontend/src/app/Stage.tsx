@@ -8,8 +8,6 @@ import { useChordKeys } from './useChordKeys';
 type Props = {
   timeline: Timeline;
   player: UsePlayer;
-  /** How the detail of a long timeline moves (BL-127). */
-  follow: boolean;
   /** The desk under trial (BL-184): the chord's explanation in a frame above the timeline. */
   desk: boolean;
   /**
@@ -25,7 +23,6 @@ type Props = {
 export function Stage({
   timeline,
   player,
-  follow,
   desk,
   wide = false,
   selectedHarmony,
@@ -41,7 +38,6 @@ export function Stage({
   const clear = () => onSelectHarmony(null);
   const overview = (
     <TimelineOverview
-      follow={follow}
       timeline={timeline}
       positionTick={player.positionTick}
       playing={player.state === 'playing'}

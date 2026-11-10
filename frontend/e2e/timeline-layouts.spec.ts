@@ -19,17 +19,20 @@ async function send(page: Page, image: string, path = '/') {
   return result;
 }
 
-test('a long timeline shows the whole piece and a four-bar detail that follows a pinned chord (A, ?zoom=page)', async ({
+test('a long timeline shows the whole piece and a four-bar detail that centres a pinned chord', async ({
   page,
 }) => {
-  const result = await send(page, '長い雨の日', '/?zoom=page');
+  const result = await send(page, '長い雨の日');
   await expect(result).toContainText('候補: 窓辺の雨（長め）');
   const overview = result.locator('svg.timeline--overview');
   await expect(overview).toBeVisible();
   await expect(overview.locator('.timeline__highlight')).toHaveAttribute('x', '40');
-  // Pin the ninth chord in the overview: the detail moves to bars 9–12.
+  // Pin the ninth chord in the overview: the detail centres it (bars 7.5–11.5).
   await overview.locator('[role=option]').nth(8).click();
-  await expect(overview.locator('.timeline__highlight')).toHaveAttribute('x', String(40 + 8 * 160));
+  await expect(overview.locator('.timeline__highlight')).toHaveAttribute(
+    'x',
+    String(40 + 8.5 * 160 - 320),
+  );
   // The overview is a duplicate drawing: its chords are no tab stops.
   await expect(overview.locator('[role=option][tabindex]')).toHaveCount(0);
 });
@@ -40,20 +43,13 @@ test('a short timeline is drawn once, whole', async ({ page }) => {
   await expect(result.getByRole('group', { name: 'タイムライン' })).toHaveCount(1);
 });
 
-test('BL-127 trial: the detail follows by default (B); ?lab switches to pages (A), kept in the URL', async ({
-  page,
-}) => {
-  const result = await send(page, '長い雨の日', '/?lab');
+test('stopped, a slider moves the detail of a long timeline (BL-127)', async ({ page }) => {
+  const result = await send(page, '長い雨の日');
   await expect(result).toContainText('候補: 窓辺の雨（長め）');
-  // B, stopped: a slider moves the detail; the overview's outline follows it.
   const slider = result.getByRole('slider', { name: '拡大の位置' });
   await slider.fill(String(8 * 1920));
   await expect(result.locator('svg.timeline--overview .timeline__highlight')).toHaveAttribute(
     'x',
     String(40 + 8 * 160 - 320),
   );
-
-  await page.getByLabel('拡大の動き（試験）').selectOption('page');
-  await expect(page).toHaveURL(/zoom=page/);
-  await expect(result.getByRole('slider', { name: '拡大の位置' })).toHaveCount(0);
 });
