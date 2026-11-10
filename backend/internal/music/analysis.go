@@ -379,7 +379,7 @@ func subtonicText(k Key, ps []placed, i int) string {
 		// No V after the VI (#378): the line goes down to VI only.
 		return " ここでは機能というより、i から VI へ下りていく線の途中（経過）。"
 	case nextDeg == 3:
-		return " ここでは次の III へ向かう。III を一時的な主音とみれば、その V にあたる（V/III の働き）。"
+		return " ここでは次の III へ向かう。III を一時的な主和音とみれば、その V にあたる（V/III の働き）。"
 	case nextDeg == 1:
 		return " ここでは導音を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
 	}
@@ -516,7 +516,7 @@ func cadenceBetween(mode Mode, prev, cur placed) Cadence {
 }
 
 var functionText = map[Function]string{
-	Tonic:       "トニック（T）。調の中心で、落ち着いて聞こえる。",
+	Tonic:       "トニック（T）。調の中心になる主和音で、落ち着いて聞こえる。",
 	Subdominant: "サブドミナント（S）。中心から離れて、動きを作る。",
 	Dominant:    "ドミナント（D）。トニックへ戻ろうとする緊張を作る。",
 }
@@ -528,7 +528,7 @@ var cadenceText = map[Cadence]string{
 	Plagal:    "直前の %s から %s へ落ち着く変格終止。「アーメン終止」とも呼ばれる、柔らかい区切り。",
 	Half:      "直前の %s から %s に着いて止まる半終止。「続きがある」と感じさせる。",
 	Deceptive: "%s から主和音ではなく %s へ進む偽終止。解決を先延ばしにして意外性を出す。",
-	Modal:     "直前の %s から %s へ進むモーダル終止。導音を使わずに主音へ戻る、ロックやケルトに多い動き。",
+	Modal:     "直前の %s から %s へ進むモーダル終止。導音を使わずに主和音へ戻る、ロックやケルトに多い動き。",
 }
 
 // characteristicText explains why a chord carrying the mode's
@@ -550,7 +550,7 @@ func isPhrygianSecond(key Key, c Chord) bool {
 		(c.Quality == MajorTriad || c.Quality == Major7)
 }
 
-const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（第 7 音を半音上げる）の形で、導音がトニックへ強く引き寄せる。"
+const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（音階の第 7 音を半音上げる）の形で、導音が主和音へ強く引き寄せる。"
 
 const (
 	borrowedText      = "同主短調（%s）から借りた和音。長調の中に短調の陰りを一瞬差す。"
@@ -715,7 +715,7 @@ func next(hs []HarmonyEvent, i int) *Chord {
 }
 
 const (
-	appliedText = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主音のように聞かせて、そこへ強く引き寄せる。"
+	appliedText = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主和音のように聞かせて、そこへ強く引き寄せる。"
 	// %s（%s）: the substitute; %s（%s）: the target; %s（%s）: the dominant it replaces; %s: the target.
 	substituteText  = "%s（%s）は、%s（%s）へ向かう裏コード（トライトーン代理）。%s（%s）の代わりに、根音が三全音離れた属七を置いている。同じ三全音（3 度と 7 度）を持つので同じように引き寄せ、根音は半音上から %s の根音へ降りる。"
 	leadingText     = "%s（%s）は、%s（%s）の導音の上に積んだ減七。根音が %s の根音へ半音で上がり、そこへ引き寄せる。"

@@ -22,6 +22,7 @@
 | ダイアトニックコード | 調の音だけで作られるコード | `Key.Diatonic` |
 | ローマ数字 (Roman numeral) | 度数とコードの質をあらわす記法。I, ii, V7, vii° | `music.RomanNumeral` |
 | 和声機能 (Harmonic function) | T（トニック）/ S（サブドミナント）/ D（ドミナント） | `music.Function` |
+| 主音・主和音・トニック | 解説の文では役割で分ける。主音は調の中心の音（C major の C）、主和音はその上の和音（I・i）、トニック（T）は機能の名前（I と、その仲間の iii・vi）。一時的な中心や和音の動きの行き先は「主和音」と言う（#390） | `Key.Tonic`, `music.Tonic` |
 | 分数コード (Slash chord) | 和音の下に、根音以外の音をベースとして置いたもの。「C/E」。middy のラベルでは `/` のあとに調の度数を書く（`I/3`）（ADR-0020） | `music.Bass`, `HarmonyEvent.Bass` |
 | 転回形 (Inversion) | 和音の音（3 度・5 度・7 度）がベースにある形。第 1 転回形は 3 度、第 2 は 5 度、第 3 は 7 度がベース | `bassText` |
 | ペダル (Pedal) | 和音が変わってもベースが同じ音に留まること。和音にない音でも続く | `bassText` |

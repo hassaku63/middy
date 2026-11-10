@@ -40,7 +40,7 @@ func TestTonicSubstitutesAndWeakDominants(t *testing.T) {
 		notWant []string
 	}{
 		{"I is the centre", Key{C, Major}, []string{"I", "vi", "IV", "V", "I"}, 0,
-			[]string{"トニック（T）。調の中心で、落ち着いて聞こえる。"}, nil},
+			[]string{"トニック（T）。調の中心になる主和音で、落ち着いて聞こえる。"}, nil},
 		{"vi stands in for I", Key{C, Major}, []string{"I", "vi", "IV", "V", "I"}, 1,
 			[]string{"トニック（T）の仲間。I と 2 つの音を共有する代わりの和音で"}, []string{"調の中心"}},
 		{"iii stands in for I", Key{C, Major}, []string{"I", "iii", "IV", "I"}, 1,

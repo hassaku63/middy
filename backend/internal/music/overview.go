@@ -206,7 +206,7 @@ var wrapText = map[Cadence]string{
 var endingText = map[Cadence]string{
 	Authentic: "正格終止で閉じる",
 	Plagal:    "変格終止で、柔らかく閉じる",
-	Modal:     "モーダル終止で、導音を使わずに主音へ戻る",
+	Modal:     "モーダル終止で、導音を使わずに主和音へ戻る",
 	Deceptive: "偽終止で、解決を先延ばしにしたまま終わる",
 	Half:      "半終止で止まり、続きを感じさせる",
 }
