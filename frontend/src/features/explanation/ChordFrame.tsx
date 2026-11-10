@@ -1,4 +1,5 @@
 import type { Timeline } from '@/shared/api/client';
+import { isFunctional } from '@/shared/lib/notation';
 import { DegreeMap } from '@/shared/ui/DegreeMap';
 import { ChordNotes, ChordStatus } from './ChordNotes';
 import { explainedIndex } from './explainedIndex';
@@ -23,22 +24,32 @@ export function ChordFrame({ timeline, positionTick, selectedHarmony, onClearSel
   const index = explainedIndex(timeline.harmony, positionTick, selectedHarmony);
   const event = index >= 0 ? timeline.harmony[index] : undefined;
   const pinned = selectedHarmony !== null && index === selectedHarmony;
-  // Functions (T, S, D) are a theory of major and minor; in a mode the
-  // map keeps degree order (ADR-0044).
-  const functional = timeline.key.mode === 'major' || timeline.key.mode === 'minor';
+  // Functions (T, S, D) are a theory of major and minor; in a mode the map
+  // keeps degree order and nothing is labelled by function (ADR-0044, 0045).
+  const functional = isFunctional(timeline.key.mode);
   return (
     <section
       className={`explanation explanation--frame ${pinned ? 'is-pinned' : 'is-following'}`}
       aria-label="コードの解説"
     >
       {timeline.overview && (
-        <DegreeMap degrees={timeline.overview.degrees} event={event} flow={functional} />
+        <DegreeMap
+          degrees={timeline.overview.degrees}
+          event={event}
+          flow={functional}
+          functions={functional}
+        />
       )}
       {/* A long text scrolls inside; the keyboard can reach it (WCAG 2.1.1). */}
       <div className="explanation__chord" tabIndex={0}>
-        <ChordStatus event={event} />
+        <ChordStatus event={event} functional={functional} />
         {event ? (
-          <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
+          <ChordNotes
+            event={event}
+            pinned={pinned}
+            onClearSelection={onClearSelection}
+            functional={functional}
+          />
         ) : (
           <p className="explanation__empty">
             再生するか、コードを押すと解説が出ます。← → で前後のコードへ、Esc で再生に戻ります。

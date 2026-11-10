@@ -1,4 +1,5 @@
-import type { Timeline } from '@/shared/api/client';
+import type { HarmonyEvent, Timeline } from '@/shared/api/client';
+import { isFunctional } from '@/shared/lib/notation';
 import { DegreeMap } from '@/shared/ui/DegreeMap';
 import { ChordNotes, ChordStatus } from './ChordNotes';
 import { explainedIndex } from './explainedIndex';
@@ -43,21 +44,54 @@ export function ExplanationPanel({
     <section className="explanation" aria-label="解説">
       {overview && <OverviewNotes overview={overview} />}
       {chord && (
-        <>
-          {overview && <DegreeMap degrees={overview.degrees} event={event} />}
-          <ChordStatus event={event} />
-          {event ? (
-            <ChordNotes event={event} pinned={pinned} onClearSelection={onClearSelection} />
-          ) : (
-            <p className="explanation__empty">
-              {timeline
-                ? '再生するか、コードをクリックすると解説が表示されます。'
-                : 'タイムラインがありません。'}
-            </p>
-          )}
-        </>
+        <ExplainedChord
+          timeline={timeline}
+          event={event}
+          pinned={pinned}
+          onClearSelection={onClearSelection}
+        />
       )}
       {timeline?.rhythm && <RhythmNotes rhythm={timeline.rhythm} />}
     </section>
+  );
+}
+
+/**
+ * One chord's part of the panel: the degree map, the live line and the
+ * notes. In a mode nothing is labelled by function (ADR-0045).
+ */
+function ExplainedChord({
+  timeline,
+  event,
+  pinned,
+  onClearSelection,
+}: {
+  timeline: Timeline | null;
+  event: HarmonyEvent | undefined;
+  pinned: boolean;
+  onClearSelection?: (() => void) | undefined;
+}) {
+  const functional = timeline ? isFunctional(timeline.key.mode) : true;
+  return (
+    <>
+      {timeline?.overview && (
+        <DegreeMap degrees={timeline.overview.degrees} event={event} functions={functional} />
+      )}
+      <ChordStatus event={event} functional={functional} />
+      {event ? (
+        <ChordNotes
+          event={event}
+          pinned={pinned}
+          onClearSelection={onClearSelection}
+          functional={functional}
+        />
+      ) : (
+        <p className="explanation__empty">
+          {timeline
+            ? '再生するか、コードをクリックすると解説が表示されます。'
+            : 'タイムラインがありません。'}
+        </p>
+      )}
+    </>
   );
 }

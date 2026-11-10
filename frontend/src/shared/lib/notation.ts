@@ -69,6 +69,16 @@ export function chordSymbol(chord: Chord): string {
   return `${pitchClassName(chord.root)}${QUALITY_SUFFIX[chord.quality]}`;
 }
 
+/**
+ * Functions (T, S, D) are a theory of major and minor: a mode has no
+ * leading tone to pull back to the tonic, so the screen does not label
+ * its chords by function (ADR-0045). The engine still assigns them by
+ * degree (ADR-0015).
+ */
+export function isFunctional(mode: Key['mode']): boolean {
+  return mode === 'major' || mode === 'minor';
+}
+
 /** The Japanese name of a harmonic function, as the explanations say it. */
 export const FUNCTION_NAME: Record<HarmonicFunction, string> = {
   T: 'トニック',

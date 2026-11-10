@@ -67,6 +67,12 @@
   max-width: 100%;
 }
 
+/* In a mode the chords carry no function colour (ADR-0045); the tonic, the
+   mode's centre, is marked by shape: a ring inside the cell. */
+.degree-map__chord.is-tonic {
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
 /* The flow of functions (#360): a column per function, T → S → D → T,
    reading left to right like the timeline. A column holds two rows at
    most; a third chord (minor's T: i, III, VI) starts a second column, so
