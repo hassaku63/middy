@@ -83,6 +83,7 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   const card = page.getByRole('article', { name: '緑の丘のリール' });
   await expect(card).toContainText('D dorian');
   await expect(card).toContainText('i - IV - i - VII');
+  await card.getByRole('button').click();
   const result = page.getByRole('region', { name: '結果' });
   // The dorian IV is a major chord, spelled for the key, and explained by its sixth.
   await result
