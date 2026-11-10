@@ -392,14 +392,19 @@ func swingText(sw Swing, beatBPM float64) string {
 
 // playedTensions is what the pattern sounds of the chord's tensions: all
 // of them on a chord hit; in an arpeggio, the first, in the octave's place
-// (#307); none in a pattern with neither hit within the chord.
-func playedTensions(t *Tensions, key music.Key, h music.HarmonyEvent, acc Accompaniment) []music.PitchClass {
+// (#307), which a seventh chord gives only on its second octave
+// (arpeggioTop); none in a pattern with neither hit within the chord.
+func playedTensions(t *Tensions, key music.Key, h music.HarmonyEvent, acc Accompaniment, bar music.Tick) []music.PitchClass {
 	arp := arpeggiated(acc)
 	voice := VoiceChord
 	if arp {
 		voice = VoiceOctave
 	}
-	if !slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == voice && x.Start < h.Duration }) {
+	need := 1
+	if arp && len(h.Chord.PitchClasses()) >= 4 {
+		need = 2
+	}
+	if hitsWithin(acc, voice, h.Duration, bar) < need {
 		return nil
 	}
 	pcs := tensionsOf(t, key, h)
@@ -409,6 +414,20 @@ func playedTensions(t *Tensions, key music.Key, h music.HarmonyEvent, acc Accomp
 	return pcs
 }
 
+// hitsWithin counts the pattern's hits of a voice over a chord of the
+// duration, the template repeated a bar at a time as chordNotes does.
+func hitsWithin(acc Accompaniment, v Voice, dur, bar music.Tick) int {
+	n := 0
+	for barStart := music.Tick(0); barStart < dur; barStart += bar {
+		for _, x := range acc.Hits {
+			if x.Voice == v && barStart+x.Start < dur {
+				n++
+			}
+		}
+	}
+	return n
+}
+
 // soundedTensions says which of the style's tensions sounded: on chords
 // the pattern strikes with its chord voice, and only those the key and the
 // chord allowed (a ii7–Imaj7 adds no 13th, whatever the rule says). Empty
@@ -416,7 +435,7 @@ func playedTensions(t *Tensions, key music.Key, h music.HarmonyEvent, acc Accomp
 func soundedTensions(tl music.Timeline, t *Tensions, acc Accompaniment) string {
 	var ninth7, thirteenth, add9 bool
 	for _, h := range tl.Harmony {
-		for _, pc := range playedTensions(t, tl.Key, h, acc) {
+		for _, pc := range playedTensions(t, tl.Key, h, acc, music.BarTicks(tl.TimeSignature, tl.PPQ)) {
 			switch {
 			case h.Chord.Quality == music.MajorTriad:
 				add9 = true

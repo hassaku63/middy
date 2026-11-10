@@ -204,6 +204,7 @@ func apply(tl music.Timeline, acc Accompaniment, dr *Drums, tensions *Tensions) 
 	out := tl
 	out.Tracks = []music.Track{chordTrack(tl, acc, tensions)}
 	out.Rhythm = &music.Rhythm{Accompaniment: describeAccompaniment(acc, ts)}
+	out.Rhythm.Accompaniment.Explanation += seventhText(tl.Harmony, acc)
 	if dr != nil {
 		out.Tracks = append(out.Tracks, drumTrack(tl, *dr))
 		out.Rhythm.Drums = describeDrums(*dr, ts)
@@ -247,6 +248,7 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 	voicing := h.Chord.Voicing(music.ChordOctave)
 	end := h.Start + h.Duration
 	var notes, walks []music.NoteEvent
+	octaves := 0 // the arpeggio's octave hits so far over the chord
 	for barStart := h.Start; barStart < end; barStart += bar {
 		for _, hit := range acc.Hits {
 			start := barStart + hit.Start
@@ -262,7 +264,10 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 				walks = append(walks, n)
 				continue
 			}
-			ps := hitPitches(tl.Key, acc, h, voicing, led, chord, adds, hit.Voice)
+			ps := hitPitches(tl.Key, acc, h, voicing, led, chord, adds, hit.Voice, octaves)
+			if hit.Voice == VoiceOctave {
+				octaves++
+			}
 			for _, p := range slashed(acc, ps, hit.Voice, bass) {
 				n.Pitch = p
 				notes = append(notes, n)
@@ -276,16 +281,45 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 }
 
 // hitPitches is what one hit of the pattern plays over the chord: its
-// voice, with the style's tensions on a chord hit (BL-125) or, in an
-// arpeggio, the first tension in place of the octave (#307).
-func hitPitches(key music.Key, acc Accompaniment, h music.HarmonyEvent, voicing, led, chord []music.Pitch, adds []music.PitchClass, v Voice) []music.Pitch {
+// voice, with the style's tensions on a chord hit (BL-125), or in an
+// arpeggio, what arpeggioTop puts in the octave's place. k counts the
+// arpeggio's octave hits over the chord before this one.
+func hitPitches(key music.Key, acc Accompaniment, h music.HarmonyEvent, voicing, led, chord []music.Pitch, adds []music.PitchClass, v Voice, k int) []music.Pitch {
 	switch {
 	case v == VoiceChord:
 		return chord
-	case v == VoiceOctave && len(adds) > 0 && arpeggiated(acc):
-		return []music.Pitch{music.LowestFrom(voicing[0].Transpose(12), adds[0])}
+	case v == VoiceOctave && arpeggiated(acc):
+		return []music.Pitch{arpeggioTop(voicing, adds, k)}
 	}
 	return pitches(key, voicing, led, h.Bass, v)
+}
+
+// seventhText says that an arpeggio's octave turns into the seventh on a
+// seventh chord (arpeggioTop), as its description names the octave only
+// (#404 S1). Empty without a seventh chord or an arpeggio.
+func seventhText(harmony []music.HarmonyEvent, acc Accompaniment) string {
+	if !arpeggiated(acc) || !slices.ContainsFunc(harmony, func(h music.HarmonyEvent) bool { return len(h.Chord.PitchClasses()) >= 4 }) {
+		return ""
+	}
+	return "七の和音では、オクターブの代わりに 7 度を弾いて、和音の 4 つの音をすべて鳴らす。"
+}
+
+// arpeggioTop is what an arpeggio plays at its octave over the chord. A
+// seventh chord plays its seventh, so that the arpeggio spells the whole
+// chord the badge names, the tritone of a V7 included (#404 S1); with a
+// tension, every second octave plays the first tension instead (#307),
+// and a chord too short for a second octave keeps its seventh. A triad
+// plays the first tension, or the octave without one.
+func arpeggioTop(voicing []music.Pitch, adds []music.PitchClass, k int) music.Pitch {
+	root := voicing[0]
+	tension := len(adds) > 0
+	if len(voicing) >= 4 && (!tension || k%2 == 0) {
+		return voicing[3]
+	}
+	if tension {
+		return music.LowestFrom(root.Transpose(12), adds[0])
+	}
+	return root.Transpose(12)
 }
 
 // arpeggiated reports a pattern that spells its chords out with an octave
