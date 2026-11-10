@@ -78,9 +78,13 @@
   border-color: #9ca3af;
 }
 
+/* The open example is marked by its frame and a faint fill of the same
+   colour, close to the page, rather than a word on the card (BL-216):
+   the frame already says it, and the fill makes it hold at a glance. */
 .candidate.is-open,
 .candidate.is-open:hover {
   border-color: #f59e0b;
+  background: rgb(245 158 11 / 8%);
 }
 
 .candidate:has(.candidate__open:focus-visible) {
@@ -113,15 +117,6 @@
 
 .candidate__open:focus-visible {
   outline: none;
-}
-
-.candidate__state {
-  align-self: flex-start;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: #b45309;
-  color: #ffffff;
-  font-size: 0.8rem;
 }
 
 .candidate__spec {
@@ -237,6 +232,7 @@
 
 .chat__line.is-open {
   border-color: #f59e0b;
+  background: rgb(245 158 11 / 8%);
 }
 
 .chat__line-title {
