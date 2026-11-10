@@ -1309,6 +1309,83 @@
           "velocity": 58
         }
       ]
+    },
+    {
+      "id": "lofi",
+      "name": "ローファイ",
+      "description": "スネアが 3 拍目だけに弱く来るハーフタイムで、キックが 1 拍目と 3 拍目の裏に少しずれて入り、小さなハイハットが 8 分で刻む。ローファイ・ヒップホップのゆったりした揺れ。",
+      "meter": {
+        "numerator": 4,
+        "denominator": 4
+      },
+      "hits": [
+        {
+          "start": 0,
+          "duration": 120,
+          "note": 42,
+          "velocity": 46
+        },
+        {
+          "start": 240,
+          "duration": 120,
+          "note": 42,
+          "velocity": 38
+        },
+        {
+          "start": 480,
+          "duration": 120,
+          "note": 42,
+          "velocity": 46
+        },
+        {
+          "start": 720,
+          "duration": 120,
+          "note": 42,
+          "velocity": 38
+        },
+        {
+          "start": 960,
+          "duration": 120,
+          "note": 42,
+          "velocity": 46
+        },
+        {
+          "start": 1200,
+          "duration": 120,
+          "note": 42,
+          "velocity": 38
+        },
+        {
+          "start": 1440,
+          "duration": 120,
+          "note": 42,
+          "velocity": 46
+        },
+        {
+          "start": 1680,
+          "duration": 240,
+          "note": 46,
+          "velocity": 42
+        },
+        {
+          "start": 0,
+          "duration": 240,
+          "note": 36,
+          "velocity": 92
+        },
+        {
+          "start": 1200,
+          "duration": 240,
+          "note": 36,
+          "velocity": 80
+        },
+        {
+          "start": 960,
+          "duration": 240,
+          "note": 38,
+          "velocity": 70
+        }
+      ]
     }
   ],
   "feels": [
@@ -1644,6 +1721,56 @@
           "feel": "straight"
         }
       ]
+    },
+    {
+      "id": "lofi",
+      "name": "ローファイ",
+      "description": "軽く跳ねるハーフタイムのビートの上で、エレクトリック・ピアノが 9 度を足した和音をゆったり鳴らす、ローファイ・ヒップホップ。",
+      "accompaniments": [
+        "ballad",
+        "arpeggio"
+      ],
+      "drums": [
+        "lofi",
+        "ballad"
+      ],
+      "feels": [
+        "swing",
+        "straight"
+      ],
+      "program": 4,
+      "instrument": "エレクトリック・ピアノ",
+      "grooves": [
+        {
+          "meter": {
+            "numerator": 4,
+            "denominator": 4
+          },
+          "accompaniment": "ballad",
+          "drums": "lofi",
+          "feel": "swing"
+        },
+        {
+          "meter": {
+            "numerator": 3,
+            "denominator": 4
+          },
+          "accompaniment": "block",
+          "feel": "swing"
+        },
+        {
+          "meter": {
+            "numerator": 6,
+            "denominator": 8
+          },
+          "accompaniment": "block",
+          "feel": "straight"
+        }
+      ],
+      "tensions": {
+        "ninths": true,
+        "text": "七の和音に 9 度を足している"
+      }
     }
   ]
 }

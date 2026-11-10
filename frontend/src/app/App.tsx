@@ -23,6 +23,8 @@ import { imageFor } from './imageFor';
 import { useAnswerOpening } from './useAnswerOpening';
 import { Stage } from './Stage';
 import { usePinMemory } from './usePinMemory';
+import { useChooseToHear } from './useChooseToHear';
+import { HearOnOpenToggle } from './HearOnOpenToggle';
 import { useCandidateKeys } from './useCandidateKeys';
 
 type AppProps = {
@@ -87,10 +89,16 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     setOrigin(p.source);
   };
 
-  const openChosen = (c: IdeaCandidate) => {
-    opened();
-    openCandidate(c, imageFor(ideas.turns, c));
-  };
+  const { openChosen, hear } = useChooseToHear({
+    desk: layout.desk,
+    openExample,
+    timeline,
+    player,
+    open: (c) => {
+      opened();
+      openCandidate(c, imageFor(ideas.turns, c));
+    },
+  });
   useCandidateKeys(layout.desk, latestCandidates(ideas.turns), openChosen);
 
   const conversation = (
@@ -130,6 +138,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         {origin && <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />}
         {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
         {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
+        {layout.desk && <HearOnOpenToggle hear={hear} />}
         <LabControls zoom={zoom} layout={layout} />
       </div>
       <Stage

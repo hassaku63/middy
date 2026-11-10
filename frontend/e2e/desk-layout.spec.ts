@@ -176,3 +176,37 @@ test('the wide desk gives the timeline the whole stage, the explanations below (
   ).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
 });
+
+/**
+ * #315: on the desk, choosing an example plays it and choosing it again
+ * stops it; the switch beside the player turns this off and is
+ * remembered; Space plays and stops. An arriving answer stays silent.
+ */
+test('choosing an example on the desk plays it; Space plays and stops (#315)', async ({ page }) => {
+  await page.goto('/?layout=desk');
+  await page.getByLabel('イメージ', { exact: true }).fill('雨の日曜の午後');
+  await page.getByRole('button', { name: '送る' }).click();
+  const result = page.getByRole('region', { name: '結果' });
+  await expect(result).toBeVisible();
+  // The answer opened its first example without a sound.
+  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+
+  await page.getByRole('article', { name: '遠い記憶' }).click();
+  await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
+  await page.getByRole('article', { name: '遠い記憶' }).click();
+  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+
+  await page.getByLabel('候補を選んだら再生').uncheck();
+  await page.reload();
+  await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  await expect(page.getByLabel('候補を選んだら再生')).not.toBeChecked();
+  await page.getByRole('article', { name: '遠い記憶' }).click();
+  await expect(result).toContainText('候補: 遠い記憶');
+  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+});
