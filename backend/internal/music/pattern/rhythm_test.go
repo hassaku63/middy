@@ -122,3 +122,29 @@ func TestSixteenBeat(t *testing.T) {
 		}
 	}
 }
+
+// TestSixteenthStrum (#308): the sixteenth-note cutting joins pop and rock
+// after their other accompaniments, and its notes count the hits finer
+// than the offbeat and the beats it skips over.
+func TestSixteenthStrum(t *testing.T) {
+	tl := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1, 4)
+	out, err := Render(tl, Choice{Accompaniment: "strum-16"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ex := out.Rhythm.Accompaniment.Explanation
+	for _, want := range []string{"1 小節に伴奏が 7 回", "裏拍（8 分の裏）が 3 回、それより細かい位置（16 分など）が 2 回", "シンコペーション"} {
+		if !strings.Contains(ex, want) {
+			t.Errorf("explanation lacks %q: %s", want, ex)
+		}
+	}
+	for _, id := range []string{"pop", "rock"} {
+		st, err := FindStyle(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if st.Accompaniments[len(st.Accompaniments)-1] != "strum-16" || st.Groove(music.FourFour).Accompaniment == "strum-16" {
+			t.Errorf("%s: accompaniments %v, groove %+v", id, st.Accompaniments, st.Groove(music.FourFour))
+		}
+	}
+}
