@@ -14,7 +14,7 @@ const DRUM_NAMES: Record<number, string> = {
   38: 'Snare',
   40: 'Snare',
   42: 'HH',
-  44: 'HH',
+  44: 'HH foot', // the pedal hi-hat, told from the hands' closed hat (GM 42, #385)
   45: 'Tom L',
   46: 'HH open',
   47: 'Tom M',
