@@ -40,7 +40,7 @@ func TestOverviewExplainsTheModeAndTheFlow(t *testing.T) {
 		{"dorian names the chord with the characteristic tone and its minor twin",
 			Key{D, Dorian}, 4, []string{"i", "IV", "i", "VII"},
 			[]string{"D dorian（ドリアン）", "この例では IV（G）が特徴音 B を含む", "短調なら、ここは iv（Gm）になる"},
-			[]string{"4 個の和音で 4 小節", "最後は VII（C）で、主和音に戻らずに終わる", "繰り返すと、VII から頭の i へのモーダル終止になる"}},
+			[]string{"4 個の和音で 4 小節", "最後は VII（C）で、主和音に戻らずに終わる", "繰り返すと、最後の VII から頭の i へ、導音を使わずに戻る"}},
 		{"dorian without the characteristic tone sounds like minor",
 			Key{D, Dorian}, 4, []string{"i", "v", "i"},
 			[]string{"特徴音（B）を含まないので、響きは短調とほとんど変わらない"},
@@ -63,7 +63,11 @@ func TestOverviewExplainsTheModeAndTheFlow(t *testing.T) {
 			[]string{"8 個の和音で 4 小節", "最後は V7 から i への正格終止で閉じる"}},
 		{"a plain major loop says how it turns around",
 			Key{C, Major}, 4, []string{"I", "V", "vi", "IV"},
-			nil, []string{"主和音から始まり", "繰り返すと、IV から頭の I への変格終止になる"}},
+			nil, []string{"主和音から始まり", "繰り返すと、最後の IV から頭の I へ柔らかく戻り、ひと回りが閉じる"}},
+		// The seam names no second cadence on the V (#378, ADR-0052).
+		{"a loop that stops on V and turns around to I",
+			Key{C, Major}, 4, []string{"I", "vi", "IV", "V"},
+			nil, []string{"最後は IV から V への半終止で止まり", "繰り返すと、最後の V は頭の I へ解決し、ひと回りが閉じる"}},
 		{"a loop that starts elsewhere and stops on V",
 			Key{C, Major}, 4, []string{"vi", "IV", "I", "V"},
 			nil, []string{"vi（Am）から始まり", "最後は I から V への半終止で止まり"}},
@@ -300,6 +304,18 @@ func TestDegreeMapNamesAlteredChords(t *testing.T) {
 		}
 		if fmt.Sprint(got) != fmt.Sprint(tt.altered) {
 			t.Errorf("%s %v: altered = %v, want %v", tt.key, tt.labels, got, tt.altered)
+		}
+	}
+}
+
+// TestLoopSeamNamesNoSecondCadence (#378 B1, ADR-0052): the V that ends a
+// loop is a half cadence; the seam back to the head's I is not called a
+// second, authentic one.
+func TestLoopSeamNamesNoSecondCadence(t *testing.T) {
+	for _, labels := range [][]string{{"I", "vi", "IV", "V"}, {"I", "V", "vi", "IV"}} {
+		flow := analysed(t, Key{C, Major}, 4, labels...).Overview.Flow
+		if strings.Contains(flow, "頭の I への") || strings.Count(flow, "終止") > 1 {
+			t.Errorf("%v:\n%s", labels, flow)
 		}
 	}
 }
