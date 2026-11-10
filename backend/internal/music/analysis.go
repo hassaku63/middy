@@ -100,7 +100,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Function:    fn,
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
-			Explanation: explain(tl.Key, *h, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, p.degree, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -433,9 +433,31 @@ func symbolOf(key Key, h HarmonyEvent) string {
 	return key.ChordSymbol(h.Chord)
 }
 
-func explain(key Key, h HarmonyEvent, fn Function, cad Cadence, borrowed bool) string {
+// modalDegreeText opens a chord's explanation in a mode, where functions
+// (T, S, D) do not hold: no leading tone pulls back to the tonic (#366,
+// ADR-0046). The tonic is still the centre; any other chord is named by
+// its degree, and the sentences after it (the characteristic tone, the
+// cadence) say what it does.
+const (
+	modalTonicText  = "%sの主和音。調の中心で、落ち着いて聞こえる。"
+	modalDegreeText = "%sの %d 度の和音。"
+)
+
+// openingText is the first sentence of a chord's explanation: its
+// function in major and minor, its place in a mode.
+func openingText(key Key, degree int, fn Function) string {
+	if key.Mode == Major || key.Mode == Minor {
+		return functionText[fn]
+	}
+	if degree == 1 {
+		return fmt.Sprintf(modalTonicText, modeName[key.Mode])
+	}
+	return fmt.Sprintf(modalDegreeText, modeName[key.Mode], degree)
+}
+
+func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borrowed bool) string {
 	symbol := symbolOf(key, h)
-	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, functionText[fn])
+	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn))
 	if borrowed {
 		s += " " + borrowedSentence(key, h)
 	}

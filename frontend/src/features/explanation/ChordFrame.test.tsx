@@ -126,7 +126,7 @@ describe('ChordFrame and the degree map (#360, ADR-0044)', () => {
     expect(within(frame).queryByRole('group', { name: /機能の流れ/ })).toBeNull();
     // No function badge, no function in the live line, no function colour;
     // the tonic is named and marked instead.
-    // (The engine's own text still names it, ADR-0015; that is #366's to change.)
+    // (The text is the engine's and is shown as it is; ADR-0046 keeps functions out of it.)
     expect(within(frame).queryByText('D · ドミナント')).toBeNull();
     expect(within(frame).getByText('V7 G7')).toHaveAttribute('aria-live', 'polite');
     const cells = within(map).getAllByRole('listitem');
