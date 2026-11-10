@@ -45,6 +45,7 @@
 | [0039](0039-batched-eval.md) | 全件の評価は Message Batches で送れる（`EVAL_BATCH=1`。アプリ本体には使わない） | Accepted |
 | [0040](0040-security-headers.md) | web のコンテナがセキュリティヘッダと CSP を付ける（snippet を全 location で。Go も nosniff） | Accepted |
 | [0041](0041-wide-screen-bounds.md) | 広い画面の上限: 横幅 2560 px、タイムラインの高さは画面の 45 %（縦横比を保つ） | Accepted |
+| [0042](0042-layout-rules.md) | 配置の規則: 骨組みは media、部品は container、しきい値は conventions の表に 1 か所。端末の当て推量は ESLint で禁止 | Accepted |
 
 ## いつ ADR を書くか
 

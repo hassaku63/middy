@@ -45,6 +45,7 @@
    - ディレクトリ構成 → `docs/architecture/overview.md`, `README.md` のツリー, `AGENTS.md` の表
    - 環境変数 → `backend/.env.example`
    - 依存追加・設計判断 → ADR
+   - `@media`・`@container` の値、幅・高さの上限 → `docs/dev/conventions.md` の「配置」の表（ADR-0042。表にない値で分岐していないか）
    - スライスの完了・分割 → `docs/product/backlog.md`
 6. `make docs-check` と `bash scripts/docs-staleness.sh` を走らせ、自分の変更に関係する指摘を潰す。
 7. PR 本文の「確認したこと」にチェックを入れる。
