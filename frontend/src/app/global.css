@@ -77,28 +77,20 @@ main {
   padding-top: 20px;
 }
 
+/* The stage (BL-061, #279): the timeline across its whole width, and the
+   chord's frame and the other explanations below it. The stage is a
+   container, so the explanations go side by side by the width the stage
+   has, not the window's: beside the conversation at 1024 px it is too
+   narrow for two (#353). */
 .app__stage {
-  display: grid;
-  gap: 12px;
-}
-
-@media (min-width: 900px) {
-  .app__stage {
-    grid-template-columns: minmax(0, 1fr) 280px;
-    align-items: start;
-  }
-}
-
-/* The wide desk under trial (BL-197, #314): the timeline takes the whole
-   width of the stage, and the chord's frame and the other explanations
-   share the space below it, side by side on wide screens. */
-.app__stage--wide {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  container: stage / inline-size;
 }
 
 /* Stretched to the stage, not stopped at the drawing's own width. */
-.app__stage--wide .timeline {
+.app__stage .timeline {
   width: 100%;
 }
 
@@ -107,7 +99,7 @@ main {
   gap: 12px;
 }
 
-@media (min-width: 900px) {
+@container stage (min-width: 760px) {
   .app__below {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: start;
