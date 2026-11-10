@@ -127,26 +127,28 @@ export function ChatPanel({
           </p>
         )}
       </div>
-      <form className="chat__form" onSubmit={submit} aria-label="イメージの入力">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="どんな曲にしたい？（例: 雨の日曜の午後）"
-          aria-label="イメージ"
-          maxLength={1000}
-          disabled={ideas.busy}
-        />
-        <button type="submit" disabled={ideas.busy || text.trim() === ''}>
-          送る
-        </button>
-        {ideas.turns.length > 0 && (
-          <button type="button" onClick={ideas.reset} disabled={ideas.busy}>
-            最初から
+      <div className="chat__composer">
+        <form className="chat__form" onSubmit={submit} aria-label="イメージの入力">
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="どんな曲にしたい？（例: 雨の日曜の午後）"
+            aria-label="イメージ"
+            maxLength={1000}
+            disabled={ideas.busy}
+          />
+          <button type="submit" disabled={ideas.busy || text.trim() === ''}>
+            送る
           </button>
-        )}
-      </form>
-      {options && <div className="chat__options">{options}</div>}
+          {ideas.turns.length > 0 && (
+            <button type="button" onClick={ideas.reset} disabled={ideas.busy}>
+              最初から
+            </button>
+          )}
+        </form>
+        {options && <div className="chat__options">{options}</div>}
+      </div>
     </section>
   );
 }

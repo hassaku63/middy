@@ -154,7 +154,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   );
 
   return (
-    <main className={layout.desk ? 'app app--desk' : 'app'}>
+    <main className={mainClass(layout)}>
       <AppHeader pwa={pwa} backendDown={backend === 'down'} />
       {layout.desk ? (
         // Desk (BL-184, #279): the conversation in a left column beside the
@@ -171,6 +171,12 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
       )}
     </main>
   );
+}
+
+/** The page's classes: the layout and, on the desk, where the input sits. */
+function mainClass(layout: ReturnType<typeof useLayoutTrial>) {
+  if (!layout.desk) return 'app';
+  return layout.followInput ? 'app app--desk app--input-follow' : 'app app--desk';
 }
 
 /** The title, the PWA banner and, when the backend is unreachable, a word. */
