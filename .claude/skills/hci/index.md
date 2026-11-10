@@ -97,7 +97,7 @@
 | 判断の問い | 分岐の条件は幅（と高さ）か。幅が狭いときに、できること（固定、キー変更）が失われていないか。文字を大きくしたら崩れないか |
 | 適切・不適切な例 | 適切: 幅が広ければ会話／舞台／解説を横に、狭ければ再生とコード列を上に固定して縦に。不適切: `userAgent` で分岐する。middy では縦の高さも効く（1280×800 では舞台が 227 px しか見えない） |
 | middy との接点 | 結果の画面の配置、会話と結果の上下関係、入力欄の位置。規則としきい値の表は `docs/dev/conventions.md` の「配置」（ADR-0042） |
-| 確認日 | 2026-11-09（Apple HIG。Material 3 は JS 描画で本文が取れず未確認） |
+| 確認日 | 2026-11-09（Apple HIG。Material 3 は JS 描画で本文が取れず未確認）。2026-11-10 に Android Developers の window size classes と "Support different display sizes" を確認。どちらも Material 3 の境目に対応し、物理的な端末の値で配置を決めない、部品は与えられた幅を使う、と明記している（https://developer.android.com/develop/ui/compose/layouts/adaptive/support-different-display-sizes ） |
 
 ## 2. 時間で変わる情報（再生に同期して出す・消える）
 
