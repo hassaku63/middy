@@ -79,7 +79,7 @@ func TestModalRolesInTheAnalysis(t *testing.T) {
 	mixo := analyze(Key{G, Mixolydian}, "I", "VII", "v", "I")
 	vii, v := mixo.Harmony[1].Analysis, mixo.Harmony[2].Analysis
 	if vii.Role != RoleCharacteristic || !strings.Contains(vii.Explanation, "三全音を含まない特徴和音") ||
-		!strings.Contains(vii.Explanation, "特徴音が根音にあるので、主和音へ戻る力がいちばん強い") {
+		!strings.Contains(vii.Explanation, "特徴音が根音にあるので、主和音へ戻る終わり方によく使われる") {
 		t.Errorf("♭VII carries the minor seventh as its root: %+v", vii)
 	}
 	if v.Role != RoleCharacteristic || strings.Contains(v.Explanation, "根音にあるので") {
@@ -105,6 +105,33 @@ func TestModalRolesInTheAnalysis(t *testing.T) {
 	}
 	if roles["i"] != RoleTonic || roles["IV"] != RoleCharacteristic || roles["vi°"] != RoleTritone || roles["VII"] != RoleOther {
 		t.Errorf("the degree map carries the roles: %v", roles)
+	}
+
+	// A seventh can add the tritone a triad lacks (#371): dorian IV7 (G7)
+	// and phrygian III7 (G7) have F and B. The analysis says so; the
+	// degree map keeps the triad's role.
+	vamp := analyze(Key{D, Dorian}, "i7", "IV7", "IV", "i7")
+	iv7, iv := vamp.Harmony[1].Analysis, vamp.Harmony[2].Analysis
+	want = "7 度の音を足すと三全音（F と B）ができるので、同じ音でできた C major に引き寄せられやすく、ドリアンの中心がぼやける。三和音の IV（G）のほうがドリアンらしく聞こえる。"
+	if iv7.Role != RoleTritone || !strings.Contains(iv7.Explanation, want) ||
+		strings.Contains(iv7.Explanation, "三全音を含まない") || strings.Contains(iv7.Explanation, "明るく聞こえる理由") {
+		t.Errorf("IV7 adds the tritone:\n%s", iv7.Explanation)
+	}
+	if iv.Role != RoleCharacteristic || !strings.Contains(iv.Explanation, "三全音を含まない特徴和音") {
+		t.Errorf("the triad IV stays characteristic: %+v", iv)
+	}
+	for _, d := range vamp.Overview.Degrees {
+		if d.Degree == 4 && d.Role != RoleCharacteristic {
+			t.Errorf("the map keeps the triad's role: %+v", d)
+		}
+	}
+	if vamp.Harmony[0].Analysis.Role != RoleTonic {
+		t.Errorf("i7 is the tonic: %+v", vamp.Harmony[0].Analysis)
+	}
+	phr := analyze(Key{E, Phrygian}, "i", "III7", "VImaj7", "i")
+	if a := phr.Harmony[1].Analysis; a.Role != RoleTritone || !strings.Contains(a.Explanation, "三和音の III（G）のほうがフリジアンらしく聞こえる") ||
+		strings.Contains(a.Explanation, "張りつめて聞こえる理由") {
+		t.Errorf("phrygian III7 adds the tritone:\n%s", a.Explanation)
 	}
 
 	major := analyze(Key{C, Major}, "I", "IV", "V", "I")

@@ -37,22 +37,43 @@ func modalRole(k Key, degree int) ModalRole {
 	if err != nil {
 		return RoleOther
 	}
-	has := func(pc PitchClass) bool {
-		for _, p := range c.PitchClasses() {
-			if p.Normalize() == pc.Normalize() {
-				return true
-			}
-		}
-		return false
-	}
-	low, high := k.tritone()
-	if has(low) && has(high) {
+	if k.holdsTritone(c) {
 		return RoleTritone
 	}
-	if tone, err := k.Degree(k.Mode.Characteristic()); err == nil && has(tone) {
+	if tone, err := k.Degree(k.Mode.Characteristic()); err == nil && holds(c, tone) {
 		return RoleCharacteristic
 	}
 	return RoleOther
+}
+
+// soundingRole is the role of the chord as it sounds, for the analysis
+// (#371): the degree's role, except that a seventh that adds the scale's
+// tritone to a triad without it (dorian IV7, G7 with F and B) blurs the
+// mode like the tritone chord does. The degree map keeps the triad's role.
+// The tonic stays the tonic: it is the centre whatever it adds.
+func soundingRole(k Key, degree int, c Chord) ModalRole {
+	role := modalRole(k, degree)
+	if role != "" && role != RoleTonic && k.holdsTritone(c) {
+		return RoleTritone
+	}
+	return role
+}
+
+// holds reports whether the chord has the pitch class.
+func holds(c Chord, pc PitchClass) bool {
+	for _, p := range c.PitchClasses() {
+		if p.Normalize() == pc.Normalize() {
+			return true
+		}
+	}
+	return false
+}
+
+// holdsTritone reports whether the chord has both tones of the scale's
+// tritone.
+func (k Key) holdsTritone(c Chord) bool {
+	low, high := k.tritone()
+	return holds(c, low) && holds(c, high)
 }
 
 // tritone returns the two tones of the scale a tritone apart, the lower
@@ -82,14 +103,18 @@ func (k Key) parallelMajor() Key {
 
 const (
 	characteristicRoleText = "三全音を含まない特徴和音で、%sの響きをはっきりさせる。"
-	characteristicRootText = "特徴音が根音にあるので、主和音へ戻る力がいちばん強い。"
+	characteristicRootText = "特徴音が根音にあるので、主和音へ戻る終わり方によく使われる。"
 	tritoneRoleText        = "三全音（%s と %s）を含むので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。"
+	// seventhTritoneText: the triad has no tritone, the seventh adds it.
+	seventhTritoneText = "7 度の音を足すと三全音（%s と %s）ができるので、同じ音でできた %s に引き寄せられやすく、%sの中心がぼやける。三和音の %s（%s）のほうが%sらしく聞こえる。"
 )
 
 // roleText says what a chord does in a mode, after its opening sentence
 // and the characteristic tone's (#366). Empty for the tonic, for any
-// other chord, and in major and minor.
-func roleText(k Key, h HarmonyEvent, role ModalRole) string {
+// other chord, and in major and minor. The role is the sounding chord's
+// (soundingRole); the degree tells a seventh that adds the tritone from a
+// triad that has it.
+func roleText(k Key, h HarmonyEvent, degree int, role ModalRole) string {
 	switch role {
 	case RoleCharacteristic:
 		s := " " + fmt.Sprintf(characteristicRoleText, modeName[k.Mode])
@@ -99,6 +124,12 @@ func roleText(k Key, h HarmonyEvent, role ModalRole) string {
 		return s
 	case RoleTritone:
 		low, high := k.tritone()
+		if modalRole(k, degree) != RoleTritone {
+			triad, _ := k.Diatonic(degree, false)
+			numeral, _ := RomanNumeral(degree, triad.Quality)
+			name := modeName[k.Mode]
+			return " " + fmt.Sprintf(seventhTritoneText, k.PitchClassName(low), k.PitchClassName(high), k.parallelMajor(), name, numeral, k.ChordSymbol(triad), name)
+		}
 		return " " + fmt.Sprintf(tritoneRoleText, k.PitchClassName(low), k.PitchClassName(high), k.parallelMajor(), modeName[k.Mode])
 	case RoleTonic, RoleOther:
 		// The opening sentence says the tonic is the centre; any other
