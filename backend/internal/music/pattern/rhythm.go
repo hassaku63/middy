@@ -126,13 +126,14 @@ func ridePart(d Drums, ts music.TimeSignature) *music.RhythmPart {
 	var ride []music.Tick
 	hat := map[int]bool{}
 	kick := false
+	beat, bar := music.BeatTicks(ts, music.DefaultPPQ), music.BarTicks(ts, music.DefaultPPQ)
 	for _, h := range d.Hits {
 		switch h.Note {
 		case Ride, RideBell:
 			ride = append(ride, h.Start)
-		case PedalHat:
-			if h.Start%quarter == 0 {
-				hat[int(h.Start/quarter)+1] = true
+		case PedalHat: // on which beat of the bar, in the meter's beats
+			if at := h.Start % bar; at%beat == 0 {
+				hat[int(at/beat)+1] = true
 			}
 		case Kick:
 			if h.Velocity >= feathered {

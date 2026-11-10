@@ -176,14 +176,7 @@ func flow(tl Timeline) string {
 	} else {
 		s += fmt.Sprintf("%sから始まり、", chordName(tl.Key, first))
 	}
-	prev := h[len(h)-2]
-	if cad := cadenceOfEvent(last); cad != NoCadence {
-		s += fmt.Sprintf("最後は %s から %s への%s。", prev.RomanNumeral, last.RomanNumeral, endingText[cad])
-	} else if degreeOfEvent(last) == 1 {
-		s += "最後は主和音に戻って落ち着く。"
-	} else {
-		s += fmt.Sprintf("最後は %sで、主和音に戻らずに終わる。", chordName(tl.Key, last))
-	}
+	s += endingSentence(tl.Key, h)
 	s += lineText(tl.Key, h)
 	// A loop closes again when it repeats: say what the turn-around makes.
 	if wrap := cadenceBetween(tl.Key.Mode, placedOf(last), placedOf(first)); wrap != NoCadence && degreeOfEvent(first) == 1 {
@@ -234,6 +227,42 @@ var meterText = map[TimeSignature]string{
 // degreeOfEvent is the chord's scale degree; 0 for a secondary dominant,
 // whose root is not the function it has (V7/IV on the tonic's root pulls
 // away from home).
+// endingSentence says how the example ends: the cadence of its last
+// chord, from the chord that cadence comes from; on a tonic six-four,
+// which no phrase rests on (#378), unsettled; else on or off the tonic.
+func endingSentence(k Key, h []HarmonyEvent) string {
+	last := h[len(h)-1]
+	cad := cadenceOfEvent(last)
+	switch {
+	case cad != NoCadence:
+		return fmt.Sprintf("最後は %s から %s への%s。", h[cadenceFrom(h)].RomanNumeral, last.RomanNumeral, endingText[cad])
+	case degreeOfEvent(last) == 1 && isSixFour(last):
+		return fmt.Sprintf("最後は %s（主和音の第 2 転回形）で、響きが浮いたまま終わる。", last.RomanNumeral)
+	case degreeOfEvent(last) == 1:
+		return "最後は主和音に戻って落ち着く。"
+	}
+	return fmt.Sprintf("最後は %sで、主和音に戻らずに終わる。", chordName(k, last))
+}
+
+// cadenceFrom is the chord the last chord's cadence comes from, as
+// cadenceAt finds it: the one before, or, for a V, the one before the run
+// of chords on the fifth degree (Vsus4 – V) that leads to it.
+func cadenceFrom(h []HarmonyEvent) int {
+	from := len(h) - 2
+	if degreeOfEvent(h[len(h)-1]) == 5 {
+		for from > 0 && degreeOfEvent(h[from]) == 5 {
+			from--
+		}
+	}
+	return from
+}
+
+// isSixFour reports a chord with its fifth in the bass.
+func isSixFour(h HarmonyEvent) bool {
+	pcs := h.Chord.PitchClasses()
+	return len(pcs) >= 3 && bassOf(h).Normalize() == pcs[2].Normalize()
+}
+
 func degreeOfEvent(h HarmonyEvent) int {
 	if h.Analysis == nil || h.Analysis.AppliedTo != 0 {
 		return 0

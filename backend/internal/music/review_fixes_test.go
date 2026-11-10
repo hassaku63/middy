@@ -46,3 +46,25 @@ func TestReviewOfTheNightsTexts(t *testing.T) {
 		t.Errorf("A minor V7/V – i/5 – V7:\n%s", applied)
 	}
 }
+
+// TestSecondReviewOfTheNightsTexts: the overview names the chord the
+// cadence came from and does not settle on a tonic six-four; a borrowed
+// ♭VII before iv names the iv.
+func TestSecondReviewOfTheNightsTexts(t *testing.T) {
+	sus := analysed(t, Key{C, Major}, 4, "I", "IV", "Vsus4", "V").Overview.Flow
+	if !strings.Contains(sus, "最後は IV から V への半終止") {
+		t.Errorf("I IV Vsus4 V flow:\n%s", sus)
+	}
+	v7 := analysed(t, Key{C, Major}, 4, "I", "ii", "V", "V7").Overview.Flow
+	if strings.Contains(v7, "V から V7") || !strings.Contains(v7, "最後は ii から V7 への半終止") {
+		t.Errorf("I ii V V7 flow:\n%s", v7)
+	}
+	six := analysed(t, Key{C, Major}, 4, "I", "IV", "V", "I/5").Overview.Flow
+	if strings.Contains(six, "主和音に戻って落ち着く") || !strings.Contains(six, "響きが浮いたまま終わる") {
+		t.Errorf("ending on I/5:\n%s", six)
+	}
+	b := analysed(t, Key{C, Major}, 4, "I", "bVII", "iv", "I").Harmony[1].Analysis.Explanation
+	if strings.Contains(b, "次の IV") || !strings.Contains(b, "次の iv へ進み") {
+		t.Errorf("♭VII – iv:\n%s", b)
+	}
+}

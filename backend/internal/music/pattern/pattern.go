@@ -283,7 +283,7 @@ func hitPitches(key music.Key, acc Accompaniment, h music.HarmonyEvent, voicing,
 	case v == VoiceChord:
 		return chord
 	case v == VoiceOctave && len(adds) > 0 && arpeggiated(acc):
-		return []music.Pitch{above(voicing[0].Transpose(12), adds[0])}
+		return []music.Pitch{music.LowestFrom(voicing[0].Transpose(12), adds[0])}
 	}
 	return pitches(key, voicing, led, h.Bass, v)
 }
@@ -294,14 +294,6 @@ func hitPitches(key music.Key, acc Accompaniment, h music.HarmonyEvent, voicing,
 func arpeggiated(acc Accompaniment) bool {
 	return !slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceChord }) &&
 		slices.ContainsFunc(acc.Hits, func(h Hit) bool { return h.Voice == VoiceOctave })
-}
-
-// above is the lowest pitch of class pc at or above p.
-func above(p music.Pitch, pc music.PitchClass) music.Pitch {
-	for p.Class() != pc {
-		p++
-	}
-	return p
 }
 
 // slashed makes the bass line sound (BL-113, #385). In an example with a

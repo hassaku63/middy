@@ -19,45 +19,38 @@ func BassLine(chords []Chord, basses []*PitchClass, led [][]Pitch) []Pitch {
 	if !slices.ContainsFunc(basses, func(b *PitchClass) bool { return b != nil }) {
 		return nil
 	}
-	bassOf := func(i int) PitchClass {
+	bassAt := func(i int) PitchClass {
 		if basses[i] != nil {
 			return *basses[i]
 		}
 		return chords[i].Root
 	}
 	line := make([]Pitch, len(chords))
-	prev := NewPitch(bassOf(0), ChordOctave-1) // the line starts in octave 3
+	prev := NewPitch(bassAt(0), ChordOctave-1) // the line starts in octave 3
 	for i := range chords {
-		pc := bassOf(i)
+		pc := bassAt(i)
 		ceiling := bassHigh
 		if len(led[i]) > 0 && slices.Min(led[i])-1 < ceiling {
 			ceiling = slices.Min(led[i]) - 1
 		}
 		best := Pitch(-1)
-		for p := lowestFrom(bassLow, pc); p <= ceiling; p += 12 {
-			if best < 0 || distance(p, prev) < distance(best, prev) {
+		for p := LowestFrom(bassLow, pc); p <= ceiling; p += 12 {
+			if best < 0 || abs(int(p)-int(prev)) < abs(int(best)-int(prev)) {
 				best = p
 			}
 		}
 		if best < 0 { // no room under the chord in range: the octave below it
-			best = lowestFrom(ceiling-11, pc)
+			best = LowestFrom(ceiling-11, pc)
 		}
 		line[i], prev = best, best
 	}
 	return line
 }
 
-// lowestFrom is the lowest pitch of class pc at or above p.
-func lowestFrom(p Pitch, pc PitchClass) Pitch {
+// LowestFrom is the lowest pitch of class pc at or above p.
+func LowestFrom(p Pitch, pc PitchClass) Pitch {
 	for p.Class() != pc.Normalize() {
 		p++
 	}
 	return p
-}
-
-func distance(a, b Pitch) int {
-	if a > b {
-		return int(a - b)
-	}
-	return int(b - a)
 }
