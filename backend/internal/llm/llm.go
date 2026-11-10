@@ -62,6 +62,10 @@ type Response struct {
 type Usage struct {
 	InputTokens  int
 	OutputTokens int
+	// CacheReadInputTokens and CacheCreationInputTokens are the input read
+	// from and written to the prompt cache, billed apart from InputTokens.
+	CacheReadInputTokens     int
+	CacheCreationInputTokens int
 }
 
 // Client is implemented by every LLM provider adapter.

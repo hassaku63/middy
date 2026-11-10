@@ -20,7 +20,7 @@ func messagesResponse(stopReason, text string) string {
 		"id": "msg_test", "type": "message", "role": "assistant", "model": "claude-opus-5-5",
 		"content":     []map[string]any{{"type": "text", "text": text}},
 		"stop_reason": stopReason, "stop_sequence": nil,
-		"usage": map[string]any{"input_tokens": 42, "output_tokens": 7},
+		"usage": map[string]any{"input_tokens": 42, "output_tokens": 7, "cache_read_input_tokens": 900, "cache_creation_input_tokens": 30},
 	}
 	if stopReason == "refusal" {
 		body["stop_details"] = map[string]any{"type": "refusal", "category": "general_harms", "explanation": "no"}
@@ -80,7 +80,8 @@ func TestCompleteBuildsTheRequestAndReadsTheAnswer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Complete: %v", err)
 	}
-	if resp.Text != `{"summary":"ok"}` || resp.Usage.InputTokens != 42 || resp.Usage.OutputTokens != 7 {
+	if resp.Text != `{"summary":"ok"}` || resp.Usage.InputTokens != 42 || resp.Usage.OutputTokens != 7 ||
+		resp.Usage.CacheReadInputTokens != 900 || resp.Usage.CacheCreationInputTokens != 30 {
 		t.Fatalf("unexpected response %+v", resp)
 	}
 
