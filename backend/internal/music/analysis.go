@@ -32,8 +32,9 @@ func (m Mode) hasModalCadence() bool {
 }
 
 // functionOf is the chord's function: by degree, except for a major key's
-// chords borrowed from the parallel minor (#371, ADR-0050). ♭VI belongs
-// with iv to the subdominant side; ♭VII has no leading tone, so it is
+// chords borrowed from the parallel minor (#371, ADR-0050, ADR-0054): the
+// job they do in the major key. ♭VI stands in for iv on the subdominant
+// side (in the minor key itself VI is a tonic substitute); ♭VII has no leading tone, so it is
 // subdominant on its way to IV and a weak dominant otherwise.
 func functionOf(k Key, p, following placed) Function {
 	if k.Mode == Major && p.borrowed {
@@ -57,7 +58,10 @@ func borrowedFunctionText(k Key, p placed, fn Function) string {
 	}
 	switch {
 	case p.degree == 6:
-		return " iv と同じく、短調の色を帯びたサブドミナント（サブドミナント・マイナー）の仲間。"
+		// In the minor key itself VI stands in for the tonic; borrowed into
+		// major it does iv's job (#385, ADR-0054). Say both, so the two
+		// screens do not seem to contradict each other.
+		return " 長調の中では iv と同じく、短調の色を帯びたサブドミナント（サブドミナント・マイナー）の役をする（短調の中の VI は、トニックの代わりになる）。"
 	case p.degree == 7 && fn == Subdominant:
 		return " ここでは次の IV へ進み、IV と同じサブドミナントの側で働く。"
 	case p.degree == 7:
