@@ -256,13 +256,7 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 				walks = append(walks, n)
 				continue
 			}
-			ps := pitches(tl.Key, voicing, led, h.Bass, hit.Voice)
-			if hit.Voice == VoiceChord {
-				ps = chord // with the style's tensions (BL-125)
-			}
-			if hit.Voice == VoiceOctave && len(adds) > 0 && arpeggiated(acc) {
-				ps = []music.Pitch{above(voicing[0].Transpose(12), adds[0])}
-			}
+			ps := hitPitches(tl.Key, acc, h, voicing, led, chord, adds, hit.Voice)
 			for _, p := range slashed(acc, h, ps, hit.Voice) {
 				n.Pitch = p
 				notes = append(notes, n)
@@ -273,6 +267,19 @@ func chordNotes(tl music.Timeline, acc Accompaniment, i int, led, chord []music.
 		walks[k].Pitch = p
 	}
 	return append(notes, walks...)
+}
+
+// hitPitches is what one hit of the pattern plays over the chord: its
+// voice, with the style's tensions on a chord hit (BL-125) or, in an
+// arpeggio, the first tension in place of the octave (#307).
+func hitPitches(key music.Key, acc Accompaniment, h music.HarmonyEvent, voicing, led, chord []music.Pitch, adds []music.PitchClass, v Voice) []music.Pitch {
+	switch {
+	case v == VoiceChord:
+		return chord
+	case v == VoiceOctave && len(adds) > 0 && arpeggiated(acc):
+		return []music.Pitch{above(voicing[0].Transpose(12), adds[0])}
+	}
+	return pitches(key, voicing, led, h.Bass, v)
 }
 
 // arpeggiated reports a pattern that spells its chords out with an octave

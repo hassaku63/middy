@@ -332,26 +332,33 @@ func swingText(sw Swing, beatBPM float64) string {
 	return text
 }
 
+// playedTensions is what the pattern sounds of the chord's tensions: all
+// of them on a chord hit; in an arpeggio, the first, in the octave's place
+// (#307); none in a pattern with neither hit within the chord.
+func playedTensions(t *Tensions, key music.Key, h music.HarmonyEvent, acc Accompaniment) []music.PitchClass {
+	arp := arpeggiated(acc)
+	voice := VoiceChord
+	if arp {
+		voice = VoiceOctave
+	}
+	if !slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == voice && x.Start < h.Duration }) {
+		return nil
+	}
+	pcs := tensionsOf(t, key, h)
+	if arp && len(pcs) > 1 {
+		pcs = pcs[:1]
+	}
+	return pcs
+}
+
 // soundedTensions says which of the style's tensions sounded: on chords
 // the pattern strikes with its chord voice, and only those the key and the
 // chord allowed (a ii7–Imaj7 adds no 13th, whatever the rule says). Empty
 // when none sounded.
 func soundedTensions(tl music.Timeline, t *Tensions, acc Accompaniment) string {
 	var ninth7, thirteenth, add9 bool
-	arp := arpeggiated(acc)
 	for _, h := range tl.Harmony {
-		voice := VoiceChord
-		if arp {
-			voice = VoiceOctave // an arpeggio plays the first tension in the octave's place (#307)
-		}
-		if !slices.ContainsFunc(acc.Hits, func(x Hit) bool { return x.Voice == voice && x.Start < h.Duration }) {
-			continue
-		}
-		pcs := tensionsOf(t, tl.Key, h)
-		if arp && len(pcs) > 1 {
-			pcs = pcs[:1]
-		}
-		for _, pc := range pcs {
+		for _, pc := range playedTensions(t, tl.Key, h, acc) {
 			switch {
 			case h.Chord.Quality == music.MajorTriad:
 				add9 = true
