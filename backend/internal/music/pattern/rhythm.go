@@ -230,7 +230,13 @@ func explainPlacement(subject string, p placement, beats int) string {
 	case p.compound && p.finer == 0:
 		fmt.Fprintf(&b, "拍の頭（%s）が %d 回、拍を 3 つに分けた残りの 8 分が %d 回。付点 4 分の拍が 3 つに分かれ、「タタタ」と回る揺れが出る。", beatNames(beats), p.onBeat, p.offBeat)
 	case p.syncopated():
-		fmt.Fprintf(&b, "拍の頭が %d 回、%s。裏拍で鳴ったあと %sの頭が鳴らないので、音が拍をまたいで前に押し出すシンコペーションになる。", p.onBeat, offBeatCounts(p), skippedNames(p.skipped))
+		// 裏拍 is the eighth off-beat (#390): a figure struck only on
+		// finer positions is said to sound between the beats.
+		between := "裏拍"
+		if p.offBeat == 0 {
+			between = "拍の頭のあいだ"
+		}
+		fmt.Fprintf(&b, "拍の頭が %d 回、%s。%sで鳴ったあと %sの頭が鳴らないので、音が拍をまたいで前に押し出すシンコペーションになる。", p.onBeat, offBeatCounts(p), between, skippedNames(p.skipped))
 	case p.offBeat == 0:
 		// No hit on the eighth off-beat: the push comes from finer ones,
 		// which 裏拍 (defined as the eighth off-beat) does not name (#390).

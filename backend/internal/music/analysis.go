@@ -74,26 +74,25 @@ func borrowedFunctionText(k Key, p placed, fn Function) string {
 // cadence ends a phrase, so the arrival must be the last chord or end on
 // a phrase boundary (PhraseBars): V – I inside a phrase is one motion, and
 // a V that goes on is no half cadence. A tonic six-four closes nothing:
-// before V (the cadential six-four) it decorates the V.
-func cadenceAt(tl Timeline, ps []placed, i int) Cadence {
+// before V (the cadential six-four) it decorates the V. It also returns
+// the chord the cadence comes from, which the sentence names.
+func cadenceAt(tl Timeline, ps []placed, i int) (Cadence, int) {
 	if i == 0 || !endsPhrase(tl, i) || isTonicSixFour(tl.Harmony, ps, i) {
 		// A tonic six-four is unstable: no phrase comes to rest on it (#378).
-		return NoCadence
+		return NoCadence, 0
 	}
-	prev := ps[i-1]
+	from := i - 1
 	if ps[i].degree == 5 && ps[i].applied == 0 {
 		// V prepared by its own sus4 or triad (Vsus4 – V, V – V7) is
 		// still the arrival on V: look back past the same degree (#378).
-		j := i - 1
-		for j >= 0 && ps[j].degree == 5 && ps[j].applied == 0 {
-			j--
+		for from >= 0 && ps[from].degree == 5 && ps[from].applied == 0 {
+			from--
 		}
-		if j < 0 {
-			return NoCadence
+		if from < 0 {
+			return NoCadence, 0
 		}
-		prev = ps[j]
 	}
-	return cadenceBetween(tl.Key.Mode, prev, ps[i])
+	return cadenceBetween(tl.Key.Mode, ps[from], ps[i]), from
 }
 
 // endsPhrase reports whether the chord at i ends a phrase: it is the last,
@@ -108,9 +107,11 @@ func endsPhrase(tl Timeline, i int) bool {
 }
 
 // isCadentialSixFour reports whether the chord at i is the tonic with its
-// fifth in the bass, going on to V (I6/4 – V).
+// fifth in the bass, going on to a V with the leading tone (I6/4 – V):
+// the dominant it decorates. Before minor's or a mode's v, which has no
+// leading tone and no dominant function to lend, it is a six-four only.
 func isCadentialSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
-	return i+1 < len(ps) && isTonicSixFour(hs, ps, i) && ps[i+1].degree == 5 && ps[i+1].applied == 0
+	return i+1 < len(ps) && isTonicSixFour(hs, ps, i) && ps[i+1].degree == 5 && ps[i+1].applied == 0 && ps[i+1].leading
 }
 
 // isTonicSixFour reports whether the chord at i is the tonic with its
@@ -124,7 +125,7 @@ func isTonicSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
 }
 
 const (
-	cadentialSixFourSentence = "ここでは次の V を飾る和音（終止の四六。V の前に置く、I の第 2 転回形）。主和音の音でできていても、働きは V の側（ドミナント）にあり、区切りにはならない。"
+	cadentialSixFourSentence = "ここでは次の %s を飾る和音（終止の四六。V の前に置く、%s の第 2 転回形）。主和音の音でできていても、働きは %s の側（ドミナント）にあり、区切りにはならない。"
 	// imperfectAuthenticText: V – I with either chord inverted.
 	imperfectAuthenticText = "直前の %s から %s へ解決する正格終止。ただし、どちらかの和音のベースが根音でないので、基本形どうしより区切りは弱い。"
 )
@@ -134,20 +135,30 @@ func cadentialSixFourText(hs []HarmonyEvent, ps []placed, i int) string {
 	if !isCadentialSixFour(hs, ps, i) {
 		return ""
 	}
-	return " " + cadentialSixFourSentence
+	tonic := "I" // the numerals as the lane shows them: i in minor
+	if hs[i].Chord.Quality == MinorTriad || hs[i].Chord.Quality == Minor7 {
+		tonic = "i"
+	}
+	v := hs[i+1].RomanNumeral
+	return " " + fmt.Sprintf(cadentialSixFourSentence, v, tonic, v)
 }
 
-// cadenceSentence says the cadence the chord at i closes; an authentic
-// cadence with either chord inverted is the weaker, imperfect one.
-func cadenceSentence(hs []HarmonyEvent, i int, cad Cadence) string {
+// cadenceSentence says the cadence the chord at i closes, coming from the
+// chord at from (cadenceAt); an authentic cadence with either chord
+// inverted is the weaker, imperfect one.
+func cadenceSentence(hs []HarmonyEvent, from, i int, cad Cadence) string {
 	if cad == NoCadence {
 		return ""
 	}
-	before, arrival := hs[i-1].RomanNumeral, hs[i].RomanNumeral
-	if cad == Authentic && (inverted(hs[i-1]) || inverted(hs[i])) {
+	before, arrival := hs[from].RomanNumeral, hs[i].RomanNumeral
+	if cad == Authentic && (inverted(hs[from]) || inverted(hs[i])) {
 		return fmt.Sprintf(imperfectAuthenticText, before, arrival)
 	}
-	return fmt.Sprintf(cadenceText[cad], before, arrival)
+	text := fmt.Sprintf(cadenceText[cad], before, arrival)
+	if from != i-1 { // through Vsus4 or V on the way: not the chord just before
+		text = strings.TrimPrefix(text, "直前の ")
+	}
+	return text
 }
 
 // inverted reports whether the chord's bass is not its root.
@@ -228,7 +239,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		if isCadentialSixFour(tl.Harmony, ps, i) {
 			fn = Dominant // it decorates the V (#371, ADR-0051)
 		}
-		cad := cadenceAt(tl, ps, i)
+		cad, from := cadenceAt(tl, ps, i)
 		var role ModalRole
 		if !p.borrowed {
 			role = soundingRole(tl.Key, p.degree, h.Chord)
@@ -239,7 +250,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
 			Role:        role,
-			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, ps, i) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, from, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, ps, i) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -733,8 +744,12 @@ func explainApplied(k Key, hs []HarmonyEvent, ps []placed, i int) string {
 	// The chord it goes to may be on the target's root in another quality:
 	// in A minor V7/V goes to the harmonic V7 (E7), not to the scale's v
 	// (Em). Name the target as it sounds then (#378).
-	if following != nil && following.Root == t.Root {
+	switch {
+	case following != nil && following.Root == t.Root:
 		t.Quality = triadOf(following.Quality, t.Quality)
+	case target == 5 && isCadentialSixFour(hs, ps, i+1) && hs[i+2].Chord.Root == t.Root:
+		// Through the six-four to the V after it (A minor's E7).
+		t.Quality = triadOf(hs[i+2].Chord.Quality, t.Quality)
 	}
 	rn, _ := RomanNumeral(target, t.Quality)
 	symbol := k.ChordSymbol(t)

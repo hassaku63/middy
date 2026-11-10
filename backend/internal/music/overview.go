@@ -199,8 +199,6 @@ var wrapText = map[Cadence]string{
 	Authentic: "繰り返すと、最後の %s は頭の %s へ解決し、ひと回りが閉じる。",
 	Plagal:    "繰り返すと、最後の %s から頭の %s へ柔らかく戻り、ひと回りが閉じる。",
 	Modal:     "繰り返すと、最後の %s から頭の %s へ、導音を使わずに戻る。",
-	Deceptive: "繰り返すと、最後の %s から頭の %s へ進む。",
-	Half:      "繰り返すと、最後の %s から頭の %s へ進む。",
 }
 
 var endingText = map[Cadence]string{
