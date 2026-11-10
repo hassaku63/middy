@@ -342,6 +342,11 @@ func TestReportNamesTheFirstPatterns(t *testing.T) {
 	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); !strings.Contains(got, "BPM, reel/bodhran)") {
 		t.Errorf("report should name the patterns:\n%s", got)
 	}
+	res.Candidates[0].Feel = "shuffle"
+	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); !strings.Contains(got, "BPM, reel/bodhran, shuffle)") {
+		t.Errorf("report should name a feel that is not straight (#321):\n%s", got)
+	}
+	res.Candidates[0].Feel = "straight"
 	res.Candidates[0].Accompaniment, res.Candidates[0].Drums = "", ""
 	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); strings.Contains(got, "BPM, ") {
 		t.Errorf("block chords without drums add nothing:\n%s", got)

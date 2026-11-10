@@ -151,6 +151,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 	if first.Style != "" {
 		v.Patterns = strings.TrimSuffix(first.Style+": "+v.Patterns, ": ")
 	}
+	if first.Feel != "" && first.Feel != "straight" { // swing or shuffle, so the table shows it (#321)
+		v.Patterns = strings.TrimPrefix(v.Patterns+", "+first.Feel, ", ")
+	}
 	v.Unconstrained = res.Unconstrained
 	v.Retry = res.Retry
 	modes := make([]music.Mode, 0, len(res.Candidates))
