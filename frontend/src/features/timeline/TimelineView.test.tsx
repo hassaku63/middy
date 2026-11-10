@@ -138,6 +138,30 @@ describe('TimelineView', () => {
     }
   });
 
+  it('tells the foot hi-hat from the closed hi-hat (#385)', () => {
+    const jazz: Timeline = {
+      ...timeline,
+      tracks: [
+        ...timeline.tracks,
+        {
+          name: 'drums',
+          channel: 9,
+          program: 0,
+          notes: [42, 44, 51].map((pitch, i) => ({
+            pitch,
+            velocity: 60,
+            start: i * 240,
+            duration: 120,
+          })),
+        },
+      ],
+    };
+    render(<TimelineView timeline={jazz} positionTick={0} />);
+    for (const name of ['HH', 'HH foot', 'Ride']) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
   it('marks nothing as sounding while stopped, though the playhead sits at the start', () => {
     const { container } = render(
       <TimelineView timeline={timeline} positionTick={0} playing={false} />,
