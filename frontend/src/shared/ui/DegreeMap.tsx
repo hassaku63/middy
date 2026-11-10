@@ -1,6 +1,6 @@
 import { Fragment, useId } from 'react';
 import type { DegreeChord, HarmonicFunction, HarmonyEvent, ModalRole } from '@/shared/api/client';
-import { FUNCTION_NAME, roleName } from '@/shared/lib/notation';
+import { FUNCTION_NAME, ROLE_NAME, roleName } from '@/shared/lib/notation';
 import { currentDegree } from './currentDegree';
 import './DegreeMap.css';
 
@@ -35,10 +35,10 @@ const FLOW: HarmonicFunction[] = ['T', 'S', 'D'];
  * is told by words, not by colour (WCAG 1.4.1).
  */
 const ROLE_GROUPS: { role: ModalRole; heading: string; name: string }[] = [
-  { role: 'tonic', heading: '主和音', name: '主和音' },
-  { role: 'characteristic', heading: '特徴和音', name: '特徴和音' },
+  { role: 'tonic', heading: '主和音', name: ROLE_NAME.tonic },
+  { role: 'characteristic', heading: '特徴和音', name: ROLE_NAME.characteristic },
   { role: 'other', heading: 'そのほか', name: 'そのほかの和音' },
-  { role: 'tritone', heading: '三全音', name: '三全音の和音' },
+  { role: 'tritone', heading: '三全音', name: ROLE_NAME.tritone },
 ];
 
 /**
@@ -146,7 +146,7 @@ function DegreeCell({
   // named even where the engine gives no role.
   const role = functions
     ? FUNCTION_NAME[d.function]
-    : roleName(d.role) || (d.degree === 1 ? '主和音' : '');
+    : roleName(d.role) || (d.degree === 1 ? ROLE_NAME.tonic : '');
   return (
     <li
       className={[

@@ -219,8 +219,9 @@ func apply(tl music.Timeline, acc Accompaniment, dr *Drums, tensions *Tensions) 
 func chordTrack(tl music.Timeline, acc Accompaniment, tensions *Tensions) music.Track {
 	track := music.Track{Name: music.ChordTrackName, Channel: 0, Program: acc.Program}
 	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
-	led := music.LeadVoicings(chordsOf(tl.Harmony)) // BL-086
-	line := bassLine(tl.Harmony, led)
+	chords := chordsOf(tl.Harmony)
+	led := music.LeadVoicings(chords) // BL-086
+	line := bassLine(tl.Harmony, chords, led)
 	for i := range tl.Harmony {
 		adds := tensionsOf(tensions, tl.Key, tl.Harmony[i])
 		chord := colour(led[i], adds)
@@ -330,12 +331,12 @@ func slashed(acc Accompaniment, ps []music.Pitch, v Voice, bass *music.Pitch) []
 }
 
 // bassLine is music.BassLine over the timeline's harmony (#385).
-func bassLine(harmony []music.HarmonyEvent, led [][]music.Pitch) []music.Pitch {
+func bassLine(harmony []music.HarmonyEvent, chords []music.Chord, led [][]music.Pitch) []music.Pitch {
 	basses := make([]*music.PitchClass, len(harmony))
 	for i, h := range harmony {
 		basses[i] = h.Bass
 	}
-	return music.BassLine(chordsOf(harmony), basses, led)
+	return music.BassLine(chords, basses, led)
 }
 
 // holdDrone ties the drone across chord changes (BL-108): a drone note

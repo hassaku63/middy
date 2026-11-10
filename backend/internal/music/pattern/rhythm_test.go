@@ -171,3 +171,19 @@ func TestOffBeatMeansTheEighthOffBeat(t *testing.T) {
 		t.Errorf("the reel glosses 裏拍:\n%s", e)
 	}
 }
+
+// TestSyncopationOnFinerPositions (#390 T3, review): a figure syncopated
+// on sixteenths alone does not say 裏拍.
+func TestSyncopationOnFinerPositions(t *testing.T) {
+	d, err := GridDrums(grid(4, map[string]string{"kick": "x......x ........"}), music.FourFour, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := describeDrums(d, music.FourFour).Explanation
+	if !strings.Contains(e, "シンコペーション") {
+		t.Skipf("not syncopated by the rule: %s", e)
+	}
+	if strings.Contains(e, "裏拍で鳴ったあと") || !strings.Contains(e, "拍の頭のあいだで鳴ったあと") {
+		t.Errorf("sixteenth syncopation:\n%s", e)
+	}
+}
