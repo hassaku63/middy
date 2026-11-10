@@ -187,3 +187,16 @@ func TestSyncopationOnFinerPositions(t *testing.T) {
 		t.Errorf("sixteenth syncopation:\n%s", e)
 	}
 }
+
+// TestRideHatBeatsInCompoundMeter (review): the foot hi-hat's beats are
+// counted in the meter's beats (dotted quarters in 6/8).
+func TestRideHatBeatsInCompoundMeter(t *testing.T) {
+	d, err := GridDrums(grid(3, map[string]string{"ride": "xxx xxx", "pedal-hat": "x.. x..", "kick": "o.. ..."}), music.SixEight, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := describeDrums(d, music.SixEight).Explanation
+	if !strings.Contains(e, "1 小節にライドが") || !strings.Contains(e, "足のハイハットが 1・2 拍目で閉じて") {
+		t.Errorf("6/8 ride:\n%s", e)
+	}
+}

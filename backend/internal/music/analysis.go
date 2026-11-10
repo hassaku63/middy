@@ -50,9 +50,17 @@ func functionOf(k Key, p, following placed) Function {
 	return functionByDegree[p.degree]
 }
 
+// nextNumeral is the next chord's numeral as the lane shows it, or "".
+func nextNumeral(hs []HarmonyEvent, i int) string {
+	if i+1 < len(hs) {
+		return hs[i+1].RomanNumeral
+	}
+	return ""
+}
+
 // borrowedFunctionText says why a major key's borrowed chord has its
 // function (#371, ADR-0050); empty for any other chord.
-func borrowedFunctionText(k Key, p placed, fn Function) string {
+func borrowedFunctionText(k Key, p placed, fn Function, next string) string {
 	if k.Mode != Major || !p.borrowed {
 		return ""
 	}
@@ -63,7 +71,8 @@ func borrowedFunctionText(k Key, p placed, fn Function) string {
 		// screens do not seem to contradict each other.
 		return " 長調の中では iv と同じく、短調の色を帯びたサブドミナント（サブドミナント・マイナー）の役をする（短調の中の VI は、トニックの代わりになる）。"
 	case p.degree == 7 && fn == Subdominant:
-		return " ここでは次の IV へ進み、IV と同じサブドミナントの側で働く。"
+		// next is the chord as the lane shows it: IV, or the borrowed iv.
+		return fmt.Sprintf(" ここでは次の %s へ進み、%s と同じサブドミナントの側で働く。", next, next)
 	case p.degree == 7:
 		return " 導音（主音の半音下の音）を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント。"
 	}
@@ -250,7 +259,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
 			Role:        role,
-			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, from, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, ps, i) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, from, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn, nextNumeral(tl.Harmony, i)) + subtonicText(tl.Key, ps, i) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -647,7 +656,7 @@ func openingText(key Key, degree int, fn Function, borrowed, open bool) string {
 func explain(key Key, h HarmonyEvent, degree int, fn Function, cadence string, borrowed bool, role ModalRole) string {
 	symbol := symbolOf(key, h)
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn, borrowed, h.Chord.Quality.isOpen()))
-	if key.Mode == Minor && degree == 5 && !borrowed && !holds(h.Chord, key.Tonic.Add(11)) {
+	if key.Mode == Minor && degree == 5 && !borrowed && !hasLeadingTone(degree, h.Chord) {
 		s += " " + naturalMinorDominantText
 	}
 	if borrowed {
