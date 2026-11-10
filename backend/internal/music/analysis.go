@@ -101,7 +101,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		cad := cadenceBetween(tl.Key.Mode, prev, p)
 		var role ModalRole
 		if !p.borrowed {
-			role = modalRole(tl.Key, p.degree)
+			role = soundingRole(tl.Key, p.degree, h.Chord)
 		}
 		h.Analysis = &Analysis{
 			Degree:      p.degree,
@@ -478,7 +478,7 @@ func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borr
 	if tone, ok := characteristicTone(key, h.Chord); ok && role != RoleTritone {
 		s += " " + fmt.Sprintf(characteristicText[key.Mode], key.PitchClassName(tone))
 	}
-	s += roleText(key, h, role)
+	s += roleText(key, h, degree, role)
 	if isPhrygianSecond(key, h.Chord) {
 		s += " " + phrygianSecondText
 	}
