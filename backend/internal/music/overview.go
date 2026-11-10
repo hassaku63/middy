@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -30,6 +31,11 @@ type DegreeChord struct {
 	// of the key: a seventh or minor's harmonic V counts, a borrowed or
 	// applied chord does not.
 	Used bool `json:"used,omitempty"`
+	// Altered lists the chords the example plays on this degree whose tones
+	// leave the mode's scale, as spelled ("B7" for E minor's harmonic V),
+	// so the map shows what sounds rather than only the diatonic triad
+	// (#296). A seventh or suspension inside the scale is not altered.
+	Altered []string `json:"altered,omitempty"`
 }
 
 var modeCharacter = map[Mode]string{
@@ -59,9 +65,13 @@ func overview(tl Timeline) *Overview {
 // plays as part of the key.
 func degrees(tl Timeline) []DegreeChord {
 	var used [8]bool
+	var altered [8][]string
 	for _, h := range tl.Harmony {
 		if a := h.Analysis; a != nil && !a.Borrowed && a.AppliedTo == 0 && a.Degree >= 1 && a.Degree <= 7 {
 			used[a.Degree] = true
+			if sym := symbolOf(tl.Key, h); leavesScale(tl.Key, h.Chord) && !slices.Contains(altered[a.Degree], sym) {
+				altered[a.Degree] = append(altered[a.Degree], sym)
+			}
 		}
 	}
 	out := make([]DegreeChord, 0, 7)
@@ -76,10 +86,20 @@ func degrees(tl Timeline) []DegreeChord {
 		}
 		out = append(out, DegreeChord{
 			Degree: d, RomanNumeral: numeral, Symbol: tl.Key.ChordSymbol(c),
-			Function: functionByDegree[d], Used: used[d],
+			Function: functionByDegree[d], Used: used[d], Altered: altered[d],
 		})
 	}
 	return out
+}
+
+// leavesScale reports whether a chord has a tone outside the key's scale.
+func leavesScale(k Key, c Chord) bool {
+	for _, pc := range c.PitchClasses() {
+		if !k.Contains(pc) {
+			return true
+		}
+	}
+	return false
 }
 
 func whole(tl Timeline) string {
