@@ -417,7 +417,7 @@ export interface components {
        */
       function: 'T' | 'S' | 'D';
       /**
-       * @description 直前のコードからこのコードへの進行が作る終止。modal はドリアン・ミクソリディアンの VII → I。該当なしのときは省略
+       * @description フレーズの終わり（最後の和音か、4 小節の区切りで終わる和音）で、直前のコードからこのコードへの進行が作る終止。modal はドリアン・ミクソリディアンの VII → I。フレーズの途中や該当なしのときは省略
        * @enum {string}
        */
       cadence?: 'authentic' | 'plagal' | 'half' | 'deceptive' | 'modal';

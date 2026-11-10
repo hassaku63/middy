@@ -118,8 +118,7 @@
       "analysis": {
         "degree": 5,
         "function": "D",
-        "cadence": "half",
-        "explanation": "V（G）はドミナント（D）。トニックへ戻ろうとする緊張を作る。 V で止まる半終止。「続きがある」と感じさせる。"
+        "explanation": "V（G）はドミナント（D）。トニックへ戻ろうとする緊張を作る。"
       }
     },
     {
@@ -134,8 +133,7 @@
       "analysis": {
         "degree": 6,
         "function": "T",
-        "cadence": "deceptive",
-        "explanation": "vi（Am）はトニック（T）の仲間。I と 2 つの音を共有する代わりの和音で、I ほどは落ち着かず、響きの色を変える。 V から I ではなく vi へ進む偽終止。解決を先延ばしにして意外性を出す。"
+        "explanation": "vi（Am）はトニック（T）の仲間。I と 2 つの音を共有する代わりの和音で、I ほどは落ち着かず、響きの色を変える。"
       }
     },
     {

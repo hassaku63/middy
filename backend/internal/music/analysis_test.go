@@ -60,9 +60,15 @@ func TestAnalyzeDetectsCadences(t *testing.T) {
 		{"minor v-i is not authentic", Key{A, Minor}, []int{5, 1}, []Cadence{NoCadence, NoCadence}},
 		{"minor i-v is not a half cadence", Key{A, Minor}, []int{1, 5}, []Cadence{NoCadence, NoCadence}},
 		{"dorian v-i is not authentic", Key{D, Dorian}, []int{5, 1}, []Cadence{NoCadence, NoCadence}},
-		{"I-V-vi-IV pop", Key{C, Major}, []int{1, 5, 6, 4}, []Cadence{NoCadence, Half, Deceptive, NoCadence}},
+		// A cadence ends a phrase (#371, ADR-0051): inside one, V and vi
+		// are motions, not cadences.
+		{"I-V-vi-IV pop", Key{C, Major}, []int{1, 5, 6, 4}, []Cadence{NoCadence, NoCadence, NoCadence, NoCadence}},
+		// A four-bar phrase that ends on V is half closed; the next one
+		// closes on I.
+		{"half cadence at the phrase's end", Key{C, Major}, []int{1, 4, 2, 5, 1, 4, 5, 1},
+			[]Cadence{NoCadence, NoCadence, NoCadence, Half, NoCadence, NoCadence, NoCadence, Authentic}},
 		{"V-V is not a half cadence twice", Key{C, Major}, []int{5, 5, 1}, []Cadence{NoCadence, NoCadence, Authentic}},
-		{"ii-V-I jazz", Key{C, Major}, []int{2, 5, 1}, []Cadence{NoCadence, Half, Authentic}},
+		{"ii-V-I jazz", Key{C, Major}, []int{2, 5, 1}, []Cadence{NoCadence, NoCadence, Authentic}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -127,15 +133,24 @@ func TestAnalyzeEmptyHarmony(t *testing.T) {
 }
 
 func TestHarmonicMinorDominantStillCadences(t *testing.T) {
-	tl := analysed(t, Key{A, Minor}, 4, "i", "V", "VI", "iv", "V7", "i")
-	got := []Cadence{}
-	for _, h := range tl.Harmony {
-		got = append(got, h.Analysis.Cadence)
-	}
-	want := []Cadence{NoCadence, Half, Deceptive, NoCadence, Half, Authentic}
-	for i := range want {
-		if got[i] != want[i] {
-			t.Errorf("harmony[%d] %s: cadence %q, want %q", i, tl.Harmony[i].RomanNumeral, got[i], want[i])
+	// Each progression is one phrase; its last chord closes it.
+	for _, c := range []struct {
+		labels []string
+		want   Cadence
+	}{
+		{[]string{"i", "iv", "VI", "V"}, Half},
+		{[]string{"i", "iv", "V", "VI"}, Deceptive},
+		{[]string{"i", "iv", "V7", "i"}, Authentic},
+	} {
+		tl := analysed(t, Key{A, Minor}, 4, c.labels...)
+		last := tl.Harmony[len(tl.Harmony)-1].Analysis
+		if last.Cadence != c.want {
+			t.Errorf("%v: cadence %q, want %q", c.labels, last.Cadence, c.want)
+		}
+		for _, h := range tl.Harmony[:len(tl.Harmony)-1] {
+			if h.Analysis.Cadence != NoCadence {
+				t.Errorf("%v: %s inside the phrase has cadence %q", c.labels, h.RomanNumeral, h.Analysis.Cadence)
+			}
 		}
 	}
 }

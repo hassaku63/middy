@@ -58,7 +58,8 @@ func TestFromProgressionHappyPath(t *testing.T) {
 	if got := strings.Join(numerals, " "); got != "I V vi IV" {
 		t.Errorf("numerals = %q", got)
 	}
-	if got := strings.Join(cadences, ","); got != ",half,deceptive," {
+	// Three bars and one phrase, ending on IV: no cadence (#371).
+	if got := strings.Join(cadences, ","); got != ",,," {
 		t.Errorf("cadences = %q", got)
 	}
 	// Default beats (4) + 2 + 2 + 4 = 12 beats.
