@@ -463,7 +463,7 @@ components:
           $ref: '#/components/schemas/Feel'
         meter:
           type: string
-          enum: ['4/4', '3/4', '6/8']
+          enum: ['4/4', '3/4', '6/8', '12/8']
           description: 拍子。省略時は 4/4（ADR-0017）
         style:
           type: string
