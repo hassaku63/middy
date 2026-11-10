@@ -15,7 +15,19 @@ type Props = {
    * so pinning shows without colour (WCAG 1.4.1; the desk under trial, BL-185).
    */
   marks?: boolean | undefined;
+  /** Ticks per quarter note, to draw where a pushed chord starts to sound. */
+  ppq: number;
 };
+
+/**
+ * How early a pushed chord sounds (BL-085): its notes start before its
+ * block, which the analysis keeps on the bar line (domain-model, Push).
+ */
+function pushTicks(h: HarmonyEvent, ppq: number): number {
+  if (h.push === 'eighth') return ppq / 2;
+  if (h.push === 'sixteenth') return ppq / 4;
+  return 0;
+}
 
 /** One clickable block per harmony event, with roman numeral and chord symbol. */
 export function ChordLane({
@@ -26,6 +38,7 @@ export function ChordLane({
   onSelect,
   focusable = true,
   marks = false,
+  ppq,
 }: Props) {
   return (
     <g aria-label="コード" role="listbox">
@@ -35,6 +48,7 @@ export function ChordLane({
         const x = layout.x(h.start);
         const width = layout.x(h.duration) - LABEL_WIDTH;
         const mark = selected ? '■' : active && selectedIndex === null ? '▶' : null;
+        const early = pushTicks(h, ppq);
         return (
           <g
             key={i}
@@ -53,6 +67,18 @@ export function ChordLane({
             }}
           >
             <rect x={x} y={2} width={width} height={CHORD_LANE_HEIGHT - 4} rx={4} />
+            {/* A pushed chord sounds before its block (#385): a tab from where
+                its notes start to the block, so the early notes have a chord. */}
+            {early > 0 && (
+              <rect
+                className="timeline__push"
+                x={layout.x(h.start - early)}
+                y={CHORD_LANE_HEIGHT - 10}
+                width={x - layout.x(h.start - early)}
+                height={6}
+                aria-hidden="true"
+              />
+            )}
             {/* One text with a space between the lines, so the visible text
                 reads "V7 B7" like the option's name (WCAG 2.5.3, BL-162). */}
             <text>

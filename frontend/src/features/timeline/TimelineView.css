@@ -140,3 +140,10 @@
   stroke-width: 3;
   pointer-events: none;
 }
+
+/* A pushed chord's early start (#385): a grey tab reaching left of its
+   block to where its notes begin. Last, so no block state repaints it. */
+.timeline__chord rect.timeline__push {
+  fill: #9ca3af;
+  stroke: none;
+}
