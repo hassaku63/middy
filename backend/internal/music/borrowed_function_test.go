@@ -37,7 +37,8 @@ func TestBorrowedFunctions(t *testing.T) {
 		notWant []string
 	}{
 		{"♭VI is subdominant minor", []string{"I", "bVI", "bVII", "I"}, 1, Subdominant,
-			[]string{"サブドミナント（S）", "サブドミナント・マイナー"}, []string{"調の中心", "トニック"}},
+			[]string{"サブドミナント（S）", "長調の中では iv と同じく", "サブドミナント・マイナー", "短調の中の VI は、トニックの代わりになる"},
+			[]string{"調の中心"}},
 		{"♭VII before I is a weak dominant", []string{"I", "bVI", "bVII", "I"}, 2, Dominant,
 			[]string{"導音を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント"}, nil},
 		{"♭VII before IV is subdominant", []string{"I", "bVII", "IV", "I"}, 1, Subdominant,
