@@ -87,6 +87,9 @@ type Candidate struct {
 	// Style is the kind of music the candidate is (pattern.Styles, BL-082);
 	// its patterns and feel must belong to it. Empty in older answers.
 	Style string `json:"style,omitempty"`
+	// Tensions is one of pattern.TensionIDs (ADR-0037); empty leaves the
+	// colour to the style.
+	Tensions string `json:"tensions,omitempty"`
 	// Meter is one of MeterIDs (ADR-0017); empty means 4/4.
 	Meter string `json:"meter,omitempty"`
 }
@@ -143,6 +146,9 @@ func (c Candidate) validate() []error {
 		errs = append(errs, fmt.Errorf("reason is too long (%d > %d characters)", n, MaxReasonRunes))
 	}
 	errs = append(errs, c.validatePatterns()...)
+	if c.Tensions != "" && !slices.Contains(pattern.TensionIDs(), c.Tensions) {
+		errs = append(errs, fmt.Errorf("tensions must be one of %v, got %q", pattern.TensionIDs(), c.Tensions))
+	}
 	return errs
 }
 
