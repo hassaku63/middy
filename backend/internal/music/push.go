@@ -64,7 +64,7 @@ func pushText(tl Timeline, i int) string {
 		n := int((h.Attack(tl.PPQ)%bar)/beat) + 1
 		where = fmt.Sprintf("（%d 拍目の裏で）", n)
 	}
-	return fmt.Sprintf("%sは拍の頭を待たず、%sひとつ早く%s入る（押し）。次の和音を先に鳴らすので、前へ進む勢いが出る。", h.RomanNumeral, value, where)
+	return fmt.Sprintf(" %s は拍の頭を待たず、%sひとつ早く%s入る（押し）。次の和音を先に鳴らすので、前へ進む勢いが出る。", h.RomanNumeral, value, where)
 }
 
 // PushNotes moves the attacks of pushed chords earlier (BL-085). A note
