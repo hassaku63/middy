@@ -174,11 +174,24 @@ func explainPlacement(subject string, p placement, beats int) string {
 	case p.compound && p.finer == 0:
 		fmt.Fprintf(&b, "拍の頭（%s）が %d 回、拍を 3 つに分けた残りの 8 分が %d 回。付点 4 分の拍が 3 つに分かれ、「タタタ」と回る揺れが出る。", beatNames(beats), p.onBeat, p.offBeat)
 	case p.syncopated():
-		fmt.Fprintf(&b, "拍の頭が %d 回、裏拍が %d 回。裏拍で鳴ったあと %sの頭が鳴らないので、音が拍をまたいで前に押し出すシンコペーションになる。", p.onBeat, p.offBeat+p.finer, skippedNames(p.skipped))
+		fmt.Fprintf(&b, "拍の頭が %d 回、%s。裏拍で鳴ったあと %sの頭が鳴らないので、音が拍をまたいで前に押し出すシンコペーションになる。", p.onBeat, offBeatCounts(p), skippedNames(p.skipped))
 	default:
-		fmt.Fprintf(&b, "拍の頭が %d 回、裏拍が %d 回。土台は拍の頭にあり、裏拍が軽い推進力を足している。", p.onBeat, p.offBeat+p.finer)
+		fmt.Fprintf(&b, "拍の頭が %d 回、%s。土台は拍の頭にあり、裏拍が軽い推進力を足している。", p.onBeat, offBeatCounts(p))
 	}
 	return b.String()
+}
+
+// offBeatCounts says how many hits fall between the beats: on the
+// eighth-note offbeat, and finer (a sixteenth, or a triplet from a grid),
+// which the sixteen-beat brings (#308).
+func offBeatCounts(p placement) string {
+	if p.finer == 0 {
+		return fmt.Sprintf("裏拍が %d 回", p.offBeat)
+	}
+	if p.offBeat == 0 {
+		return fmt.Sprintf("8 分の裏より細かい位置（16 分など）が %d 回", p.finer)
+	}
+	return fmt.Sprintf("裏拍（8 分の裏）が %d 回、それより細かい位置（16 分など）が %d 回", p.offBeat, p.finer)
 }
 
 // beatNames lists a bar's beats: "1・2・3" in 3/4.
