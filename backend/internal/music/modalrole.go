@@ -49,12 +49,23 @@ func modalRole(k Key, degree int) ModalRole {
 // soundingRole is the role of the chord as it sounds, for the analysis
 // (#371): the degree's role, except that a seventh that adds the scale's
 // tritone to a triad without it (dorian IV7, G7 with F and B) blurs the
-// mode like the tritone chord does. The degree map keeps the triad's role.
+// mode like the tritone chord does, and a chord without the characteristic
+// tone (dorian IV5) is no characteristic chord. The degree map keeps the
+// triad's role.
 // The tonic stays the tonic: it is the centre whatever it adds.
 func soundingRole(k Key, degree int, c Chord) ModalRole {
 	role := modalRole(k, degree)
-	if role != "" && role != RoleTonic && k.holdsTritone(c) {
+	if role == "" || role == RoleTonic {
+		return role
+	}
+	if k.holdsTritone(c) {
 		return RoleTritone
+	}
+	// A power or sus4 chord can leave out the characteristic tone the
+	// triad has (dorian IV5, G and D without B): it does not mark the mode
+	// (#378).
+	if tone, err := k.Degree(k.Mode.Characteristic()); role == RoleCharacteristic && err == nil && !holds(c, tone) {
+		return RoleOther
 	}
 	return role
 }

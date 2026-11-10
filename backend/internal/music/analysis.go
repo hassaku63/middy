@@ -566,6 +566,10 @@ const (
 	tonicSubstituteText = "トニック（T）の仲間。%s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
 	// borrowedTonicText: major's ♭III, a tonic of the parallel minor.
 	borrowedTonicText = "同主短調ではトニック（T）の仲間（短調の i と 2 つの音を共有する）。"
+	// The same for a power or sus4 chord, which shares fewer notes: the
+	// degree is the tonic's kin, the count is the triad's (#378).
+	openTonicSubstituteText = "トニック（T）の仲間の度数。三和音なら %s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
+	openBorrowedTonicText   = "同主短調ではトニック（T）の仲間の度数（三和音なら短調の i と 2 つの音を共有する）。"
 	// naturalMinorDominantText: minor's v has no leading tone (#371).
 	naturalMinorDominantText = "ただし導音を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"
 	modalDegreeText          = "%sの %d 度の和音。"
@@ -573,19 +577,25 @@ const (
 
 // openingText is the first sentence of a chord's explanation: its
 // function in major and minor, its place in a mode.
-func openingText(key Key, degree int, fn Function, borrowed bool) string {
+func openingText(key Key, degree int, fn Function, borrowed, open bool) string {
 	if key.Mode == Major || key.Mode == Minor {
 		// Only I is the centre; iii and vi (III and VI in minor) share two
 		// notes with it and stand in for it (#371).
 		if fn == Tonic && degree != 1 && borrowed {
 			// ♭III: a tonic substitute of the parallel minor, not of
 			// this key (it shares one note with I).
+			if open {
+				return openBorrowedTonicText
+			}
 			return borrowedTonicText
 		}
 		if fn == Tonic && degree != 1 {
 			tonic := "I"
 			if key.Mode == Minor {
 				tonic = "i"
+			}
+			if open {
+				return fmt.Sprintf(openTonicSubstituteText, tonic, tonic)
 			}
 			return fmt.Sprintf(tonicSubstituteText, tonic, tonic)
 		}
@@ -599,7 +609,7 @@ func openingText(key Key, degree int, fn Function, borrowed bool) string {
 
 func explain(key Key, h HarmonyEvent, degree int, fn Function, cadence string, borrowed bool, role ModalRole) string {
 	symbol := symbolOf(key, h)
-	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn, borrowed))
+	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn, borrowed, h.Chord.Quality.isOpen()))
 	if key.Mode == Minor && degree == 5 && !borrowed && !holds(h.Chord, key.Tonic.Add(11)) {
 		s += " " + naturalMinorDominantText
 	}
