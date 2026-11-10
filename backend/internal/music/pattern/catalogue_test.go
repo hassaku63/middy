@@ -66,3 +66,43 @@ func TestDecodeCatalogueRefusesUnknownFields(t *testing.T) {
 		t.Fatalf("decodeCatalogue = %v, want an unknown field error", err)
 	}
 }
+
+// Styles are checked against the patterns they name (BL-179).
+func TestValidateChecksTheStyles(t *testing.T) {
+	d := Drums{ID: "beat", Name: "B", Description: "x", Meter: &fourFour, Hits: []DrumHit{{0, eighth, Kick, 90}}}
+	a := Accompaniment{ID: "strum", Name: "S", Description: "x", Hits: []Hit{{0, 0, VoiceChord, 80}}}
+	guitar := 24
+	for _, tc := range []struct {
+		name  string
+		style Style
+		want  []string
+	}{
+		{"a good style", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Drums: []string{"beat"}, Feels: []Feel{FeelStraight}, Program: &guitar, Instrument: "ギター"}, nil},
+		{"unknown patterns and feel", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum", "polka"}, Drums: []string{"beat", "taiko"}, Feels: []Feel{"shuffle"}},
+			[]string{"names acc:polka", "names drums:taiko", `feel "shuffle"`}},
+		{"a pattern no style names", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Feels: []Feel{FeelStraight}},
+			[]string{"drums:beat belongs to no style"}},
+		{"an instrument without its name", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Drums: []string{"beat"}, Feels: []Feel{FeelStraight}, Program: &guitar},
+			[]string{"an instrument needs both"}},
+		{"tensions without text, and written grooves", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Drums: []string{"beat"}, Feels: []Feel{FeelStraight}, Tensions: &Tensions{Ninths: true}, Grooves: []Groove{{}}},
+			[]string{"tensions need a text", "grooves are worked out"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := Catalogue{Accompaniments: []Accompaniment{a}, Drums: []Drums{d}, Styles: []Style{tc.style}}.Validate()
+			if len(tc.want) == 0 {
+				if err != nil {
+					t.Fatalf("Validate() = %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatal("Validate() = nil")
+			}
+			for _, w := range tc.want {
+				if !strings.Contains(err.Error(), w) {
+					t.Errorf("error lacks %q:\n%v", w, err)
+				}
+			}
+		})
+	}
+}

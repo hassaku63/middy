@@ -1,0 +1,71 @@
+{
+  "styles": [
+    {
+      "id": "pop",
+      "name": "ポップ",
+      "description": "歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。",
+      "accompaniments": ["pulse", "ballad", "arpeggio", "strum", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6"],
+      "drums": ["eight-beat", "ballad", "waltz", "six-eight"],
+      "feels": ["straight", "swing"]
+    },
+    {
+      "id": "ballad",
+      "name": "バラード",
+      "description": "ゆっくり歌う曲。間を広く取り、和音を伸ばしたり分散したりする。",
+      "accompaniments": ["ballad", "arpeggio", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "drone"],
+      "drums": ["ballad", "waltz", "six-eight"],
+      "feels": ["straight"],
+      "tensions": {
+        "add9": true,
+        "text": "長三和音に 9 度を足して（add9）柔らかくしている"
+      }
+    },
+    {
+      "id": "rock",
+      "name": "ロック",
+      "description": "ギターのストロークと 8 ビートで、強く前に進む。",
+      "accompaniments": ["strum", "pulse"],
+      "drums": ["eight-beat"],
+      "feels": ["straight", "swing"],
+      "program": 29,
+      "instrument": "歪んだギター"
+    },
+    {
+      "id": "jazz",
+      "name": "ジャズ",
+      "description": "ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。",
+      "accompaniments": ["comp", "walking", "arpeggio", "ballad", "waltz", "arpeggio-3"],
+      "drums": ["jazz-ride", "jazz-waltz"],
+      "feels": ["swing", "straight"],
+      "tensions": {
+        "ninths": true,
+        "thirteenths": true,
+        "text": "七の和音に 9 度、属七には 13 度も足している"
+      }
+    },
+    {
+      "id": "bossa",
+      "name": "ボサノバ",
+      "description": "ブラジルの穏やかなリズム。表と裏が交互に来るキックの上で、和音を軽く流す。",
+      "accompaniments": ["arpeggio", "comp", "ballad"],
+      "drums": ["bossa"],
+      "feels": ["straight"],
+      "program": 24,
+      "instrument": "ナイロン弦ギター",
+      "tensions": {
+        "ninths": true,
+        "text": "七の和音に 9 度を足している"
+      }
+    },
+    {
+      "id": "celtic",
+      "name": "ケルト",
+      "description": "アイルランドやスコットランドの舞曲と民謡。リールの裏打ちとボーラン、6/8 のジグ、ドローン。",
+      "accompaniments": ["reel", "drone", "arpeggio", "arpeggio-3", "waltz", "rocking-6", "arpeggio-6"],
+      "drums": ["bodhran", "jig", "six-eight"],
+      "feels": ["straight"],
+      "program": 46,
+      "instrument": "ハープ"
+    }
+  ]
+}
