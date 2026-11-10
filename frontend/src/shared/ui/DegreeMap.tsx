@@ -14,6 +14,11 @@ export type DegreeMapProps = {
    * the caller asks for the flow only there (ADR-0044).
    */
   flow?: boolean;
+  /**
+   * Colour and name the chords by function. False in a mode, where
+   * functions do not hold: the tonic is marked instead (ADR-0045).
+   */
+  functions?: boolean;
 };
 
 const FLOW: HarmonicFunction[] = ['T', 'S', 'D'];
@@ -26,10 +31,12 @@ const FLOW: HarmonicFunction[] = ['T', 'S', 'D'];
  * place of its own, so any screen can put it where it fits. In major and
  * minor it can lay the chords out as the flow of functions (#360).
  */
-export function DegreeMap({ degrees, event, flow = false }: DegreeMapProps) {
+export function DegreeMap({ degrees, event, flow = false, functions = true }: DegreeMapProps) {
   if (degrees.length === 0) return null;
   const current = currentDegree(event);
-  const cell = (d: DegreeChord) => <DegreeCell key={d.degree} d={d} current={current} />;
+  const cell = (d: DegreeChord) => (
+    <DegreeCell key={d.degree} d={d} current={current} functions={functions} />
+  );
   if (!flow) {
     return (
       <ol className="degree-map" aria-label="度数の地図">
@@ -65,19 +72,29 @@ export function DegreeMap({ degrees, event, flow = false }: DegreeMapProps) {
   );
 }
 
-function DegreeCell({ d, current }: { d: DegreeChord; current: number | null }) {
+function DegreeCell({
+  d,
+  current,
+  functions,
+}: {
+  d: DegreeChord;
+  current: number | null;
+  functions: boolean;
+}) {
+  const role = functions ? FUNCTION_NAME[d.function] : d.degree === 1 ? '主和音' : '';
   return (
     <li
       className={[
         'degree-map__chord',
-        `is-${d.function}`,
+        functions ? `is-${d.function}` : '',
+        !functions && d.degree === 1 ? 'is-tonic' : '',
         d.used ? 'is-used' : '',
         d.degree === current ? 'is-current' : '',
       ]
         .filter(Boolean)
         .join(' ')}
       aria-current={d.degree === current ? 'true' : undefined}
-      aria-label={`${d.romanNumeral}（${d.symbol}）、${FUNCTION_NAME[d.function]}${usedText(d)}`}
+      aria-label={`${d.romanNumeral}（${d.symbol}）${role ? `、${role}` : ''}${usedText(d)}`}
     >
       <span className="degree-map__numeral">{d.romanNumeral}</span>
       <span className="degree-map__symbol">{d.symbol}</span>

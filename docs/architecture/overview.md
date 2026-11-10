@@ -75,7 +75,7 @@ src/test       Vitest セットアップ
 - スタイルの選び直しは `features/regroove`: 型のカタログが各スタイルの拍子ごとのグルーヴ（`pattern.Style.Groove`。その拍子で使える最初の伴奏・ドラム・ノリ）を返し、`regrooveRequest` が和声をそのままにそのグルーヴでリクエストを組み立てる。`grooveChanges` が前後で変わった部分（伴奏・ドラム・ノリ・楽器）だけを述べる。LLM は呼ばない。
 - 保存は `features/projects`: `useProjects` が `shared/lib/storage/projects` の `ProjectStore`（ブラウザに IndexedDB があればそれ、なければメモリ）を使い、開いている例があるときだけ結果のツールバーに `SaveProjectForm` が出て、タイムラインとその出どころ（イメージと候補名。以前の版で保存したものは進行の入力）を名前つきで保存する。`ProjectList` は保存したものを折りたたんで一覧し、開く・削除を受け持つ。サーバーには何も保存しない。
 - 書き出しは `features/export`: `DownloadMidiButton` が `POST /api/v1/export/midi` の Blob を、調と進行を含むファイル名で保存する。
-- 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示し、`timeline.rhythm` があれば `RhythmNotes` が伴奏・ドラムの説明と打点の分析を出す。度数の地図（`shared/ui/DegreeMap`、`Overview.degrees` を並べ、解説中の和音を光らせる。BL-099）は、結果の画面では 1 和音の解説の枠（`ChordFrame`）の中に置く（#360、ADR-0044）。長調と短調では `flow` で機能の列（T → S → D）に並べ、モードでは度数の順に並べる。地図は置き場所を持たない部品なので、ほかの画面にも置ける（`ExplanationPanel` が 1 和音の解説も出すときは、パネルの中に出す）。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。
+- 解説は `features/explanation`: `ExplanationPanel` が固定中のコード、なければ再生位置のコードの `analysis`（機能・終止・解説文）を表示し、`timeline.rhythm` があれば `RhythmNotes` が伴奏・ドラムの説明と打点の分析を出す。度数の地図（`shared/ui/DegreeMap`、`Overview.degrees` を並べ、解説中の和音を光らせる。BL-099）は、結果の画面では 1 和音の解説の枠（`ChordFrame`）の中に置く（#360、ADR-0044）。長調と短調では `flow` で機能の列（T → S → D）に並べ、モードでは度数の順に並べる。モードの例では（`shared/lib/notation` の `isFunctional`）、解説の機能の札、読み上げの機能名、地図の機能の色を出さず、地図の主和音に印を付ける（`functions`、ADR-0045）。地図は置き場所を持たない部品なので、ほかの画面にも置ける（`ExplanationPanel` が 1 和音の解説も出すときは、パネルの中に出す）。文章はバックエンドの決定論的な分析をそのまま出し、フロントで生成しない。
 - 描画はまず SVG。ピアノロールの性能問題が出たら Canvas を検討する。
 - スタイルはプレーン CSS（CSS Modules 可）。UI ライブラリは導入しない。
 

@@ -13,10 +13,12 @@ type Props = {
   event: HarmonyEvent;
   pinned: boolean;
   onClearSelection?: (() => void) | undefined;
+  /** Label the chord by function; false in a mode (ADR-0045). */
+  functional?: boolean;
 };
 
 /** The harmony half of the explanation: one chord's function, cadence and text. */
-export function ChordNotes({ event, pinned, onClearSelection }: Props) {
+export function ChordNotes({ event, pinned, onClearSelection, functional = true }: Props) {
   const analysis = event.analysis;
   return (
     <>
@@ -25,7 +27,7 @@ export function ChordNotes({ event, pinned, onClearSelection }: Props) {
           <span className="explanation__numeral">{event.romanNumeral}</span>
           <span className="explanation__symbol">{harmonySymbol(event)}</span>
         </h2>
-        {analysis && (
+        {analysis && functional && (
           <span className={`explanation__function is-${analysis.function}`}>
             {analysis.function} · {FUNCTION_NAME[analysis.function]}
           </span>
@@ -48,11 +50,18 @@ export function ChordNotes({ event, pinned, onClearSelection }: Props) {
 
 /**
  * The one live region of the explanation (#274, WCAG 4.1.3): the sounding
- * or pinned chord's name and function, short enough to announce at the
+ * or pinned chord's name and, in major and minor, its function, short enough to announce at the
  * pace of playback. The longer text is there to read, not announced.
  */
-export function ChordStatus({ event }: { event: HarmonyEvent | undefined }) {
-  const fn = event?.analysis?.function;
+export function ChordStatus({
+  event,
+  functional = true,
+}: {
+  event: HarmonyEvent | undefined;
+  /** Name the chord's function; false in a mode (ADR-0045). */
+  functional?: boolean;
+}) {
+  const fn = functional ? event?.analysis?.function : undefined;
   return (
     <p className="explanation__live" aria-live="polite">
       {event

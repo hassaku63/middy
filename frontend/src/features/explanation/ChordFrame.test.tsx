@@ -112,7 +112,7 @@ describe('ChordFrame and the degree map (#360, ADR-0044)', () => {
     );
   });
 
-  it('keeps degree order in a mode, where functions do not hold', () => {
+  it('keeps degree order in a mode and labels nothing by function (ADR-0045)', () => {
     render(
       <ChordFrame
         timeline={withMap('dorian')}
@@ -122,7 +122,15 @@ describe('ChordFrame and the degree map (#360, ADR-0044)', () => {
       />,
     );
     const frame = screen.getByRole('region', { name: 'コードの解説' });
-    expect(within(frame).getByRole('list', { name: '度数の地図' })).toBeInTheDocument();
+    const map = within(frame).getByRole('list', { name: '度数の地図' });
     expect(within(frame).queryByRole('group', { name: /機能の流れ/ })).toBeNull();
+    // No function badge, no function in the live line, no function colour;
+    // the tonic is named and marked instead.
+    // (The engine's own text still names it, ADR-0015; that is #366's to change.)
+    expect(within(frame).queryByText('D · ドミナント')).toBeNull();
+    expect(within(frame).getByText('V7 G7')).toHaveAttribute('aria-live', 'polite');
+    const cells = within(map).getAllByRole('listitem');
+    expect(cells.some((li) => /\bis-[TSD]\b/.test(li.className))).toBe(false);
+    expect(within(map).getByLabelText('I（C）、主和音、この例で使う')).toHaveClass('is-tonic');
   });
 });

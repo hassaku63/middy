@@ -48,6 +48,7 @@
 | [0042](0042-layout-rules.md) | 配置の規則: 骨組みは media、部品は container、しきい値は conventions の表に 1 か所。端末の当て推量は ESLint で禁止 | Accepted |
 | [0043](0043-scrolling-timeline.md) | 長いタイムラインは横スクロールの 1 本と縮小図の帯（拡大とスライダーを置き換え）。追随はページめくり | Accepted |
 | [0044](0044-chord-band-and-function-map.md) | 1 和音の解説と度数の地図を同じ枠に入れ、広い画面ではタイムラインの上の帯に。地図は長調・短調で機能の列、モードで度数の順 | Accepted |
+| [0045](0045-no-function-labels-in-modes.md) | モードの例では、画面で和音を機能で呼ばない（札・読み上げ・地図の色）。地図は主和音に印。文は #366 | Accepted |
 
 ## いつ ADR を書くか
 
