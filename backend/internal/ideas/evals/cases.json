@@ -27,6 +27,7 @@
     {"id": "shuffle-walk", "tags": ["groove", "chords"], "image": "スキップしたくなるような、跳ねるリズムの散歩", "mode": "either", "feel": "swing/shuffle", "wants": ["VI7", "III7"]},
     {"id": "celtic-reel", "tags": ["style", "groove", "mode"], "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "major/dorian/mixolydian", "modeInAny": "dorian/mixolydian", "tempoMin": 100, "style": "celtic"},
     {"id": "blues-shuffle", "tags": ["style", "groove", "chords"], "image": "煙たいバーで鳴るスロー・ブルース", "mode": "either", "tempoMax": 100, "wants": ["I7", "IV7"]},
+    {"id": "slow-blues", "tags": ["meter", "style", "groove"], "image": "夜更けのバーで、3 連で重く揺れるスロー・ブルース", "mode": "either", "tempoMax": 80, "wants": ["I7", "IV7"]},
     {"id": "flamenco", "tags": ["mode", "chords"], "image": "フラメンコのギター。情熱的で、足を踏み鳴らす", "mode": "either", "wants": ["bII"]},
     {"id": "sixteen-funk", "tags": ["groove"], "image": "16 分のハイハットで細かく刻む、都会的なファンク寄りのポップス", "mode": "either", "tempoMin": 90, "drums": "sixteen-beat"},
     {"id": "rock-anthem", "tags": ["mode", "chords"], "image": "スタジアムで拳を突き上げるロックのアンセム", "mode": "major/mixolydian", "tempoMin": 110, "wants": ["bVII", "bVI", "I5", "IV5", "V5", "bVII5"]},

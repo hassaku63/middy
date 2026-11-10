@@ -94,7 +94,6 @@ const (
 var (
 	fourFour  = music.FourFour
 	threeFour = music.ThreeFour
-	sixEight  = music.SixEight
 )
 
 // GM drum map notes used by the templates.
@@ -185,8 +184,9 @@ func Apply(tl music.Timeline, acc Accompaniment, dr *Drums) (music.Timeline, err
 // chord voice of every pattern.
 func apply(tl music.Timeline, acc Accompaniment, dr *Drums, tensions *Tensions) (music.Timeline, error) {
 	ts := tl.TimeSignature
-	if (ts != fourFour && ts != threeFour && ts != sixEight) || tl.PPQ != music.DefaultPPQ {
-		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for 4/4, 3/4 and 6/8 at %d ppq, got %d/%d at %d",
+	// The meters are music.SupportedMeter's, so a new one is added once.
+	if music.SupportedMeter(ts) != nil || tl.PPQ != music.DefaultPPQ {
+		return music.Timeline{}, fmt.Errorf("pattern: templates are defined for the engine's meters at %d ppq, got %d/%d at %d",
 			music.DefaultPPQ, ts.Numerator, ts.Denominator, tl.PPQ)
 	}
 	if !acc.Fits(ts) {

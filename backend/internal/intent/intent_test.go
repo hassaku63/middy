@@ -291,6 +291,40 @@ func TestParseSpellsLabelsAsTheEngineDoes(t *testing.T) {
 	}
 }
 
+// TestTwelveEightCandidate (#308): 12/8 is counted in four dotted-quarter
+// beats; a slow blues takes the 12/8 patterns of the blues style, its 4/4
+// shuffle drums are refused, and so is the shuffle feel.
+func TestTwelveEightCandidate(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*Candidate)
+		want   string // "" means valid
+	}{
+		{"one bar", func(c *Candidate) {}, ""},
+		{"half a bar", func(c *Candidate) { c.BeatsPerChord = 2 }, ""},
+		{"three beats", func(c *Candidate) { c.BeatsPerChord = 3 }, "beatsPerChord must be one of [1 2 4 8] in 12/8"},
+		{"4/4 shuffle drums", func(c *Candidate) { c.Drums = "shuffle" }, "drums must be one of"},
+		{"the shuffle feel", func(c *Candidate) { c.Feel = "shuffle" }, "not used in 12/8"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			c := &in.Candidates[0]
+			c.Key = music.Key{Tonic: music.C, Mode: music.Major}
+			c.Progression = []string{"I7", "IV7", "I7", "V7"}
+			c.Meter, c.BeatsPerChord, c.Style, c.Accompaniment, c.Drums = "12/8", 4, "blues", "triplets-12", "twelve-eight"
+			tt.mutate(c)
+			err := in.Validate()
+			switch {
+			case tt.want == "" && err != nil:
+				t.Fatalf("should be valid: %v", err)
+			case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+				t.Fatalf("error %v should mention %q", err, tt.want)
+			}
+		})
+	}
+}
+
 // TestSixEightCandidate: 6/8 is counted in dotted-quarter beats, so a chord
 // lasts half a bar (1), a bar (2) or two bars (4); the patterns must be the
 // 6/8 ones, and swing is refused because the beat already divides in three.

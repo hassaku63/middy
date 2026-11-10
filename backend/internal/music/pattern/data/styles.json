@@ -12,8 +12,8 @@
       "id": "ballad",
       "name": "バラード",
       "description": "ゆっくり歌う曲。間を広く取り、和音を伸ばしたり分散したりする。",
-      "accompaniments": ["ballad", "arpeggio", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "drone"],
-      "drums": ["ballad", "waltz", "six-eight"],
+      "accompaniments": ["ballad", "arpeggio", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "triplets-12", "drone"],
+      "drums": ["ballad", "waltz", "six-eight", "twelve-eight"],
       "feels": ["straight"],
       "tensions": {
         "add9": true,
@@ -85,8 +85,8 @@
       "id": "blues",
       "name": "ブルース",
       "description": "3 連符で跳ねるシャッフルの上で、属七の和音（I7・IV7・V7）を回す。ウォーキング・ベースやコンピングで、粘りのあるノリを出す。",
-      "accompaniments": ["walking", "comp", "pulse", "strum"],
-      "drums": ["shuffle", "eight-beat"],
+      "accompaniments": ["walking", "comp", "pulse", "strum", "triplets-12"],
+      "drums": ["shuffle", "eight-beat", "twelve-eight"],
       "feels": ["shuffle", "straight"]
     }
   ]

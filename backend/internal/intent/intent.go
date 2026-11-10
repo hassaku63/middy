@@ -32,18 +32,20 @@ const (
 // its meter (ADR-0017): in 4/4 a beat, half a bar, a bar or two; in 3/4 a
 // bar or two, since a chord on two of three beats would cross the beat
 // pattern (a hemiola, a special effect left out for now); in 6/8, whose
-// beat is a dotted quarter, half a bar, a bar or two.
+// beat is a dotted quarter, half a bar, a bar or two; in 12/8, four dotted
+// quarters to the bar, as in 4/4 (#308).
 var AllowedBeats = map[music.TimeSignature][]int{
-	music.FourFour:  {1, 2, 4, 8},
-	music.ThreeFour: {3, 6},
-	music.SixEight:  {1, 2, 4},
+	music.FourFour:    {1, 2, 4, 8},
+	music.ThreeFour:   {3, 6},
+	music.SixEight:    {1, 2, 4},
+	music.TwelveEight: {1, 2, 4, 8},
 }
 
 // Meters are the time signatures a candidate may ask for; omitted is 4/4.
-var Meters = map[string]music.TimeSignature{"4/4": music.FourFour, "3/4": music.ThreeFour, "6/8": music.SixEight}
+var Meters = map[string]music.TimeSignature{"4/4": music.FourFour, "3/4": music.ThreeFour, "6/8": music.SixEight, "12/8": music.TwelveEight}
 
 // MeterIDs lists Meters in a stable order.
-func MeterIDs() []string { return []string{"4/4", "3/4", "6/8"} }
+func MeterIDs() []string { return []string{"4/4", "3/4", "6/8", "12/8"} }
 
 // Intent is the LLM's whole answer for one turn of the conversation.
 type Intent struct {

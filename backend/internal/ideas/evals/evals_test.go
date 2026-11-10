@@ -79,7 +79,7 @@ func TestSelectNarrowsTheRun(t *testing.T) {
 	for _, c := range picked {
 		ids = append(ids, c.ID)
 	}
-	if got := strings.Join(ids, " "); got != "graduation-bass minor-cliche waltz-ball jazz-waltz rocking-lullaby irish-jig" {
+	if got := strings.Join(ids, " "); got != "graduation-bass minor-cliche slow-blues waltz-ball jazz-waltz rocking-lullaby irish-jig" {
 		t.Errorf("meter and slash picked %s", got)
 	}
 	if got := scopeNote([]string{"meter", "slash"}, 6, 44); !strings.Contains(got, "タグ meter, slash の 6 / 44 件") {

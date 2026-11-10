@@ -21,7 +21,7 @@ func SystemPrompt() string {
 		for _, m := range []struct {
 			name string
 			ts   music.TimeSignature
-		}{{"4/4", music.FourFour}, {"3/4", music.ThreeFour}, {"6/8", music.SixEight}} {
+		}{{"4/4", music.FourFour}, {"3/4", music.ThreeFour}, {"6/8", music.SixEight}, {"12/8", music.TwelveEight}} {
 			fmt.Fprintf(&b, "\n\n%s で使える伴奏の型（accompaniment）:\n", m.name)
 			for _, a := range pattern.AccompanimentsFor(m.ts) {
 				fmt.Fprintf(&b, "- %s: %s %s\n", a.ID, a.Name, a.Description)
@@ -42,6 +42,7 @@ func SystemPrompt() string {
 		}
 		b.WriteString("拍子（meter）はどの候補にも書く（多くのイメージでは 4/4）。ワルツ、メヌエット、ジャズ・ワルツ、3 拍子のバラードのように 3 拍子が典型のイメージでは 3/4 にし、beatsPerChord は 3（1 小節）か 6（2 小節）、伴奏とドラムは 3/4 の型から選ぶ。")
 		b.WriteString("ゆりかごの子守唄、舟歌、ジグ、6/8 のバラードのように、付点 4 分の 2 拍で揺れ、各拍が 3 つに分かれるイメージでは 6/8 にする。6/8 の拍は付点 4 分で、beatsPerChord は 1（半小節）・2（1 小節）・4（2 小節）、tempoBpm も付点 4 分の速さで書く（ゆったりした子守唄なら 50〜70、ジグなら 100〜130）。伴奏とドラムは 6/8 の型から選び、feel は使わない（拍がすでに 3 つに分かれている）。")
+		b.WriteString("スロー・ブルースや 3 連のバラードのように、付点 4 分の 4 拍で重く揺れ、各拍が 3 連に分かれるイメージでは 12/8 にする。12/8 の拍も付点 4 分で、beatsPerChord は 2（半小節）・4（1 小節）・8（2 小節）、tempoBpm は付点 4 分の速さで書く（スロー・ブルースなら 40〜70）。伴奏とドラムは 12/8 の型から選び、feel は使わない。速めのブルースで 8 分が跳ねるなら、12/8 ではなく 4/4 で feel を shuffle にする。")
 		b.WriteString("ケルト（アイルランド、スコットランド）の舞曲なら、リールは 4/4 で accompaniment を reel、drums を bodhran に、ジグは 6/8 で drums を jig、accompaniment を rocking-6 か arpeggio-6 にする。8 ビートやストロークはポップスやフォークロックに聞こえるので、ケルトの例には使わない。ゆったりしたケルトの曲（エア）や民謡風の静かな曲で、主音を持続させたいときは accompaniment を drone にする（どの拍子でも使える）。")
 		b.WriteString("ジャズ（スウィング、ビバップ、ジャズ・バー、ピアノトリオ）なら、4/4 で accompaniment を comp、drums を jazz-ride にし、feel を swing にする。8 ビートとボサノバのドラムはジャズには使わない（ボサノバを頼まれたときは別）。ジャズ・ワルツは 3/4 で drums を jazz-waltz にし、feel を swing にする（3/4 でもスウィングできる）。")
 		b.WriteString("和音の長さは beatsPerChord で一律にできるが、和音ごとに変えたいときは beats に progression と同じ数の長さを書く（例: 4/4 で [8, 4, 2, 2] は、最初の和音を 2 小節保ち、最後の 2 つを 2 拍ずつ替える）。ケルトや民謡では、主和音を長く保つと素朴さが出る。毎小節同じ間隔で替えるとポップスに聞こえやすい。")

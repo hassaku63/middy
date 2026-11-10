@@ -30,7 +30,7 @@ type Style struct {
 }
 
 // GrooveMeters are the meters a style lists a groove for.
-var GrooveMeters = []music.TimeSignature{music.FourFour, music.ThreeFour, music.SixEight}
+var GrooveMeters = []music.TimeSignature{music.FourFour, music.ThreeFour, music.SixEight, music.TwelveEight}
 
 // Groove is what a style plays in a meter when the learner picks the style
 // for an example that already has its harmony (BL-087): the first of the
