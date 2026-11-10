@@ -31,7 +31,7 @@ type Case struct {
 	TempoMin float64 `json:"tempoMin,omitempty"`
 	TempoMax float64 `json:"tempoMax,omitempty"`
 	// Feel, when set, is the feel the first candidate must have ("straight"
-	// also matches an omitted feel).
+	// also matches an omitted feel); "swing/shuffle" accepts either.
 	Feel string `json:"feel,omitempty"`
 	// Drums, when set, lists the drums the first candidate may use, joined
 	// with "/"; "none" allows no drums (BL-081).
@@ -396,8 +396,8 @@ func judgeFeel(want, got string) string {
 	if got == "" {
 		got = "straight"
 	}
-	if want == "" || want == got {
-		return ""
+	if want == "" || slices.Contains(strings.Split(want, "/"), got) {
+		return "" // "swing/shuffle": either fits
 	}
 	return "expected feel " + want + ", got " + got
 }

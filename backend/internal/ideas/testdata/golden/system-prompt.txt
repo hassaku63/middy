@@ -54,12 +54,13 @@
 - jig: ジグ キックが 2 つの拍の頭、軽いスネアが各拍の 3 つめの 8 分。「タタタ・タタタ」と回り、拍の終わりから次の拍へ跳ねる、ケルトの舞曲の推進力。
 8 分音符のノリ（feel）:
 - straight: ストレート 8 分音符を均等に刻む。
-- swing: スウィング 8 分音符を長・短で跳ねさせる。ジャズやシャッフルの揺れ。
+- swing: スウィング 8 分音符を長・短で跳ねさせる。跳ね方はテンポに合わせる（遅いほど深い）。ジャズの揺れ。
+- shuffle: シャッフル 8 分音符を 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。ブルースやロックの「タッカ・タッカ」と跳ねる揺れ。
 スタイル（style）。候補ごとに最初にスタイルを選び、伴奏・ドラム・ノリはそのスタイルに挙げたものから選ぶ（ブロックの和音とドラムなしはどのスタイルでも使える）:
-- pop: ポップ。歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。（伴奏: pulse, ballad, arpeggio, strum, waltz, arpeggio-3, rocking-6, arpeggio-6, strum-16。ドラム: eight-beat, ballad, waltz, six-eight, sixteen-beat。ノリ: straight, swing）
+- pop: ポップ。歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。（伴奏: pulse, ballad, arpeggio, strum, waltz, arpeggio-3, rocking-6, arpeggio-6, strum-16。ドラム: eight-beat, ballad, waltz, six-eight, sixteen-beat。ノリ: straight, swing, shuffle）
 - ballad: バラード。ゆっくり歌う曲。間を広く取り、和音を伸ばしたり分散したりする。（伴奏: ballad, arpeggio, waltz, arpeggio-3, rocking-6, arpeggio-6, drone。ドラム: ballad, waltz, six-eight。ノリ: straight。テンション: 長三和音に 9 度を足して（add9）柔らかくしている）
-- rock: ロック。ギターのストロークと 8 ビートで、強く前に進む。（伴奏: strum, pulse, strum-16。ドラム: eight-beat, sixteen-beat。ノリ: straight, swing）
-- jazz: ジャズ。ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。（伴奏: comp, walking, arpeggio, ballad, waltz, arpeggio-3。ドラム: jazz-ride, jazz-waltz。ノリ: swing, straight。テンション: 七の和音に 9 度、属七には 13 度も足している）
+- rock: ロック。ギターのストロークと 8 ビートで、強く前に進む。（伴奏: strum, pulse, strum-16。ドラム: eight-beat, sixteen-beat。ノリ: straight, swing, shuffle）
+- jazz: ジャズ。ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。（伴奏: comp, walking, arpeggio, ballad, waltz, arpeggio-3。ドラム: jazz-ride, jazz-waltz。ノリ: swing, straight, shuffle。テンション: 七の和音に 9 度、属七には 13 度も足している）
 - bossa: ボサノバ。ブラジルの穏やかなリズム。表と裏が交互に来るキックの上で、和音を軽く流す。（伴奏: arpeggio, comp, ballad。ドラム: bossa。ノリ: straight。テンション: 七の和音に 9 度を足している）
 - celtic: ケルト。アイルランドやスコットランドの舞曲と民謡。リールの裏打ちとボーラン、6/8 のジグ、ドローン。（伴奏: reel, drone, arpeggio, arpeggio-3, waltz, rocking-6, arpeggio-6。ドラム: bodhran, jig, six-eight。ノリ: straight）
 - lofi: ローファイ。軽く跳ねるハーフタイムのビートの上で、エレクトリック・ピアノが 9 度を足した和音をゆったり鳴らす、ローファイ・ヒップホップ。（伴奏: ballad, arpeggio。ドラム: lofi, ballad。ノリ: swing, straight。テンション: 七の和音に 9 度を足している）

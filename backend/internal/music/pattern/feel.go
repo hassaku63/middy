@@ -17,8 +17,19 @@ type Feel string
 // Feels.
 const (
 	FeelStraight Feel = "straight" // even eighths; the default
-	FeelSwing    Feel = "swing"    // long-short eighths, a 2:1 triplet pair
+	FeelSwing    Feel = "swing"    // long-short eighths, as deep as the tempo calls for
+	// FeelShuffle is the blues and rock shuffle (#308, ADR-0036): eighths
+	// swung on the triplet, 2:1, whatever the tempo.
+	FeelShuffle Feel = "shuffle"
 )
+
+// shuffleRatio is the shuffle's long-short: the first and third notes of
+// a triplet.
+const shuffleRatio = 2.0
+
+// Swings reports whether the feel delays the offbeats, which a compound
+// meter does not take: its beat is already divided in three.
+func (f Feel) Swings() bool { return f == FeelSwing || f == FeelShuffle }
 
 // FeelInfo names and explains a feel for the prompt and the panel.
 type FeelInfo struct {
@@ -29,7 +40,8 @@ type FeelInfo struct {
 
 var feels = []FeelInfo{
 	{FeelStraight, "ストレート", "8 分音符を均等に刻む。"},
-	{FeelSwing, "スウィング", "8 分音符を長・短で跳ねさせる。ジャズやシャッフルの揺れ。"},
+	{FeelSwing, "スウィング", "8 分音符を長・短で跳ねさせる。跳ね方はテンポに合わせる（遅いほど深い）。ジャズの揺れ。"},
+	{FeelShuffle, "シャッフル", "8 分音符を 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。ブルースやロックの「タッカ・タッカ」と跳ねる揺れ。"},
 }
 
 // Feels lists the feels in a stable order.
@@ -136,6 +148,9 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 	if info.ID == FeelStraight {
 		return tl
 	}
+	if info.ID == FeelShuffle && sw.Ratio == 0 {
+		sw.Ratio = shuffleRatio
+	}
 	sw = sw.resolved(tl.TempoBPM)
 	tracks := make([]music.Track, len(tl.Tracks))
 	for i, tr := range tl.Tracks {
@@ -154,7 +169,7 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 		Name:        info.Name,
 		Ratio:       sw.Ratio,
 		Unit:        string(sw.Unit),
-		Explanation: swingText(sw, tl.TempoBPM),
+		Explanation: feelText(info.ID, sw, tl.TempoBPM),
 	}
 	tl.Rhythm = &rhythm
 	return tl
@@ -210,9 +225,9 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 	if err != nil {
 		return music.Timeline{}, err
 	}
-	if info.ID == FeelSwing && tl.TimeSignature.Compound() {
+	if info.ID.Swings() && tl.TimeSignature.Compound() {
 		ts := tl.TimeSignature
-		return music.Timeline{}, fmt.Errorf("pattern: swing is for simple meters; %d/%d already divides each beat in three", ts.Numerator, ts.Denominator)
+		return music.Timeline{}, fmt.Errorf("pattern: %s is for simple meters; %d/%d already divides each beat in three", info.ID, ts.Numerator, ts.Denominator)
 	}
 	if acc.ID == "block" && drums == nil && !slices.ContainsFunc(tl.Harmony, func(h music.HarmonyEvent) bool { return h.Push != music.PushNone }) {
 		info, _ = findFeel(FeelStraight) // held block chords, unpushed, have no eighths to swing
@@ -315,6 +330,15 @@ func applyStyle(tl music.Timeline, st *Style, acc Accompaniment) music.Timeline 
 	rhythm.Style = rs
 	tl.Rhythm = &rhythm
 	return tl
+}
+
+// feelText explains the feel: the shuffle by its triplet, a swing by
+// swingText.
+func feelText(f Feel, sw Swing, beatBPM float64) string {
+	if f == FeelShuffle && sw.Ratio == shuffleRatio && sw.Unit == UnitEighth {
+		return "シャッフル。8 分音符を 2 つずつ組にし、3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。「タッカ・タッカ」と跳ね、ブルースやロックの重いノリになる。テンポが変わっても跳ね方は変わらない。"
+	}
+	return swingText(sw, beatBPM)
 }
 
 // swingText explains the swing: which notes, how far, and the tendency

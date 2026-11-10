@@ -175,7 +175,7 @@ func TestPatternsCatalogue(t *testing.T) {
 	if len(body.Accompaniments) < 5 || len(body.Drums) < 3 || body.Accompaniments[0].ID != "block" {
 		t.Fatalf("unexpected catalogue: %d accompaniments, %d drums", len(body.Accompaniments), len(body.Drums))
 	}
-	if len(body.Feels) != 2 || body.Feels[0].ID != "straight" {
+	if len(body.Feels) != 3 || body.Feels[0].ID != "straight" {
 		t.Fatalf("feels missing from the catalogue: %+v", body.Feels)
 	}
 	// The styles come with the catalogue so the card can name them (BL-119).
