@@ -1,0 +1,180 @@
+{
+  "accompaniments": [
+    {
+      "id": "block",
+      "name": "ブロック",
+      "description": "コードの構成音をまとめて、コードが変わるまで伸ばす。進行そのものを聴くための形。",
+      "program": 0,
+      "hits": [
+        {"start": 0, "duration": 0, "voice": "chord", "velocity": 80}
+      ]
+    },
+    {
+      "id": "pulse",
+      "name": "4 分刻み",
+      "description": "毎拍にコードを打つ。拍の位置がはっきりし、テンポ感が出る。",
+      "program": 0,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 480, "voice": "chord", "velocity": 84},
+        {"start": 480, "duration": 480, "voice": "chord", "velocity": 72},
+        {"start": 960, "duration": 480, "voice": "chord", "velocity": 80},
+        {"start": 1440, "duration": 480, "voice": "chord", "velocity": 72}
+      ]
+    },
+    {
+      "id": "ballad",
+      "name": "バラード",
+      "description": "1 拍目と 3 拍目にベース、2 拍目と 4 拍目にコード。重心が交互に動き、ゆったり揺れる。",
+      "program": 0,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 480, "voice": "bass", "velocity": 88},
+        {"start": 480, "duration": 480, "voice": "chord", "velocity": 70},
+        {"start": 960, "duration": 480, "voice": "bass", "velocity": 80},
+        {"start": 1440, "duration": 480, "voice": "chord", "velocity": 70}
+      ]
+    },
+    {
+      "id": "arpeggio",
+      "name": "アルペジオ",
+      "description": "構成音を 8 分音符で下から順に弾く。和音が線になって流れる。",
+      "program": 0,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 240, "voice": "root", "velocity": 82},
+        {"start": 240, "duration": 240, "voice": "third", "velocity": 70},
+        {"start": 480, "duration": 240, "voice": "fifth", "velocity": 74},
+        {"start": 720, "duration": 240, "voice": "octave", "velocity": 70},
+        {"start": 960, "duration": 240, "voice": "root", "velocity": 78},
+        {"start": 1200, "duration": 240, "voice": "third", "velocity": 68},
+        {"start": 1440, "duration": 240, "voice": "fifth", "velocity": 72},
+        {"start": 1680, "duration": 240, "voice": "octave", "velocity": 68}
+      ]
+    },
+    {
+      "id": "strum",
+      "name": "ストローク",
+      "description": "ギターのストロークのように、表拍に長く、裏拍に短く刻む。8 ビートの基本。",
+      "program": 24,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 480, "voice": "chord", "velocity": 86},
+        {"start": 720, "duration": 240, "voice": "chord", "velocity": 66},
+        {"start": 960, "duration": 480, "voice": "chord", "velocity": 80},
+        {"start": 1440, "duration": 240, "voice": "chord", "velocity": 70},
+        {"start": 1680, "duration": 240, "voice": "chord", "velocity": 64}
+      ]
+    },
+    {
+      "id": "reel",
+      "name": "リールの裏打ち",
+      "description": "1・3 拍にベース、各拍の裏に短い和音。ギターがリールの細かな 8 分を後ろから押し、ケルトの舞曲の推進力を作る。",
+      "program": 25,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 480, "voice": "bass", "velocity": 86},
+        {"start": 240, "duration": 180, "voice": "chord", "velocity": 64},
+        {"start": 720, "duration": 180, "voice": "chord", "velocity": 60},
+        {"start": 960, "duration": 480, "voice": "bass", "velocity": 80},
+        {"start": 1200, "duration": 180, "voice": "chord", "velocity": 62},
+        {"start": 1680, "duration": 180, "voice": "chord", "velocity": 58}
+      ]
+    },
+    {
+      "id": "comp",
+      "name": "4 ビートのコンピング",
+      "description": "1・3 拍にベース、1 拍目と 2 拍目の裏に短い和音（チャールストンのリズム）。和音を短く切って間を空け、ジャズのピアノが伴奏する形。ノリはスウィングと組み合わせる。",
+      "program": 0,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 480, "voice": "bass", "velocity": 84},
+        {"start": 0, "duration": 180, "voice": "chord", "velocity": 70},
+        {"start": 720, "duration": 180, "voice": "chord", "velocity": 64},
+        {"start": 960, "duration": 480, "voice": "bass", "velocity": 76}
+      ]
+    },
+    {
+      "id": "walking",
+      "name": "ウォーキング・ベース",
+      "description": "ベースが 4 分音符で歩く。和音の 1 拍目に根音、間に和音の音、和音の最後の拍で次の和音の根音の半音下から入る。上では短い和音がチャールストンのリズムで鳴る。ジャズの 4 ビート。ノリはスウィングと組み合わせる。",
+      "program": 0,
+      "meter": {"numerator": 4, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 432, "voice": "walk", "velocity": 84},
+        {"start": 480, "duration": 432, "voice": "walk", "velocity": 70},
+        {"start": 960, "duration": 432, "voice": "walk", "velocity": 78},
+        {"start": 1440, "duration": 432, "voice": "walk", "velocity": 70},
+        {"start": 0, "duration": 180, "voice": "chord", "velocity": 64},
+        {"start": 720, "duration": 180, "voice": "chord", "velocity": 58}
+      ]
+    },
+    {
+      "id": "drone",
+      "name": "ドローン",
+      "description": "主音と 5 度を低く保ち、その上で和音を伸ばす（リードオルガン）。和音が動いても主音が鳴り続けるので、バグパイプやフィドルの開放弦のような、ケルトや民謡の土台になる。",
+      "program": 20,
+      "hits": [
+        {"start": 0, "duration": 0, "voice": "drone", "velocity": 70},
+        {"start": 0, "duration": 0, "voice": "chord", "velocity": 62}
+      ]
+    },
+    {
+      "id": "waltz",
+      "name": "ワルツ",
+      "description": "1 拍目にベース、2・3 拍目にコード。「ズン・チャッ・チャッ」と 1 小節ごとに回る、3 拍子の基本。",
+      "program": 0,
+      "meter": {"numerator": 3, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 480, "voice": "bass", "velocity": 90},
+        {"start": 480, "duration": 480, "voice": "chord", "velocity": 68},
+        {"start": 960, "duration": 480, "voice": "chord", "velocity": 64}
+      ]
+    },
+    {
+      "id": "arpeggio-3",
+      "name": "3 拍のアルペジオ",
+      "description": "構成音を 8 分音符で上って下りる（根音・3 度・5 度・オクターブ・5 度・3 度）。3 拍子の揺れが線になって流れる。",
+      "program": 0,
+      "meter": {"numerator": 3, "denominator": 4},
+      "hits": [
+        {"start": 0, "duration": 240, "voice": "root", "velocity": 82},
+        {"start": 240, "duration": 240, "voice": "third", "velocity": 68},
+        {"start": 480, "duration": 240, "voice": "fifth", "velocity": 72},
+        {"start": 720, "duration": 240, "voice": "octave", "velocity": 70},
+        {"start": 960, "duration": 240, "voice": "fifth", "velocity": 70},
+        {"start": 1200, "duration": 240, "voice": "third", "velocity": 66}
+      ]
+    },
+    {
+      "id": "rocking-6",
+      "name": "6/8 の揺れ",
+      "description": "付点 4 分の拍の頭にベース、残りの 8 分 2 つにコード。「ズン・チャ・チャ」が 1 小節に 2 回来て、ゆりかごのように揺れる。",
+      "program": 0,
+      "meter": {"numerator": 6, "denominator": 8},
+      "hits": [
+        {"start": 0, "duration": 720, "voice": "bass", "velocity": 88},
+        {"start": 240, "duration": 240, "voice": "chord", "velocity": 62},
+        {"start": 480, "duration": 240, "voice": "chord", "velocity": 58},
+        {"start": 720, "duration": 720, "voice": "bass", "velocity": 80},
+        {"start": 960, "duration": 240, "voice": "chord", "velocity": 60},
+        {"start": 1200, "duration": 240, "voice": "chord", "velocity": 56}
+      ]
+    },
+    {
+      "id": "arpeggio-6",
+      "name": "6/8 のアルペジオ",
+      "description": "構成音を 8 分音符 6 つで上って下りる（根音・3 度・5 度・オクターブ・5 度・3 度）。2 拍目の頭にオクターブが来て、1 小節で波が 1 往復する。",
+      "program": 0,
+      "meter": {"numerator": 6, "denominator": 8},
+      "hits": [
+        {"start": 0, "duration": 240, "voice": "root", "velocity": 82},
+        {"start": 240, "duration": 240, "voice": "third", "velocity": 64},
+        {"start": 480, "duration": 240, "voice": "fifth", "velocity": 66},
+        {"start": 720, "duration": 240, "voice": "octave", "velocity": 76},
+        {"start": 960, "duration": 240, "voice": "fifth", "velocity": 64},
+        {"start": 1200, "duration": 240, "voice": "third", "velocity": 62}
+      ]
+    }
+  ]
+}
