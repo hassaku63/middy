@@ -69,17 +69,27 @@ func borrowedFunctionText(k Key, p placed, fn Function) string {
 // cadenceAt is the cadence the chord at i closes (#371, ADR-0051). A
 // cadence ends a phrase, so the arrival must be the last chord or end on
 // a phrase boundary (PhraseBars): V – I inside a phrase is one motion, and
-// a V that goes on is no half cadence. The tonic six-four before V (the
-// cadential six-four) decorates the V; it closes nothing.
+// a V that goes on is no half cadence. A tonic six-four closes nothing:
+// before V (the cadential six-four) it decorates the V.
 func cadenceAt(tl Timeline, ps []placed, i int) Cadence {
-	if i == 0 || !endsPhrase(tl, i) {
+	if i == 0 || !endsPhrase(tl, i) || isTonicSixFour(tl.Harmony, ps, i) {
+		// A tonic six-four is unstable: no phrase comes to rest on it (#378).
 		return NoCadence
 	}
-	cad := cadenceBetween(tl.Key.Mode, ps[i-1], ps[i])
-	if cad == Plagal && isCadentialSixFour(tl.Harmony, ps, i) {
-		return NoCadence
+	prev := ps[i-1]
+	if ps[i].degree == 5 && ps[i].applied == 0 {
+		// V prepared by its own sus4 or triad (Vsus4 – V, V – V7) is
+		// still the arrival on V: look back past the same degree (#378).
+		j := i - 1
+		for j >= 0 && ps[j].degree == 5 && ps[j].applied == 0 {
+			j--
+		}
+		if j < 0 {
+			return NoCadence
+		}
+		prev = ps[j]
 	}
-	return cad
+	return cadenceBetween(tl.Key.Mode, prev, ps[i])
 }
 
 // endsPhrase reports whether the chord at i ends a phrase: it is the last,
@@ -96,8 +106,13 @@ func endsPhrase(tl Timeline, i int) bool {
 // isCadentialSixFour reports whether the chord at i is the tonic with its
 // fifth in the bass, going on to V (I6/4 – V).
 func isCadentialSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
-	if i+1 >= len(ps) || ps[i].degree != 1 || ps[i].borrowed || ps[i].applied != 0 ||
-		ps[i+1].degree != 5 || ps[i+1].applied != 0 {
+	return i+1 < len(ps) && isTonicSixFour(hs, ps, i) && ps[i+1].degree == 5 && ps[i+1].applied == 0
+}
+
+// isTonicSixFour reports whether the chord at i is the tonic with its
+// fifth in the bass.
+func isTonicSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
+	if ps[i].degree != 1 || ps[i].borrowed || ps[i].applied != 0 {
 		return false
 	}
 	pcs := hs[i].Chord.PitchClasses()

@@ -61,3 +61,27 @@ func TestCadenceSentencesNameTheChords(t *testing.T) {
 		}
 	}
 }
+
+// TestCadenceEdgeCases (#378 B3, B7): no cadence comes to rest on a tonic
+// six-four, and a V prepared by its own sus4 or triad is a half cadence.
+func TestCadenceEdgeCases(t *testing.T) {
+	// The I/5 ends bar 4 and goes on to V: no authentic cadence on it.
+	six := analysed(t, Key{C, Major}, 4, "I", "IV", "V", "I/5", "V", "I")
+	if a := six.Harmony[3].Analysis; a.Cadence != NoCadence || strings.Contains(a.Explanation, "正格終止") {
+		t.Errorf("V – I/5 at the phrase's end:\n%+v", a)
+	}
+	end := analysed(t, Key{C, Major}, 4, "I", "ii", "IV", "I/5")
+	if a := end.Harmony[3].Analysis; a.Cadence != NoCadence || strings.Contains(a.Explanation, "変格終止") {
+		t.Errorf("IV – I/5 at the end:\n%+v", a)
+	}
+	for _, labels := range [][]string{{"I", "IV", "Vsus4", "V"}, {"I", "ii", "V", "V7"}} {
+		tl := analysed(t, Key{C, Major}, 4, labels...)
+		if a := tl.Harmony[3].Analysis; a.Cadence != Half || !strings.Contains(a.Explanation, "半終止") {
+			t.Errorf("%v ends on V: %+v", labels, a)
+		}
+	}
+	// V – V – I is still one authentic cadence at the end.
+	if a := analysed(t, Key{C, Major}, 4, "V", "V7", "I").Harmony[2].Analysis; a.Cadence != Authentic {
+		t.Errorf("V – V7 – I: %+v", a)
+	}
+}
