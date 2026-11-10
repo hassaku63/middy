@@ -96,3 +96,31 @@ func TestNoReviewNoSection(t *testing.T) {
 		t.Errorf("a run without reviews printed %q", got)
 	}
 }
+
+// TestReviewRunsOnFullRuns (#334): the reviewer runs on a full run, not on
+// one narrowed by tags, unless EVAL_REVIEW says otherwise; a skipped
+// review is said once and not counted as a review that failed.
+func TestReviewRunsOnFullRuns(t *testing.T) {
+	for _, c := range []struct {
+		tags []string
+		env  string
+		want bool
+	}{
+		{nil, "", true},
+		{[]string{"meter"}, "", false},
+		{[]string{"meter"}, "1", true},
+		{nil, "0", false},
+	} {
+		if got, err := ReviewWanted(c.tags, c.env); err != nil || got != c.want {
+			t.Errorf("tags %v, EVAL_REVIEW %q: %v %v, want %v", c.tags, c.env, got, err, c.want)
+		}
+	}
+	if _, err := ReviewWanted(nil, "yes"); err == nil {
+		t.Error("EVAL_REVIEW=yes must be an error")
+	}
+	verdicts := []Verdict{{Case: Case{ID: "a"}, Pass: true, ReviewInput: "依頼: …"}}
+	note := SkipReview(verdicts)
+	if report := Report(verdicts) + note; strings.Contains(report, "レビューできなかったもの") || !strings.Contains(report, "独立したレビュアーは走らせていない") {
+		t.Errorf("a skipped review must be said, not counted as failed:\n%s", report)
+	}
+}

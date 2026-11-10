@@ -232,3 +232,28 @@ func reviewReport(verdicts []Verdict) string {
 	}
 	return b.String()
 }
+
+// ReviewWanted says whether a run calls the reviewer (#334): a full run
+// does, a run narrowed by tags does not, and EVAL_REVIEW ("1" or "0")
+// overrides either.
+func ReviewWanted(tags []string, env string) (bool, error) {
+	switch env {
+	case "":
+		return len(tags) == 0, nil
+	case "1":
+		return true, nil
+	case "0":
+		return false, nil
+	}
+	return false, fmt.Errorf("evals: EVAL_REVIEW must be 1 or 0, got %q", env)
+}
+
+// SkipReview marks the verdicts as not sent to the reviewer, so the
+// report does not count them as reviews that failed, and returns the line
+// that says so.
+func SkipReview(verdicts []Verdict) string {
+	for i := range verdicts {
+		verdicts[i].ReviewInput = ""
+	}
+	return "\n独立したレビュアーは走らせていない（絞った評価。EVAL_REVIEW=1 で走らせる）。\n"
+}

@@ -3,7 +3,7 @@
   "cases": [
     {"id": "rainy-sunday", "tags": ["smoke", "basic", "tension"], "image": "雨の日曜の午後みたいな曲", "mode": "either", "tempoMax": 100},
     {"id": "departure-morning", "tags": ["basic", "chords"], "image": "出発の朝、晴れていて少しわくわくする", "mode": "major", "tempoMin": 90, "wants": ["II", "II7", "III", "III7", "Vsus4", "V7sus4", "Isus4"]},
-    {"id": "night-walk", "tags": ["basic"], "image": "夜の帰り道、少し寂しい", "mode": "minor", "tempoMax": 110},
+    {"id": "night-walk", "tags": ["basic"], "image": "夜の帰り道、少し寂しい", "mode": "minor/major", "tempoMax": 110},
     {"id": "summer-festival", "tags": ["basic"], "image": "夏祭りの屋台の賑わい", "mode": "major", "tempoMin": 100},
     {"id": "first-snow", "tags": ["basic", "tension"], "image": "初雪が静かに降る夜", "mode": "either", "tempoMax": 90},
     {"id": "graduation", "tags": ["basic", "chords"], "image": "卒業式、嬉しいけど寂しい", "mode": "either", "tempoMax": 110, "wants": ["III7", "III"]},

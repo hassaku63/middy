@@ -42,6 +42,12 @@ func TestLiveEval(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The reviewer runs on full runs; a narrowed run skips it (#334).
+	// Checked before anything is sent, like the tags.
+	review, err := ReviewWanted(tags, os.Getenv("EVAL_REVIEW"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	// End a minute before `go test` would kill the run, so the report is
 	// printed with whatever finished (the default -timeout is 10 minutes).
 	budget := 9 * time.Minute
@@ -56,8 +62,13 @@ func TestLiveEval(t *testing.T) {
 	defer cancelRun()
 	answers, reviewer := NewMeter(client), NewMeter(client)
 	verdicts := Run(runCtx, ideas.NewDiagnostic(answers), cases)
-	ReviewAll(ctx, reviewer, verdicts)
-	fmt.Println(Report(verdicts) + UsageReport(UsagePart{"答え（出し直しを含む）", answers}, UsagePart{"レビュアー", reviewer}) + scopeNote(tags, len(cases), len(all)))
+	reviewNote := ""
+	if review {
+		ReviewAll(ctx, reviewer, verdicts)
+	} else {
+		reviewNote = SkipReview(verdicts)
+	}
+	fmt.Println(Report(verdicts) + reviewNote + UsageReport(UsagePart{"答え（出し直しを含む）", answers}, UsagePart{"レビュアー", reviewer}) + scopeNote(tags, len(cases), len(all)))
 	failed := 0
 	for _, v := range verdicts {
 		if !v.Pass {
