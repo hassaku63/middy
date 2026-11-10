@@ -149,3 +149,30 @@ test('the column lists earlier examples and brings one back as it was left (BL-1
   await expect(result).toContainText('候補: 朝の光');
   await expect(frame).toHaveClass(/is-following/);
 });
+
+/**
+ * BL-197 (#314): the wide desk puts the timeline across the whole stage,
+ * with the chord's frame and the other explanations side by side below it,
+ * so the timeline is wider than on the desk.
+ */
+test('the wide desk gives the timeline the whole stage, the explanations below (BL-197)', async ({
+  page,
+}) => {
+  const timelineWidth = async (layout: string) => {
+    await page.goto(`/?layout=${layout}`);
+    const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+    const box = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
+    return { result, box };
+  };
+  const desk = await timelineWidth('desk');
+  const wide = await timelineWidth('wide');
+  expect(wide.box && desk.box && wide.box.width > desk.box.width * 1.3).toBe(true);
+
+  const frame = await wide.result.getByRole('region', { name: 'コードの解説' }).boundingBox();
+  const notes = await wide.result.getByRole('region', { name: '解説', exact: true }).boundingBox();
+  expect(frame && wide.box && frame.y >= wide.box.y + wide.box.height).toBe(true);
+  expect(
+    frame && notes && frame.x + frame.width <= notes.x && Math.abs(frame.y - notes.y) < 2,
+  ).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
+});
