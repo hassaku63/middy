@@ -460,6 +460,8 @@ export interface components {
       function: 'T' | 'S' | 'D';
       /** @description 例がこの度数の和音を調の和音として鳴らすとき true（七の和音や短調の V を含む。借用和音とセカンダリードミナントは含まない）。省略時 false */
       used?: boolean;
+      /** @description この度数で鳴る和音のうち、構成音が調の音階から外れるもの（短調の和声的な V7 なら B7、長調のブルースの I7 なら C7）。調に合わせて綴った和音名。音階の中の七の和音や sus4 は含まない（#296）。省略時は空 */
+      altered?: string[];
     };
     Rhythm: {
       accompaniment?: components['schemas']['RhythmPart'];

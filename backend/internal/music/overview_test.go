@@ -240,3 +240,31 @@ func TestDegreeMapListsTheModesSevenChords(t *testing.T) {
 		}
 	}
 }
+
+// TestDegreeMapNamesAlteredChords (#296): a chord played on a degree whose
+// tones leave the scale (minor's harmonic V7, a blues I7) is named on the
+// map; a seventh or a suspension inside the scale is not.
+func TestDegreeMapNamesAlteredChords(t *testing.T) {
+	tests := []struct {
+		key     Key
+		labels  []string
+		altered map[int]string
+	}{
+		{Key{E, Minor}, []string{"i", "iv", "V7", "i"}, map[int]string{5: "B7"}},
+		{Key{E, Minor}, []string{"i", "v", "V", "V7", "i"}, map[int]string{5: "B B7"}},
+		{Key{C, Major}, []string{"I7", "IV7", "I7", "V7"}, map[int]string{1: "C7", 4: "F7"}},
+		{Key{C, Major}, []string{"Imaj7", "ii7", "Vsus4", "V7", "I"}, map[int]string{}},
+	}
+	for _, tt := range tests {
+		tl := analysed(t, tt.key, 4, tt.labels...)
+		got := map[int]string{}
+		for _, d := range tl.Overview.Degrees {
+			if len(d.Altered) > 0 {
+				got[d.Degree] = strings.Join(d.Altered, " ")
+			}
+		}
+		if fmt.Sprint(got) != fmt.Sprint(tt.altered) {
+			t.Errorf("%s %v: altered = %v, want %v", tt.key, tt.labels, got, tt.altered)
+		}
+	}
+}
