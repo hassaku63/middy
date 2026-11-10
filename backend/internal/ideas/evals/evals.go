@@ -23,8 +23,11 @@ var casesJSON []byte
 
 // Case is one image with loose expectations on the first candidate.
 type Case struct {
-	ID    string `json:"id"`
-	Image string `json:"image"`
+	ID string `json:"id"`
+	// Tags say what the case looks at (Tags lists them), so a run can be
+	// narrowed to the cases a change touches (#334).
+	Tags  []string `json:"tags"`
+	Image string   `json:"image"`
 	// Mode is "major", "minor", "dorian", "mixolydian", "phrygian", "either", or several
 	// of those joined with "/" when more than one would fit.
 	Mode     string  `json:"mode"`
@@ -53,6 +56,50 @@ type Case struct {
 	// mixolydian or minor. A miss is reported, not failed: some wants are not
 	// yet expressible, and the report measures exactly that (ADR-0013).
 	Wants []string `json:"wants,omitempty"`
+}
+
+// Tags are what a case looks at; every case has at least one.
+var Tags = []string{
+	"smoke",   // a few cases across the rest, to run with any narrowed set
+	"basic",   // an everyday image: mode and tempo
+	"mode",    // the modes beyond major and minor
+	"meter",   // 3/4 and 6/8
+	"style",   // a style the case names or implies
+	"groove",  // accompaniment, drums and feel
+	"chords",  // the vocabulary beyond diatonic chords (wants)
+	"slash",   // slash basses
+	"tension", // tensions, from the style or the candidate
+	"named",   // a named progression (丸サ, カノン, ii–V–I)
+}
+
+// Select keeps the cases with any of the tags, in their order; no tags
+// keeps them all. An unknown tag is an error, so a misspelt one does not
+// quietly run nothing.
+func Select(cases []Case, tags []string) ([]Case, error) {
+	if len(tags) == 0 {
+		return cases, nil
+	}
+	for _, t := range tags {
+		if !slices.Contains(Tags, t) {
+			return nil, fmt.Errorf("evals: unknown tag %q; use some of %v", t, Tags)
+		}
+	}
+	var out []Case
+	for _, c := range cases {
+		if slices.ContainsFunc(c.Tags, func(t string) bool { return slices.Contains(tags, t) }) {
+			out = append(out, c)
+		}
+	}
+	return out, nil
+}
+
+// scopeNote says which cases a run covered, so a narrowed run is not read
+// as the whole set.
+func scopeNote(tags []string, ran, total int) string {
+	if len(tags) == 0 {
+		return fmt.Sprintf("\n評価したケース: 全件（%d 件）\n", total)
+	}
+	return fmt.Sprintf("\n評価したケース: タグ %s の %d / %d 件\n", strings.Join(tags, ", "), ran, total)
 }
 
 // Load returns the embedded cases.

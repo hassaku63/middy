@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,7 +27,18 @@ func TestLiveEval(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cases, err := Load()
+	all, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// EVAL_TAGS="meter,smoke" runs only the cases with those tags (#334).
+	var tags []string
+	for _, tag := range strings.Split(os.Getenv("EVAL_TAGS"), ",") {
+		if tag = strings.TrimSpace(tag); tag != "" {
+			tags = append(tags, tag)
+		}
+	}
+	cases, err := Select(all, tags)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +56,7 @@ func TestLiveEval(t *testing.T) {
 	defer cancelRun()
 	verdicts := Run(runCtx, ideas.NewDiagnostic(client), cases)
 	ReviewAll(ctx, client, verdicts)
-	fmt.Println(Report(verdicts))
+	fmt.Println(Report(verdicts) + scopeNote(tags, len(cases), len(all)))
 	failed := 0
 	for _, v := range verdicts {
 		if !v.Pass {

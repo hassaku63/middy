@@ -3,6 +3,7 @@ package evals
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -42,6 +43,53 @@ func TestCasesLoadAndAreWellFormed(t *testing.T) {
 		if c.TempoMin > 0 && c.TempoMax > 0 && c.TempoMin > c.TempoMax {
 			t.Errorf("%s: tempo band inverted", c.ID)
 		}
+		if len(c.Tags) == 0 {
+			t.Errorf("%s: no tags", c.ID)
+		}
+		for _, tag := range c.Tags {
+			if !slices.Contains(Tags, tag) {
+				t.Errorf("%s: unknown tag %q", c.ID, tag)
+			}
+		}
+	}
+	for _, tag := range Tags {
+		if picked, _ := Select(cases, []string{tag}); len(picked) == 0 {
+			t.Errorf("tag %q names no case", tag)
+		}
+	}
+}
+
+// TestSelectNarrowsTheRun (#334): a run can be narrowed to the cases with
+// some tags, in their order; no tags is every case; a misspelt tag is an
+// error rather than an empty run.
+func TestSelectNarrowsTheRun(t *testing.T) {
+	cases, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	all, err := Select(cases, nil)
+	if err != nil || len(all) != len(cases) {
+		t.Fatalf("no tags keeps every case: %d of %d, %v", len(all), len(cases), err)
+	}
+	picked, err := Select(cases, []string{"meter", "slash"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	for _, c := range picked {
+		ids = append(ids, c.ID)
+	}
+	if got := strings.Join(ids, " "); got != "graduation-bass minor-cliche waltz-ball jazz-waltz rocking-lullaby irish-jig" {
+		t.Errorf("meter and slash picked %s", got)
+	}
+	if got := scopeNote([]string{"meter", "slash"}, 6, 44); !strings.Contains(got, "タグ meter, slash の 6 / 44 件") {
+		t.Errorf("scope note: %q", got)
+	}
+	if got := scopeNote(nil, 44, 44); !strings.Contains(got, "全件（44 件）") {
+		t.Errorf("scope note: %q", got)
+	}
+	if _, err := Select(cases, []string{"metre"}); err == nil || !strings.Contains(err.Error(), `unknown tag "metre"`) {
+		t.Errorf("a misspelt tag must be an error, got %v", err)
 	}
 }
 
