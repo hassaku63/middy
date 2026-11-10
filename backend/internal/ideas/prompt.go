@@ -40,7 +40,7 @@ func SystemPrompt() string {
 			fmt.Fprintf(&b, "- %s: %s。%s（伴奏: %s。ドラム: %s。ノリ: %s%s）\n", st.ID, st.Name, st.Description,
 				strings.Join(st.Accompaniments, ", "), strings.Join(st.Drums, ", "), joinFeels(st.Feels), tensionNote(st))
 		}
-		b.WriteString("拍子（meter）は 4/4 が既定。ワルツ、メヌエット、ジャズ・ワルツ、3 拍子のバラードのように 3 拍子が典型のイメージでは 3/4 にし、beatsPerChord は 3（1 小節）か 6（2 小節）、伴奏とドラムは 3/4 の型から選ぶ。")
+		b.WriteString("拍子（meter）はどの候補にも書く（多くのイメージでは 4/4）。ワルツ、メヌエット、ジャズ・ワルツ、3 拍子のバラードのように 3 拍子が典型のイメージでは 3/4 にし、beatsPerChord は 3（1 小節）か 6（2 小節）、伴奏とドラムは 3/4 の型から選ぶ。")
 		b.WriteString("ゆりかごの子守唄、舟歌、ジグ、6/8 のバラードのように、付点 4 分の 2 拍で揺れ、各拍が 3 つに分かれるイメージでは 6/8 にする。6/8 の拍は付点 4 分で、beatsPerChord は 1（半小節）・2（1 小節）・4（2 小節）、tempoBpm も付点 4 分の速さで書く（ゆったりした子守唄なら 50〜70、ジグなら 100〜130）。伴奏とドラムは 6/8 の型から選び、feel は使わない（拍がすでに 3 つに分かれている）。")
 		b.WriteString("ケルト（アイルランド、スコットランド）の舞曲なら、リールは 4/4 で accompaniment を reel、drums を bodhran に、ジグは 6/8 で drums を jig、accompaniment を rocking-6 か arpeggio-6 にする。8 ビートやストロークはポップスやフォークロックに聞こえるので、ケルトの例には使わない。ゆったりしたケルトの曲（エア）や民謡風の静かな曲で、主音を持続させたいときは accompaniment を drone にする（どの拍子でも使える）。")
 		b.WriteString("ジャズ（スウィング、ビバップ、ジャズ・バー、ピアノトリオ）なら、4/4 で accompaniment を comp、drums を jazz-ride にし、feel を swing にする。8 ビートとボサノバのドラムはジャズには使わない（ボサノバを頼まれたときは別）。ジャズ・ワルツは 3/4 で drums を jazz-waltz にし、feel を swing にする（3/4 でもスウィングできる）。")
