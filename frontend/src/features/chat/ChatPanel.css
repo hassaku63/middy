@@ -251,7 +251,6 @@
   gap: 12px;
   font-size: 0.9rem;
 }
-<<<<<<< HEAD
 
 /* The input and the settings for choosing, kept together (BL-218). */
 .chat__composer {
@@ -259,5 +258,3 @@
   flex-direction: column;
   gap: 8px;
 }
-=======
->>>>>>> origin/main

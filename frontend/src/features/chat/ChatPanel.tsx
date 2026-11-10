@@ -141,7 +141,6 @@ export function ChatPanel({
           <button type="submit" disabled={ideas.busy || text.trim() === ''}>
             送る
           </button>
-<<<<<<< HEAD
           {ideas.turns.length > 0 && (
             <button type="button" onClick={ideas.reset} disabled={ideas.busy}>
               最初から
@@ -150,11 +149,6 @@ export function ChatPanel({
         </form>
         {options && <div className="chat__options">{options}</div>}
       </div>
-=======
-        )}
-      </form>
-      {options && <div className="chat__options">{options}</div>}
->>>>>>> origin/main
     </section>
   );
 }
