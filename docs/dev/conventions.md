@@ -42,13 +42,24 @@
 
 ### 配置（画面の幅・高さ・表示環境で変えるとき）
 
-配置の規則は ADR-0042。判断の根拠は hci の索引（`.claude/skills/hci/index.md` の「画面幅のクラスと配置の切り替え」「行長と読みやすさ」）。
+配置の規則は ADR-0042。判断の根拠は hci の索引（`.claude/skills/hci/index.md` の「画面幅のクラスと配置の切り替え」「行長と読みやすさ」）。各規則の「根拠」に出典を書く。「確認済み」は本文を読んで確かめたもの。「抜粋」は検索結果の抜粋でしか確かめていないもの。
 
 - **骨組みは media query、部品は container query。** 画面の幅を見るのは `src/app/global.css` の骨組み（会話の列と結果の並び）だけ。feature の部品は、置かれた箱の幅を見る（`@container`）。部品の置き場所を変えても、部品の CSS は書き換えない。
+  - 根拠: Android Developers の [Support different display sizes](https://developer.android.com/develop/ui/compose/layouts/adaptive/support-different-display-sizes)（確認済み 2026-11-10）。表示の大きさの判断は、アプリ全体の配置の 1 か所に閉じる。個々の部品は、画面全体の大きさに暗に頼らず、実際に与えられた幅を使う。Web で同じことをする仕組みが container size query（W3C の [CSS Containment Module Level 3](https://www.w3.org/TR/css-contain-3/) が定義。[web-features](https://web-platform-dx.github.io/web-features-explorer/features/container-queries) では 2025-08 から Baseline Widely available）。
 - **しきい値は内容から決める。** 端末の幅（「iPhone の幅」）からは決めない。内容が崩れ始める幅（1 行が 40 字を超える、ボタンが折り返す）に置く。決めた値は下の表に足す。表にない値で分岐しない。
+  - 根拠: web.dev の [Responsive web design basics](https://web.dev/articles/responsive-web-design-basics)（抜粋）。端末の種類で決めず、内容が必要とするところにだけ境目を置く。
+  - 別の立場: Material 3 と Android の [window size classes](https://developer.android.com/develop/ui/compose/layouts/adaptive/window-size-classes)（確認済み）は、端末の多数例をもとにした既定の境目（600・840・1200・1600 dp）を勧める。ただし、窓の大きさで決めるものであって、`isTablet` のような判定には使わない、と明記している。middy は分岐が少ないので、内容から決める。分岐が増えて名前つきの帯が欲しくなったら、この既定の境目を候補にする。
 - **分岐しなくて済む書き方を先に使う。** `grid` の `minmax()`・`auto-fit`、`clamp()`、`max-width`、縦横比（`aspect-ratio`）。
-- **幅でできることを変えない。** 狭い画面でも、広い画面と同じ操作（固定、キー変更、保存）ができる。変えるのは配置だけ。
+  - 根拠: 上の Android のページ（確認済み）。中身を「どこに・どう」置くかを変えるだけなら、分岐ではなく、伸び縮みする配置で済ませる。分岐（`BoxWithConstraints`）は「何を」出すかを変えるときに使い、その分の手間がかかる。
+- **幅で、できることと読めることを失わない。** 狭い画面でも、広い画面と同じ操作（固定、キー変更、保存）ができ、同じ情報にたどり着ける。変えるのは配置と、見せる量だけ。
+  - 根拠: WCAG 2.2 の達成基準 1.4.10 Reflow（AA。[Understanding](https://www.w3.org/WAI/WCAG22/Understanding/reflow)、抜粋）。幅 320 CSS px で、情報と機能を失わず、縦と横の両方のスクロールを要しない。ただし、表や図のように 2 次元の配置が意味を持つ部分は例外。タイムラインは時間×音高の図なので、その箱の中の横スクロールはこの例外に当たる。ページ全体は横にスクロールさせない。
+  - Android のページ（確認済み）も、どの大きさでも部品に十分なデータを渡し、幅で出し入れするのは見せ方だけにする、としている。
 - **端末を当てない。** UA、`window.innerWidth`、`screen` で分岐しない（ESLint が禁止する）。表示環境で分けるときは、媒体の性質（`prefers-color-scheme`、`prefers-reduced-motion`、`pointer`、`hover`、`display-mode`、`env(safe-area-inset-*)`）を CSS で使う。
+  - 根拠: Android のページ（確認済み）が、配置の判断に物理的な端末の値を使わないよう明記している（"Avoid using physical hardware values for making layout decisions"）。分割画面や窓の大きさの変更で、端末の大きさは使える領域と一致しないため。
+  - MDN の [Browser detection using the user agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Browser_detection_using_the_user_agent)（抜粋）も、UA による判定より機能の検出を勧め、端末の判定を UA の誤用の代表に挙げている。
+- **しきい値は表に 1 か所。** 値を CSS・E2E・文書に散らさず、下の表を正典にする。
+  - 根拠: 上の Android のページ（確認済み）。表示の大きさの扱いを 1 か所に閉じ、同期を要する場所を散らさない。この repo の ADR-0006（事実は 1 箇所）。
+  - 表が大きくなったら、W3C Design Tokens Community Group の [Design Tokens Format Module 2025.10](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/)（CG の安定版。境目専用の型はない）の形式で書き出すことを検討する。
 
 幅の帯としきい値（この表が正典。CSS の値を変えたらこの表も直す）:
 
