@@ -87,7 +87,7 @@ func TestRenderChoices(t *testing.T) {
 	if _, err := Render(tl, Choice{Accompaniment: "polka"}); !errors.Is(err, ErrUnknownPattern) {
 		t.Fatalf("unknown ids are errors, got %v", err)
 	}
-	if _, err := Render(tl, Choice{Accompaniment: "block", Feel: "shuffle"}); !errors.Is(err, ErrUnknownPattern) {
+	if _, err := Render(tl, Choice{Accompaniment: "block", Feel: "bounce"}); !errors.Is(err, ErrUnknownPattern) {
 		t.Fatalf("unknown feels are errors, got %v", err)
 	}
 }
@@ -159,5 +159,37 @@ func TestSwingKeepsSixteenthsInOrder(t *testing.T) {
 	}
 	if start, _ := sw.move(eighth, eighth); start == eighth {
 		t.Error("an eighth on the and still swings")
+	}
+}
+
+// TestShuffle (#308, ADR-0036): the shuffle swings eighths on the triplet,
+// 2:1, at any tempo, says so, and is refused in 6/8 like swing.
+func TestShuffle(t *testing.T) {
+	for _, bpm := range []float64{70, 160} {
+		tl := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1)
+		tl.TempoBPM = bpm
+		out, err := Render(tl, Choice{Accompaniment: "strum", Drums: "eight-beat", Feel: FeelShuffle})
+		if err != nil {
+			t.Fatal(err)
+		}
+		f := out.Rhythm.Feel
+		if f == nil || f.ID != "shuffle" || f.Ratio != 2 || !strings.Contains(f.Explanation, "3 連符の 1 つ目と 3 つ目") {
+			t.Fatalf("%v BPM: feel %+v", bpm, f)
+		}
+		// The offbeat eighth (240) moves to the triplet's third (320).
+		found := false
+		for _, n := range out.Tracks[1].Notes {
+			if n.Start == 320 {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%v BPM: no drum hit on the triplet's third", bpm)
+		}
+	}
+	six := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 2, 1)
+	six.TimeSignature = music.SixEight
+	if _, err := Render(six, Choice{Accompaniment: "rocking-6", Feel: FeelShuffle}); err == nil || !strings.Contains(err.Error(), "shuffle is for simple meters") {
+		t.Errorf("6/8 shuffle: %v", err)
 	}
 }

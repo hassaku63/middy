@@ -68,7 +68,7 @@ func (s Style) Groove(ts music.TimeSignature) Groove {
 		}
 	}
 	for _, f := range s.Feels {
-		if f != FeelSwing || !ts.Compound() { // swing is for simple meters
+		if !f.Swings() || !ts.Compound() { // swing and shuffle are for simple meters
 			g.Feel = f
 			break
 		}

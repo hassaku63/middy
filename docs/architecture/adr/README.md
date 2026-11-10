@@ -39,6 +39,7 @@
 | [0033](0033-problem-details-only-for-the-api.md) | problem detail は API の応答にだけ使い、アプリのファイルと画面のエラーは短い平文にする | Accepted |
 | [0034](0034-what-variation-is-an-error.md) | 提案のゆらぎは許し、答えの中の理論の誤りと食い違いは許さない | Accepted |
 | [0035](0035-pattern-catalogue-as-data.md) | 型のカタログは、版管理され検証されるデータとしてエンジンに含める | Accepted |
+| [0036](0036-shuffle-feel.md) | シャッフルを、名前のついたノリとして足す | Accepted |
 | [0037](0037-candidate-tensions.md) | テンションは、候補ごとに AI が頼める（足す音はエンジンが決める） | Accepted |
 
 ## いつ ADR を書くか

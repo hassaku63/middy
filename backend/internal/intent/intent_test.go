@@ -189,7 +189,7 @@ func TestFeelIsValidatedAndInTheSchema(t *testing.T) {
 	if err := in.Validate(); err != nil {
 		t.Fatalf("swing is allowed: %v", err)
 	}
-	in.Candidates[0].Feel = "shuffle"
+	in.Candidates[0].Feel = "bounce"
 	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "feel must be one of") {
 		t.Fatalf("unknown feel must be reported, got %v", err)
 	}
@@ -595,7 +595,7 @@ func TestEachPatternMistakeIsReportedOnce(t *testing.T) {
 		want    string
 		wantNot string
 	}{
-		{"unknown feel", func(c *Candidate) { c.Style, c.Feel = "jazz", "shuffle" }, "feel must be one of", "does not fit the jazz style"},
+		{"unknown feel", func(c *Candidate) { c.Style, c.Feel = "jazz", "bounce" }, "feel must be one of", "does not fit the jazz style"},
 		{"basedOn for another meter", func(c *Candidate) { c.Style, c.DrumGrid = "jazz", grid("waltz", 2) }, "basedOn", "does not fit the jazz style"},
 		{"drums beside a grid", func(c *Candidate) { c.Style, c.Drums, c.DrumGrid = "jazz", "eight-beat", grid("", 2) }, "does not fit the jazz style", ""},
 		{"tempo out of range", func(c *Candidate) { c.TempoBPM, c.DrumGrid = 300, grid("", 4) }, "tempoBpm must be", "coarser"},

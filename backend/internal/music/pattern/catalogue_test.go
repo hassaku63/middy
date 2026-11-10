@@ -78,8 +78,8 @@ func TestValidateChecksTheStyles(t *testing.T) {
 		want  []string
 	}{
 		{"a good style", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Drums: []string{"beat"}, Feels: []Feel{FeelStraight}, Program: &guitar, Instrument: "ギター"}, nil},
-		{"unknown patterns and feel", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum", "polka"}, Drums: []string{"beat", "taiko"}, Feels: []Feel{"shuffle"}},
-			[]string{"names acc:polka", "names drums:taiko", `feel "shuffle"`}},
+		{"unknown patterns and feel", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum", "polka"}, Drums: []string{"beat", "taiko"}, Feels: []Feel{"bounce"}},
+			[]string{"names acc:polka", "names drums:taiko", `feel "bounce"`}},
 		{"a pattern no style names", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Feels: []Feel{FeelStraight}},
 			[]string{"drums:beat belongs to no style"}},
 		{"an instrument without its name", Style{ID: "s", Name: "S", Description: "x", Accompaniments: []string{"strum"}, Drums: []string{"beat"}, Feels: []Feel{FeelStraight}, Program: &guitar},

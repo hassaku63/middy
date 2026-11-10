@@ -450,8 +450,8 @@ func (c Candidate) validatePatterns() []error {
 		feel = ""
 	}
 	errs = append(errs, c.styleErrs(acc, drums, feel)...)
-	if c.Feel == string(pattern.FeelSwing) && ts.Compound() {
-		errs = append(errs, fmt.Errorf("feel swing is not used in %d/%d: its beat already divides in three", ts.Numerator, ts.Denominator))
+	if pattern.Feel(c.Feel).Swings() && ts.Compound() {
+		errs = append(errs, fmt.Errorf("feel %s is not used in %d/%d: its beat already divides in three", c.Feel, ts.Numerator, ts.Denominator))
 	}
 	return errs
 }
