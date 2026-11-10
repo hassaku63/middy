@@ -179,7 +179,7 @@ func TestPatternsCatalogue(t *testing.T) {
 		t.Fatalf("feels missing from the catalogue: %+v", body.Feels)
 	}
 	// The styles come with the catalogue so the card can name them (BL-119).
-	if len(body.Styles) != 7 || body.Styles[5].ID != "celtic" || body.Styles[5].Name != "ケルト" || body.Styles[6].ID != "lofi" {
+	if len(body.Styles) != 8 || body.Styles[5].ID != "celtic" || body.Styles[5].Name != "ケルト" || body.Styles[6].ID != "lofi" || body.Styles[7].ID != "blues" {
 		t.Fatalf("styles missing from the catalogue: %+v", body.Styles)
 	}
 	for _, a := range body.Accompaniments {

@@ -310,7 +310,7 @@ export interface components {
        * @description 候補の音楽のスタイル（BL-082、ADR-0012）。伴奏・ドラム・ノリはこのスタイルに合うものに限られる。以前の候補にはない
        * @enum {string}
        */
-      style?: 'pop' | 'ballad' | 'rock' | 'jazz' | 'bossa' | 'celtic' | 'lofi';
+      style?: 'pop' | 'ballad' | 'rock' | 'jazz' | 'bossa' | 'celtic' | 'lofi' | 'blues';
       /**
        * @description 候補がスタイルの規則の代わりに頼んだ色付け（ADR-0037）。`timeline.rhythm.tensions` に記録される。省略時はスタイルの規則
        * @enum {string}
