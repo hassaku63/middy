@@ -77,3 +77,28 @@ func keys(m map[Tick][]Pitch) []Tick {
 	}
 	return out
 }
+
+// TestPushTextReadsAsItsOwnSentence: the push sentence follows the others
+// after a space, and its numeral is set off like theirs ("IV は").
+func TestPushTextReadsAsItsOwnSentence(t *testing.T) {
+	k := Key{C, Major}
+	var prog Progression
+	for _, l := range []string{"I", "V", "vi", "IV"} {
+		s, err := StepFromLabel(k, l, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	prog[3].Push = PushEighth
+	tl, err := FromProgression(k, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tl, err = Analyze(tl); err != nil {
+		t.Fatal(err)
+	}
+	if e := tl.Harmony[3].Analysis.Explanation; !strings.Contains(e, "。 IV は拍の頭を待たず") {
+		t.Errorf("push sentence:\n%s", e)
+	}
+}
