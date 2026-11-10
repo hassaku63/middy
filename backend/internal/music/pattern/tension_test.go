@@ -147,3 +147,44 @@ func TestTensionsSecondReview(t *testing.T) {
 		t.Error("changing a found style changed the catalogue")
 	}
 }
+
+// TestArpeggioPlaysTheTension (#307): an arpeggio strikes no whole chord,
+// so it plays the style's first tension where its octave was, and the
+// rhythm notes say so; a style without tensions keeps the octave.
+func TestArpeggioPlaysTheTension(t *testing.T) {
+	key := music.Key{Tonic: music.F, Mode: music.Major}
+	var prog music.Progression
+	for _, l := range []string{"Imaj7", "ii7"} {
+		s, err := music.StepFromLabel(key, l, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := music.FromProgression(key, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	classes := func(style string) map[music.PitchClass]bool {
+		out, err := Render(tl, Choice{Accompaniment: "arpeggio", Style: style})
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := map[music.PitchClass]bool{}
+		for _, n := range out.Tracks[0].Notes {
+			if n.Start < 1920 { // the Imaj7 bar
+				got[n.Pitch.Class()] = true
+			}
+		}
+		if style == "bossa" && (out.Rhythm.Style == nil || !strings.Contains(out.Rhythm.Style.Tensions, "9 度")) {
+			t.Errorf("bossa's notes do not name the ninth: %+v", out.Rhythm.Style)
+		}
+		return got
+	}
+	if g := classes("bossa"); !g[music.G] {
+		t.Errorf("bossa arpeggio on Fmaj7 lacks the ninth G: %v", g)
+	}
+	if g := classes("pop"); g[music.G] {
+		t.Errorf("pop has no tensions, yet G sounds on Fmaj7: %v", g)
+	}
+}

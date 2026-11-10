@@ -60,22 +60,68 @@
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+/* The whole card opens the example (#313): the title's button stretches
+   its hit area over the card, so the card stays one button for assistive
+   tech, named by the title. */
 .candidate {
+  position: relative;
   border: 1px solid #374151;
   border-radius: 10px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  cursor: pointer;
 }
 
-.candidate.is-open {
+.candidate:hover {
+  border-color: #9ca3af;
+}
+
+.candidate.is-open,
+.candidate.is-open:hover {
   border-color: #f59e0b;
+}
+
+.candidate:has(.candidate__open:focus-visible) {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
 }
 
 .candidate__title {
   margin: 0;
   font-size: 1.05rem;
+}
+
+.candidate__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.candidate__open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+}
+
+.candidate__open:focus-visible {
+  outline: none;
+}
+
+.candidate__state {
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #b45309;
+  color: #ffffff;
+  font-size: 0.8rem;
 }
 
 .candidate__spec {

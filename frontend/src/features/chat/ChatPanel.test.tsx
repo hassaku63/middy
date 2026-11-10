@@ -70,7 +70,7 @@ describe('ChatPanel', () => {
     expect(within(card).getByText('A minor')).toBeInTheDocument();
     expect(within(card).getByText('72 BPM')).toBeInTheDocument();
     expect(within(card).getByText('i - VI - III - VII')).toBeInTheDocument();
-    await user.click(within(card).getByRole('button', { name: 'この候補を開く' }));
+    await user.click(within(card).getByRole('button', { name: '窓辺の雨' }));
     expect(onOpen).toHaveBeenCalledWith(candidate);
     expect(screen.getByRole('button', { name: '最初から' })).toBeInTheDocument();
   });
@@ -122,7 +122,7 @@ describe('ChatPanel', () => {
       error: 'AI に接続できませんでした。',
     });
     render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} openExample={candidate} />);
-    expect(screen.getByRole('button', { name: '開いています' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: candidate.title })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -170,10 +170,13 @@ describe('ChatPanel', () => {
     const user = userEvent.setup();
     render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} openExample={again} />);
     await user.click(screen.getByText('これまでのやり取り（1）'));
-    expect(screen.getAllByRole('button', { name: '開いています' })).toHaveLength(1);
-    expect(screen.getAllByRole('button', { name: 'この候補を開く' })).toHaveLength(1);
+    const cards = screen.getAllByRole('button', { name: candidate.title });
+    expect(cards.map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
     const latest = screen.getByRole('list', { name: '会話' });
-    expect(within(latest).getByRole('button', { name: '開いています' })).toBeInTheDocument();
+    expect(within(latest).getByRole('button', { name: candidate.title })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('lists earlier examples one line each on the desk, numbered by exchange (BL-186)', async () => {

@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { IdeaCandidate } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
@@ -75,20 +76,37 @@ describe('CandidateCard style (BL-119)', () => {
 });
 
 describe('CandidateCard order (BL-073)', () => {
-  it('puts the switch before the reason: title, progression, switch, reason', () => {
+  it('puts the reason last: title (the switch), progression, state, reason', () => {
     render(
-      <CandidateCard candidate={{ ...base, reason: '理由の文' }} open={false} onOpen={vi.fn()} />,
+      <CandidateCard candidate={{ ...base, reason: '理由の文' }} open={true} onOpen={vi.fn()} />,
     );
     const card = within(screen.getByRole('article'));
     const order = [
-      card.getByRole('heading'),
+      card.getByRole('button', { name: base.title }),
       card.getByText(base.progression.join(' - ')),
-      card.getByRole('button', { name: 'この候補を開く' }),
+      card.getByText('開いています'),
       card.getByText('理由の文'),
     ];
     // Each part comes after the one before it in the document.
     for (const [i, el] of order.slice(1).entries()) {
       expect(order[i]!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
+  });
+});
+
+describe('CandidateCard as a whole (#313)', () => {
+  it('opens from its title, which is the one button of the card and says whether it is open', async () => {
+    const onOpen = vi.fn();
+    const { rerender } = render(<CandidateCard candidate={base} open={false} onOpen={onOpen} />);
+    const card = within(screen.getByRole('article'));
+    expect(card.getAllByRole('button')).toHaveLength(1);
+    const button = card.getByRole('button', { name: base.title });
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+    expect(card.queryByText('開いています')).not.toBeInTheDocument();
+    await userEvent.click(button);
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    rerender(<CandidateCard candidate={base} open={true} onOpen={onOpen} />);
+    expect(card.getByRole('button', { name: base.title })).toHaveAttribute('aria-pressed', 'true');
+    expect(card.getByText('開いています')).toBeInTheDocument();
   });
 });

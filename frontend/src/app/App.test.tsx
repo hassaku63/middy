@@ -120,7 +120,10 @@ describe('App docs/product/experience.md', () => {
         .map((o) => o.getAttribute('aria-label')),
     ).toEqual(['I C', 'V G']);
     expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
-    expect(within(card).getByRole('button', { name: '開いています' })).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: '窓辺の雨' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     // Playhead at 0: the explanation follows the first chord.
     expect(within(result).getByRole('heading')).toHaveTextContent('IC');
 
