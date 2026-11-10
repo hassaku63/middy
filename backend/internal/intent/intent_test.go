@@ -202,6 +202,28 @@ func TestFeelIsValidatedAndInTheSchema(t *testing.T) {
 	}
 }
 
+// TestTensionsAreValidatedAndInTheSchema (BL-202, ADR-0037).
+func TestTensionsAreValidatedAndInTheSchema(t *testing.T) {
+	in := valid()
+	for _, id := range []string{"none", "9", "9-13"} {
+		in.Candidates[0].Tensions = id
+		if err := in.Validate(); err != nil {
+			t.Fatalf("%q is allowed: %v", id, err)
+		}
+	}
+	in.Candidates[0].Tensions = "11"
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "tensions must be one of") {
+		t.Fatalf("unknown tensions must be reported, got %v", err)
+	}
+	if !strings.Contains(string(Schema), `"tensions": { "type": "string", "enum": ["none", "9", "9-13"]`) {
+		t.Fatal("the schema must offer the tensions")
+	}
+	parsed, err := Parse([]byte(`{"summary":"s","mood":[],"candidates":[{"title":"t","key":{"tonic":0,"mode":"major"},"tempoBpm":120,"progression":["I","V"],"beatsPerChord":4,"reason":"r","tensions":" NONE "}]}`))
+	if err != nil || parsed.Candidates[0].Tensions != "none" {
+		t.Fatalf("tensions are normalised: %+v %v", parsed, err)
+	}
+}
+
 func TestLabelsThatTheKeyWouldChangeAreRejectedWithTheFix(t *testing.T) {
 	in := valid() // A minor
 	in.Candidates[0].Progression = []string{"i", "II", "V"}

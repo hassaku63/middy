@@ -311,6 +311,11 @@ export interface components {
        * @enum {string}
        */
       style?: 'pop' | 'ballad' | 'rock' | 'jazz' | 'bossa' | 'celtic' | 'lofi' | 'blues';
+      /**
+       * @description 候補がスタイルの規則の代わりに頼んだ色付け（ADR-0037）。`timeline.rhythm.tensions` に記録される。省略時はスタイルの規則
+       * @enum {string}
+       */
+      tensions?: 'none' | '9' | '9-13';
       timeline: components['schemas']['Timeline'];
     };
     IdeasResponse: {

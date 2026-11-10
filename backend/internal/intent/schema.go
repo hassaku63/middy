@@ -75,13 +75,14 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
               "basedOn": { "type": "string", "enum": [%s], "description": "もとにしたドラムの型。スタイルの型から選ぶ" }
             }
           },
-          "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる（跳ね方はテンポに合わせる）、shuffle は 3 連符で跳ねる（ブルースやロックのシャッフル）。伴奏かドラムがあるときに効く。swing と shuffle は 6/8 では使わない。省略するとストレート" }
+          "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる（跳ね方はテンポに合わせる）、shuffle は 3 連符で跳ねる（ブルースやロックのシャッフル）。伴奏かドラムがあるときに効く。swing と shuffle は 6/8 では使わない。省略するとストレート" },
+          "tensions": { "type": "string", "enum": [%s], "description": "和音に足すテンション。スタイルの決まりの代わりに使う。none は足さない、9 は 9 度（長三和音には add9）、9-13 は 9 度と 13 度。どの音を足すかはエンジンが調の音階から選び、ローマ数字には書かない。省略するとスタイルのまま" }
         }
       }
     }
   }
 }`, MaxMoodTags, MinCandidates, MaxCandidates, quoted(StyleIDs()), MinTempoBPM, MaxTempoBPM, MaxChords,
-	quoted(AccompanimentIDs()), quoted(DrumIDs()), quoted(pattern.GridVoices()), quoted(DrumIDs()), quoted(FeelIDs())))
+	quoted(AccompanimentIDs()), quoted(DrumIDs()), quoted(pattern.GridVoices()), quoted(DrumIDs()), quoted(FeelIDs()), quoted(pattern.TensionIDs())))
 
 func quoted(ids []string) string {
 	out := make([]string, len(ids))
@@ -102,7 +103,7 @@ func Parse(data []byte) (Intent, error) {
 	id := func(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
 	for i := range in.Candidates {
 		c := &in.Candidates[i]
-		c.Accompaniment, c.Drums, c.Feel, c.Style = id(c.Accompaniment), id(c.Drums), id(c.Feel), id(c.Style)
+		c.Accompaniment, c.Drums, c.Feel, c.Style, c.Tensions = id(c.Accompaniment), id(c.Drums), id(c.Feel), id(c.Style), id(c.Tensions)
 		for j, p := range c.Pushes {
 			c.Pushes[j] = id(p)
 		}

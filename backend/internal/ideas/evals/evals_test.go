@@ -353,6 +353,19 @@ func TestReportNamesTheFirstPatterns(t *testing.T) {
 	}
 }
 
+// TestReportListsRequestedTensions (BL-202): candidates that ask for
+// tensions in place of their style's are listed with their position.
+func TestReportListsRequestedTensions(t *testing.T) {
+	res := result()
+	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); strings.Contains(got, "テンションを頼んだ候補") {
+		t.Errorf("no section without requested tensions:\n%s", got)
+	}
+	res.Candidates[0].Tensions, res.Candidates[0].Style = "9-13", "jazz"
+	if got := Report([]Verdict{Judge(Case{ID: "c", Mode: "either"}, res)}); !strings.Contains(got, "| c | 1: 9-13 (jazz) |") {
+		t.Errorf("report should list the candidate that asked for tensions:\n%s", got)
+	}
+}
+
 // TestReportShowsPerChordBeats (BL-109): when the first candidate gives
 // each chord a length, the progression column shows it ("i:8").
 func TestReportShowsPerChordBeats(t *testing.T) {
