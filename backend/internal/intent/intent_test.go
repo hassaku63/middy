@@ -251,6 +251,21 @@ func TestTensionsAreValidatedAndInTheSchema(t *testing.T) {
 	}
 }
 
+// TestBassOnAnotherDegreeIsRejectedWithTheFix (#331): A minor's "iv/b6"
+// stands on Fb (E), which the model meant as F; the retry is told both.
+func TestBassOnAnotherDegreeIsRejectedWithTheFix(t *testing.T) {
+	in := valid() // A minor
+	in.Candidates[0].Progression = []string{"i", "i/#7", "i/7", "i/#6", "iv/b6", "V"}
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), `progression[4]: music: "iv/b6": the bass b6 in A minor is Fb, the same note as degree 5 (E); write "/5"`) {
+		t.Fatalf("want the clash reported with its fix, got %v", err)
+	}
+	in.Candidates[0].Progression[4] = "iv/6"
+	if err := in.Validate(); err != nil {
+		t.Fatalf("the line cliché with iv/6 is valid: %v", err)
+	}
+}
+
 func TestLabelsThatTheKeyWouldChangeAreRejectedWithTheFix(t *testing.T) {
 	in := valid() // A minor
 	in.Candidates[0].Progression = []string{"i", "II", "V"}

@@ -257,3 +257,24 @@ func LiteralSlash(tonic PitchClass, label string) (Chord, *PitchClass, error) {
 	pc := bass.pitchClass(Key{Tonic: tonic, Mode: Major})
 	return chord, &pc, nil
 }
+
+// BassClash reports a slash bass whose sharp or flat lands it on another
+// degree of the key's own scale (#331): A minor's 6 is already F, so
+// "iv/b6" stands on Fb, the note of degree 5 (E), and was meant as "/6" or
+// "/5". It returns nil for a label without such a bass, and for one the
+// engine cannot read (the label's own error says why).
+func BassClash(key Key, label string) error {
+	_, b, _ := splitBass(label) // a label it cannot read has no bass: its own error says why
+	if b == nil || b.Accidental == 0 {
+		return nil
+	}
+	names := key.scaleNames()
+	pc := b.pitchClass(key)
+	for i, s := range key.Scale() {
+		if s == pc {
+			return fmt.Errorf("music: %q: the bass %s in %s is %s, the same note as degree %d (%s); write \"/%d\" for that note, or \"/%d\" for %s, the key's own %d",
+				label, strings.TrimPrefix(b.suffix(), "/"), key, key.spellDegree(b.Degree, b.Accidental), i+1, names[i], i+1, b.Degree, names[b.Degree-1], b.Degree)
+		}
+	}
+	return nil
+}

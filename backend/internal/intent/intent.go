@@ -177,6 +177,11 @@ func (c Candidate) validateProgression() []error {
 		// something to fix quietly (ADR-0013).
 		if _, err := music.CanonicalLabel(c.Key, label); err != nil {
 			errs = append(errs, fmt.Errorf("progression[%d]: %w%s%s%s%s", i, err, c.suggestLabel(label), c.dominantHint(label), c.substituteHint(label), c.diminishedHint(label)))
+		} else if err := music.BassClash(c.Key, label); err != nil {
+			// The engine plays it, but the model counted the degree from
+			// another scale (#331); the answer is checked, not the
+			// labels an example sends back when it is rebuilt.
+			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
 		}
 	}
 	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
