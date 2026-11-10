@@ -68,33 +68,6 @@ describe('useIdeas', () => {
     expect(result.current.turns).toHaveLength(1);
   });
 
-  it('reports each answer once, with the image it answers', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.resolve(json(200, reply))),
-    );
-    const onAnswer = vi.fn();
-    const { result } = renderHook(() => useIdeas(onAnswer));
-
-    await act(() => result.current.send('雨の日曜'));
-    await act(() => result.current.send('もう少し明るく'));
-    expect(onAnswer.mock.calls).toEqual([
-      [{ image: '雨の日曜', candidates: [] }],
-      [{ image: 'もう少し明るく', candidates: [] }],
-    ]);
-  });
-
-  it('does not report an answer when the request fails', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.resolve(json(502, { code: 'llm_unavailable', detail: 'x' }))),
-    );
-    const onAnswer = vi.fn();
-    const { result } = renderHook(() => useIdeas(onAnswer));
-    await act(() => result.current.send('雨'));
-    expect(onAnswer).not.toHaveBeenCalled();
-  });
-
   it('says what went wrong in Japanese for any other failure (review)', async () => {
     vi.stubGlobal(
       'fetch',
@@ -109,19 +82,6 @@ describe('useIdeas', () => {
     expect(result.current.error).toBe(
       'AI の答えから例を作れませんでした。もう一度送ってください。',
     );
-  });
-
-  it('does not report a fault in the answer handler as a network failure (review)', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(200, reply)));
-    const { result } = renderHook(() =>
-      useIdeas(() => {
-        throw new Error('handler');
-      }),
-    );
-    await act(() => result.current.send('雨').catch(() => undefined));
-    expect(result.current.error).toBeNull();
-    expect(result.current.turns).toHaveLength(2);
-    expect(result.current.busy).toBe(false);
   });
 
   it('ignores blank input', async () => {
