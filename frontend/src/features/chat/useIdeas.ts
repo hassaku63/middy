@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ApiError, imagine, type ChatMessage, type IdeaCandidate } from '@/shared/api/client';
 
 /** A rendered turn of the conversation: what was said and what came back. */
@@ -15,22 +15,14 @@ export type Ideas = {
   reset: () => void;
 };
 
-/** What came back for one image: the text the user sent and the examples. */
-export type Answer = { image: string; candidates: IdeaCandidate[] };
-
 /**
  * Owns the conversation of scenario S2. The server is stateless, so the
  * history (user texts and assistant replies) goes with every turn, cut to
- * the latest MAX_MESSAGES by recentHistory.
- * `onAnswer` runs once per reply, so the caller can open the first example
- * at once (docs/product/experience.md: an example arrives ready to hear).
+ * the latest MAX_MESSAGES by recentHistory. An answer opens nothing by
+ * itself: the user chooses (docs/product/experience.md, BL-219).
  */
-export function useIdeas(onAnswer?: (answer: Answer) => void): Ideas {
+export function useIdeas(): Ideas {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
-  const onAnswerRef = useRef(onAnswer);
-  useEffect(() => {
-    onAnswerRef.current = onAnswer;
-  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,8 +50,6 @@ export function useIdeas(onAnswer?: (answer: Answer) => void): Ideas {
         ...prev,
         { role: 'assistant', content: res.reply, mood: res.mood, candidates: res.candidates },
       ]);
-      // Outside the try: a fault in the caller's handler is not a network failure.
-      onAnswerRef.current?.({ image: content, candidates: res.candidates });
     },
     [turns, busy],
   );

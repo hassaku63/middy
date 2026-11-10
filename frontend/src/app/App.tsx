@@ -13,14 +13,13 @@ import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
-import type { ChatTurn } from '@/features/chat/useIdeas';
+import { useIdeas, type ChatTurn } from '@/features/chat/useIdeas';
 import { useBackendHealth } from './useBackendHealth';
 import { LabControls } from './LabControls';
 import { useZoomTrial } from './useZoomTrial';
 import { useLayoutTrial } from './useLayoutTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
-import { useAnswerOpening } from './useAnswerOpening';
 import { Stage } from './Stage';
 import { usePinMemory } from './usePinMemory';
 import { useChooseToHear } from './useChooseToHear';
@@ -77,11 +76,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     setOrigin({ kind: 'idea', image, candidateTitle: c.title });
   };
 
-  // An answer arrives ready to hear, unless the user chose another meanwhile.
-  const { ideas, opened } = useAnswerOpening(openCandidate);
+  // An answer opens nothing by itself: the user chooses (BL-219). What the
+  // user chose before stays open when a new answer arrives.
+  const ideas = useIdeas();
 
   const openProject = (p: Project) => {
-    opened();
     show(p.timeline);
     forget();
     setOpenExample(null);
@@ -94,10 +93,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     openExample,
     timeline,
     player,
-    open: (c) => {
-      opened();
-      openCandidate(c, imageFor(ideas.turns, c));
-    },
+    open: (c) => openCandidate(c, imageFor(ideas.turns, c)),
   });
   useCandidateKeys(layout.desk, latestCandidates(ideas.turns), openChosen);
 
