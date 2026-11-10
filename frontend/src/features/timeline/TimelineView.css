@@ -32,9 +32,23 @@
   stroke-width: 3;
 }
 
+/* The sounding chord stands out by lightness alone, not by a hue: the
+   degree map and the badge paint the functions in green, blue and orange,
+   and the sounding chord must not look like a dominant (ADR-0055). The
+   amber edge is the one of every sounding note and hit. */
 .timeline__chord.is-active rect {
-  fill: #b45309;
+  fill: #f3f4f6;
   stroke: #f59e0b;
+  stroke-width: 2;
+}
+
+.timeline__chord.is-active .timeline__numeral,
+.timeline__chord.is-active .timeline__mark {
+  fill: #111827;
+}
+
+.timeline__chord.is-active .timeline__symbol {
+  fill: #374151;
 }
 
 .timeline__chord.is-selected rect {
@@ -113,6 +127,16 @@
   }
   .timeline__symbol {
     fill: #374151;
+  }
+  .timeline__chord.is-active rect {
+    fill: #1f2937;
+  }
+  .timeline__chord.is-active .timeline__numeral,
+  .timeline__chord.is-active .timeline__mark {
+    fill: #f9fafb;
+  }
+  .timeline__chord.is-active .timeline__symbol {
+    fill: #e5e7eb;
   }
 }
 
