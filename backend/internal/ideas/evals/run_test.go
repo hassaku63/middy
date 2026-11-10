@@ -60,7 +60,7 @@ func TestRunAllSendsTheFirstCaseAlone(t *testing.T) {
 		return Verdict{Case: c}
 	}
 
-	got := runAll(context.Background(), cases, limit, one)
+	got := runAll(context.Background(), cases, limit, true, one)
 
 	if len(startedEarly) > 0 {
 		t.Errorf("started before the first case finished: %v", startedEarly)
@@ -79,7 +79,7 @@ func TestRunAllSendsTheFirstCaseAlone(t *testing.T) {
 }
 
 func TestRunAllWithoutCases(t *testing.T) {
-	if got := runAll(context.Background(), nil, 4, func(c Case) Verdict { return Verdict{Case: c} }); len(got) != 0 {
+	if got := runAll(context.Background(), nil, 4, true, func(c Case) Verdict { return Verdict{Case: c} }); len(got) != 0 {
 		t.Errorf("no cases should give no verdicts, got %v", got)
 	}
 }
@@ -89,7 +89,7 @@ func TestRunAllWithoutCases(t *testing.T) {
 func TestRunAllStopsWhenTheFirstCaseErrors(t *testing.T) {
 	cases := []Case{{ID: "a"}, {ID: "b"}, {ID: "c"}}
 	sent := 0
-	got := runAll(context.Background(), cases, 2, func(c Case) Verdict {
+	got := runAll(context.Background(), cases, 2, true, func(c Case) Verdict {
 		sent++
 		return Verdict{Case: c, Problems: []string{"timeout"}, Errored: true}
 	})
@@ -105,7 +105,7 @@ func TestRunAllReportsWhatTimeLeft(t *testing.T) {
 	cases := []Case{{ID: "a"}, {ID: "b"}, {ID: "c"}, {ID: "d"}}
 	var mu sync.Mutex
 	sent := 0
-	got := runAll(ctx, cases, 1, func(c Case) Verdict {
+	got := runAll(ctx, cases, 1, true, func(c Case) Verdict {
 		mu.Lock()
 		sent++
 		mu.Unlock()
@@ -125,7 +125,7 @@ func TestRunAllReportsWhatTimeLeft(t *testing.T) {
 func TestRunGoesOnAfterAModelFailure(t *testing.T) {
 	cases := []Case{{ID: "a"}, {ID: "b"}}
 	sent := 0
-	runAll(context.Background(), cases, 1, func(c Case) Verdict {
+	runAll(context.Background(), cases, 1, true, func(c Case) Verdict {
 		sent++
 		return Verdict{Case: c, Problems: []string{"invalid intent"}}
 	})
@@ -140,11 +140,44 @@ func TestRunGoesOnAfterAModelFailure(t *testing.T) {
 func TestRunAllBlamesTheBudgetNotTheModel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cases := []Case{{ID: "a"}, {ID: "b"}}
-	got := runAll(ctx, cases, 2, func(c Case) Verdict {
+	got := runAll(ctx, cases, 2, true, func(c Case) Verdict {
 		cancel()
 		return Verdict{Case: c, Problems: []string{"context canceled"}, Errored: true}
 	})
 	if p := got[1].Problems[0]; !strings.Contains(p, "ran out of time") {
 		t.Errorf("second case: %q, want the time budget named", p)
+	}
+}
+
+// TestRunTogetherSendsEveryCaseAtOnce (ADR-0039): for a batching client,
+// every case is in flight at once, the first included, so the requests
+// gather into one batch.
+func TestRunTogetherSendsEveryCaseAtOnce(t *testing.T) {
+	cases := []Case{{ID: "a"}, {ID: "b"}, {ID: "c"}, {ID: "d"}}
+	var mu sync.Mutex
+	inFlight, peak := 0, 0
+	release := make(chan struct{})
+	go func() {
+		for {
+			mu.Lock()
+			n := inFlight
+			mu.Unlock()
+			if n == len(cases) {
+				close(release)
+				return
+			}
+			time.Sleep(time.Millisecond)
+		}
+	}()
+	got := runAll(context.Background(), cases, len(cases), false, func(c Case) Verdict {
+		mu.Lock()
+		inFlight++
+		peak = max(peak, inFlight)
+		mu.Unlock()
+		<-release
+		return Verdict{Case: c, Pass: true}
+	})
+	if peak != len(cases) || len(got) != len(cases) || got[0].Case.ID != "a" || got[3].Case.ID != "d" {
+		t.Fatalf("want all %d in flight and the verdicts in order: peak %d, %+v", len(cases), peak, got)
 	}
 }

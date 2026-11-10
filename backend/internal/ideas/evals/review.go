@@ -116,6 +116,12 @@ func ReviewAll(ctx context.Context, client llm.Client, verdicts []Verdict) {
 	reviewAll(ctx, client, verdicts, Concurrency)
 }
 
+// ReviewAllTogether asks about every verdict at once, for a client that
+// batches the requests made together (ADR-0039).
+func ReviewAllTogether(ctx context.Context, client llm.Client, verdicts []Verdict) {
+	reviewAll(ctx, client, verdicts, max(len(verdicts), 1))
+}
+
 func reviewAll(ctx context.Context, client llm.Client, verdicts []Verdict, limit int) {
 	sem := make(chan struct{}, limit)
 	var wg sync.WaitGroup

@@ -108,6 +108,12 @@ func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, e
 	if err != nil {
 		return llm.Response{}, classify(err)
 	}
+	return c.response(ctx, msg)
+}
+
+// response reads a message: its usage is logged, a refusal and a cut-off
+// answer are errors, and the rest is the text.
+func (c *Client) response(ctx context.Context, msg *sdk.Message) (llm.Response, error) {
 	// Token accounting per call: the prerequisite for judging cost and for
 	// seeing whether the cached system prompt is actually read from cache.
 	// Logged before the stop reason, so a truncated (and costliest) call
