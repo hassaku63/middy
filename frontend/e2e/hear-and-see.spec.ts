@@ -35,10 +35,8 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
   await expect(page.getByLabel('再生位置')).toHaveText('1.1');
 
   // 遠い記憶: E minor, ending iiø7 - V7 - i. Pin the dominant by clicking it.
-  await page
-    .getByRole('article', { name: '遠い記憶' })
-    .getByRole('button', { name: 'この候補を開く' })
-    .click();
+  // The whole card opens it (#313): press the card, not a button in it.
+  await page.getByRole('article', { name: '遠い記憶' }).click();
   await result.getByRole('option', { name: 'V7 B7' }).click();
   await expect(result.getByRole('heading', { level: 2 })).toContainText('V7');
   // Uppercase V in minor is the harmonic-minor dominant.

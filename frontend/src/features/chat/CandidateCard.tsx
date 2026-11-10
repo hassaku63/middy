@@ -9,13 +9,21 @@ type Props = {
   patterns?: PatternsResponse | undefined;
 };
 
-/** One proposal: what it is, why it fits, and a button to load it. */
+/**
+ * One proposal: what it is and why it fits. The whole card is what the
+ * learner presses to open it (#313): the title is the button, and its
+ * hit area covers the card.
+ */
 export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
   const { title, key, tempoBpm, progression, beatsPerChord, beats, reason } = candidate;
   const labels = patternLabels(candidate, patterns);
   return (
     <article className={`candidate${open ? ' is-open' : ''}`} aria-label={title}>
-      <h3 className="candidate__title">{title}</h3>
+      <h3 className="candidate__title">
+        <button type="button" className="candidate__open" onClick={onOpen} aria-pressed={open}>
+          {title}
+        </button>
+      </h3>
       <p className="candidate__spec">
         <span>{keyName(key)}</span>
         <span>{tempoBpm} BPM</span>
@@ -29,10 +37,8 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
           ))}
         </p>
       )}
-      {/* Hear first, then read why (intent 4, BL-073): the reason follows the button. */}
-      <button type="button" onClick={onOpen} aria-pressed={open}>
-        {open ? '開いています' : 'この候補を開く'}
-      </button>
+      {open && <p className="candidate__state">開いています</p>}
+      {/* Hear first, then read why (intent 4, BL-073): the reason comes last. */}
       <p className="candidate__reason">{reason}</p>
     </article>
   );
