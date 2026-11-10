@@ -41,7 +41,7 @@
 | [0035](0035-pattern-catalogue-as-data.md) | 型のカタログは、版管理され検証されるデータとしてエンジンに含める | Accepted |
 | [0036](0036-shuffle-feel.md) | シャッフルを、名前のついたノリとして足す | Accepted |
 | [0037](0037-candidate-tensions.md) | テンションは、候補ごとに AI が頼める（足す音はエンジンが決める） | Accepted |
-| [0038](0038-narrowed-eval.md) | 評価は、タグで絞って走らせられる（`needs-eval:<tag>`。`needs-eval` は全件） | Proposed |
+| [0038](0038-narrowed-eval.md) | 評価は、タグで絞って走らせられる（`needs-eval:<tag>`。`needs-eval` は全件） | Accepted |
 | [0039](0039-batched-eval.md) | 全件の評価は Message Batches で送れる（`EVAL_BATCH=1`。アプリ本体には使わない） | Accepted |
 
 ## いつ ADR を書くか
