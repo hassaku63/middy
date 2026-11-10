@@ -187,9 +187,20 @@ func flow(tl Timeline) string {
 	s += lineText(tl.Key, h)
 	// A loop closes again when it repeats: say what the turn-around makes.
 	if wrap := cadenceBetween(tl.Key.Mode, placedOf(last), placedOf(first)); wrap != NoCadence && degreeOfEvent(first) == 1 {
-		s += fmt.Sprintf("繰り返すと、%s から頭の %s への%sになる。", last.RomanNumeral, first.RomanNumeral, cadenceName[wrap])
+		s += fmt.Sprintf(wrapText[wrap], last.RomanNumeral, first.RomanNumeral)
 	}
 	return s
+}
+
+// wrapText says how a loop closes when it repeats, without naming a
+// cadence (#378, ADR-0052): the head's tonic begins the next phrase, it
+// is no arrival, and the last chord has its own cadence already.
+var wrapText = map[Cadence]string{
+	Authentic: "繰り返すと、最後の %s は頭の %s へ解決し、ひと回りが閉じる。",
+	Plagal:    "繰り返すと、最後の %s から頭の %s へ柔らかく戻り、ひと回りが閉じる。",
+	Modal:     "繰り返すと、最後の %s から頭の %s へ、導音を使わずに戻る。",
+	Deceptive: "繰り返すと、最後の %s から頭の %s へ進む。",
+	Half:      "繰り返すと、最後の %s から頭の %s へ進む。",
 }
 
 var endingText = map[Cadence]string{
@@ -198,10 +209,6 @@ var endingText = map[Cadence]string{
 	Modal:     "モーダル終止で、導音を使わずに主音へ戻る",
 	Deceptive: "偽終止で、解決を先延ばしにしたまま終わる",
 	Half:      "半終止で止まり、続きを感じさせる",
-}
-
-var cadenceName = map[Cadence]string{
-	Authentic: "正格終止", Plagal: "変格終止", Modal: "モーダル終止", Deceptive: "偽終止", Half: "半終止",
 }
 
 // bars is the length in bars of the time signature, without a trailing .0.

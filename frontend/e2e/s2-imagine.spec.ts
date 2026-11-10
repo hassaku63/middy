@@ -97,7 +97,7 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   const overview = result.getByLabel('全体と流れ');
   await expect(overview).toContainText('D dorian（ドリアン）');
   await expect(overview).toContainText('短調なら、ここは iv（Gm）になる');
-  await expect(overview).toContainText('繰り返すと、VII から頭の i へのモーダル終止になる');
+  await expect(overview).toContainText('繰り返すと、最後の VII から頭の i へ、導音を使わずに戻る');
   await page.getByRole('button', { name: /固定を解除/ }).click();
   // Switching to the mixolydian example keeps the key selector in that mode.
   await page.getByRole('article', { name: '港町のジグ' }).click();
