@@ -107,7 +107,7 @@ func isCadentialSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
 const (
 	cadentialSixFourSentence = "ここでは次の V を飾る和音（終止の四六）。主和音の音でできていても、働きは V の側（ドミナント）にあり、区切りにはならない。"
 	// imperfectAuthenticText: V – I with either chord inverted.
-	imperfectAuthenticText = "直前の V から I へ解決する正格終止。ただし、どちらかの和音のベースが根音でないので、基本形どうしより区切りは弱い。"
+	imperfectAuthenticText = "直前の %s から %s へ解決する正格終止。ただし、どちらかの和音のベースが根音でないので、基本形どうしより区切りは弱い。"
 )
 
 // cadentialSixFourText says what the cadential six-four does.
@@ -124,10 +124,11 @@ func cadenceSentence(hs []HarmonyEvent, i int, cad Cadence) string {
 	if cad == NoCadence {
 		return ""
 	}
+	before, arrival := hs[i-1].RomanNumeral, hs[i].RomanNumeral
 	if cad == Authentic && (inverted(hs[i-1]) || inverted(hs[i])) {
-		return imperfectAuthenticText
+		return fmt.Sprintf(imperfectAuthenticText, before, arrival)
 	}
-	return cadenceText[cad]
+	return fmt.Sprintf(cadenceText[cad], before, arrival)
 }
 
 // inverted reports whether the chord's bass is not its root.
@@ -497,12 +498,14 @@ var functionText = map[Function]string{
 	Dominant:    "ドミナント（D）。トニックへ戻ろうとする緊張を作る。",
 }
 
+// cadenceText says each cadence with the numerals of the two chords as
+// the chord lane shows them (#378): before, then the arrival.
 var cadenceText = map[Cadence]string{
-	Authentic: "直前の V から I へ解決する正格終止。もっとも強い区切り。",
-	Plagal:    "直前の IV から I へ落ち着く変格終止。「アーメン終止」とも呼ばれる、柔らかい区切り。",
-	Half:      "V で止まる半終止。「続きがある」と感じさせる。",
-	Deceptive: "V から I ではなく vi へ進む偽終止。解決を先延ばしにして意外性を出す。",
-	Modal:     "直前の VII から主和音へ進むモーダル終止。導音を使わずに主音へ戻る、ロックやケルトに多い動き。",
+	Authentic: "直前の %s から %s へ解決する正格終止。もっとも強い区切り。",
+	Plagal:    "直前の %s から %s へ落ち着く変格終止。「アーメン終止」とも呼ばれる、柔らかい区切り。",
+	Half:      "直前の %s から %s に着いて止まる半終止。「続きがある」と感じさせる。",
+	Deceptive: "%s から主和音ではなく %s へ進む偽終止。解決を先延ばしにして意外性を出す。",
+	Modal:     "直前の %s から %s へ進むモーダル終止。導音を使わずに主音へ戻る、ロックやケルトに多い動き。",
 }
 
 // characteristicText explains why a chord carrying the mode's
