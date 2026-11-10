@@ -13,6 +13,10 @@ async function send(page: Page, image: string, path = '/') {
   await page.getByRole('button', { name: '送る' }).click();
   // An answer opens nothing by itself (BL-219): open its first example.
   await page.getByRole('article').first().getByRole('button').click();
+  // Choosing plays it (#315); stopped, the detail stays where it is put.
+  const stop = page.getByRole('button', { name: '停止' });
+  await expect(stop).toBeVisible();
+  if (await stop.isEnabled()) await stop.click();
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('group', { name: 'タイムライン' }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
@@ -26,13 +30,16 @@ test('a long timeline shows the whole piece and a four-bar detail that centres a
   await expect(result).toContainText('候補: 窓辺の雨（長め）');
   const overview = result.locator('svg.timeline--overview');
   await expect(overview).toBeVisible();
-  await expect(overview.locator('.timeline__highlight')).toHaveAttribute('x', '40');
-  // Pin the ninth chord in the overview: the detail centres it (bars 7.5–11.5).
-  await overview.locator('[role=option]').nth(8).click();
-  await expect(overview.locator('.timeline__highlight')).toHaveAttribute(
-    'x',
-    String(40 + 8.5 * 160 - 320),
-  );
+  const highlight = overview.locator('.timeline__highlight');
+  const x = async () => Number(await highlight.getAttribute('x'));
+  const start = await x();
+  // Pin the ninth chord in the overview: the detail moves to centre it,
+  // so the outline's middle meets the chord's middle.
+  const ninth = overview.locator('[role=option]').nth(8);
+  await ninth.click();
+  await expect.poll(x).toBeGreaterThan(start);
+  const [h, c] = await Promise.all([highlight.boundingBox(), ninth.boundingBox()]);
+  expect(h && c && Math.abs(h.x + h.width / 2 - (c.x + c.width / 2))).toBeLessThan(2);
   // The overview is a duplicate drawing: its chords are no tab stops.
   await expect(overview.locator('[role=option][tabindex]')).toHaveCount(0);
 });
@@ -46,10 +53,9 @@ test('a short timeline is drawn once, whole', async ({ page }) => {
 test('stopped, a slider moves the detail of a long timeline (BL-127)', async ({ page }) => {
   const result = await send(page, '長い雨の日');
   await expect(result).toContainText('候補: 窓辺の雨（長め）');
-  const slider = result.getByRole('slider', { name: '拡大の位置' });
-  await slider.fill(String(8 * 1920));
-  await expect(result.locator('svg.timeline--overview .timeline__highlight')).toHaveAttribute(
-    'x',
-    String(40 + 8 * 160 - 320),
-  );
+  const highlight = result.locator('svg.timeline--overview .timeline__highlight');
+  const x = async () => Number(await highlight.getAttribute('x'));
+  const start = await x();
+  await result.getByRole('slider', { name: '拡大の位置' }).fill(String(8 * 1920));
+  await expect.poll(x).toBeGreaterThan(start);
 });

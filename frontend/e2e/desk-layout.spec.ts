@@ -2,17 +2,17 @@ import { expect, test } from '@playwright/test';
 import { openExample } from './helpers';
 
 /**
- * BL-184 (#279): the desk under trial puts the conversation in a left
- * column beside the stage on wide screens, so that the input, the
- * timeline and the explanation are in view together. Today's layout stays
- * the default; ?lab switches, and the choice is kept in the URL.
+ * BL-184, #279: the conversation sits in a left column beside the stage on
+ * wide screens, so that the input, the timeline and the explanation are in
+ * view together; the owner chose the wide stage (BL-197). Below 1024 px it
+ * stacks.
  */
 test.use({ viewport: { width: 1280, height: 800 } });
 
 test('the desk shows the input, the timeline and the explanation at once (?layout=desk)', async ({
   page,
 }) => {
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   await expect(page.getByLabel('イメージ', { exact: true })).toBeInViewport({ ratio: 1 });
   await expect(result.getByRole('group', { name: 'タイムライン' })).toBeInViewport();
@@ -37,25 +37,20 @@ test('the desk shows the input, the timeline and the explanation at once (?layou
   await expect(result).toContainText('候補: 朝の光');
 });
 
-test("today's layout stays the default; ?lab switches to the desk and keeps it in the URL", async ({
+test('the wide layout is the default: the conversation beside the stage (#279)', async ({
   page,
 }) => {
-  await page.goto('/?lab');
+  await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
-  const stacked = await result.boundingBox();
-  const chat = await page.getByRole('region', { name: 'イメージから' }).boundingBox();
-  expect(chat && stacked && chat.y + chat.height <= stacked.y).toBe(true);
-
-  await page.getByLabel('画面の配置（試験）').selectOption('desk');
-  await expect(page).toHaveURL(/layout=desk/);
   const side = await page.getByRole('region', { name: 'イメージから' }).boundingBox();
   const stage = await result.boundingBox();
   expect(side && stage && side.x + side.width <= stage.x).toBe(true);
+  await expect(page.getByLabel('画面の配置（試験）')).toHaveCount(0);
 });
 
 test('below 1024 px the desk stacks as today', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   const chat = await page.getByRole('region', { name: 'イメージから' }).boundingBox();
   const stage = await result.boundingBox();
@@ -69,7 +64,7 @@ test('below 1024 px the desk stacks as today', async ({ page }) => {
  * by ▶／■ on the chord lane; ← → move and pin, Esc follows again.
  */
 test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', async ({ page }) => {
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   const frame = result.getByRole('region', { name: 'コードの解説' });
   await expect(frame).toHaveClass(/is-following/);
@@ -118,7 +113,7 @@ test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', asyn
 test('the column lists earlier examples and brings one back as it was left (BL-186)', async ({
   page,
 }) => {
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   await result.getByRole('option', { name: 'VII G' }).click();
   await openExample(page, 'もう少し明るく', '朝の光');
@@ -155,22 +150,17 @@ test('the column lists earlier examples and brings one back as it was left (BL-1
  * with the chord's frame and the other explanations side by side below it,
  * so the timeline is wider than on the desk.
  */
-test('the wide desk gives the timeline the whole stage, the explanations below (BL-197)', async ({
+test('the timeline takes the whole stage, the explanations side by side below (BL-197)', async ({
   page,
 }) => {
-  const timelineWidth = async (layout: string) => {
-    await page.goto(`/?layout=${layout}`);
-    const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
-    const box = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
-    return { result, box };
-  };
-  const desk = await timelineWidth('desk');
-  const wide = await timelineWidth('wide');
-  expect(wide.box && desk.box && wide.box.width > desk.box.width * 1.3).toBe(true);
-
-  const frame = await wide.result.getByRole('region', { name: 'コードの解説' }).boundingBox();
-  const notes = await wide.result.getByRole('region', { name: '解説', exact: true }).boundingBox();
-  expect(frame && wide.box && frame.y >= wide.box.y + wide.box.height).toBe(true);
+  await page.goto('/');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  const stage = await result.boundingBox();
+  const timeline = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
+  expect(stage && timeline && timeline.width > stage.width * 0.9).toBe(true);
+  const frame = await result.getByRole('region', { name: 'コードの解説' }).boundingBox();
+  const notes = await result.getByRole('region', { name: '解説', exact: true }).boundingBox();
+  expect(frame && timeline && frame.y >= timeline.y + timeline.height).toBe(true);
   expect(
     frame && notes && frame.x + frame.width <= notes.x && Math.abs(frame.y - notes.y) < 2,
   ).toBe(true);
@@ -183,7 +173,7 @@ test('the wide desk gives the timeline the whole stage, the explanations below (
  * remembered; Space plays and stops. An arriving answer stays silent.
  */
 test('choosing an example on the desk plays it; Space plays and stops (#315)', async ({ page }) => {
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   await page.getByLabel('イメージ', { exact: true }).fill('雨の日曜の午後');
   await page.getByRole('button', { name: '送る' }).click();
   const result = page.getByRole('region', { name: '結果' });
@@ -222,7 +212,7 @@ test('the desk input rises into a short conversation and sticks at the foot of a
   await page.setViewportSize({ width: 1280, height: 800 });
   const input = page.getByLabel('イメージ', { exact: true });
 
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   expect((await input.boundingBox())?.y ?? 9999).toBeLessThan(400);
 
   await openExample(page, '雨の日曜の午後', '窓辺の雨');

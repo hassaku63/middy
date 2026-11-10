@@ -92,13 +92,15 @@ test('play the same example in another style: the harmony stays, the groove chan
   await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨'); // A minor, arpeggio + ballad
   const chords = result.getByRole('listbox', { name: 'コード' }).getByRole('option');
-  const before = await chords.allTextContents();
+  // Named by numeral and chord (the ▶ of the followed chord is no part of it).
+  const names = () => chords.evaluateAll((os) => os.map((o) => o.getAttribute('aria-label')));
+  const before = await names();
   await result.getByLabel('スタイル').selectOption('jazz');
   await expect(result.getByLabel('スタイル')).toHaveValue('jazz');
   const note = result.getByRole('status').filter({ hasText: '鳴らし直しました' });
   await expect(note).toContainText('ジャズで鳴らし直しました。和声はそのままです。');
   await expect(note).toContainText('伴奏: アルペジオ → 4 ビートのコンピング');
   await expect(note).toContainText('ノリ: ストレート → スウィング');
-  await expect(chords).toHaveText(before);
+  await expect.poll(names).toEqual(before);
   await expect(result.getByLabel('リズム')).toContainText('スウィング');
 });

@@ -15,8 +15,6 @@ import type { IdeaCandidate, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useIdeas, type ChatTurn } from '@/features/chat/useIdeas';
 import { useBackendHealth } from './useBackendHealth';
-import { LabControls } from './LabControls';
-import { useLayoutTrial } from './useLayoutTrial';
 import { useExampleChanges } from './useExampleChanges';
 import { imageFor } from './imageFor';
 import { Stage } from './Stage';
@@ -51,7 +49,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const patterns = usePatterns(backend !== 'down');
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
-  const layout = useLayoutTrial();
 
   const show = (tl: Timeline) => {
     player.stop();
@@ -87,13 +84,12 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   };
 
   const { openChosen, hear } = useChooseToHear({
-    desk: layout.desk,
     openExample,
     timeline,
     player,
     open: (c) => openCandidate(c, imageFor(ideas.turns, c)),
   });
-  useCandidateKeys(layout.desk, latestCandidates(ideas.turns), openChosen);
+  useCandidateKeys(true, latestCandidates(ideas.turns), openChosen);
 
   const conversation = (
     <>
@@ -104,8 +100,8 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         onOpenCandidate={openChosen}
         openExample={openExample}
         patterns={patterns}
-        list={layout.desk}
-        options={layout.desk && <HearOnOpenToggle hear={hear} />}
+        list
+        options={<HearOnOpenToggle hear={hear} />}
       />
     </>
   );
@@ -133,13 +129,10 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         {origin && <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />}
         {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
         {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
-        <LabControls layout={layout} />
       </div>
       <Stage
         timeline={timeline}
         player={player}
-        desk={layout.desk}
-        wide={layout.wide}
         selectedHarmony={selectedHarmony}
         onSelectHarmony={setSelectedHarmony}
       />
@@ -147,21 +140,14 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   );
 
   return (
-    <main className={layout.desk ? 'app app--desk' : 'app'}>
+    <main className="app app--desk">
       <AppHeader pwa={pwa} backendDown={backend === 'down'} />
-      {layout.desk ? (
-        // Desk (BL-184, #279): the conversation in a left column beside the
-        // stage on wide screens; stacked as today below 1024 px.
-        <div className="app__columns">
-          <div className="app__side">{conversation}</div>
-          <div className="app__main">{result}</div>
-        </div>
-      ) : (
-        <>
-          {conversation}
-          {result}
-        </>
-      )}
+      {/* The conversation in a left column beside the stage on wide screens;
+          stacked below 1024 px (BL-184, #279). */}
+      <div className="app__columns">
+        <div className="app__side">{conversation}</div>
+        <div className="app__main">{result}</div>
+      </div>
     </main>
   );
 }

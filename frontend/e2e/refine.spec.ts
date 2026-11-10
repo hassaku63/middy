@@ -27,10 +27,7 @@ test('after three refinements, 再生 is still on the first screen', async ({ pa
   expect((play?.y ?? 9999) + (play?.height ?? 0)).toBeLessThanOrEqual(800);
   await expect(page.getByLabel('イメージ', { exact: true })).toBeInViewport();
 
-  // Earlier turns are folded, not lost.
-  const earlier = page.getByText(/これまでのやり取り（3）/);
-  await expect(earlier).toBeVisible();
-  await earlier.click();
+  // Earlier turns become one line per example in the column, not lost (BL-186).
   await expect(page.getByText('雨の日曜の午後')).toBeVisible();
   // The fake repeats titles across answers; only the open example is marked (BL-070).
   await expect(page.getByRole('button', { name: /./, pressed: true })).toHaveCount(1);

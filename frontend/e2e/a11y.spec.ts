@@ -37,7 +37,7 @@ test('the explanation of a pinned chord has no axe violations', async ({ page })
 
 test('the desk layout under trial has no axe violations (BL-184)', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto('/?layout=desk');
+  await page.goto('/');
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   expect(await violations(page)).toEqual([]);
   // Pinned, the chord frame and the ■ on the chord lane (BL-185).
@@ -52,7 +52,7 @@ test('the desk layout under trial has no axe violations (BL-184)', async ({ page
 
 test('the wide desk under trial has no axe violations (BL-197)', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto('/?layout=wide');
+  await page.goto('/');
   await openExample(page, '雨の日曜の午後', '窓辺の雨');
   expect(await violations(page)).toEqual([]);
 });

@@ -142,9 +142,10 @@
 .explanation--frame {
   position: relative;
   box-sizing: border-box;
-  /* The header row, then five lines of text (line-height 1.7): 141 kana
-     at 1280 px. A narrower stage scrolls the text inside the frame. */
-  height: calc(8.5em + 72px);
+  /* The header row, then six lines of text (line-height 1.7): 141 kana
+     in the wide layout's half of the stage at 1280 px (#279). A narrower
+     stage scrolls the text inside the frame. */
+  height: calc(10.2em + 72px);
   min-height: 0;
   overflow-y: auto;
   display: grid;
@@ -160,7 +161,7 @@
 }
 
 /* In the frame, the unpin button shares the header's row, so the text
-   keeps its five lines. */
+   keeps its six lines. */
 .explanation--frame > .explanation__text,
 .explanation--frame > .explanation__empty {
   grid-column: 1 / -1;
