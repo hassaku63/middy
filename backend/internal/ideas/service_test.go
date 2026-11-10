@@ -197,6 +197,24 @@ func TestImagineAppliesCandidatePatterns(t *testing.T) {
 	}
 }
 
+// TestImagineAddsTheTensionsTheCandidateAsks (BL-202): a candidate's
+// tensions reach the engine, which records them in the rhythm.
+func TestImagineAddsTheTensionsTheCandidateAsks(t *testing.T) {
+	withTensions := strings.Replace(goodIntent, `"beatsPerChord": 4, "reason": "短調で落ち着いた切なさ。"`,
+		`"beatsPerChord": 4, "reason": "短調で落ち着いた切なさ。", "accompaniment": "pulse", "tensions": "9"`, 1)
+	res, err := New(fake.New(llm.Response{Text: withTensions})).Imagine(context.Background(), []Message{user("雨")})
+	if err != nil {
+		t.Fatalf("Imagine: %v", err)
+	}
+	r := res.Candidates[0].Timeline.Rhythm
+	if r == nil || r.Tensions == nil || r.Tensions.ID != "9" {
+		t.Fatalf("tensions not applied: %+v", r)
+	}
+	if !strings.Contains(SystemPrompt(), "tensions を書く") {
+		t.Fatal("the prompt must offer the tensions")
+	}
+}
+
 func TestSystemPromptListsTheCatalogue(t *testing.T) {
 	p := SystemPrompt()
 	for _, id := range []string{"block", "arpeggio", "strum", "eight-beat", "bossa"} {

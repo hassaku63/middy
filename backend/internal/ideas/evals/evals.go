@@ -106,6 +106,9 @@ type Verdict struct {
 	// Silent lists the words in the candidates' reasons that name what
 	// middy never plays (#128); reported, not failed.
 	Silent []string
+	// Tensions lists the candidates that asked for tensions in place of
+	// their style's ("2: 9-13 (jazz)"; ADR-0037); reported, not judged.
+	Tensions []string
 	// ReviewInput is what the independent reviewer sees of the answer
 	// (review.go); Review is its verdict, when it ran (BL-172).
 	ReviewInput string
@@ -162,6 +165,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 		reasons = append(reasons, cand.Reason)
 		v.Labels = append(v.Labels, cand.Progression...)
 		modes = append(modes, cand.Key.Mode)
+		if cand.Tensions != "" {
+			v.Tensions = append(v.Tensions, fmt.Sprintf("%d: %s (%s)", i+1, cand.Tensions, cand.Style))
+		}
 		if v.WantsIn == 0 && wantsHit(c.Wants, cand.Key.Tonic, cand.Timeline.Harmony) {
 			v.WantsIn = i + 1
 		}
@@ -353,8 +359,24 @@ func breadthReport(verdicts []Verdict) string {
 	}
 	fmt.Fprintf(&b, "- 再試行が要った件数: %d（理由は表の retry）\n", m.retries)
 	fmt.Fprintf(&b, "- 説明が鳴らないものに触れた件数: %d（楽器やメロディ。表の reason names。#128）\n", m.silent)
+	b.WriteString(tensionsReport(verdicts))
 	b.WriteString(wishesReport(verdicts))
 	return b.String()
+}
+
+// tensionsReport lists the candidates that asked for tensions, so a run
+// shows whether the model uses the field and on which styles (BL-202).
+func tensionsReport(verdicts []Verdict) string {
+	var rows []string
+	for _, v := range verdicts {
+		if len(v.Tensions) > 0 {
+			rows = append(rows, fmt.Sprintf("| %s | %s |", v.Case.ID, strings.Join(v.Tensions, ", ")))
+		}
+	}
+	if len(rows) == 0 {
+		return ""
+	}
+	return "\n### テンションを頼んだ候補\n\n| case | 候補: tensions (style) |\n| --- | --- |\n" + strings.Join(rows, "\n") + "\n"
 }
 
 // wishesReport lists what the model would have written without the
