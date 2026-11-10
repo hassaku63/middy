@@ -31,6 +31,41 @@ func (m Mode) hasModalCadence() bool {
 	return m == Dorian || m == Mixolydian
 }
 
+// functionOf is the chord's function: by degree, except for a major key's
+// chords borrowed from the parallel minor (#371, ADR-0050). ♭VI belongs
+// with iv to the subdominant side; ♭VII has no leading tone, so it is
+// subdominant on its way to IV and a weak dominant otherwise.
+func functionOf(k Key, p, following placed) Function {
+	if k.Mode == Major && p.borrowed {
+		switch p.degree {
+		case 6:
+			return Subdominant
+		case 7:
+			if following.degree == 4 && following.applied == 0 {
+				return Subdominant
+			}
+		}
+	}
+	return functionByDegree[p.degree]
+}
+
+// borrowedFunctionText says why a major key's borrowed chord has its
+// function (#371, ADR-0050); empty for any other chord.
+func borrowedFunctionText(k Key, p placed, fn Function) string {
+	if k.Mode != Major || !p.borrowed {
+		return ""
+	}
+	switch {
+	case p.degree == 6:
+		return " iv と同じく、短調の色を帯びたサブドミナント（サブドミナント・マイナー）の仲間。"
+	case p.degree == 7 && fn == Subdominant:
+		return " ここでは次の IV へ進み、IV と同じサブドミナントの側で働く。"
+	case p.degree == 7:
+		return " 導音を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント。"
+	}
+	return ""
+}
+
 // Cadence names how the previous chord resolves into this one.
 type Cadence string
 
@@ -103,7 +138,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 		if i+1 < len(ps) {
 			following = ps[i+1]
 		}
-		fn := functionByDegree[p.degree]
+		fn := functionOf(tl.Key, p, following)
 		cad := cadenceBetween(tl.Key.Mode, prev, p)
 		var role ModalRole
 		if !p.borrowed {
@@ -115,7 +150,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
 			Role:        role,
-			Explanation: explain(tl.Key, *h, p.degree, fn, cad, p.borrowed, role) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, p.degree, fn, cad, p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -457,6 +492,8 @@ const (
 	modalTonicText = "%sの主和音。調の中心で、落ち着いて聞こえる。"
 	// tonicSubstituteText: iii and vi in major, III and VI in minor.
 	tonicSubstituteText = "トニック（T）の仲間。%s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
+	// borrowedTonicText: major's ♭III, a tonic of the parallel minor.
+	borrowedTonicText = "同主短調ではトニック（T）の仲間（短調の i と 2 つの音を共有する）。"
 	// naturalMinorDominantText: minor's v has no leading tone (#371).
 	naturalMinorDominantText = "ただし導音を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"
 	modalDegreeText          = "%sの %d 度の和音。"
@@ -468,7 +505,12 @@ func openingText(key Key, degree int, fn Function, borrowed bool) string {
 	if key.Mode == Major || key.Mode == Minor {
 		// Only I is the centre; iii and vi (III and VI in minor) share two
 		// notes with it and stand in for it (#371).
-		if fn == Tonic && degree != 1 && !borrowed {
+		if fn == Tonic && degree != 1 && borrowed {
+			// ♭III: a tonic substitute of the parallel minor, not of
+			// this key (it shares one note with I).
+			return borrowedTonicText
+		}
+		if fn == Tonic && degree != 1 {
 			tonic := "I"
 			if key.Mode == Minor {
 				tonic = "i"
