@@ -124,6 +124,33 @@ func TestSchemaIsValidJSONAndMirrorsLimits(t *testing.T) {
 	}
 }
 
+// TestSchemaAsksForTheMeterEveryTime (#328): a candidate meant for 3/4 or
+// 6/8 that left out its meter was checked as 4/4 and sent back, so the
+// schema makes the model write the meter; Validate still reads an answer
+// without one as 4/4.
+func TestSchemaAsksForTheMeterEveryTime(t *testing.T) {
+	var schema struct {
+		Properties struct {
+			Candidates struct {
+				Items struct {
+					Required []string `json:"required"`
+				} `json:"items"`
+			} `json:"candidates"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal(Schema, &schema); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(schema.Properties.Candidates.Items.Required, "meter") {
+		t.Errorf("meter must be required: %v", schema.Properties.Candidates.Items.Required)
+	}
+	in := valid()
+	in.Candidates[0].Meter = ""
+	if err := in.Validate(); err != nil || in.Candidates[0].TimeSignature() != music.FourFour {
+		t.Fatalf("an answer without a meter is 4/4: %v", err)
+	}
+}
+
 func TestParseRoundTrip(t *testing.T) {
 	data, err := json.Marshal(valid())
 	if err != nil {
