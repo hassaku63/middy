@@ -19,6 +19,7 @@
 - ballad: バラード 1 拍目と 3 拍目にベース、2 拍目と 4 拍目にコード。重心が交互に動き、ゆったり揺れる。
 - arpeggio: アルペジオ 構成音を 8 分音符で下から順に弾く。和音が線になって流れる。
 - strum: ストローク ギターのストロークのように、表拍に長く、裏拍に短く刻む。8 ビートの基本。
+- strum-16: 16 分のカッティング ギターが 16 分の細かいカッティングで刻む。拍の頭だけでなく 16 分の位置にも短い和音が入り、細かく跳ねて前へ進む。ファンクや 16 ビートのポップス向け。
 - reel: リールの裏打ち 1・3 拍にベース、各拍の裏に短い和音。ギターがリールの細かな 8 分を後ろから押し、ケルトの舞曲の推進力を作る。
 - comp: 4 ビートのコンピング 1・3 拍にベース、1 拍目と 2 拍目の裏に短い和音（チャールストンのリズム）。和音を短く切って間を空け、ジャズのピアノが伴奏する形。ノリはスウィングと組み合わせる。
 - walking: ウォーキング・ベース ベースが 4 分音符で歩く。和音の 1 拍目に根音、間に和音の音、和音の最後の拍で次の和音の根音の半音下から入る。上では短い和音がチャールストンのリズムで鳴る。ジャズの 4 ビート。ノリはスウィングと組み合わせる。
@@ -54,9 +55,9 @@
 - straight: ストレート 8 分音符を均等に刻む。
 - swing: スウィング 8 分音符を長・短で跳ねさせる。ジャズやシャッフルの揺れ。
 スタイル（style）。候補ごとに最初にスタイルを選び、伴奏・ドラム・ノリはそのスタイルに挙げたものから選ぶ（ブロックの和音とドラムなしはどのスタイルでも使える）:
-- pop: ポップ。歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。（伴奏: pulse, ballad, arpeggio, strum, waltz, arpeggio-3, rocking-6, arpeggio-6。ドラム: eight-beat, ballad, waltz, six-eight, sixteen-beat。ノリ: straight, swing）
+- pop: ポップ。歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。（伴奏: pulse, ballad, arpeggio, strum, waltz, arpeggio-3, rocking-6, arpeggio-6, strum-16。ドラム: eight-beat, ballad, waltz, six-eight, sixteen-beat。ノリ: straight, swing）
 - ballad: バラード。ゆっくり歌う曲。間を広く取り、和音を伸ばしたり分散したりする。（伴奏: ballad, arpeggio, waltz, arpeggio-3, rocking-6, arpeggio-6, drone。ドラム: ballad, waltz, six-eight。ノリ: straight。テンション: 長三和音に 9 度を足して（add9）柔らかくしている）
-- rock: ロック。ギターのストロークと 8 ビートで、強く前に進む。（伴奏: strum, pulse。ドラム: eight-beat, sixteen-beat。ノリ: straight, swing）
+- rock: ロック。ギターのストロークと 8 ビートで、強く前に進む。（伴奏: strum, pulse, strum-16。ドラム: eight-beat, sixteen-beat。ノリ: straight, swing）
 - jazz: ジャズ。ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。（伴奏: comp, walking, arpeggio, ballad, waltz, arpeggio-3。ドラム: jazz-ride, jazz-waltz。ノリ: swing, straight。テンション: 七の和音に 9 度、属七には 13 度も足している）
 - bossa: ボサノバ。ブラジルの穏やかなリズム。表と裏が交互に来るキックの上で、和音を軽く流す。（伴奏: arpeggio, comp, ballad。ドラム: bossa。ノリ: straight。テンション: 七の和音に 9 度を足している）
 - celtic: ケルト。アイルランドやスコットランドの舞曲と民謡。リールの裏打ちとボーラン、6/8 のジグ、ドローン。（伴奏: reel, drone, arpeggio, arpeggio-3, waltz, rocking-6, arpeggio-6。ドラム: bodhran, jig, six-eight。ノリ: straight）

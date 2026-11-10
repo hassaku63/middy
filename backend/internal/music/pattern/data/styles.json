@@ -4,7 +4,7 @@
       "id": "pop",
       "name": "ポップ",
       "description": "歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。",
-      "accompaniments": ["pulse", "ballad", "arpeggio", "strum", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6"],
+      "accompaniments": ["pulse", "ballad", "arpeggio", "strum", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "strum-16"],
       "drums": ["eight-beat", "ballad", "waltz", "six-eight", "sixteen-beat"],
       "feels": ["straight", "swing"]
     },
@@ -24,7 +24,7 @@
       "id": "rock",
       "name": "ロック",
       "description": "ギターのストロークと 8 ビートで、強く前に進む。",
-      "accompaniments": ["strum", "pulse"],
+      "accompaniments": ["strum", "pulse", "strum-16"],
       "drums": ["eight-beat", "sixteen-beat"],
       "feels": ["straight", "swing"],
       "program": 29,
