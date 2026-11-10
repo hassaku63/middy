@@ -99,6 +99,9 @@ describe('ChordFrame and the degree map (#360, ADR-0044)', () => {
     );
     const frame = screen.getByRole('region', { name: 'コードの解説' });
     const map = within(frame).getByRole('group', { name: '度数の地図（機能の流れ）' });
+    // The flow is the basic one, not a rule (#371): said in view and read out.
+    expect(map).toHaveAccessibleDescription('基本の流れ（いつもこの順とは限らない）');
+    expect(within(map).getByText('基本の流れ（いつもこの順とは限らない）')).toBeVisible();
     const column = (name: string) =>
       within(within(map).getByRole('list', { name }))
         .getAllByRole('listitem')
