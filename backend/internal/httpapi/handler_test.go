@@ -195,3 +195,15 @@ func TestTrailingClosersAreRejected(t *testing.T) {
 		}
 	}
 }
+
+// TestEveryResponseSaysNoSniff (#280, #206 A-4): answers and errors alike
+// tell the browser not to guess their type.
+func TestEveryResponseSaysNoSniff(t *testing.T) {
+	srv := newTestServer(t)
+	for _, path := range []string{"/api/v1/health", "/api/v1/nope", "/"} {
+		resp := get(t, srv.URL+path)
+		if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
+			t.Errorf("%s: X-Content-Type-Options = %q, want nosniff", path, got)
+		}
+	}
+}
