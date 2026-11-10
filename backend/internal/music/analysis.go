@@ -25,6 +25,12 @@ const (
 // borrowed and applied chords are placed before this table is read.
 var functionByDegree = [8]Function{"", Tonic, Subdominant, Tonic, Subdominant, Dominant, Tonic, Dominant}
 
+// hasModalCadence: the modal cadence is the whole step up of dorian's
+// and mixolydian's VII to I; phrygian ends from ♭II instead (#371).
+func (m Mode) hasModalCadence() bool {
+	return m == Dorian || m == Mixolydian
+}
+
 // Cadence names how the previous chord resolves into this one.
 type Cadence string
 
@@ -363,9 +369,7 @@ func cadenceBetween(mode Mode, prev, cur placed) Cadence {
 			return Half
 		}
 		return NoCadence
-	case prev.degree == 7 && cur.degree == 1 && (mode == Dorian || mode == Mixolydian):
-		// The modal cadence is the whole step up of dorian's and
-		// mixolydian's VII; phrygian ends from ♭II instead (#371).
+	case prev.degree == 7 && cur.degree == 1 && mode.hasModalCadence():
 		return Modal
 	case prev.leading && cur.degree == 1:
 		return Authentic
