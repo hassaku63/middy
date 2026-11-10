@@ -171,3 +171,11 @@
   fill: #9ca3af;
   stroke: none;
 }
+
+/* On the light page the tab needs a darker grey to stand out from the
+   white chord it reaches into (3:1, WCAG 1.4.11). */
+@media (prefers-color-scheme: light) {
+  .timeline__chord rect.timeline__push {
+    fill: #6b7280;
+  }
+}

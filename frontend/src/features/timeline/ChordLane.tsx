@@ -23,6 +23,17 @@ type Props = {
  * How early a pushed chord sounds (BL-085): its notes start before its
  * block, which the analysis keeps on the bar line (domain-model, Push).
  */
+/**
+ * What the grey tab says to those who do not see it (ui-review): the name
+ * starts with the visible text (WCAG 2.5.3) and adds how early the chord
+ * comes in, in the words of the explanation.
+ */
+function pushName(h: HarmonyEvent): string {
+  if (h.push === 'eighth') return '、8 分音符ひとつ早く入る（押し）';
+  if (h.push === 'sixteenth') return '、16 分音符ひとつ早く入る（押し）';
+  return '';
+}
+
 function pushTicks(h: HarmonyEvent, ppq: number): number {
   if (h.push === 'eighth') return ppq / 2;
   if (h.push === 'sixteenth') return ppq / 4;
@@ -53,7 +64,7 @@ export function ChordLane({
           <g
             key={i}
             role="option"
-            aria-label={`${h.romanNumeral} ${harmonySymbol(h)}`}
+            aria-label={`${h.romanNumeral} ${harmonySymbol(h)}${pushName(h)}`}
             aria-current={active ? 'true' : undefined}
             aria-selected={selected}
             className={`timeline__chord${active ? ' is-active' : ''}${selected ? ' is-selected' : ''}`}

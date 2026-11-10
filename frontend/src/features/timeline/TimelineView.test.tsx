@@ -152,6 +152,11 @@ describe('TimelineView', () => {
     const tabEnd = tabX + Number(tab?.getAttribute('width'));
     expect(tabEnd).toBeCloseTo(Number(block?.getAttribute('x')));
     expect(tabX).toBeLessThan(tabEnd);
+    // The tab is drawn only; the option's name says what it shows.
+    expect(screen.getByRole('option', { name: /押し/ })).toHaveAttribute(
+      'aria-label',
+      'V G、8 分音符ひとつ早く入る（押し）',
+    );
   });
 
   it('tells the foot hi-hat from the closed hi-hat (#385)', () => {
