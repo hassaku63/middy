@@ -40,6 +40,28 @@
 - 非同期の未処理 Promise 禁止（`no-floating-promises`）。
 - API とストレージの失敗は、それを呼ぶ hook の `catch` で画面の状態に変えて終える。`console` に出して投げ直さない。`try` は失敗しうる呼び出しだけを囲み、結果を組み立てる自分の関数は外に置く（`useIdeas.ts`。自分のバグを「〜できませんでした」に変えて隠さないため）。
 
+### 配置（画面の幅・高さ・表示環境で変えるとき）
+
+配置の規則は ADR-0042。判断の根拠は hci の索引（`.claude/skills/hci/index.md` の「画面幅のクラスと配置の切り替え」「行長と読みやすさ」）。
+
+- **骨組みは media query、部品は container query。** 画面の幅を見るのは `src/app/global.css` の骨組み（会話の列と結果の並び）だけ。feature の部品は、置かれた箱の幅を見る（`@container`）。部品の置き場所を変えても、部品の CSS は書き換えない。
+- **しきい値は内容から決める。** 端末の幅（「iPhone の幅」）からは決めない。内容が崩れ始める幅（1 行が 40 字を超える、ボタンが折り返す）に置く。決めた値は下の表に足す。表にない値で分岐しない。
+- **分岐しなくて済む書き方を先に使う。** `grid` の `minmax()`・`auto-fit`、`clamp()`、`max-width`、縦横比（`aspect-ratio`）。
+- **幅でできることを変えない。** 狭い画面でも、広い画面と同じ操作（固定、キー変更、保存）ができる。変えるのは配置だけ。
+- **端末を当てない。** UA、`window.innerWidth`、`screen` で分岐しない（ESLint が禁止する）。表示環境で分けるときは、媒体の性質（`prefers-color-scheme`、`prefers-reduced-motion`、`pointer`、`hover`、`display-mode`、`env(safe-area-inset-*)`）を CSS で使う。
+
+幅の帯としきい値（この表が正典。CSS の値を変えたらこの表も直す）:
+
+| 値 | 何を見るか | 何が変わるか | 場所 |
+| --- | --- | --- | --- |
+| 1024 px | 画面の幅（media） | 未満は会話と結果を縦に、以上は会話を左の列（320 px）、結果を右に | `global.css` |
+| 2560 px | 画面の幅（media の内側の上限） | ページの横幅の上限。これより広い画面では中央に寄せる | `global.css` |
+| 45 %（高さ） | 画面の高さ | 結果の中のタイムラインの高さの上限。縦横比は保つ | `global.css` |
+| 760 px | 結果の箱の幅（`@container stage`） | 以上は 2 つの解説を左右に、未満は上下に | `global.css` |
+| 40 字（`40em`） | 段落の幅 | 解説の 1 行の上限 | `ExplanationPanel.css` |
+
+PR の自己点検（`/code-review` と `docs-sync`）で、差分に `@media`・`@container` の値や、幅・高さの上限があれば、表にあるか、なければ表に足したかを確かめる。検査のスクリプトは置かない（分岐が少ないうちは、読み合わせで足りる）。
+
 ## API（HTTP/JSON）
 
 - フィールドは camelCase（`tempoBpm`, `romanNumeral`）。

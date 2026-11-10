@@ -79,6 +79,30 @@ const componentPurityRules = {
   },
 };
 
+// Layout follows the space, not the device (ADR-0042): no branching on the
+// user agent or the window's size in code; CSS media and container queries
+// decide the layout.
+const deviceGuessRules = {
+  files: ['src/**/*.{ts,tsx}'],
+  ignores: ['src/**/*.test.{ts,tsx}', 'src/test/**'],
+  rules: {
+    'no-restricted-properties': [
+      'error',
+      ...['userAgent', 'userAgentData', 'platform', 'vendor'].map((property) => ({
+        object: 'navigator',
+        property,
+        message: 'do not guess the device; use CSS media features (docs/dev/conventions.md)',
+      })),
+      ...['innerWidth', 'innerHeight', 'outerWidth', 'outerHeight'].map((property) => ({
+        object: 'window',
+        property,
+        message:
+          'layout follows CSS media and container queries, not the window size (docs/dev/conventions.md)',
+      })),
+    ],
+  },
+};
+
 const testHygieneRules = {
   files: ['src/**/*.test.{ts,tsx}'],
   rules: {
@@ -160,6 +184,7 @@ export default tseslint.config(
   },
   ...featureBoundaryRules,
   componentPurityRules,
+  deviceGuessRules,
   testHygieneRules,
   {
     files: ['*.config.{js,ts}'],
