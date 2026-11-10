@@ -1,13 +1,32 @@
 .timeline-overview {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
+/* One drawing, scrolled sideways (#360). Its height shows four bars
+   across the box, but no more than 45 % of the screen (ADR-0041); the
+   width follows the drawing's proportions. */
+.timeline-overview__scroll {
+  overflow-x: auto;
+  container-type: inline-size;
+  border-radius: 8px;
+}
+
+.timeline-overview__scroll .timeline {
+  width: auto;
+  max-width: none;
+  height: min(45vh, calc(100cqw * var(--timeline-four-bars)));
+}
+
+/* The whole piece as a strip: notes and chords, no words. */
 .timeline.timeline--overview {
+  width: 100%;
+  height: 48px;
   opacity: 0.85;
 }
 
-.timeline-overview__slider {
-  width: 100%;
+.timeline--overview text {
+  display: none;
 }

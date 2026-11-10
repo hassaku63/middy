@@ -92,8 +92,9 @@ main {
 /* Stretched to the stage, not stopped at the drawing's own width, but no
    taller than 45 % of the screen, so that the chord's frame below stays in
    view on a wide screen (ADR-0041, #353). The drawing keeps its
-   proportions: the width stops where the height would pass the cap. */
-.app__stage .timeline {
+   proportions: the width stops where the height would pass the cap. A
+   long timeline scrolls in its own box instead (TimelineOverview.css). */
+.app__stage > .timeline {
   width: 100%;
   max-width: calc(45vh * var(--timeline-aspect));
 }
