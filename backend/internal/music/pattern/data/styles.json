@@ -80,6 +80,14 @@
         "ninths": true,
         "text": "七の和音に 9 度を足している"
       }
+    },
+    {
+      "id": "blues",
+      "name": "ブルース",
+      "description": "3 連符で跳ねるシャッフルの上で、属七の和音（I7・IV7・V7）を回す。ウォーキング・ベースやコンピングで、粘りのあるノリを出す。",
+      "accompaniments": ["walking", "comp", "pulse", "strum"],
+      "drums": ["shuffle", "eight-beat"],
+      "feels": ["shuffle", "straight"]
     }
   ]
 }

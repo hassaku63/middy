@@ -310,7 +310,7 @@ export interface components {
        * @description 候補の音楽のスタイル（BL-082、ADR-0012）。伴奏・ドラム・ノリはこのスタイルに合うものに限られる。以前の候補にはない
        * @enum {string}
        */
-      style?: 'pop' | 'ballad' | 'rock' | 'jazz' | 'bossa' | 'celtic' | 'lofi';
+      style?: 'pop' | 'ballad' | 'rock' | 'jazz' | 'bossa' | 'celtic' | 'lofi' | 'blues';
       timeline: components['schemas']['Timeline'];
     };
     IdeasResponse: {
