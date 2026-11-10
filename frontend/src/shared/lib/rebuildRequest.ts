@@ -21,6 +21,7 @@ export function rebuildRequest(timeline: Timeline, tonic: PitchClass): FromProgr
   else if (rhythm?.drums) req.drums = rhythm.drums.id;
   if (rhythm?.feel) req.feel = rhythm.feel.id;
   if (rhythm?.style) req.style = rhythm.style.id; // keeps the style's instrument (BL-110)
+  if (rhythm?.tensions) req.tensions = rhythm.tensions.id; // the colour asked for (ADR-0037)
   return req;
 }
 

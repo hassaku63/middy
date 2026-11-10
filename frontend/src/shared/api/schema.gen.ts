@@ -147,6 +147,11 @@ export interface components {
       feel?: components['schemas']['Feel'];
       /** @description スタイルの id（`GET /patterns` の styles）。鍵盤を既定とする型の音色をスタイルの楽器にし、タイムラインに記録する（BL-110）。型がスタイルに合うかは検査しない */
       style?: string;
+      /**
+       * @description スタイルの規則の代わりに頼む色付け（ADR-0037）。none は足さない、9 は七の和音と長三和音に 9 度、9-13 はさらに属七に 13 度。足す音はエンジンが決める。省略時はスタイルの規則
+       * @enum {string}
+       */
+      tensions?: 'none' | '9' | '9-13';
       /** @description 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017） */
       timeSignature?: components['schemas']['TimeSignature'];
     };
@@ -470,6 +475,14 @@ export interface components {
       style?: components['schemas']['RhythmStyle'];
       /** @description ドラムが格子で書かれたときの格子（BL-123）。調やスタイルを変えて作り直すときに送り返す。このとき `drums.id` は `grid` */
       drumGrid?: components['schemas']['DrumGrid'];
+      tensions?: components['schemas']['RhythmTensions'];
+    };
+    /** @description 候補が頼んだ色付け（ADR-0037）。調を変えて作り直すときに送り返す */
+    RhythmTensions: {
+      /** @enum {string} */
+      id: 'none' | '9' | '9-13';
+      /** @description 足した音の説明。鳴ったときだけ */
+      explanation?: string;
     };
     /** @description 1 小節のドラムの格子（BL-122、ADR-0012 の決定 2）。エンジンが検証し、問題をまとめて 400 で返す */
     DrumGrid: {

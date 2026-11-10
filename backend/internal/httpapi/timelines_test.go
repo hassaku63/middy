@@ -342,3 +342,33 @@ func TestFromProgressionTakesATritoneSubstitute(t *testing.T) {
 		t.Fatalf("subV7/I = %+v %+v", sub, sub.Analysis)
 	}
 }
+
+// TestFromProgressionWithTensions (ADR-0037, BL-201): the request may ask
+// for a colour in place of the style's; the timeline records it for the
+// key change, and an unknown colour is a bad request.
+func TestFromProgressionWithTensions(t *testing.T) {
+	srv := newTestServer(t)
+	resp := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
+		"progression": [{"numeral": "Imaj7"}, {"numeral": "V7"}],
+		"accompaniment": "pulse", "style": "pop", "tensions": "9"
+	}`)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("status = %d: %s", resp.StatusCode, body)
+	}
+	var body timelineResponse
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if rt := body.Timeline.Rhythm.Tensions; rt == nil || rt.ID != "9" || rt.Explanation == "" {
+		t.Fatalf("rhythm tensions = %+v", rt)
+	}
+	bad := postJSON(t, srv.URL+"/api/v1/timelines/from-progression", `{
+		"key": {"tonic": 0, "mode": "major"}, "tempoBpm": 100,
+		"progression": [{"numeral": "I"}], "tensions": "11"
+	}`)
+	if bad.StatusCode != http.StatusBadRequest {
+		t.Fatalf("unknown colour: status = %d", bad.StatusCode)
+	}
+}

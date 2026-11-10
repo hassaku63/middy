@@ -7,24 +7,16 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
     ['ドラム', rhythm.drums],
   ];
   // A style recorded on plain block chords has nothing to explain here.
-  const style = rhythm.style;
-  if (
-    !rhythm.accompaniment &&
-    !rhythm.drums &&
-    !rhythm.feel &&
-    !style?.instrument &&
-    !style?.tensions
-  )
-    return null;
+  const colour = colourNotes(rhythm);
+  if (!rhythm.accompaniment && !rhythm.drums && !rhythm.feel && colour.length === 0) return null;
   return (
     <section className="explanation__rhythm" aria-label="リズム">
       <h3 className="explanation__subtitle">リズム</h3>
-      {rhythm.style?.instrument && (
-        <p className="explanation__text">
-          {rhythm.style.name}のスタイルなので、和音は{rhythm.style.instrument}で鳴らす。
+      {colour.map((text) => (
+        <p key={text} className="explanation__text">
+          {text}
         </p>
-      )}
-      {rhythm.style?.tensions && <p className="explanation__text">{rhythm.style.tensions}</p>}
+      ))}
       {parts.map(([label, part]) =>
         part ? (
           <section key={label} aria-label={`${label}: ${part.name}`} className="explanation__part">
@@ -45,4 +37,18 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
       )}
     </section>
   );
+}
+
+/**
+ * What colours the chords: the style's instrument and tensions, or the
+ * tensions the candidate asked for (ADR-0037).
+ */
+function colourNotes(rhythm: Rhythm): string[] {
+  const style = rhythm.style;
+  const out: string[] = [];
+  if (style?.instrument)
+    out.push(`${style.name}のスタイルなので、和音は${style.instrument}で鳴らす。`);
+  if (style?.tensions) out.push(style.tensions);
+  if (rhythm.tensions?.explanation) out.push(rhythm.tensions.explanation);
+  return out;
 }

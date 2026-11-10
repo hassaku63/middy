@@ -188,3 +188,67 @@ func TestArpeggioPlaysTheTension(t *testing.T) {
 		t.Errorf("pop has no tensions, yet G sounds on Fmaj7: %v", g)
 	}
 }
+
+// TestRequestedTensions (ADR-0037, BL-201): a candidate's colour replaces
+// its style's rule: pop takes a ninth on Imaj7 and a thirteenth on V7 with
+// "9-13", jazz takes none with "none"; the numerals stay at the seventh,
+// and the notes say what was added even without a style.
+func TestRequestedTensions(t *testing.T) {
+	key := music.Key{Tonic: music.C, Mode: music.Major}
+	var prog music.Progression
+	for _, l := range []string{"Imaj7", "V7"} {
+		s, err := music.StepFromLabel(key, l, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := music.FromProgression(key, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sounds := func(out music.Timeline, from, to music.Tick, pc music.PitchClass) bool {
+		for _, n := range out.Tracks[0].Notes {
+			if n.Start >= from && n.Start < to && n.Pitch.Class() == pc {
+				return true
+			}
+		}
+		return false
+	}
+	out, err := Render(tl, Choice{Accompaniment: "pulse", Style: "pop", Tensions: TensionsNinths13})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !sounds(out, 0, 1920, music.D) || !sounds(out, 1920, 3840, music.E) {
+		t.Errorf("9-13 on pop: want D over Cmaj7 and E (13th) over G7")
+	}
+	if rt := out.Rhythm.Tensions; rt == nil || rt.ID != "9-13" || !strings.Contains(rt.Explanation, "13 度") {
+		t.Errorf("rhythm tensions = %+v", rt)
+	}
+	if out.Rhythm.Style == nil || out.Rhythm.Style.Tensions != "" {
+		t.Errorf("the style does not claim the requested colour: %+v", out.Rhythm.Style)
+	}
+	if out.Harmony[0].RomanNumeral != "Imaj7" {
+		t.Errorf("numeral = %s, want Imaj7", out.Harmony[0].RomanNumeral)
+	}
+
+	jazz, err := Render(tl, Choice{Accompaniment: "comp", Style: "jazz", Tensions: TensionsNone})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sounds(jazz, 0, 1920, music.D) {
+		t.Error(`"none" on jazz still adds the ninth`)
+	}
+
+	bare, err := Render(tl, Choice{Tensions: TensionsNinths})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !sounds(bare, 0, 1920, music.D) || bare.Rhythm == nil || bare.Rhythm.Tensions == nil || bare.Rhythm.Tensions.Explanation == "" {
+		t.Errorf("block chords without a style still take and explain the ninth: %+v", bare.Rhythm)
+	}
+
+	if _, err := Render(tl, Choice{Tensions: "11"}); err == nil || !strings.Contains(err.Error(), `tensions "11"`) {
+		t.Errorf("unknown colour: %v", err)
+	}
+}

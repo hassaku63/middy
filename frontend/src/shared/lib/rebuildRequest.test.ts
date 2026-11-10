@@ -78,6 +78,9 @@ describe('rebuildRequest', () => {
       feel: 'swing',
     });
     expect(rebuildRequest(grooved, 2)).not.toHaveProperty('drums');
+    expect(rebuildRequest(grooved, 2)).not.toHaveProperty('tensions');
+    const coloured: Timeline = { ...base, rhythm: { tensions: { id: '9', explanation: 'x' } } };
+    expect(rebuildRequest(coloured, 2)).toMatchObject({ tensions: '9' }); // ADR-0037
   });
 });
 

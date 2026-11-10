@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -18,6 +19,31 @@ type Tensions struct {
 	Add9 bool `json:"add9,omitempty"`
 	// Text says what the style adds, for the rhythm notes.
 	Text string `json:"text"`
+}
+
+// The colours a candidate may ask for in place of its style's (ADR-0037):
+// none, the ninths (add9 on major triads), or ninths and the dominant's
+// thirteenth. The engine still chooses the tones by tensionsOf.
+const (
+	TensionsNone     = "none"
+	TensionsNinths   = "9"
+	TensionsNinths13 = "9-13"
+)
+
+// TensionIDs lists the colours a candidate may ask for.
+func TensionIDs() []string { return []string{TensionsNone, TensionsNinths, TensionsNinths13} }
+
+// requestedTensions is the rule a requested colour stands for; nil for none.
+func requestedTensions(id string) (*Tensions, error) {
+	switch id {
+	case TensionsNone:
+		return nil, nil
+	case TensionsNinths:
+		return &Tensions{Ninths: true, Add9: true}, nil
+	case TensionsNinths13:
+		return &Tensions{Ninths: true, Thirteenths: true, Add9: true}, nil
+	}
+	return nil, fmt.Errorf("%w: tensions %q; use one of %v", ErrUnknownPattern, id, TensionIDs())
 }
 
 // tensionsOf lists the tones the rule adds to a chord in the key: only
