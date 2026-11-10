@@ -37,14 +37,15 @@ var modeCharacter = map[Mode]string{
 	Minor:      "自然短音階で、暗く内向きに聞こえる。",
 	Dorian:     "短調に似ているが、6 度の音が半音高いので、暗さの中に明るさが混ざる。",
 	Mixolydian: "長調に似ているが、7 度の音が半音低く導音がないので、開放的に聞こえる。",
+	Phrygian:   "短調に似ているが、2 度の音が半音低いので、さらに暗く、スペインのフラメンコのような張りつめた響きになる。",
 }
 
-// reference is the mode a modal key is heard against: dorian against
-// natural minor, mixolydian against major. Each differs from it by the
-// characteristic tone alone.
-var reference = map[Mode]Mode{Dorian: Minor, Mixolydian: Major}
+// reference is the mode a modal key is heard against: dorian and phrygian
+// against natural minor, mixolydian against major. Each differs from it by
+// the characteristic tone alone.
+var reference = map[Mode]Mode{Dorian: Minor, Mixolydian: Major, Phrygian: Minor}
 
-var modeName = map[Mode]string{Major: "長調", Minor: "短調", Dorian: "ドリアン", Mixolydian: "ミクソリディアン"}
+var modeName = map[Mode]string{Major: "長調", Minor: "短調", Dorian: "ドリアン", Mixolydian: "ミクソリディアン", Phrygian: "フリジアン"}
 
 // overview needs the per-chord analysis, so Analyze calls it last.
 func overview(tl Timeline) *Overview {
