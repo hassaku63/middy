@@ -170,23 +170,20 @@ main {
     overflow-y: auto;
   }
 
-  /* The column is one screen tall: saved projects and the conversation
-     above, which scrolls on its own, and the input below it, always in
-     view and never over a card. */
+  /* The column is one screen tall and scrolls as a whole: saved projects,
+     the conversation and, right after it, the input, which rises into the
+     space a short conversation leaves and sticks to the column's foot once
+     the conversation fills it (BL-218, the owner's choice; BL-222). */
   .app--desk .app__side {
     min-height: 0;
-    overflow: hidden;
-  }
-
-  .app--desk .app__side > .chat {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .app--desk .chat__scroll {
-    flex: 1;
-    min-height: 0;
     overflow-y: auto;
+  }
+
+  .app--desk .chat__composer {
+    position: sticky;
+    bottom: 0;
+    padding: 8px 0;
+    background: var(--page);
   }
 
   .app--desk .chat__form {
@@ -227,31 +224,5 @@ main {
   .app--desk .app__main:has(.app__timeline) {
     border-left: 1px solid var(--rule);
     padding-left: 20px;
-  }
-}
-
-/* The desk's input under trial (BL-218, ?input=follow): the column
-   scrolls as a whole and the input comes right after the conversation,
-   so it rises into the space a short one leaves; once the conversation
-   fills the column, the input sticks to the column's foot. */
-@media (min-width: 1024px) {
-  .app--input-follow .app__side {
-    overflow-y: auto;
-  }
-
-  .app--input-follow .app__side > .chat {
-    flex: none;
-  }
-
-  .app--input-follow .chat__scroll {
-    flex: none;
-    overflow: visible;
-  }
-
-  .app--input-follow .chat__composer {
-    position: sticky;
-    bottom: 0;
-    padding: 8px 0;
-    background: var(--page);
   }
 }

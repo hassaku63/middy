@@ -9,9 +9,11 @@ test.use({ viewport: { width: 1280, height: 800 } });
 
 test('after three refinements, 再生 is still on the first screen', async ({ page }) => {
   await page.goto('/');
+  // Each answer opens nothing by itself (BL-219): the user opens its first card.
   const say = async (text: string, title: string) => {
     await page.getByLabel('イメージ', { exact: true }).fill(text);
     await page.getByRole('button', { name: '送る' }).click();
+    await page.getByRole('article', { name: title }).last().getByRole('button').click();
     await expect(page.getByRole('region', { name: '結果' })).toContainText(`候補: ${title}`);
   };
   await say('雨の日曜の午後', '窓辺の雨');
