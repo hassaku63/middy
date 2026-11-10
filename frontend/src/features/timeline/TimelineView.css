@@ -156,6 +156,11 @@
   .timeline__drum-row {
     fill: #e2e8f0;
   }
+  /* A darker violet on the light row, so a hit stands out at 3:1 (WCAG
+     1.4.11, #402 G). */
+  .timeline__drum-hit {
+    fill: #7c3aed;
+  }
 }
 
 .timeline__highlight {
