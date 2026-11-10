@@ -100,6 +100,17 @@ const deviceGuessRules = {
           'layout follows CSS media and container queries, not the window size (docs/dev/conventions.md)',
       })),
     ],
+    // A size query in code would draw a different component tree by width
+    // and lose its state on a resize; media features such as
+    // prefers-reduced-motion stay allowed.
+    'no-restricted-syntax': [
+      'error',
+      ...['callee.name', 'callee.property.name'].map((callee) => ({
+        selector: `CallExpression[${callee}='matchMedia'][arguments.0.value=/width|height|aspect-ratio|orientation/]`,
+        message:
+          'do not branch the component tree on size; lay out with CSS so state survives a resize (docs/dev/conventions.md)',
+      })),
+    ],
   },
 };
 

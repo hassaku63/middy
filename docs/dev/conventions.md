@@ -54,6 +54,9 @@
 - **幅で、できることと読めることを失わない。** 狭い画面でも、広い画面と同じ操作（固定、キー変更、保存）ができ、同じ情報にたどり着ける。変えるのは配置と、見せる量だけ。
   - 根拠: WCAG 2.2 の達成基準 1.4.10 Reflow（AA。[Understanding](https://www.w3.org/WAI/WCAG22/Understanding/reflow)、抜粋）。幅 320 CSS px で、情報と機能を失わず、縦と横の両方のスクロールを要しない。ただし、表や図のように 2 次元の配置が意味を持つ部分は例外。タイムラインは時間×音高の図なので、その箱の中の横スクロールはこの例外に当たる。ページ全体は横にスクロールさせない。
   - Android のページ（確認済み）も、どの大きさでも部品に十分なデータを渡し、幅で出し入れするのは見せ方だけにする、としている。
+- **配置が変わっても状態を保つ。** 幅で部品の木を分けない（幅で別の部品を描き分けない）。配置は CSS で変え、同じ部品を置き直す。固定した和音、スクロールの位置、入力中の文字は、窓の大きさが変わっても残る。大きさを問う `matchMedia`（`width`・`height`・`aspect-ratio`・`orientation`）は ESLint が禁止する。`prefers-reduced-motion` などの、大きさ以外を問うものは使ってよい。
+  - 根拠: Android の [Support different display sizes](https://developer.android.com/develop/ui/compose/layouts/adaptive/support-different-display-sizes)（確認済み）の "Make all data available for different display sizes"。表示の大きさを、データの取得や状態の寿命と結びつけない。大きさが変わっても状態が残るよう、状態を上に持ち上げる。窓の大きさの変更、向きの変更、折りたたみで、大きさは何度でも変わるため。
+  - 検査: まだない。E2E で、固定した和音とスクロールの位置が窓の大きさの変更のあとも残ることを確かめる（#359 のスライス 3）。
 - **端末を当てない。** UA、`window.innerWidth`、`screen` で分岐しない（ESLint が禁止する）。表示環境で分けるときは、媒体の性質（`prefers-color-scheme`、`prefers-reduced-motion`、`pointer`、`hover`、`display-mode`、`env(safe-area-inset-*)`）を CSS で使う。
   - 根拠: Android のページ（確認済み）が、配置の判断に物理的な端末の値を使わないよう明記している（"Avoid using physical hardware values for making layout decisions"）。分割画面や窓の大きさの変更で、端末の大きさは使える領域と一致しないため。
   - MDN の [Browser detection using the user agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Browser_detection_using_the_user_agent)（抜粋）も、UA による判定より機能の検出を勧め、端末の判定を UA の誤用の代表に挙げている。
@@ -61,16 +64,16 @@
   - 根拠: 上の Android のページ（確認済み）。表示の大きさの扱いを 1 か所に閉じ、同期を要する場所を散らさない。この repo の ADR-0006（事実は 1 箇所）。
   - 表が大きくなったら、W3C Design Tokens Community Group の [Design Tokens Format Module 2025.10](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/)（CG の安定版。境目専用の型はない）の形式で書き出すことを検討する。
 
-幅の帯としきい値（この表が正典。CSS の値を変えたらこの表も直す）:
+幅の帯としきい値（この表が正典。CSS の値を変えたらこの表も直す。値を足すときは、理由と、確かめるテストも書く）:
 
-| 値 | 何を見るか | 何が変わるか | 場所 |
-| --- | --- | --- | --- |
-| 1024 px | 画面の幅（media） | 未満は会話と結果を縦に、以上は会話を左の列（320 px）、結果を右に | `global.css` |
-| 2560 px | 画面の幅（media の内側の上限） | ページの横幅の上限。これより広い画面では中央に寄せる | `global.css` |
-| 45 %（高さ） | 画面の高さ | 結果の中のタイムラインの高さの上限。縦横比は保つ | `global.css`、`TimelineOverview.css` |
-| 4 小節 | 曲の長さと、スクロールの箱の幅（`cqw`） | 4 小節を超える曲は横スクロールの 1 本と縮小図の帯にする。箱の高さは 4 小節が箱の幅に収まる大きさ（45 % が上限） | `TimelineOverview.tsx`、`TimelineOverview.css` |
-| 760 px | 結果の箱の幅（`@container stage`） | 以上は 2 つの解説を左右に、未満は上下に | `global.css` |
-| 40 字（`40em`） | 段落の幅 | 解説の 1 行の上限 | `ExplanationPanel.css` |
+| 値 | 何を見るか | 何が変わるか | 理由 | 確かめるテスト | 場所 |
+| --- | --- | --- | --- | --- | --- |
+| 1024 px | 画面の幅（media） | 未満は会話と結果を縦に、以上は会話を左の列（320 px）、結果を右に | 会話の列（320 px）の横に、1 列で読める幅の結果（約 630 px、1 行 40 字）が並ぶ最小の幅 | `desk-layout.spec.ts`（390 は縦、1280 は横）、`layout.spec.ts`（1024 で結果が右の列に入り、解説が 1 列）。境目の前後（1023・1024）は未検査 | `global.css` |
+| 2560 px | 画面の幅（media の内側の上限） | ページの横幅の上限。これより広い画面では中央に寄せる | 所有者の判断（#353）。広げすぎると目の移動が長くなる | `layout.spec.ts`（2560×1440 で、結果の幅が以前の上限 1440 px のときより広い）。上限そのもの（2560 を超える窓）は未検査 | `global.css` |
+| 45 %（高さ） | 画面の高さ | 結果の中のタイムラインの高さの上限。縦横比は保つ | 再生中に、タイムラインと 1 和音の枠を同時に見せる（ADR-0041） | `layout.spec.ts`（1920×1080・2560×1440 の再生中）、`desk-layout.spec.ts`（1280×800） | `global.css`、`TimelineOverview.css` |
+| 4 小節 | 曲の長さと、スクロールの箱の幅（`cqw`） | 4 小節を超える曲は横スクロールの 1 本と縮小図の帯にする。箱の高さは 4 小節が箱の幅に収まる大きさ（45 % が上限） | 4 小節が箱に収まる大きさなら和音名が読める（BL-080 から引き継いだ範囲。ADR-0043） | `timeline-layouts.spec.ts`、`TimelineOverview.test.tsx` | `TimelineOverview.tsx`、`TimelineOverview.css` |
+| 760 px | 結果の箱の幅（`@container stage`） | 以上は 2 つの解説を左右に、未満は上下に | 2 列にしても 1 列が約 370 px（約 23 字/行）を下回らない。1024 px の窓（結果は約 630 px）では 1 列のまま | `layout.spec.ts`（960・1024・1280・1920・2560 の列の数）。境目の前後（759・760）は未検査 | `global.css` |
+| 40 字（`40em`） | 段落の幅 | 解説の 1 行の上限 | WCAG 1.4.8 の CJK の上限（hci の索引「行長と読みやすさ」） | `layout.spec.ts`（5 つの幅で 1 行 40 字以下） | `ExplanationPanel.css` |
 
 PR の自己点検（`/code-review` と `docs-sync`）で、差分に `@media`・`@container` の値や、幅・高さの上限があれば、表にあるか、なければ表に足したかを確かめる。検査のスクリプトは置かない（分岐が少ないうちは、読み合わせで足りる）。
 
