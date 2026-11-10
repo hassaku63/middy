@@ -105,13 +105,21 @@ func (b *Batcher) send(calls []*batchCall) (map[int]batchResult, error) {
 	reqs := make([]sdk.MessageBatchNewParamsRequest, len(calls))
 	for i, call := range calls {
 		p := call.params
+		// A batch can take longer than the cache's 5 minutes, so the system
+		// prompt is cached for an hour: the docs advise it for batches
+		// sharing context, where hits are best-effort (ADR-0039).
+		system := make([]sdk.TextBlockParam, len(p.System))
+		for j, block := range p.System {
+			block.CacheControl = sdk.CacheControlEphemeralParam{TTL: sdk.CacheControlEphemeralTTLTTL1h}
+			system[j] = block
+		}
 		reqs[i] = sdk.MessageBatchNewParamsRequest{
 			CustomID: strconv.Itoa(i),
 			Params: sdk.MessageBatchNewParamsRequestParams{
 				Model:        p.Model,
 				MaxTokens:    p.MaxTokens,
 				Messages:     p.Messages,
-				System:       p.System,
+				System:       system,
 				OutputConfig: p.OutputConfig,
 			},
 		}

@@ -3,6 +3,8 @@ package evals
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
@@ -97,4 +99,32 @@ func runAll(ctx context.Context, cases []Case, limit int, firstAlone bool, one f
 
 func notRun(c Case, why string) Verdict {
 	return Verdict{Case: c, Problems: []string{"not run: " + why}, Errored: true}
+}
+
+// DefaultBatchMin is how many cases a run needs before EVAL_BATCH=auto
+// sends it as Message Batches: a handful costs little either way and is
+// quicker one request at a time (#334, ADR-0039).
+const DefaultBatchMin = 20
+
+// BatchWanted reads EVAL_BATCH for a run of n cases: "1" batches, "" or
+// "0" does not, and "auto" batches when n reaches minimum (EVAL_BATCH_MIN,
+// DefaultBatchMin when empty).
+func BatchWanted(env, minimum string, n int) (bool, error) {
+	switch env {
+	case "", "0":
+		return false, nil
+	case "1":
+		return true, nil
+	case "auto":
+		least := DefaultBatchMin
+		if minimum != "" {
+			v, err := strconv.Atoi(minimum)
+			if err != nil || v < 1 {
+				return false, fmt.Errorf("evals: EVAL_BATCH_MIN must be a positive number, got %q", minimum)
+			}
+			least = v
+		}
+		return n >= least, nil
+	}
+	return false, fmt.Errorf("evals: EVAL_BATCH must be 1, 0 or auto, got %q", env)
 }

@@ -4,9 +4,10 @@
 # can be added again after the next fix. `needs-eval` runs every case; a
 # label `needs-eval:<tag>` (a tag of evals.Tags, e.g. `needs-eval:meter`)
 # runs only the cases with that tag and the smoke cases, to spend less
-# credit on a change that touches one aspect (#334). The full run goes as
-# Message Batches, at half the price, and waits longer for the answers
-# (ADR-0039); a narrowed run is small, so it sends one request at a time.
+# credit on a change that touches one aspect (#334). A run of many cases
+# (the full one) goes as Message Batches, at half the price, and waits
+# longer for the answers; a small one sends one request at a time
+# (EVAL_BATCH=auto, ADR-0039).
 #
 # Guards (all required, ADR-0018):
 # - Only `pull_request`, never `pull_request_target`, and only for branches
@@ -86,9 +87,10 @@ jobs:
               exit 1
             fi
             export EVAL_TAGS="$tag,smoke"
-          else
-            export EVAL_BATCH=1 EVAL_TIMEOUT=80m
           fi
+          # Message Batches for a run of EVAL_BATCH_MIN cases or more (the
+          # full run); a small narrowed run goes one request at a time.
+          export EVAL_BATCH=auto EVAL_TIMEOUT=80m
           if [ -z "$ANTHROPIC_API_KEY" ]; then
             echo "::error::the eval environment has no ANTHROPIC_API_KEY"
             exit 1

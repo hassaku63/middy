@@ -76,7 +76,7 @@ describe('CandidateCard style (BL-119)', () => {
 });
 
 describe('CandidateCard order (BL-073)', () => {
-  it('puts the reason last: title (the switch), progression, state, reason', () => {
+  it('puts the reason last: title (the switch), progression, reason', () => {
     render(
       <CandidateCard candidate={{ ...base, reason: '理由の文' }} open={true} onOpen={vi.fn()} />,
     );
@@ -84,7 +84,6 @@ describe('CandidateCard order (BL-073)', () => {
     const order = [
       card.getByRole('button', { name: base.title }),
       card.getByText(base.progression.join(' - ')),
-      card.getByText('開いています'),
       card.getByText('理由の文'),
     ];
     // Each part comes after the one before it in the document.
@@ -102,11 +101,11 @@ describe('CandidateCard as a whole (#313)', () => {
     expect(card.getAllByRole('button')).toHaveLength(1);
     const button = card.getByRole('button', { name: base.title });
     expect(button).toHaveAttribute('aria-pressed', 'false');
-    expect(card.queryByText('開いています')).not.toBeInTheDocument();
     await userEvent.click(button);
     expect(onOpen).toHaveBeenCalledTimes(1);
     rerender(<CandidateCard candidate={base} open={true} onOpen={onOpen} />);
     expect(card.getByRole('button', { name: base.title })).toHaveAttribute('aria-pressed', 'true');
-    expect(card.getByText('開いています')).toBeInTheDocument();
+    // The frame and its fill mark it (BL-216); no word is added to the card.
+    expect(card.queryByText('開いています')).not.toBeInTheDocument();
   });
 });

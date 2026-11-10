@@ -1,6 +1,9 @@
 import type { useHearOnOpen } from './useHearOnOpen';
 
-/** The switch for playing on choosing, beside the player (#315). */
+/**
+ * The switch for playing on choosing (#315), below the input where the
+ * examples are chosen (BL-217).
+ */
 export function HearOnOpenToggle({ hear }: { hear: ReturnType<typeof useHearOnOpen> }) {
   return (
     <label className="app__lab">

@@ -74,3 +74,12 @@ type UsagePart struct {
 	Name  string
 	Meter *Meter
 }
+
+// sendNote says how the run's requests went, so the usage above is read
+// at the right price: batched requests cost half (ADR-0039).
+func sendNote(batch bool) string {
+	if batch {
+		return "送り方: Message Batches（料金は 1 件ずつの半分。キャッシュの当たりはベストエフォート）\n"
+	}
+	return "送り方: 1 件ずつ\n"
+}
