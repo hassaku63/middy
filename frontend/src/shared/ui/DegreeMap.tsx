@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useId } from 'react';
 import type { DegreeChord, HarmonicFunction, HarmonyEvent, ModalRole } from '@/shared/api/client';
 import { FUNCTION_NAME, roleName } from '@/shared/lib/notation';
 import { currentDegree } from './currentDegree';
@@ -56,6 +56,7 @@ export function DegreeMap({
   functions = true,
   roles = false,
 }: DegreeMapProps) {
+  const captionId = useId();
   if (degrees.length === 0) return null;
   const current = currentDegree(event);
   const cell = (d: DegreeChord) => (
@@ -93,29 +94,41 @@ export function DegreeMap({
     );
   }
   // The flow of functions (#360): each function's chords in a column, in
-  // degree order, the columns joined left to right and back to T.
+  // degree order, the columns joined left to right and back to T. The
+  // caption says it is the basic flow, not a rule (#371): music also goes
+  // D → S (V → IV in blues and rock), and the arrows alone read as a law.
   return (
-    <div className="degree-map degree-map--flow" role="group" aria-label="度数の地図（機能の流れ）">
-      {FLOW.map((f, i) => (
-        <Fragment key={f}>
-          {i > 0 && (
-            <span className="degree-map__arrow" aria-hidden="true">
-              →
-            </span>
-          )}
-          <div className={`degree-map__column is-${f}`}>
-            <span className="degree-map__function" aria-hidden="true">
-              {f}
-            </span>
-            <ul className="degree-map__chords" aria-label={FUNCTION_NAME[f]}>
-              {degrees.filter((d) => d.function === f).map(cell)}
-            </ul>
-          </div>
-        </Fragment>
-      ))}
-      <span className="degree-map__arrow" aria-hidden="true">
-        → T
-      </span>
+    <div
+      className="degree-map degree-map--flow degree-map--captioned"
+      role="group"
+      aria-label="度数の地図（機能の流れ）"
+      aria-describedby={captionId}
+    >
+      <div className="degree-map__row">
+        {FLOW.map((f, i) => (
+          <Fragment key={f}>
+            {i > 0 && (
+              <span className="degree-map__arrow" aria-hidden="true">
+                →
+              </span>
+            )}
+            <div className={`degree-map__column is-${f}`}>
+              <span className="degree-map__function" aria-hidden="true">
+                {f}
+              </span>
+              <ul className="degree-map__chords" aria-label={FUNCTION_NAME[f]}>
+                {degrees.filter((d) => d.function === f).map(cell)}
+              </ul>
+            </div>
+          </Fragment>
+        ))}
+        <span className="degree-map__arrow" aria-hidden="true">
+          → T
+        </span>
+      </div>
+      <p id={captionId} className="degree-map__caption">
+        基本の流れ（いつもこの順とは限らない）
+      </p>
     </div>
   );
 }

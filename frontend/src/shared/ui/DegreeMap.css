@@ -84,6 +84,25 @@
   margin: 0;
 }
 
+/* The flow with its caption under it (#371): the caption says it is the
+   basic flow, not a rule. */
+.degree-map--captioned {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.degree-map__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.degree-map__caption {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 .degree-map__column {
   display: flex;
   flex-direction: column;
