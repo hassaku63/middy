@@ -55,8 +55,12 @@ type Analysis struct {
 	Substitute bool `json:"substitute,omitempty"`
 	// LeadingTone is true when the applied chord is the diminished seventh
 	// on the target's leading tone (vii°7/x, BL-130).
-	LeadingTone bool   `json:"leadingTone,omitempty"`
-	Explanation string `json:"explanation"`
+	LeadingTone bool `json:"leadingTone,omitempty"`
+	// Role is what the chord does in a mode (tonic, characteristic,
+	// tritone, other), where functions do not hold (#366, ADR-0047);
+	// empty in major and minor, and for a borrowed or applied chord.
+	Role        ModalRole `json:"role,omitempty"`
+	Explanation string    `json:"explanation"`
 }
 
 // Analyze returns a copy of the timeline whose Harmony events carry an
@@ -95,12 +99,17 @@ func Analyze(tl Timeline) (Timeline, error) {
 		}
 		fn := functionByDegree[p.degree]
 		cad := cadenceBetween(tl.Key.Mode, prev, p)
+		var role ModalRole
+		if !p.borrowed {
+			role = modalRole(tl.Key, p.degree)
+		}
 		h.Analysis = &Analysis{
 			Degree:      p.degree,
 			Function:    fn,
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
-			Explanation: explain(tl.Key, *h, p.degree, fn, cad, p.borrowed) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Role:        role,
+			Explanation: explain(tl.Key, *h, p.degree, fn, cad, p.borrowed, role) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -455,7 +464,7 @@ func openingText(key Key, degree int, fn Function) string {
 	return fmt.Sprintf(modalDegreeText, modeName[key.Mode], degree)
 }
 
-func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borrowed bool) string {
+func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borrowed bool, role ModalRole) string {
 	symbol := symbolOf(key, h)
 	s := fmt.Sprintf("%s（%s）は%s", h.RomanNumeral, symbol, openingText(key, degree, fn))
 	if borrowed {
@@ -464,9 +473,12 @@ func explain(key Key, h HarmonyEvent, degree int, fn Function, cad Cadence, borr
 	if isHarmonicMinorDominant(key, h.Chord) {
 		s += " " + harmonicMinorText
 	}
-	if tone, ok := characteristicTone(key, h.Chord); ok {
+	// A chord with the tritone also carries the characteristic tone, but
+	// it blurs the mode rather than marks it: its role says so instead.
+	if tone, ok := characteristicTone(key, h.Chord); ok && role != RoleTritone {
 		s += " " + fmt.Sprintf(characteristicText[key.Mode], key.PitchClassName(tone))
 	}
+	s += roleText(key, h, role)
 	if isPhrygianSecond(key, h.Chord) {
 		s += " " + phrygianSecondText
 	}

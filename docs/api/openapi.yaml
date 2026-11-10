@@ -638,6 +638,8 @@ components:
         leadingTone:
           type: boolean
           description: 向かう先の導音の上の減七（vii°7/x。BL-130）のとき true。省略時 false
+        role:
+          $ref: '#/components/schemas/ModalRole'
         explanation:
           type: string
           description: UI にそのまま表示できる 1〜2 文の日本語
@@ -717,6 +719,16 @@ components:
           items:
             type: string
           description: この度数で鳴る和音のうち、構成音が調の音階から外れるもの（短調の和声的な V7 なら B7、長調のブルースの I7 なら C7）。調に合わせて綴った和音名。音階の中の七の和音や sus4 は含まない（#296）。省略時は空
+        role:
+          $ref: '#/components/schemas/ModalRole'
+    ModalRole:
+      description: >-
+        モード（dorian・mixolydian・phrygian）の和音の役割（#366、ADR-0047）。機能（T・S・D）が成り立たないモードで、和音が何をするかを言う。
+        tonic は主和音。characteristic は特徴音を含み、音階の三全音を含まない和音（ドリアンの IV・ii、ミクソリディアンの ♭VII・v、フリジアンの ♭II・♭vii）。
+        tritone は三全音の 2 音を含み、同じ音でできた長調へ引き寄せる和音。other はそれ以外。
+        長調と短調、借用和音とセカンダリードミナントでは省く
+      type: string
+      enum: [tonic, characteristic, tritone, other]
     Rhythm:
       type: object
       properties:
