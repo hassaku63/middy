@@ -16,6 +16,10 @@ server {
     server_tokens off;
     root /usr/share/nginx/html;
 
+    # Security headers and the CSP (#206 A-4). A location with its own
+    # add_header includes them again: nginx does not merge the two.
+    include /etc/nginx/snippets/security-headers.conf;
+
     # Resolve API_UPSTREAM per request (cached 10 s), so a recreated api
     # container's new address is picked up. RESOLVER is the network's DNS
     # (127.0.0.11 under compose); an IP upstream never asks it.
@@ -43,6 +47,8 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        # The API sets nosniff itself; nginx adds the server's set once.
+        proxy_hide_header X-Content-Type-Options;
         proxy_read_timeout 180s;
         proxy_send_timeout 180s;
         client_max_body_size 4m;
@@ -60,6 +66,7 @@ server {
     }
     location ^~ /assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable" always;
+        include /etc/nginx/snippets/security-headers.conf;
         try_files $uri =404;
     }
 
@@ -67,6 +74,7 @@ server {
     location = /manifest.webmanifest {
         default_type application/manifest+json;
         add_header Cache-Control "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
         try_files $uri =404;
     }
 
@@ -74,12 +82,14 @@ server {
     # is and revalidated, or a 404, never index.html.
     location ~ \.[A-Za-z0-9]+$ {
         add_header Cache-Control "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
         try_files $uri =404;
     }
 
     # Screen URLs: the app shell, revalidated so a deploy is picked up.
     location / {
         add_header Cache-Control "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
         try_files $uri /index.html;
     }
 
@@ -94,12 +104,14 @@ server {
         types { }
         default_type text/plain;
         add_header Cache-Control "no-cache" always;
+        include /etc/nginx/snippets/security-headers.conf;
         return 404 "not found\n";
     }
     location @method_not_allowed {
         types { }
         default_type text/plain;
         add_header Allow "GET, HEAD" always;
+        include /etc/nginx/snippets/security-headers.conf;
         return 405 "method not allowed\n";
     }
     location @request_too_large {

@@ -37,6 +37,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS web
 COPY --from=frontend /src/frontend/dist /usr/share/nginx/html
 COPY deploy/nginx/templates/ /etc/nginx/templates/
+COPY deploy/nginx/snippets/ /etc/nginx/snippets/
 ENV PORT=8080 RESOLVER=127.0.0.11
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=1s --retries=3 \

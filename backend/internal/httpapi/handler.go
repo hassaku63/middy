@@ -67,7 +67,16 @@ func NewHandler(d Deps) http.Handler {
 	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "no such endpoint")
 	})
-	return requestLogger(d.Logger, mux)
+	return requestLogger(d.Logger, noSniff(mux))
+}
+
+// noSniff tells browsers to take every response as the type it says it is
+// (#280, #206 A-4): the API answers JSON and SMF, never something to sniff.
+func noSniff(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		next.ServeHTTP(w, r)
+	})
 }
 
 // methodNotAllowed answers a known path called with a method it does not take.
