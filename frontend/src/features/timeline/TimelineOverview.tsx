@@ -1,66 +1,65 @@
-import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
 import { BAR_WIDTH, LABEL_WIDTH, computeLayout, type Layout } from './layout';
+import { useTimelineScroll } from './useTimelineScroll';
 import './TimelineOverview.css';
 
-/** Bars in the detail below the overview. */
+/** Bars that fit the scrolling box's width, at most, when its height allows. */
 const BARS_PER_VIEW = 4;
-const DETAIL_WIDTH = BARS_PER_VIEW * BAR_WIDTH;
 
-type Props = Omit<TimelineViewProps, 'view' | 'highlight' | 'label' | 'decorative' | 'className'>;
+type Props = Omit<
+  TimelineViewProps,
+  'highlight' | 'label' | 'decorative' | 'className' | 'stretch'
+>;
 
 /**
- * The timeline as the screen shows it (BL-080): a short one whole, a long
- * one as the whole piece small on top and four bars large below. Clicking
- * a chord in the overview pins it and so moves the detail. The overview is
- * a duplicate drawing, hidden from assistive tech. The detail follows the
- * playhead, keeping it at the centre while playing; stopped, it centres the
- * pinned chord, else where a slider puts it (BL-127, the owner's choice).
+ * The timeline as the screen shows it: a short one whole; a long one as
+ * one drawing that scrolls sideways, with the whole piece as a thin strip
+ * below that outlines the part in view, as an editor's overview (#360,
+ * the owner's choice). Playing, the box turns a page when the playhead
+ * nears an edge; stopped, it centres the pinned chord, else it stays where
+ * it was scrolled. Clicking a chord in the strip pins it. The strip is a
+ * duplicate drawing, hidden from assistive tech.
  */
 export function TimelineOverview(props: Props) {
-  const [manual, setManual] = useState(0); // the detail's centre while stopped (B), in ticks
   const geometry = computeLayout(props.timeline);
-  if (geometry.bars <= BARS_PER_VIEW) return <TimelineView {...props} />;
+  const long = geometry.bars > BARS_PER_VIEW;
   const pinned =
     props.selectedHarmony != null ? props.timeline.harmony[props.selectedHarmony] : undefined;
-  const detail = centredOn(geometry, followed(props, pinned, manual));
-  const sliding = props.playing === false && !pinned;
+  const playing = props.playing !== false;
+  const target = !long ? null : followed(geometry, props.positionTick, playing, pinned);
+  const { ref, view, onScroll } = useTimelineScroll(
+    geometry.width,
+    target,
+    playing ? 'page' : 'centre',
+  );
+  if (!long) return <TimelineView {...props} />;
+  // The box shows four bars across its width, unless the height cap
+  // (ADR-0041) makes the drawing smaller.
+  const fourBars = geometry.height / (LABEL_WIDTH + BARS_PER_VIEW * BAR_WIDTH);
   return (
     <div className="timeline-overview">
-      <TimelineView {...props} decorative highlight={detail} className="timeline--overview" />
-      <TimelineView {...props} view={detail} />
-      {sliding && (
-        <input
-          type="range"
-          className="timeline-overview__slider"
-          aria-label="拡大の位置"
-          min={0}
-          max={geometry.bars * geometry.perBar}
-          step={geometry.perBar / 4}
-          value={manual}
-          onChange={(e) => setManual(Number(e.target.value))}
-        />
-      )}
+      <div
+        className="timeline-overview__scroll"
+        ref={ref}
+        onScroll={onScroll}
+        style={{ '--timeline-four-bars': fourBars } as CSSProperties}
+      >
+        <TimelineView {...props} />
+      </div>
+      <TimelineView {...props} decorative stretch highlight={view} className="timeline--overview" />
     </div>
   );
 }
 
-/** The tick kept at the centre of the detail. */
+/** The point kept in view, in drawing units: the playhead, or the pinned chord's middle. */
 function followed(
-  props: { positionTick: number; playing?: boolean | undefined },
+  geometry: Layout,
+  positionTick: number,
+  playing: boolean,
   pinned: Timeline['harmony'][number] | undefined,
-  manual: number,
 ) {
-  if (props.playing !== false) return props.positionTick;
-  return pinned ? pinned.start + pinned.duration / 2 : manual;
-}
-
-/** Four bars with tick at the centre, kept inside the piece. */
-function centredOn(geometry: Layout, tick: number) {
-  const x = geometry.x(tick) - DETAIL_WIDTH / 2;
-  return {
-    x: Math.min(Math.max(x, LABEL_WIDTH), geometry.width - DETAIL_WIDTH),
-    width: DETAIL_WIDTH,
-  };
+  if (playing) return geometry.x(positionTick);
+  return pinned ? geometry.x(pinned.start + pinned.duration / 2) : null;
 }

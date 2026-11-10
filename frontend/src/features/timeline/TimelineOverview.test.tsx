@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineOverview } from './TimelineOverview';
+import { scrollFor } from './useTimelineScroll';
 
 /** bars one-bar chords (I each) at 120 BPM. */
 function bars(n: number): Timeline {
@@ -20,64 +21,43 @@ function bars(n: number): Timeline {
   };
 }
 
-describe('TimelineOverview (BL-080)', () => {
+describe('TimelineOverview (#360)', () => {
   it('draws a short timeline once, whole', () => {
     const { container } = render(<TimelineOverview timeline={bars(4)} positionTick={0} />);
     expect(container.querySelectorAll('svg.timeline')).toHaveLength(1);
-    expect(container.querySelector('.timeline--overview')).toBeNull();
+    expect(container.querySelector('.timeline-overview__scroll')).toBeNull();
   });
 
-  it('draws a long one as an overview and a four-bar detail', () => {
+  it('draws a long one whole in a scrolling box, with a strip of the whole piece', () => {
     const { container } = render(
       <TimelineOverview timeline={bars(16)} positionTick={0} onSelectHarmony={vi.fn()} />,
     );
-    const overview = container.querySelector('svg.timeline--overview');
+    const main = container.querySelector('.timeline-overview__scroll svg.timeline');
+    const strip = container.querySelector('svg.timeline--overview');
     expect(container.querySelectorAll('svg.timeline')).toHaveLength(2);
-    expect(overview?.getAttribute('aria-hidden')).toBe('true');
+    // The scrolled drawing is the whole piece, not a slice.
+    expect(main?.getAttribute('viewBox')).toBe(
+      `0 0 ${40 + 16 * 160} ${main?.getAttribute('height')}`,
+    );
+    expect(main?.getAttribute('aria-hidden')).toBeNull();
+    expect(strip?.getAttribute('aria-hidden')).toBe('true');
+    expect(strip?.getAttribute('preserveAspectRatio')).toBe('none');
     // The duplicate drawing's chords can be clicked but are no tab stops.
-    expect(overview?.querySelectorAll('[role=option][tabindex]')).toHaveLength(0);
-    expect(overview?.querySelector('.timeline__highlight')?.getAttribute('x')).toBe('40');
+    expect(strip?.querySelectorAll('[role=option][tabindex]')).toHaveLength(0);
+    expect(strip?.querySelector('.timeline__highlight')).not.toBeNull();
+    expect(container.querySelector('input[type=range]')).toBeNull();
   });
+});
 
-  describe('following the playhead (BL-127)', () => {
-    const detailX = (container: HTMLElement) =>
-      Number(
-        container.querySelector('svg.timeline--overview .timeline__highlight')?.getAttribute('x'),
-      );
-
-    it('keeps the playhead at the centre while playing, inside the piece', () => {
-      const { container, rerender } = render(
-        <TimelineOverview timeline={bars(16)} positionTick={6 * 1920} playing />,
-      );
-      // Bar 7's start (x = 40 + 6·160 = 1000) at the centre of a 640-wide detail.
-      expect(detailX(container)).toBe(1000 - 320);
-      rerender(<TimelineOverview timeline={bars(16)} positionTick={0} playing />);
-      expect(detailX(container)).toBe(40); // not before the first bar
-      rerender(<TimelineOverview timeline={bars(16)} positionTick={16 * 1920 - 1} playing />);
-      expect(detailX(container)).toBe(40 + 16 * 160 - 640); // nor past the last
-      expect(screen.queryByRole('slider', { name: '拡大の位置' })).toBeNull();
-    });
-
-    it('lets a slider move it while stopped', () => {
-      const { container } = render(
-        <TimelineOverview timeline={bars(16)} positionTick={0} playing={false} />,
-      );
-      const slider = screen.getByRole('slider', { name: '拡大の位置' });
-      fireEvent.change(slider, { target: { value: String(8 * 1920) } });
-      expect(detailX(container)).toBe(40 + 8 * 160 - 320);
-    });
-
-    it('centres a pinned chord while stopped', () => {
-      const { container } = render(
-        <TimelineOverview
-          timeline={bars(16)}
-          positionTick={0}
-          playing={false}
-          selectedHarmony={10}
-        />,
-      );
-      expect(detailX(container)).toBe(40 + 10.5 * 160 - 320);
-      expect(screen.queryByRole('slider', { name: '拡大の位置' })).toBeNull();
-    });
+describe('scrollFor (#360)', () => {
+  // A 1000 px view scrolled to 2000: the lead before the point is 100 px.
+  it.each([
+    ['inside the view: stays', 2500, 'page', null],
+    ['near the right edge: turns the page', 2950, 'page', 2850],
+    ['before the view: turns back', 1500, 'page', 1400],
+    ['near the left edge: turns back a little', 2050, 'page', 1950],
+    ['centre: always to the middle', 2500, 'centre', 2000],
+  ] as const)('%s', (_, x, keep, want) => {
+    expect(scrollFor(2000, 1000, x, keep)).toBe(want);
   });
 });

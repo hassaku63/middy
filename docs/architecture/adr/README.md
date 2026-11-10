@@ -46,6 +46,7 @@
 | [0040](0040-security-headers.md) | web のコンテナがセキュリティヘッダと CSP を付ける（snippet を全 location で。Go も nosniff） | Accepted |
 | [0041](0041-wide-screen-bounds.md) | 広い画面の上限: 横幅 2560 px、タイムラインの高さは画面の 45 %（縦横比を保つ） | Accepted |
 | [0042](0042-layout-rules.md) | 配置の規則: 骨組みは media、部品は container、しきい値は conventions の表に 1 か所。端末の当て推量は ESLint で禁止 | Accepted |
+| [0043](0043-scrolling-timeline.md) | 長いタイムラインは横スクロールの 1 本と縮小図の帯（拡大とスライダーを置き換え）。追随はページめくり | Accepted |
 
 ## いつ ADR を書くか
 

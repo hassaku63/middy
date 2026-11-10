@@ -19,14 +19,10 @@ export type TimelineViewProps = {
   /** Index into timeline.harmony the user pinned by clicking, if any. */
   selectedHarmony?: number | null;
   onSelectHarmony?: (index: number) => void;
-  /**
-   * Show only this horizontal slice of the drawing (user units, i.e. the
-   * unscaled pixels of computeLayout). Used by TimelineOverview's detail
-   * (BL-080); omitted, the whole timeline is drawn.
-   */
-  view?: { x: number; width: number };
-  /** Outline this slice, e.g. the part shown in detail next to an overview. */
+  /** Outline this slice, e.g. the part in view next to an overview. */
   highlight?: { x: number; width: number };
+  /** Fill the box it is given, out of proportion (an overview strip). */
+  stretch?: boolean;
   /** Accessible name; several timelines on one screen need distinct names. */
   label?: string;
   /** ▶ on the chord followed, ■ on the pinned one (see ChordLane). */
@@ -47,8 +43,8 @@ export function TimelineView({
   playing = true,
   selectedHarmony = null,
   onSelectHarmony,
-  view,
   highlight,
+  stretch = false,
   label = 'タイムライン',
   decorative = false,
   marks,
@@ -64,7 +60,6 @@ export function TimelineView({
     [timeline],
   );
 
-  const width = view?.width ?? layout.width;
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (
@@ -75,11 +70,12 @@ export function TimelineView({
       role="group"
       aria-label={label}
       aria-hidden={decorative || undefined}
-      width={width}
+      width={layout.width}
       height={layout.height}
       // The drawing's proportions, for CSS to cap the height (ADR-0041).
-      style={{ '--timeline-aspect': width / layout.height } as CSSProperties}
-      viewBox={`${view?.x ?? 0} 0 ${width} ${layout.height}`}
+      style={{ '--timeline-aspect': layout.width / layout.height } as CSSProperties}
+      viewBox={`0 0 ${layout.width} ${layout.height}`}
+      preserveAspectRatio={stretch ? 'none' : undefined}
     >
       {Array.from({ length: layout.bars + 1 }, (_, i) => (
         <line
