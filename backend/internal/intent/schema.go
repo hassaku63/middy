@@ -75,7 +75,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
               "basedOn": { "type": "string", "enum": [%s], "description": "もとにしたドラムの型。スタイルの型から選ぶ" }
             }
           },
-          "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる。伴奏かドラムがあるときに効く。6/8 では使わない。省略するとストレート" }
+          "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる（跳ね方はテンポに合わせる）、shuffle は 3 連符で跳ねる（ブルースやロックのシャッフル）。伴奏かドラムがあるときに効く。swing と shuffle は 6/8 では使わない。省略するとストレート" }
         }
       }
     }

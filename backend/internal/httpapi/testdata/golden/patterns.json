@@ -1320,7 +1320,12 @@
     {
       "id": "swing",
       "name": "スウィング",
-      "description": "8 分音符を長・短で跳ねさせる。ジャズやシャッフルの揺れ。"
+      "description": "8 分音符を長・短で跳ねさせる。跳ね方はテンポに合わせる（遅いほど深い）。ジャズの揺れ。"
+    },
+    {
+      "id": "shuffle",
+      "name": "シャッフル",
+      "description": "8 分音符を 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。ブルースやロックの「タッカ・タッカ」と跳ねる揺れ。"
     }
   ],
   "styles": [
@@ -1348,7 +1353,8 @@
       ],
       "feels": [
         "straight",
-        "swing"
+        "swing",
+        "shuffle"
       ],
       "grooves": [
         {
@@ -1450,7 +1456,8 @@
       ],
       "feels": [
         "straight",
-        "swing"
+        "swing",
+        "shuffle"
       ],
       "program": 29,
       "instrument": "歪んだギター",
@@ -1500,7 +1507,8 @@
       ],
       "feels": [
         "swing",
-        "straight"
+        "straight",
+        "shuffle"
       ],
       "grooves": [
         {

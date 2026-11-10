@@ -255,8 +255,8 @@ components:
           description: 拍子。4/4、3/4、6/8 のどれか。省略時は 4/4。progression の beats はこの拍子の拍で数える（ADR-0017）
     Feel:
       type: string
-      enum: [straight, swing]
-      description: 8 分音符のノリ。swing は裏拍を遅らせる（長・短の比はテンポから決まる。BL-084）。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing は使えない。省略時は straight
+      enum: [straight, swing, shuffle]
+      description: 8 分音符のノリ。swing は裏拍を遅らせる（長・短の比はテンポから決まる。BL-084）。shuffle は 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2:1 で、テンポによらない。ADR-0036）。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing と shuffle は使えない。省略時は straight
     PatternsResponse:
       type: object
       required: [accompaniments, drums, feels, styles]

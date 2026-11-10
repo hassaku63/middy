@@ -6,7 +6,7 @@
       "description": "歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。",
       "accompaniments": ["pulse", "ballad", "arpeggio", "strum", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "strum-16"],
       "drums": ["eight-beat", "ballad", "waltz", "six-eight", "sixteen-beat"],
-      "feels": ["straight", "swing"]
+      "feels": ["straight", "swing", "shuffle"]
     },
     {
       "id": "ballad",
@@ -26,7 +26,7 @@
       "description": "ギターのストロークと 8 ビートで、強く前に進む。",
       "accompaniments": ["strum", "pulse", "strum-16"],
       "drums": ["eight-beat", "sixteen-beat"],
-      "feels": ["straight", "swing"],
+      "feels": ["straight", "swing", "shuffle"],
       "program": 29,
       "instrument": "歪んだギター"
     },
@@ -36,7 +36,7 @@
       "description": "ライドシンバルの 4 ビートと短いコンピング。スウィングと組み合わせる。",
       "accompaniments": ["comp", "walking", "arpeggio", "ballad", "waltz", "arpeggio-3"],
       "drums": ["jazz-ride", "jazz-waltz"],
-      "feels": ["swing", "straight"],
+      "feels": ["swing", "straight", "shuffle"],
       "tensions": {
         "ninths": true,
         "thirteenths": true,
