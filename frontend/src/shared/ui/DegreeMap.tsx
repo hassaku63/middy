@@ -33,12 +33,27 @@ export function DegreeMap({ degrees, event }: DegreeMapProps) {
             .filter(Boolean)
             .join(' ')}
           aria-current={d.degree === current ? 'true' : undefined}
-          aria-label={`${d.romanNumeral}（${d.symbol}）、${FUNCTION_NAME[d.function]}${d.used ? '、この例で使う' : ''}`}
+          aria-label={`${d.romanNumeral}（${d.symbol}）、${FUNCTION_NAME[d.function]}${usedText(d)}`}
         >
           <span className="degree-map__numeral">{d.romanNumeral}</span>
           <span className="degree-map__symbol">{d.symbol}</span>
+          {d.altered?.map((a) => (
+            <span key={a} className="degree-map__altered">
+              {a}
+            </span>
+          ))}
         </li>
       ))}
     </ol>
   );
+}
+
+/**
+ * What the example does with the degree: plays its chord, or plays it
+ * altered (#296: E minor's harmonic V is B7, not the map's Bm).
+ */
+function usedText(d: DegreeChord): string {
+  if (d.altered?.length)
+    return `、この例では ${d.altered.join('、')}（音階の外の音を含む形）で使う`;
+  return d.used ? '、この例で使う' : '';
 }
