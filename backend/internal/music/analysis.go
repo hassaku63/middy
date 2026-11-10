@@ -197,14 +197,11 @@ func Analyze(tl Timeline) (Timeline, error) {
 				AppliedTo:   p.applied,
 				Substitute:  p.sub,
 				LeadingTone: p.lead,
-				Explanation: explainApplied(tl.Key, *h, p, next(tl.Harmony, i)) + passingText(tl.Harmony, i, p),
+				Explanation: explainApplied(tl.Key, tl.Harmony, ps, i) + passingText(tl.Harmony, i, p),
 			}
 			continue
 		}
-		var prev, following placed // the zero value means "none"
-		if i > 0 {
-			prev = ps[i-1]
-		}
+		var following placed // the zero value means "none"
 		if i+1 < len(ps) {
 			following = ps[i+1]
 		}
@@ -223,7 +220,7 @@ func Analyze(tl Timeline) (Timeline, error) {
 			Cadence:     cad,
 			Borrowed:    p.borrowed,
 			Role:        role,
-			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, p, prev, following) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
+			Explanation: explain(tl.Key, *h, p.degree, fn, cadenceSentence(tl.Harmony, i, cad), p.borrowed, role) + borrowedFunctionText(tl.Key, p, fn) + subtonicText(tl.Key, ps, i) + bluesText(tl.Key, p, following) + majorAlias(tl.Key, p.degree, h.Chord),
 		}
 	}
 	for i := range out.Harmony {
@@ -349,27 +346,34 @@ func hasLeadingTone(degree int, c Chord) bool {
 // (ADR-0012, decision 2): heading to III it acts as III's dominant, going
 // back to i it is a weak dominant without a leading tone, and between i
 // and VI it passes on the way down to V.
-func subtonicText(k Key, p, prev, following placed) string {
+func subtonicText(k Key, ps []placed, i int) string {
+	p := ps[i]
 	if k.Mode != Minor || p.degree != 7 || p.borrowed {
 		return ""
 	}
 	// A secondary dominant's degree is only its root's: V7/VI on III is no III.
-	prevDeg, nextDeg := prev.degree, following.degree
-	if prev.applied != 0 {
-		prevDeg = 0
-	}
-	if following.applied != 0 {
-		nextDeg = 0
-	}
+	prevDeg, nextDeg, afterDeg := degreeAt(ps, i-1), degreeAt(ps, i+1), degreeAt(ps, i+2)
 	switch {
-	case prevDeg == 1 && nextDeg == 6:
+	case prevDeg == 1 && nextDeg == 6 && afterDeg == 5:
 		return " ここでは機能というより、i から VI、V へ下りていく線の途中（経過）。"
+	case prevDeg == 1 && nextDeg == 6:
+		// No V after the VI (#378): the line goes down to VI only.
+		return " ここでは機能というより、i から VI へ下りていく線の途中（経過）。"
 	case nextDeg == 3:
 		return " ここでは次の III へ向かう。III を一時的な主音とみれば、その V にあたる（V/III の働き）。"
 	case nextDeg == 1:
 		return " ここでは導音を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
 	}
 	return " 導音を持たないので、V ほど強くは i へ引き寄せない。"
+}
+
+// degreeAt is the degree of the chord at j, or 0 when there is none or it
+// is a secondary dominant (its root's degree says nothing of its job).
+func degreeAt(ps []placed, j int) int {
+	if j < 0 || j >= len(ps) || ps[j].applied != 0 {
+		return 0
+	}
+	return ps[j].degree
 }
 
 // locate finds the chord's scale degree in the key, or, in a major key, in
@@ -699,11 +703,20 @@ const (
 	passingSentence = "前の和音から根音が半音ずつ上がる、経過の減七（パッシング・ディミニッシュ）。" //nolint:gosec // G101 reads "passing" as a password; this is explanation text
 	resolvesText    = "次の %s へ解決する。"
 	deflectedText   = "ここでは %s へは進まず、引き寄せをかわす。"
+	viaSixFourText  = "次の %s（V を飾る和音）を経て、%s へ解決する。"
 )
 
-func explainApplied(k Key, h HarmonyEvent, p placed, following *Chord) string {
+func explainApplied(k Key, hs []HarmonyEvent, ps []placed, i int) string {
+	h, p := hs[i], ps[i]
+	following := next(hs, i)
 	target := p.applied
 	t, _ := k.Diatonic(target, false)
+	// The chord it goes to may be on the target's root in another quality:
+	// in A minor V7/V goes to the harmonic V7 (E7), not to the scale's v
+	// (Em). Name the target as it sounds then (#378).
+	if following != nil && following.Root == t.Root {
+		t.Quality = triadOf(following.Quality, t.Quality)
+	}
 	rn, _ := RomanNumeral(target, t.Quality)
 	symbol := k.ChordSymbol(t)
 	s := fmt.Sprintf(appliedText, h.RomanNumeral, symbolOf(k, h), rn, symbol, symbol)
@@ -721,10 +734,25 @@ func explainApplied(k Key, h HarmonyEvent, p placed, following *Chord) string {
 	case following == nil:
 	case following.Root == t.Root:
 		s += " " + fmt.Sprintf(resolvesText, rn)
+	case target == 5 && isCadentialSixFour(hs, ps, i+1) && hs[i+2].Chord.Root == t.Root:
+		// V/V – I6/4 – V: the six-four delays the V it resolves to.
+		s += " " + fmt.Sprintf(viaSixFourText, hs[i+1].RomanNumeral, rn)
 	default:
 		s += " " + fmt.Sprintf(deflectedText, rn)
 	}
 	return s
+}
+
+// triadOf is the triad a chord quality is built on (E7 on E major), or
+// the fallback for a chord that has none of its own (sus4, power, dim).
+func triadOf(q, fallback ChordQuality) ChordQuality {
+	if q == MajorTriad || q == Major7 || q == Dominant7 {
+		return MajorTriad
+	}
+	if q == MinorTriad || q == Minor7 || q == MinorSixth {
+		return MinorTriad
+	}
+	return fallback
 }
 
 // passingText names a leading-tone diminished seventh that passes: the
