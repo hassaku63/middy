@@ -59,7 +59,7 @@ func TestPhrygianExplainsTheSecond(t *testing.T) {
 		t.Fatal(err)
 	}
 	ii := tl.Harmony[1].Analysis.Explanation
-	for _, want := range []string{"フリジアンの特徴音（主音から短 2 度の F）", "主音の半音上の長三和音（♭II）", "フリジアンらしい終わり方", "「フリギア終止」と呼ぶのは短調の iv6 → V"} {
+	for _, want := range []string{"フリジアンの特徴音（主音から短 2 度の F）", "主音の半音上の長三和音（♭II）", "フリジアンらしい終わり方", "と呼ぶのは短調の iv の第 1 転回形 → V"} {
 		if !strings.Contains(ii, want) {
 			t.Errorf("II lacks %q: %s", want, ii)
 		}

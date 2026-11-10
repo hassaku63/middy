@@ -13,7 +13,7 @@ func TestCadencesEndPhrases(t *testing.T) {
 	six := analysed(t, Key{C, Major}, 4, "IV", "I/5", "V", "I")
 	if a := six.Harmony[1].Analysis; a.Cadence != NoCadence || a.Function != Dominant ||
 		strings.Contains(a.Explanation, "変格終止") || strings.Contains(a.Explanation, "落ち着いて") ||
-		!strings.Contains(a.Explanation, "次の V を飾る和音（終止の四六）") {
+		!strings.Contains(a.Explanation, "次の V を飾る和音（終止の四六。V の前に置く、I の第 2 転回形）") {
 		t.Errorf("I6/4 before V:\n%+v", a)
 	}
 	if a := six.Harmony[3].Analysis; a.Cadence != Authentic || !strings.Contains(a.Explanation, "もっとも強い区切り") {

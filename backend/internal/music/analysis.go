@@ -65,7 +65,7 @@ func borrowedFunctionText(k Key, p placed, fn Function) string {
 	case p.degree == 7 && fn == Subdominant:
 		return " ここでは次の IV へ進み、IV と同じサブドミナントの側で働く。"
 	case p.degree == 7:
-		return " 導音を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント。"
+		return " 導音（主音の半音下の音）を持たないので、V ほど強くは I へ引き寄せない、弱いドミナント。"
 	}
 	return ""
 }
@@ -124,7 +124,7 @@ func isTonicSixFour(hs []HarmonyEvent, ps []placed, i int) bool {
 }
 
 const (
-	cadentialSixFourSentence = "ここでは次の V を飾る和音（終止の四六）。主和音の音でできていても、働きは V の側（ドミナント）にあり、区切りにはならない。"
+	cadentialSixFourSentence = "ここでは次の V を飾る和音（終止の四六。V の前に置く、I の第 2 転回形）。主和音の音でできていても、働きは V の側（ドミナント）にあり、区切りにはならない。"
 	// imperfectAuthenticText: V – I with either chord inverted.
 	imperfectAuthenticText = "直前の %s から %s へ解決する正格終止。ただし、どちらかの和音のベースが根音でないので、基本形どうしより区切りは弱い。"
 )
@@ -344,13 +344,13 @@ func bluesText(k Key, p placed, following placed) string {
 	}
 	if p.degree == 4 {
 		seventh := k.spellDegree(3, -1) // the seventh of IV is the key's lowered third
-		return fmt.Sprintf(" ブルースの属七。IV に %s を重ねた属七で、%s は調の ♭3（音階の第 3 音を半音下げた音、ブルー・ノート）にあたる。どこかへ解決する和音ではなく、サブドミナントのまま鳴る。", seventh, seventh)
+		return fmt.Sprintf(" ブルースの属七（V7 と同じ形の和音）。IV に %s を重ねた属七で、%s は調の ♭3（音階の第 3 音を半音下げた音、ブルー・ノート）にあたる。どこかへ解決する和音ではなく、サブドミナントのまま鳴る。", seventh, seventh)
 	}
 	seventh := k.spellDegree(7, -1)
 	if following.degree == 4 && following.applied == 0 && !following.borrowed {
-		return fmt.Sprintf(" ブルースの属七。主和音に %s（♭7）を重ねた属七で、機能はトニックのまま。次が IV なので、%s が IV の 3 度の %s へ半音で下り、同じ音の V7/IV のように IV を引き寄せて聞こえる。", seventh, seventh, k.spellDegree(6, 0))
+		return fmt.Sprintf(" ブルースの属七（V7 と同じ形の和音）。主和音に %s（♭7）を重ねた属七で、機能はトニックのまま。次が IV なので、%s が IV の 3 度の %s へ半音で下り、同じ音の V7/IV のように IV を引き寄せて聞こえる。", seventh, seventh, k.spellDegree(6, 0))
 	}
-	return fmt.Sprintf(" ブルースの属七。主和音に %s（♭7）を重ねた属七で、解決を求めずトニックのまま鳴る。V7/IV と同じ音だが、IV へ向かう働きではない。", seventh)
+	return fmt.Sprintf(" ブルースの属七（V7 と同じ形の和音）。主和音に %s（♭7）を重ねた属七で、解決を求めずトニックのまま鳴る。V7/IV と同じ音だが、IV へ向かう働きではない。", seventh)
 }
 
 // hasLeadingTone reports a V that carries the leading tone, the major
@@ -381,9 +381,9 @@ func subtonicText(k Key, ps []placed, i int) string {
 	case nextDeg == 3:
 		return " ここでは次の III へ向かう。III を一時的な主和音とみれば、その V にあたる（V/III の働き）。"
 	case nextDeg == 1:
-		return " ここでは導音を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
+		return " ここでは導音（主音の半音下の音）を持たないまま i へ戻る。V ほど強くない、弱いドミナント。"
 	}
-	return " 導音を持たないので、V ほど強くは i へ引き寄せない。"
+	return " 導音（主音の半音下の音）を持たないので、V ほど強くは i へ引き寄せない。"
 }
 
 // degreeAt is the degree of the chord at j, or 0 when there is none or it
@@ -541,7 +541,7 @@ var characteristicText = map[Mode]string{
 
 // phrygianSecondText is said of phrygian's major chord on the second
 // degree (BL-134), the chord that marks the mode most strongly.
-const phrygianSecondText = "主音の半音上の長三和音（♭II）は、フリジアンをいちばん強く印象づける和音。ここから主和音へ根音が半音で下りる動きは、フリジアンらしい終わり方（フラメンコなどでよく使う）。古典の和声で「フリギア終止」と呼ぶのは短調の iv6 → V の半終止で、これとは別のもの。"
+const phrygianSecondText = "主音の半音上の長三和音（♭II）は、フリジアンをいちばん強く印象づける和音。ここから主和音へ根音が半音で下りる動きは、フリジアンらしい終わり方（フラメンコなどでよく使う）。古典の和声で「フリギア終止」（フリギアはフリジアンの別の読み方）と呼ぶのは短調の iv の第 1 転回形 → V の半終止で、これとは別のもの。"
 
 // isPhrygianSecond reports the major triad (or its seventh) on phrygian's
 // second degree.
@@ -550,7 +550,7 @@ func isPhrygianSecond(key Key, c Chord) bool {
 		(c.Quality == MajorTriad || c.Quality == Major7)
 }
 
-const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（音階の第 7 音を半音上げる）の形で、導音が主和音へ強く引き寄せる。"
+const harmonicMinorText = "短調の V を長三和音にするのは和声的短音階（音階の第 7 音を半音上げる）の形で、導音（主音の半音下の音）が主和音へ強く引き寄せる。"
 
 const (
 	borrowedText      = "同主短調（%s）から借りた和音。長調の中に短調の陰りを一瞬差す。"
@@ -597,7 +597,7 @@ const (
 	openTonicSubstituteText = "トニック（T）の仲間の度数。三和音なら %s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
 	openBorrowedTonicText   = "同主短調ではトニック（T）の仲間の度数（三和音なら短調の i と 2 つの音を共有する）。"
 	// naturalMinorDominantText: minor's v has no leading tone (#371).
-	naturalMinorDominantText = "ただし導音を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"
+	naturalMinorDominantText = "ただし導音（主音の半音下の音）を持たないので、V（長三和音）ほど強くは i へ引き寄せない。"
 	modalDegreeText          = "%sの %d 度の和音。"
 )
 
@@ -717,7 +717,7 @@ func next(hs []HarmonyEvent, i int) *Chord {
 const (
 	appliedText = "%s（%s）は、%s（%s）へ向かうセカンダリードミナント。%s を一時的な主和音のように聞かせて、そこへ強く引き寄せる。"
 	// %s（%s）: the substitute; %s（%s）: the target; %s（%s）: the dominant it replaces; %s: the target.
-	substituteText  = "%s（%s）は、%s（%s）へ向かう裏コード（トライトーン代理）。%s（%s）の代わりに、根音が三全音離れた属七を置いている。同じ三全音（3 度と 7 度）を持つので同じように引き寄せ、根音は半音上から %s の根音へ降りる。"
+	substituteText  = "%s（%s）は、%s（%s）へ向かう裏コード（トライトーン代理）。%s（%s）の代わりに、根音が三全音（トライトーン。全音 3 つ分の音程）離れた属七を置いている。同じ三全音（3 度と 7 度）を持つので同じように引き寄せ、根音は半音上から %s の根音へ降りる。"
 	leadingText     = "%s（%s）は、%s（%s）の導音の上に積んだ減七。根音が %s の根音へ半音で上がり、そこへ引き寄せる。"
 	passingSentence = "前の和音から根音が半音ずつ上がる、経過の減七（パッシング・ディミニッシュ）。" //nolint:gosec // G101 reads "passing" as a password; this is explanation text
 	resolvesText    = "次の %s へ解決する。"
