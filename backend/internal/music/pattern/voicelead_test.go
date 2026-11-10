@@ -144,12 +144,12 @@ func TestEverySlashBassSounds(t *testing.T) {
 		for _, n := range out.Tracks[0].Notes {
 			if n.Start >= bar && n.Start < 2*bar {
 				lowest = min(lowest, n.Pitch)
-				hasB = hasB || n.Pitch == 59
+				hasB = hasB || (n.Pitch.Class() == music.B && n.Pitch < 60) // the line's B, under the chords
 			}
 		}
 		if acc.ID == "drone" { // the drone's tonic is the pedal under everything
 			if !hasB {
-				t.Errorf("drone: G/B has no B3")
+				t.Errorf("drone: G/B has no B under the chords")
 			}
 			continue
 		}
@@ -206,5 +206,42 @@ func TestFirstChordInRange(t *testing.T) {
 	}
 	if moved > 3 {
 		t.Errorf("A to D moves %d semitones (%v → %v); the least is 3", moved, first, second)
+	}
+}
+
+// TestPatternsPlayTheBassLine (#385 F1): a pattern with a bass voice
+// plays the line too, not every bass in octave 3 (C3 – B3 – A3 jumped up a
+// seventh); a pattern without one puts it under the chord.
+func TestPatternsPlayTheBassLine(t *testing.T) {
+	key := music.Key{Tonic: music.C, Mode: music.Major}
+	var prog music.Progression
+	for _, l := range []string{"I", "I/7", "vi", "vi/5"} {
+		s, err := music.StepFromLabel(key, l, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := music.FromProgression(key, prog, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []music.Pitch{48, 47, 45, 43} // C3 – B2 – A2 – G2
+	for _, id := range []string{"ballad", "block", "strum"} {
+		out, err := Render(tl, Choice{Accompaniment: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, h := range out.Harmony {
+			lowest := music.Pitch(127)
+			for _, n := range out.Tracks[0].Notes {
+				if n.Start >= h.Start && n.Start < h.Start+h.Duration {
+					lowest = min(lowest, n.Pitch)
+				}
+			}
+			if lowest != want[i] {
+				t.Errorf("%s %s: lowest %v, want %v", id, h.RomanNumeral, lowest, want[i])
+			}
+		}
 	}
 }

@@ -56,6 +56,7 @@
 | [0050](0050-borrowed-chord-functions.md) | 長調の借用和音の機能は同主短調での働きで決める（♭VI は S、♭VII は次が IV なら S、それ以外は弱い D） | Accepted |
 | [0051](0051-cadences-end-phrases.md) | 終止はフレーズ（4 小節）の終わりでだけ判定する。終止の四六は D で終止なし、転回形の V → I は弱い正格終止 | Accepted |
 | [0052](0052-loop-seam-without-cadence-names.md) | ループの継ぎ目の文で終止の名前を言わない（どう戻るかだけを言う） | Accepted |
+| [0053](0053-bass-line-under-slash-examples.md) | 分数コードのある例では、すべての和音のベースを、前のベースに近い高さで 1 本の線として鳴らす | Accepted |
 
 ## いつ ADR を書くか
 
