@@ -156,6 +156,9 @@ type Verdict struct {
 	// Tensions lists the candidates that asked for tensions in place of
 	// their style's ("2: 9-13 (jazz)"; ADR-0037); reported, not judged.
 	Tensions []string
+	// Unplayed lists, per candidate, the chord names its reason claims and
+	// it never plays ("2: Eb7（鳴るのは …）"; #331); reported, not judged.
+	Unplayed []string
 	// ReviewInput is what the independent reviewer sees of the answer
 	// (review.go); Review is its verdict, when it ran (BL-172).
 	ReviewInput string
@@ -212,6 +215,9 @@ func Judge(c Case, res ideas.Result) Verdict {
 		reasons = append(reasons, cand.Reason)
 		v.Labels = append(v.Labels, cand.Progression...)
 		modes = append(modes, cand.Key.Mode)
+		if names := unplayedNames(cand.Reason, cand.Timeline.Harmony); len(names) > 0 {
+			v.Unplayed = append(v.Unplayed, unplayedLine(i+1, names, cand.Timeline.Harmony))
+		}
 		if cand.Tensions != "" {
 			v.Tensions = append(v.Tensions, fmt.Sprintf("%d: %s (%s)", i+1, cand.Tensions, cand.Style))
 		}
@@ -407,8 +413,26 @@ func breadthReport(verdicts []Verdict) string {
 	fmt.Fprintf(&b, "- 再試行が要った件数: %d（理由は表の retry）\n", m.retries)
 	fmt.Fprintf(&b, "- 説明が鳴らないものに触れた件数: %d（楽器やメロディ。表の reason names。#128）\n", m.silent)
 	b.WriteString(tensionsReport(verdicts))
+	b.WriteString(unplayedReport(verdicts))
 	b.WriteString(wishesReport(verdicts))
 	return b.String()
+}
+
+// unplayedReport lists the chord names that reasons claim and their
+// candidates never play (#331), to be read against the reviewer's
+// 和音名 findings: how many it catches, and how many it should not have.
+func unplayedReport(verdicts []Verdict) string {
+	var rows []string
+	for _, v := range verdicts {
+		if len(v.Unplayed) > 0 {
+			rows = append(rows, fmt.Sprintf("| %s | %s |", v.Case.ID, oneLine(strings.Join(v.Unplayed, " / "))))
+		}
+	}
+	head := fmt.Sprintf("\n### 理由の文の、鳴っていない和音名（決定論的な検査、#331）\n\n- 件数: %d（報告だけで、合否には使わない）\n", len(rows))
+	if len(rows) == 0 {
+		return head
+	}
+	return head + "\n| case | 候補: 名前（鳴る和音） |\n| --- | --- |\n" + strings.Join(rows, "\n") + "\n"
 }
 
 // tensionsReport lists the candidates that asked for tensions, so a run
