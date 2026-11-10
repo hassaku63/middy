@@ -25,6 +25,12 @@ const (
 // borrowed and applied chords are placed before this table is read.
 var functionByDegree = [8]Function{"", Tonic, Subdominant, Tonic, Subdominant, Dominant, Tonic, Dominant}
 
+// hasModalCadence: the modal cadence is the whole step up of dorian's
+// and mixolydian's VII to I; phrygian ends from ♭II instead (#371).
+func (m Mode) hasModalCadence() bool {
+	return m == Dorian || m == Mixolydian
+}
+
 // Cadence names how the previous chord resolves into this one.
 type Cadence string
 
@@ -363,7 +369,7 @@ func cadenceBetween(mode Mode, prev, cur placed) Cadence {
 			return Half
 		}
 		return NoCadence
-	case prev.degree == 7 && cur.degree == 1 && mode.Characteristic() != 0:
+	case prev.degree == 7 && cur.degree == 1 && mode.hasModalCadence():
 		return Modal
 	case prev.leading && cur.degree == 1:
 		return Authentic
@@ -402,7 +408,7 @@ var characteristicText = map[Mode]string{
 
 // phrygianSecondText is said of phrygian's major chord on the second
 // degree (BL-134), the chord that marks the mode most strongly.
-const phrygianSecondText = "主音の半音上の長三和音（♭II）は、フリジアンをいちばん強く印象づける和音。ここから主和音へ根音が半音で下りる動きは、フリジアン終止と呼ばれる。"
+const phrygianSecondText = "主音の半音上の長三和音（♭II）は、フリジアンをいちばん強く印象づける和音。ここから主和音へ根音が半音で下りる動きは、フリジアンらしい終わり方（フラメンコなどでよく使う）。古典の和声で「フリギア終止」と呼ぶのは短調の iv6 → V の半終止で、これとは別のもの。"
 
 // isPhrygianSecond reports the major triad (or its seventh) on phrygian's
 // second degree.

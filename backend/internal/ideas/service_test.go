@@ -453,7 +453,7 @@ func TestAPhrygianAnswerIsExplained(t *testing.T) {
 	if c.Timeline.Key.Mode != music.Phrygian || c.Timeline.Harmony[1].Symbol != "F" {
 		t.Fatalf("key %v, II = %q", c.Timeline.Key, c.Timeline.Harmony[1].Symbol)
 	}
-	if !strings.Contains(c.Timeline.Harmony[1].Analysis.Explanation, "フリジアン終止") {
+	if !strings.Contains(c.Timeline.Harmony[1].Analysis.Explanation, "フリジアンらしい終わり方") {
 		t.Errorf("II lacks the phrygian cadence: %s", c.Timeline.Harmony[1].Analysis.Explanation)
 	}
 }
