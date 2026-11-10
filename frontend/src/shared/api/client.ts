@@ -25,6 +25,7 @@ export type TimeSignature = Schemas['TimeSignature'];
 export type NoteEvent = Schemas['NoteEvent'];
 export type HarmonyAnalysis = Schemas['HarmonyAnalysis'];
 export type HarmonicFunction = HarmonyAnalysis['function'];
+export type ModalRole = Schemas['ModalRole'];
 export type Cadence = NonNullable<HarmonyAnalysis['cadence']>;
 export type HarmonyEvent = Schemas['HarmonyEvent'];
 export type RhythmPart = Schemas['RhythmPart'];

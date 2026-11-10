@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
-import type { DegreeChord, HarmonicFunction, HarmonyEvent } from '@/shared/api/client';
-import { FUNCTION_NAME } from '@/shared/lib/notation';
+import type { DegreeChord, HarmonicFunction, HarmonyEvent, ModalRole } from '@/shared/api/client';
+import { FUNCTION_NAME, roleName } from '@/shared/lib/notation';
 import { currentDegree } from './currentDegree';
 import './DegreeMap.css';
 
@@ -19,9 +19,27 @@ export type DegreeMapProps = {
    * functions do not hold: the tonic is marked instead (ADR-0045).
    */
   functions?: boolean;
+  /**
+   * Group the chords by their role in the mode (#366, ADR-0048): the
+   * tonic, the characteristic chords, the others, then the chords with the
+   * tritone. The caller asks for it in a mode, where the engine gives roles.
+   */
+  roles?: boolean;
 };
 
 const FLOW: HarmonicFunction[] = ['T', 'S', 'D'];
+
+/**
+ * The role groups in reading order: the centre, what makes the mode, the
+ * rest, and last what blurs it. Each has a visible heading, so the group
+ * is told by words, not by colour (WCAG 1.4.1).
+ */
+const ROLE_GROUPS: { role: ModalRole; heading: string; name: string }[] = [
+  { role: 'tonic', heading: '主和音', name: '主和音' },
+  { role: 'characteristic', heading: '特徴和音', name: '特徴和音' },
+  { role: 'other', heading: 'そのほか', name: 'そのほかの和音' },
+  { role: 'tritone', heading: '三全音', name: '三全音の和音' },
+];
 
 /**
  * The degree map (BL-099): the seven chords of the example's mode in a
@@ -31,12 +49,42 @@ const FLOW: HarmonicFunction[] = ['T', 'S', 'D'];
  * place of its own, so any screen can put it where it fits. In major and
  * minor it can lay the chords out as the flow of functions (#360).
  */
-export function DegreeMap({ degrees, event, flow = false, functions = true }: DegreeMapProps) {
+export function DegreeMap({
+  degrees,
+  event,
+  flow = false,
+  functions = true,
+  roles = false,
+}: DegreeMapProps) {
   if (degrees.length === 0) return null;
   const current = currentDegree(event);
   const cell = (d: DegreeChord) => (
     <DegreeCell key={d.degree} d={d} current={current} functions={functions} />
   );
+  if (roles && degrees.some((d) => d.role)) {
+    return (
+      <div
+        className="degree-map degree-map--flow"
+        role="group"
+        aria-label="度数の地図（和音の役割）"
+      >
+        {ROLE_GROUPS.map(({ role, heading, name }) => {
+          const chords = degrees.filter((d) => d.role === role);
+          if (chords.length === 0) return null;
+          return (
+            <div key={role} className={`degree-map__column is-role-${role}`}>
+              <span className="degree-map__function" aria-hidden="true">
+                {heading}
+              </span>
+              <ul className="degree-map__chords" aria-label={name}>
+                {chords.map(cell)}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
   if (!flow) {
     return (
       <ol className="degree-map" aria-label="度数の地図">
@@ -81,7 +129,11 @@ function DegreeCell({
   current: number | null;
   functions: boolean;
 }) {
-  const role = functions ? FUNCTION_NAME[d.function] : d.degree === 1 ? '主和音' : '';
+  // In a mode the chord is named by its role (ADR-0048); the tonic is
+  // named even where the engine gives no role.
+  const role = functions
+    ? FUNCTION_NAME[d.function]
+    : roleName(d.role) || (d.degree === 1 ? '主和音' : '');
   return (
     <li
       className={[

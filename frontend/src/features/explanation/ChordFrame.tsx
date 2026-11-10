@@ -24,8 +24,9 @@ export function ChordFrame({ timeline, positionTick, selectedHarmony, onClearSel
   const index = explainedIndex(timeline.harmony, positionTick, selectedHarmony);
   const event = index >= 0 ? timeline.harmony[index] : undefined;
   const pinned = selectedHarmony !== null && index === selectedHarmony;
-  // Functions (T, S, D) are a theory of major and minor; in a mode the map
-  // keeps degree order and nothing is labelled by function (ADR-0044, 0045).
+  // Functions (T, S, D) are a theory of major and minor; in a mode nothing
+  // is labelled by function and the map groups the chords by their role
+  // instead (ADR-0044, 0045, 0048).
   const functional = isFunctional(timeline.key.mode);
   return (
     <section
@@ -38,6 +39,7 @@ export function ChordFrame({ timeline, positionTick, selectedHarmony, onClearSel
           event={event}
           flow={functional}
           functions={functional}
+          roles={!functional}
         />
       )}
       {/* A long text scrolls inside; the keyboard can reach it (WCAG 2.1.1). */}
