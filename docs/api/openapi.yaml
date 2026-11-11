@@ -528,7 +528,7 @@ components:
           $ref: '#/components/schemas/Mode'
     ChordQuality:
       type: string
-      enum: [maj, min, dim, aug, maj7, min7, dom7, m7b5, min6, dim7, sus4, dom7sus4, power]
+      enum: [maj, min, dim, aug, maj7, min7, dom7, m7b5, min6, dim7, sus4, dom7sus4, power, sus2]
       description: min6 は短三和音に長 6 度を足した和音（長調で借用する ivm6）
     Chord:
       type: object

@@ -565,6 +565,13 @@
     },
     {
       "chord": {
+        "root": 0,
+        "quality": "sus2"
+      },
+      "symbol": "Csus2"
+    },
+    {
+      "chord": {
         "root": 1,
         "quality": "maj"
       },
@@ -653,6 +660,13 @@
         "quality": "power"
       },
       "symbol": "C#5"
+    },
+    {
+      "chord": {
+        "root": 1,
+        "quality": "sus2"
+      },
+      "symbol": "C#sus2"
     },
     {
       "chord": {
@@ -747,6 +761,13 @@
     },
     {
       "chord": {
+        "root": 2,
+        "quality": "sus2"
+      },
+      "symbol": "Dsus2"
+    },
+    {
+      "chord": {
         "root": 3,
         "quality": "maj"
       },
@@ -835,6 +856,13 @@
         "quality": "power"
       },
       "symbol": "D#5"
+    },
+    {
+      "chord": {
+        "root": 3,
+        "quality": "sus2"
+      },
+      "symbol": "D#sus2"
     },
     {
       "chord": {
@@ -929,6 +957,13 @@
     },
     {
       "chord": {
+        "root": 4,
+        "quality": "sus2"
+      },
+      "symbol": "Esus2"
+    },
+    {
+      "chord": {
         "root": 5,
         "quality": "maj"
       },
@@ -1017,6 +1052,13 @@
         "quality": "power"
       },
       "symbol": "F5"
+    },
+    {
+      "chord": {
+        "root": 5,
+        "quality": "sus2"
+      },
+      "symbol": "Fsus2"
     },
     {
       "chord": {
@@ -1111,6 +1153,13 @@
     },
     {
       "chord": {
+        "root": 6,
+        "quality": "sus2"
+      },
+      "symbol": "F#sus2"
+    },
+    {
+      "chord": {
         "root": 7,
         "quality": "maj"
       },
@@ -1199,6 +1248,13 @@
         "quality": "power"
       },
       "symbol": "G5"
+    },
+    {
+      "chord": {
+        "root": 7,
+        "quality": "sus2"
+      },
+      "symbol": "Gsus2"
     },
     {
       "chord": {
@@ -1293,6 +1349,13 @@
     },
     {
       "chord": {
+        "root": 8,
+        "quality": "sus2"
+      },
+      "symbol": "G#sus2"
+    },
+    {
+      "chord": {
         "root": 9,
         "quality": "maj"
       },
@@ -1381,6 +1444,13 @@
         "quality": "power"
       },
       "symbol": "A5"
+    },
+    {
+      "chord": {
+        "root": 9,
+        "quality": "sus2"
+      },
+      "symbol": "Asus2"
     },
     {
       "chord": {
@@ -1475,6 +1545,13 @@
     },
     {
       "chord": {
+        "root": 10,
+        "quality": "sus2"
+      },
+      "symbol": "A#sus2"
+    },
+    {
+      "chord": {
         "root": 11,
         "quality": "maj"
       },
@@ -1563,6 +1640,13 @@
         "quality": "power"
       },
       "symbol": "B5"
+    },
+    {
+      "chord": {
+        "root": 11,
+        "quality": "sus2"
+      },
+      "symbol": "Bsus2"
     }
   ],
   "romanNumerals": [

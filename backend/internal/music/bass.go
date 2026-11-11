@@ -105,17 +105,7 @@ func bassText(key Key, harmony []HarmonyEvent, i int) string {
 	name := bassName(key, h)
 	prev, next := neighbourBasses(harmony, i)
 	pedal := (prev != nil && *prev == *h.Bass) || (next != nil && *next == *h.Bass)
-	if idx := inversionIndex(h); idx == 3 && h.Chord.Quality == MinorSixth {
-		s := fmt.Sprintf(" 根音ではなく、足した 6 度の %s がベース。6 度が下に来ると、和音の重心が下がって陰りが深まる。", name)
-		if pedal {
-			s += "隣の和音と同じベースが続くので、ペダルとしても働く。"
-		}
-		return s
-	} else if idx > 0 {
-		s := fmt.Sprintf(" 根音ではなく %sの %s がベース（%s", inversionName[idx], name, inversionText[idx])
-		if pedal { // e.g. I – IV/1 – I, the pedal six-four
-			s += "隣の和音と同じベースが続くので、ペダルとしても働き、ベースは留まって和音だけが上で動く。"
-		}
+	if s := chordToneBassText(h, name, pedal); s != "" {
 		return s
 	}
 	switch {
@@ -125,6 +115,34 @@ func bassText(key Key, harmony []HarmonyEvent, i int) string {
 		return fmt.Sprintf(" ベースの %s はこの和音にない音で、前後のベースのあいだを順につなぐ経過音。", name)
 	}
 	return fmt.Sprintf(" ベースの %s はこの和音にない音で、和音に緊張を加える。", name)
+}
+
+// chordToneBassText explains a bass that is one of the chord's own notes:
+// an inversion, a minor sixth chord's sixth, or a sus chord's second or
+// fourth (BL-309). "" for a bass outside the chord.
+func chordToneBassText(h HarmonyEvent, name string, pedal bool) string {
+	idx := inversionIndex(h)
+	switch {
+	case idx == 3 && h.Chord.Quality == MinorSixth:
+		s := fmt.Sprintf(" 根音ではなく、足した 6 度の %s がベース。6 度が下に来ると、和音の重心が下がって陰りが深まる。", name)
+		if pedal {
+			s += "隣の和音と同じベースが続くので、ペダルとしても働く。"
+		}
+		return s
+	case idx == suspendedBass:
+		s := fmt.Sprintf(" 根音ではなく、3 度の代わりに鳴らす %d 度の %s がベース。", suspendedStep(h.Chord), name)
+		if pedal {
+			s += "隣の和音と同じベースが続くので、ペダルとしても働く。"
+		}
+		return s
+	case idx > 0:
+		s := fmt.Sprintf(" 根音ではなく %sの %s がベース（%s", inversionName[idx], name, inversionText[idx])
+		if pedal { // e.g. I – IV/1 – I, the pedal six-four
+			s += "隣の和音と同じベースが続くので、ペダルとしても働き、ベースは留まって和音だけが上で動く。"
+		}
+		return s
+	}
+	return ""
 }
 
 // neighbourBasses are the basses of the chords before and after i (nil at
@@ -143,7 +161,49 @@ func neighbourBasses(harmony []HarmonyEvent, i int) (prev, next *PitchClass) {
 
 // inversionIndex is 1, 2 or 3 when the slash bass is the chord's third,
 // fifth or seventh; 0 when it is not a chord tone above the root.
+// suspendedBass is inversionIndex for the second or fourth of a sus chord
+// in the bass: it stands for the third, but no inversion is named for it.
+const suspendedBass = -1
+
+// openInversion is inversionIndex for a chord without a third, read by
+// interval rather than by position: a power chord's second note is its
+// fifth, and a sus chord's second note is no third (BL-309).
+func openInversion(h HarmonyEvent) int {
+	interval := (int(*h.Bass) - int(h.Chord.Root) + 12) % 12
+	if h.Chord.Quality != Power && interval == suspendedSemitones(h.Chord) {
+		return suspendedBass
+	}
+	switch interval {
+	case 7:
+		return 2
+	case 10:
+		if h.Chord.Quality == Dominant7Sus4 {
+			return 3
+		}
+	}
+	return 0
+}
+
+// suspendedStep is the degree a sus chord sounds in place of the third,
+// and suspendedSemitones its distance above the root.
+func suspendedStep(c Chord) int {
+	if c.Quality == Sus2 {
+		return 2
+	}
+	return 4
+}
+
+func suspendedSemitones(c Chord) int {
+	if c.Quality == Sus2 {
+		return 2
+	}
+	return 5
+}
+
 func inversionIndex(h HarmonyEvent) int {
+	if h.Chord.Quality.isOpen() {
+		return openInversion(h)
+	}
 	for idx, p := range h.Chord.Voicing(ChordOctave) {
 		if idx > 0 && idx < len(inversionName) && p.Class() == *h.Bass {
 			return idx
@@ -319,12 +379,14 @@ func BassCrossesChord(key Key, label string) error {
 }
 
 // genericStep is how many letters a chord tone lies above the root: the
-// third two, the fifth four, the seventh six; a sus4's fourth three and a
-// sixth chord's sixth five.
+// third two, the fifth four, the seventh six; a sus2's second one, a sus4's
+// fourth three and a sixth chord's sixth five.
 func genericStep(q ChordQuality, semitones int) int {
 	switch semitones {
 	case 0:
 		return 0
+	case 2:
+		return 1
 	case 3, 4:
 		return 2
 	case 5:

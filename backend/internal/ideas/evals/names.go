@@ -171,7 +171,7 @@ func engineClass(q music.ChordQuality) string {
 		return "half-dim"
 	case music.Dominant7:
 		return "dominant"
-	case music.Sus4, music.Dominant7Sus4:
+	case music.Sus4, music.Dominant7Sus4, music.Sus2:
 		return "sus"
 	case music.AugmentedTriad:
 		return "aug"

@@ -61,7 +61,7 @@ func soundingRole(k Key, degree int, c Chord) ModalRole {
 	if k.holdsTritone(c) {
 		return RoleTritone
 	}
-	// A power or sus4 chord can leave out the characteristic tone the
+	// A power or sus chord can leave out the characteristic tone the
 	// triad has (dorian IV5, G and D without B): it does not mark the mode
 	// (#378).
 	if tone, err := k.Degree(k.Mode.Characteristic()); role == RoleCharacteristic && err == nil && !holds(c, tone) {

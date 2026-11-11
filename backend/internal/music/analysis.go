@@ -612,7 +612,7 @@ const (
 	tonicSubstituteText = "トニック（T）の仲間。%s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
 	// borrowedTonicText: major's ♭III, a tonic of the parallel minor.
 	borrowedTonicText = "同主短調ではトニック（T）の仲間（短調の i と 2 つの音を共有する）。"
-	// The same for a power or sus4 chord, which shares fewer notes: the
+	// The same for a power or sus chord, which shares fewer notes: the
 	// degree is the tonic's kin, the count is the triad's (#378).
 	openTonicSubstituteText = "トニック（T）の仲間の度数。三和音なら %s と 2 つの音を共有する代わりの和音で、%s ほどは落ち着かず、響きの色を変える。"
 	openBorrowedTonicText   = "同主短調ではトニック（T）の仲間の度数（三和音なら短調の i と 2 つの音を共有する）。"
@@ -787,7 +787,7 @@ func explainApplied(k Key, hs []HarmonyEvent, ps []placed, i int) string {
 }
 
 // triadOf is the triad a chord quality is built on (E7 on E major), or
-// the fallback for a chord that has none of its own (sus4, power, dim).
+// the fallback for a chord that has none of its own (sus, power, dim).
 func triadOf(q, fallback ChordQuality) ChordQuality {
 	if q == MajorTriad || q == Major7 || q == Dominant7 {
 		return MajorTriad
@@ -815,6 +815,8 @@ func passingText(hs []HarmonyEvent, i int, p placed) string {
 const (
 	susText        = " 3 度の代わりに 4 度を鳴らす掛留（sus4）。長調とも短調とも決まらない、宙に浮いた響きになる。"
 	susResolveText = "次の和音で 4 度が 3 度へ下がって解決する。"
+	sus2Text       = " 3 度の代わりに 2 度を鳴らす（sus2）。長調とも短調とも決まらない、澄んで開いた響きになる。"
+	sus2ThirdText  = "次の和音で 2 度が 3 度へ上がり、長調か短調かが定まる。"
 	powerText      = " 3 度を抜き、根音と 5 度だけを鳴らすパワーコード。長調か短調かを決める 3 度がないので、開いた力強い響きになる（ロックのギターに多い）。"
 )
 
@@ -831,6 +833,11 @@ func openText(hs []HarmonyEvent, i int) string {
 			return susText + susResolveText
 		}
 		return susText
+	case Sus2:
+		if i+1 < len(hs) && hs[i+1].Chord.Root == c.Root && !hs[i+1].Chord.Quality.isOpen() {
+			return sus2Text + sus2ThirdText
+		}
+		return sus2Text
 	default: // a chord with a third: nothing to add here
 	}
 	return ""

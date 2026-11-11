@@ -25,6 +25,9 @@ func TestOpenChords(t *testing.T) {
 		{c, "bVII5", "♭VII5", "Bb5", Power},
 		{c, "bVI5", "♭VI5", "Ab5", Power},
 		{Key{E, Minor}, "i5", "I5", "E5", Power},
+		{c, "Isus2", "Isus2", "Csus2", Sus2},
+		{c, "vsus2", "Vsus2", "Gsus2", Sus2},
+		{Key{A, Minor}, "isus2", "Isus2", "Asus2", Sus2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.key.String()+" "+tt.label, func(t *testing.T) {
@@ -44,7 +47,8 @@ func TestOpenChords(t *testing.T) {
 			}
 		})
 	}
-	for _, bad := range []string{"IVsus4", "vii°5", "bVIIsus4", "#IV5"} {
+	// C major's IIIsus2 needs F#, its VIIsus2 C# and F#.
+	for _, bad := range []string{"IVsus4", "vii°5", "bVIIsus4", "#IV5", "IIIsus2", "VIIsus2"} {
 		if _, err := StepFromLabel(c, bad, 4); err == nil {
 			t.Errorf("%q accepted in C major", bad)
 		}
@@ -67,6 +71,18 @@ func TestOpenChordsAreExplained(t *testing.T) {
 	// V – I5 still lands on the tonic's root, the leading tone rising to it.
 	if got := tl.Harmony[3].Analysis.Cadence; got != Authentic {
 		t.Errorf("V – I5 cadence = %q, want authentic", got)
+	}
+	// A sus2 that moves to the same root's triad says the second rises to
+	// the third; one that does not only names the second (BL-309).
+	open := analysedLabels(t, c, "Isus2", "I", "IVsus2", "V")
+	if e := open.Harmony[0].Analysis.Explanation; !strings.Contains(e, "2 度を鳴らす（sus2）") || !strings.Contains(e, "2 度が 3 度へ上がり") {
+		t.Errorf("Isus2 – I: %s", e)
+	}
+	if e := open.Harmony[2].Analysis.Explanation; !strings.Contains(e, "（sus2）") || strings.Contains(e, "3 度へ上がり") {
+		t.Errorf("IVsus2 – V: %s", e)
+	}
+	if got := open.Harmony[0].Symbol; got != "Csus2" {
+		t.Errorf("Isus2 symbol = %q", got)
 	}
 	rock := analysedLabels(t, c, "I5", "bVII5", "IV5", "I5")
 	if a := rock.Harmony[1].Analysis; !a.Borrowed || a.Degree != 7 {
@@ -107,5 +123,25 @@ func TestOpenChordsOnAFlatThatIsTheKeysOwnDegree(t *testing.T) {
 	}
 	if _, err := CanonicalLabel(Key{D, Mixolydian}, "bII5"); err == nil {
 		t.Error("bII5 is not D mixolydian's own degree and must be refused")
+	}
+}
+
+// TestOpenChordSlashBasses: a bass on a chord without a third is named by
+// its interval. A sus chord's second or fourth stands in for the third and
+// is no first inversion; a power chord's fifth is a second inversion
+// (BL-309).
+func TestOpenChordSlashBasses(t *testing.T) {
+	tests := []struct{ label, want, not string }{
+		{"Isus2/2", "3 度の代わりに鳴らす 2 度の D がベース", "転回形"},
+		{"Isus4/4", "3 度の代わりに鳴らす 4 度の F がベース", "転回形"},
+		{"I5/5", "5 度の G がベース（第 2 転回形）", "3 度の G"},
+		{"V7sus4/4", "7 度の F がベース（第 3 転回形）", "3 度の F"},
+		{"Isus4/2", "ベースの D はこの和音にない音", "転回形"},
+	}
+	for _, tt := range tests {
+		e := analysedLabels(t, Key{C, Major}, "I", tt.label, "I").Harmony[1].Analysis.Explanation
+		if !strings.Contains(e, tt.want) || strings.Contains(e, tt.not) {
+			t.Errorf("%s: %s", tt.label, e)
+		}
 	}
 }
