@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { PwaBanner } from './PwaBanner';
+import { InstallButton, PwaBanner } from './PwaBanner';
 import type { Pwa } from './usePwa';
 
 function pwa(partial: Partial<Pwa>): Pwa {
@@ -21,15 +21,23 @@ describe('PwaBanner', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('offers the update and install actions', async () => {
+  it('offers the update, and no install line (#439)', async () => {
     const p = pwa({ updateReady: true, installable: true });
     const user = userEvent.setup();
     render(<PwaBanner pwa={p} />);
 
     await user.click(screen.getByRole('button', { name: '更新して再読み込み' }));
-    await user.click(screen.getByRole('button', { name: 'インストール' }));
-
     expect(p.applyUpdate).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/アプリとして使えます/)).not.toBeInTheDocument();
+  });
+
+  it('offers to install by a small button only while the browser can (#439)', async () => {
+    const { rerender } = render(<InstallButton pwa={pwa({})} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+
+    const p = pwa({ installable: true });
+    rerender(<InstallButton pwa={p} />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'アプリにする' }));
     expect(p.promptInstall).toHaveBeenCalledTimes(1);
   });
 
