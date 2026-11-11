@@ -205,6 +205,13 @@ jobs:
         run: |
           echo "go=$(awk '$1 == "golang" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
           echo "node=$(awk '$1 == "nodejs" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
+      # BuildKit's build checks (#408): rules hadolint does not have, such
+      # as undefined variables and secrets in ARG or ENV. A violation fails.
+      # They need the Dockerfile syntax 1.8 or later.
+      - name: Build checks
+        run: |
+          docker buildx build --check --target api .
+          docker buildx build --check --target web .
       # The two images of ADR-0027, run together by compose as `make up` does.
       - name: Build the api image
         uses: docker/build-push-action@v7
