@@ -80,6 +80,10 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
           "tensions": { "type": "string", "enum": [%s], "description": "和音に足すテンション。スタイルの決まりの代わりに使う。none は足さない、9 は 9 度（長三和音には add9）、9-13 は 9 度と 13 度。どの音を足すかはエンジンが調の音階から選び、ローマ数字には書かない。省略するとスタイルのまま" }
         }
       }
+    },
+    "unconstrained": {
+      "type": "string",
+      "description": "要約の下に小さく表示される。このイメージのために使いたかったが、指示された語彙やカタログで表せないために使わなかったもの（和音、音階やモード、リズム、拍子など）を、ユーザー向けに 1 文で短く。代わりにどう近づけたかを添えてよい。表せる語彙で書けたものは含めない。なければ「なし」。音には使われない"
     }
   }
 }`, MaxMoodTags, MinCandidates, MaxCandidates, quoted(StyleIDs()), MinTempoBPM, MaxTempoBPM, MaxChords,
@@ -130,31 +134,4 @@ func Parse(data []byte) (Intent, error) {
 		}
 	}
 	return in, nil
-}
-
-// DiagnosticSchema is Schema plus an optional free-text field in which the
-// model says what it would have proposed without the engine's limits
-// (diatonic chords, major and minor only, the pattern catalogue). The
-// evaluation set uses it to tell "cannot be expressed" from "was not
-// chosen" (ADR-0013); production requests use Schema.
-var DiagnosticSchema = diagnosticSchema()
-
-func diagnosticSchema() json.RawMessage {
-	var root map[string]any
-	if err := json.Unmarshal(Schema, &root); err != nil {
-		panic("intent: Schema is not JSON: " + err.Error())
-	}
-	props, ok := root["properties"].(map[string]any)
-	if !ok {
-		panic("intent: Schema has no properties object")
-	}
-	props["unconstrained"] = map[string]any{
-		"type":        "string",
-		"description": "評価のための欄。このイメージのために使いたかったが、指示された語彙やカタログで表せないために使わなかったもの（和音、音階やモード、リズム、拍子など）を 1〜3 文で。表せる語彙で書けたものは含めない。なければ「なし」。音には使われない",
-	}
-	out, err := json.Marshal(root)
-	if err != nil {
-		panic("intent: " + err.Error())
-	}
-	return out
 }

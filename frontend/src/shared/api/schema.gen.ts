@@ -324,6 +324,8 @@ export interface components {
       /** @description 返答文。次のターンでは assistant の content としてそのまま送り返す */
       reply: string;
       mood: string[];
+      /** @description AI が、このイメージのために使いたかったがアプリの語彙で表せなかったもの（1 文。AI の自己申告）。 なければ省略する。音には使われない（ADR-0061） */
+      unconstrained?: string;
       candidates: components['schemas']['IdeaCandidate'][];
     };
     /** @description 0 = C … 11 = B */

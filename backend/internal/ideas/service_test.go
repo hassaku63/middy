@@ -242,27 +242,27 @@ func TestImagineSwingsWhenTheCandidateAsks(t *testing.T) {
 	}
 }
 
-func TestDiagnosticServiceAsksForAndKeepsTheUnconstrainedField(t *testing.T) {
-	withNote := strings.Replace(goodIntent, `"summary": "雨の日曜の午後。静かで少し切ない。",`,
-		`"summary": "雨の日曜の午後。静かで少し切ない。", "unconstrained": "本当は Dm9 と Bbmaj7 の浮遊感を使いたい",`, 1)
-	client := fake.New(llm.Response{Text: withNote})
-	res, err := NewDiagnostic(client).Imagine(context.Background(), []Message{user("雨")})
-	if err != nil {
-		t.Fatal(err)
+func TestImagineKeepsWhatCouldNotBeExpressed(t *testing.T) {
+	withNote := func(note string) string {
+		return strings.Replace(goodIntent, `"summary": "雨の日曜の午後。静かで少し切ない。",`,
+			`"summary": "雨の日曜の午後。静かで少し切ない。", "unconstrained": "`+note+`",`, 1)
 	}
-	if !strings.Contains(string(client.Requests()[0].OutputSchema), "unconstrained") {
-		t.Fatal("the diagnostic service must send the diagnostic schema")
-	}
-	if res.Unconstrained != "本当は Dm9 と Bbmaj7 の浮遊感を使いたい" {
-		t.Fatalf("unconstrained not kept: %q", res.Unconstrained)
-	}
-	// The ordinary service never asks.
-	plain := fake.New(llm.Response{Text: goodIntent})
-	if _, err := New(plain).Imagine(context.Background(), []Message{user("雨")}); err != nil {
-		t.Fatal(err)
-	}
-	if strings.Contains(string(plain.Requests()[0].OutputSchema), "unconstrained") {
-		t.Fatal("the production schema must not ask for the diagnostic field")
+	for _, tc := range []struct{ note, want string }{
+		{"  sus2 は使えないので、sus4 で近づけています。 ", "sus2 は使えないので、sus4 で近づけています。"},
+		{"なし", ""},
+		{"なし。", ""},
+	} {
+		client := fake.New(llm.Response{Text: withNote(tc.note)})
+		res, err := New(client).Imagine(context.Background(), []Message{user("雨")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(client.Requests()[0].OutputSchema), "unconstrained") {
+			t.Fatal("the request must ask for the unconstrained field")
+		}
+		if res.Unconstrained != tc.want {
+			t.Errorf("%q: got %q, want %q", tc.note, res.Unconstrained, tc.want)
+		}
 	}
 }
 

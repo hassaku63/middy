@@ -42,6 +42,23 @@ describe('useIdeas', () => {
     ]);
   });
 
+  it('keeps what the AI could not express on the turn, not in the history (ADR-0061)', async () => {
+    const note = 'sus2 は使えないので、sus4 で近づけています。';
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(() =>
+      Promise.resolve(json(200, { ...reply, unconstrained: note })),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useIdeas());
+
+    await act(() => result.current.send('朝'));
+    await waitFor(() => expect(result.current.turns).toHaveLength(2));
+    expect(result.current.turns[1]).toMatchObject({ unconstrained: note });
+
+    await act(() => result.current.send('もう少し'));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[1]?.[1]?.body as string).not.toContain('sus2');
+  });
+
   it('translates provider errors into friendly text and keeps the user turn', async () => {
     vi.stubGlobal(
       'fetch',

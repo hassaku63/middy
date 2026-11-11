@@ -16,7 +16,7 @@
 | [0010](0010-ux-decisions-follow-product-intent.md) | UI の判断は、プロダクトの意思を根拠に共通の原則と手順で行う | Accepted |
 | [0011](0011-settings-only-from-launch-environment.md) | ローカル実行の設定と秘密情報は、起動時の環境変数だけで渡す | Accepted |
 | [0012](0012-harmony-groove-style.md) | 例を「和声 × グルーヴ」に分け、「スタイル」で結ぶ（付録: [和声](0012/harmony.md)、[リズム](0012/rhythm.md)、[結びつき](0012/combination.md)、[類似アプリ](0012/apps.md)） | Accepted |
-| [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Accepted |
+| [0013](0013-breadth-of-proposals.md) | 提案の幅は「表せる空間」と「選ぶ振る舞い」に分けて、測ってから広げる | Accepted（一部は 0061 で置き換え） |
 | [0014](0014-issues-in-the-loop.md) | 観察と企画を GitHub Issue に置き、backlog と ADR はそのまま正典に保つ | Accepted |
 | [0015](0015-modes.md) | モードを調の属性として足し、特徴音で解説する | Accepted |
 | [0016](0016-ci-speed.md) | CI は、アプリと同じ版をキャッシュで速く取り、検査を 1 回ずつ走らせ、差分でジョブを選ぶ | Accepted |
@@ -64,6 +64,7 @@
 | [0058](0058-layout-e2e-in-required.md) | 配置の E2E（全サイズで横スクロールなし・axe・操作の集合・固定が残る）を、フロントエンドを変える PR の CI `layout` ジョブで走らせ、必須の検査に入れる。イメージに頼らない | Accepted |
 | [0059](0059-timeline-scrolls-on-narrow-screens.md) | 狭い画面のタイムラインは縮めずに横へスクロールし、行名の列を左に留める。行名は 12 px | Accepted |
 | [0060](0060-sixteenth-swing-feel.md) | 16 分のスウィング `swing-16` を名前のついたノリとして足す。比 1.3 : 1（約 57 %）、テンポによらない。pop と lofi で選べる | Accepted |
+| [0061](0061-show-what-could-not-be-expressed.md) | 表せなかったもの（`unconstrained`）を本番の答えでも求め、要約の下に「AI の見立て」として小さく出す | Accepted |
 
 ## いつ ADR を書くか
 

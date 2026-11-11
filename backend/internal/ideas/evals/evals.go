@@ -149,7 +149,7 @@ type Verdict struct {
 	// model never offers it" from "it offers it, but not first".
 	WantsHit bool
 	WantsIn  int
-	// Unconstrained is the model's free-text wish (diagnostic runs only).
+	// Unconstrained is what the model could not express (ADR-0061).
 	Unconstrained string
 	// Retry is why the first answer was not used, when there was a retry.
 	Retry string
@@ -471,7 +471,7 @@ func tensionsReport(verdicts []Verdict) string {
 }
 
 // wishesReport lists what the model would have written without the
-// engine's limits (diagnostic runs only).
+// engine's limits, the field the user also sees (ADR-0061).
 func wishesReport(verdicts []Verdict) string {
 	var rows []string
 	for _, v := range verdicts {

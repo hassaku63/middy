@@ -476,7 +476,7 @@
 | 一次情報 | https://json-schema.org/specification 。Core、Validation、メタスキーマの各文書はこのページから行ける（各文書は開いていない）。登録なしで読める |
 | 状態 | 現行は 2020-12。前の版は 2019-09 とある |
 | 当たるべき場面 | LLM に渡す出力の形を変えるとき。`docs/api/openapi.yaml` のスキーマのキーワードの意味を確かめるとき |
-| middy との接点 | `backend/internal/intent/schema.go` の `Schema` と `DiagnosticSchema`（LLM の構造化出力に渡す）。OAS のページに、Schema Object は既定で JSON Schema 2020-12 の上位集合とあるので、`docs/api/openapi.yaml` のスキーマもこれに当たる |
+| middy との接点 | `backend/internal/intent/schema.go` の `Schema`（LLM の構造化出力に渡す）。OAS のページに、Schema Object は既定で JSON Schema 2020-12 の上位集合とあるので、`docs/api/openapi.yaml` のスキーマもこれに当たる |
 | middy との違い | `intent.Schema` は Messages API が受け付ける部分集合だけを使う（`maxItems` と `minimum`/`maximum` を使わず、`minItems` は 0 か 1、すべての object に `additionalProperties: false`）。部分集合で書けない制限は `description` に書き、`Validate` が強制する。`$schema` は宣言していない |
 | 確認日 | 2026-11-09 |
 

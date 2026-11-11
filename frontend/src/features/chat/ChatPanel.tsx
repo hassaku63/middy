@@ -54,14 +54,7 @@ export function ChatPanel({
       </li>
     ) : (
       <li key={i} className="chat__turn chat__turn--assistant">
-        <p>{turn.content}</p>
-        {turn.mood.length > 0 && (
-          <ul className="chat__mood" aria-label="雰囲気">
-            {turn.mood.map((m) => (
-              <li key={m}>{m}</li>
-            ))}
-          </ul>
-        )}
+        <ReplyHead turn={turn} />
         <ul className="chat__candidates" aria-label="候補">
           {turn.candidates.map((c, n) => (
             <li key={`${n}-${c.title}`}>
@@ -150,5 +143,28 @@ export function ChatPanel({
         {options && <div className="chat__options">{options}</div>}
       </div>
     </section>
+  );
+}
+
+type AssistantTurn = Extract<ChatTurn, { role: 'assistant' }>;
+
+/** The reply's summary, what it could not express (ADR-0061), and its mood tags. */
+function ReplyHead({ turn }: { turn: AssistantTurn }) {
+  return (
+    <>
+      <p>{turn.content}</p>
+      {turn.unconstrained && (
+        <p className="chat__unconstrained">
+          この例では表せなかったもの（AI の見立て）: {turn.unconstrained}
+        </p>
+      )}
+      {turn.mood.length > 0 && (
+        <ul className="chat__mood" aria-label="雰囲気">
+          {turn.mood.map((m) => (
+            <li key={m}>{m}</li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }

@@ -5,7 +5,14 @@ import { historyMessage } from './history';
 /** A rendered turn of the conversation: what was said and what came back. */
 export type ChatTurn =
   | { role: 'user'; content: string }
-  | { role: 'assistant'; content: string; mood: string[]; candidates: IdeaCandidate[] };
+  | {
+      role: 'assistant';
+      content: string;
+      mood: string[];
+      candidates: IdeaCandidate[];
+      /** What the AI says the app could not express; absent when nothing (ADR-0061). */
+      unconstrained?: string;
+    };
 
 export type Ideas = {
   turns: ChatTurn[];
@@ -47,7 +54,13 @@ export function useIdeas(): Ideas {
       }
       setTurns((prev) => [
         ...prev,
-        { role: 'assistant', content: res.reply, mood: res.mood, candidates: res.candidates },
+        {
+          role: 'assistant',
+          content: res.reply,
+          mood: res.mood,
+          candidates: res.candidates,
+          ...(res.unconstrained ? { unconstrained: res.unconstrained } : {}),
+        },
       ]);
     },
     [turns, busy],

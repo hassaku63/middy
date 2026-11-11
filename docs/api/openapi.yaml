@@ -491,6 +491,11 @@ components:
           type: array
           items:
             type: string
+        unconstrained:
+          type: string
+          description: >-
+            AI が、このイメージのために使いたかったがアプリの語彙で表せなかったもの（1 文。AI の自己申告）。
+            なければ省略する。音には使われない（ADR-0061）
         candidates:
           type: array
           minItems: 1
