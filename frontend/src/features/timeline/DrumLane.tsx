@@ -23,7 +23,7 @@ export function DrumLane({ notes, layout, positionTick }: Props) {
             width={layout.width - layout.labelWidth}
             height={DRUM_ROW_HEIGHT}
           />
-          <text x={4} y={rowY(note) + DRUM_ROW_HEIGHT - 3} className="timeline__pitch-label">
+          <text x={4} y={rowY(note) + DRUM_ROW_HEIGHT - 4} className="timeline__pitch-label">
             {drumName(note)}
           </text>
         </g>

@@ -5,19 +5,64 @@
   min-width: 0;
 }
 
-/* One drawing, scrolled sideways (#360). Its height shows four bars
-   across the box, but no more than 45 % of the screen (ADR-0041); the
-   width follows the drawing's proportions. */
+/* One box for every timeline, scrolled sideways when the drawing is wider
+   (#360, #402 A). Its height (--timeline-height) is the drawing's at the
+   box's width, never below its own size, and no more than 45 % of the
+   screen (ADR-0041): a short timeline fills the box's width and, under the
+   cap, widens its bars (ADR-0057); a long one shows four bars across. On a
+   narrow screen neither shrinks below its own size: it scrolls, and its
+   text stays at 12 px. */
 .timeline-overview__scroll {
+  --timeline-height: min(
+    45vh,
+    calc(max(100cqw, var(--timeline-natural-width)) / var(--timeline-aspect))
+  );
+  display: flex;
+  align-items: flex-start;
   overflow-x: auto;
   container-type: inline-size;
   border-radius: 8px;
 }
 
-.timeline-overview__scroll .timeline {
-  width: auto;
+.timeline-overview__scroll.is-long {
+  --timeline-height: min(
+    45vh,
+    calc(max(100cqw, var(--timeline-four-bars-width)) * var(--timeline-four-bars))
+  );
+}
+
+.timeline-overview__scroll > .timeline {
+  flex: none;
+  width: max(100cqw, var(--timeline-natural-width));
   max-width: none;
-  height: min(45vh, calc(100cqw * var(--timeline-four-bars)));
+  height: var(--timeline-height);
+}
+
+.timeline-overview__scroll.is-long > .timeline {
+  width: auto;
+}
+
+/* The label column, held at the left over the drawing's own (TimelineLabels):
+   as wide as the drawing's at its height, and taking no room of its own. */
+.timeline-labels {
+  --labels-width: calc(var(--timeline-height) * var(--timeline-label-ratio));
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: none;
+  width: var(--labels-width);
+  height: var(--timeline-height);
+  margin-right: calc(-1 * var(--labels-width));
+}
+
+.timeline-labels__ground {
+  fill: #1f2937; /* the timeline's own ground (TimelineView.css) */
+}
+
+@media (prefers-color-scheme: light) {
+  .timeline-labels__ground {
+    fill: #e5e7eb;
+  }
 }
 
 /* The whole piece as a strip: notes and chords, no words. */

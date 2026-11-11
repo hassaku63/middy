@@ -85,7 +85,7 @@
 
 .timeline__pitch-label {
   fill: var(--text-muted);
-  font-size: 9px;
+  font-size: 12px; /* LABEL_FONT in layout.ts */
 }
 
 .timeline__note {

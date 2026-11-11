@@ -37,22 +37,49 @@ test.describe('at 1280×800', () => {
   });
 });
 
+/**
+ * #402 A: on a phone the timeline keeps its own size and scrolls sideways
+ * instead of shrinking; its text stays at 12 px or more and a chord at
+ * 24 px tall or more (WCAG 2.5.8), and the label column stays at the left
+ * while it scrolls. The page itself does not scroll sideways.
+ */
 test.describe('at phone width', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('nothing scrolls sideways and the timeline keeps its proportions', async ({ page }) => {
+  test('the timeline scrolls at its own size, its labels held at the left', async ({ page }) => {
     await page.goto('/');
     const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       390,
     );
-    const box = await result.getByRole('group', { name: 'タイムライン' }).boundingBox();
-    const [w, h] = await result
-      .getByRole('group', { name: 'タイムライン' })
-      .evaluate((el) => [Number(el.getAttribute('width')), Number(el.getAttribute('height'))]);
-    expect(box).not.toBeNull();
-    // Scaled down to fit, the drawing keeps its aspect ratio instead of a tall empty box.
-    expect(Math.abs((box?.height ?? 0) / (box?.width ?? 1) - h / w)).toBeLessThan(0.05);
+    const timeline = result.getByRole('group', { name: 'タイムライン' });
+    const [box, h] = await Promise.all([
+      timeline.boundingBox(),
+      timeline.evaluate((el) => Number(el.getAttribute('height'))),
+    ]);
+    const scale = (box?.height ?? 0) / h;
+    expect(12 * scale).toBeGreaterThanOrEqual(12);
+    const chord = await result
+      .getByRole('listbox', { name: 'コード' })
+      .getByRole('option')
+      .first()
+      .boundingBox();
+    expect(chord?.height ?? 0).toBeGreaterThanOrEqual(24);
+
+    const scroll = result.locator('.timeline-overview__scroll');
+    expect(await scroll.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+    const labels = result.locator('.timeline-labels');
+    await scroll.scrollIntoViewIfNeeded();
+    const before = await labels.boundingBox();
+    await scroll.evaluate((el) => {
+      el.scrollLeft = 300;
+    });
+    await expect(async () => {
+      const after = await labels.boundingBox();
+      expect(Math.abs((after?.x ?? -1) - (before?.x ?? 0))).toBeLessThanOrEqual(1);
+      expect(await scroll.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    }).toPass();
+    await expect(labels.getByText('キック')).toBeInViewport();
   });
 });
 

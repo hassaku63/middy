@@ -48,8 +48,8 @@ test('a long timeline scrolls in its box; pinning a chord in the strip brings it
 
 test('a short timeline is drawn once, whole', async ({ page }) => {
   const result = await send(page, '雨の日曜');
-  await expect(result.locator('.timeline-overview__scroll')).toHaveCount(0);
   await expect(result.getByRole('group', { name: 'タイムライン' })).toHaveCount(1);
+  await expect(result.locator('svg.timeline--overview')).toHaveCount(0);
 });
 
 test('scrolling the box moves the outline in the strip', async ({ page }) => {

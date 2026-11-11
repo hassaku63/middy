@@ -22,10 +22,12 @@ function bars(n: number): Timeline {
 }
 
 describe('TimelineOverview (#360)', () => {
-  it('draws a short timeline once, whole', () => {
+  it('draws a short timeline once, whole, with the label column held over it (#402 A)', () => {
     const { container } = render(<TimelineOverview timeline={bars(4)} positionTick={0} />);
     expect(container.querySelectorAll('svg.timeline')).toHaveLength(1);
-    expect(container.querySelector('.timeline-overview__scroll')).toBeNull();
+    const labels = container.querySelector('.timeline-overview__scroll > svg.timeline-labels');
+    expect(labels?.getAttribute('aria-hidden')).toBe('true');
+    expect(labels?.getAttribute('viewBox')).toBe('0 0 40 164');
   });
 
   it('draws a long one whole in a scrolling box, with a strip of the whole piece', () => {

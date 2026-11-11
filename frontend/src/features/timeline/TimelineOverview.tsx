@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
+import { TimelineLabels } from './TimelineLabels';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
 import { BAR_WIDTH, computeLayout, type Layout } from './layout';
 import { useTimelineScroll } from './useTimelineScroll';
@@ -28,34 +29,49 @@ export function TimelineOverview(props: Props) {
   const pinned =
     props.selectedHarmony != null ? props.timeline.harmony[props.selectedHarmony] : undefined;
   const playing = props.playing !== false;
-  const target = !long ? null : followed(geometry, props.positionTick, playing, pinned);
+  // Any timeline may scroll (a narrow screen), so the box follows the playhead or the pinned chord.
+  const target = followed(geometry, props.positionTick, playing, pinned);
   const { ref, view, onScroll } = useTimelineScroll(
     geometry.width,
     target,
     playing ? 'page' : 'centre',
   );
-  if (!long) return <TimelineView {...props} />;
-  // The box shows four bars across its width, unless the height cap
-  // (ADR-0041) makes the drawing smaller.
-  const fourBars = geometry.height / (geometry.labelWidth + BARS_PER_VIEW * BAR_WIDTH);
+  // One box for every timeline, so the tree does not change with the
+  // width (ADR-0042): it scrolls sideways when the drawing is wider than
+  // the box, with the label column held at its left (#402 A). A short
+  // timeline fills the box's width and widens its bars under the height
+  // cap (ADR-0057); it never shrinks below its own size, so on a narrow
+  // screen it scrolls instead of shrinking its text. A long one shows four
+  // bars across, at its own size at least, with the whole piece as a strip
+  // below (#360).
+  const vars = {
+    '--timeline-aspect': geometry.width / geometry.height,
+    '--timeline-natural-width': `${String(geometry.width)}px`,
+    '--timeline-four-bars-width': `${String(geometry.labelWidth + BARS_PER_VIEW * BAR_WIDTH)}px`,
+    '--timeline-four-bars': geometry.height / (geometry.labelWidth + BARS_PER_VIEW * BAR_WIDTH),
+    '--timeline-label-ratio': geometry.labelWidth / geometry.height,
+  } as CSSProperties;
   return (
     <div className="timeline-overview">
       <div
-        className="timeline-overview__scroll"
+        className={`timeline-overview__scroll${long ? ' is-long' : ''}`}
         ref={ref}
         onScroll={onScroll}
-        style={{ '--timeline-four-bars': fourBars } as CSSProperties}
+        style={vars}
       >
-        <TimelineView {...props} fit={false} />
+        <TimelineLabels layout={geometry} />
+        <TimelineView {...props} fit={!long && props.fit === true} />
       </div>
-      <TimelineView
-        {...props}
-        fit={false}
-        decorative
-        stretch
-        highlight={view}
-        className="timeline--overview"
-      />
+      {long && (
+        <TimelineView
+          {...props}
+          fit={false}
+          decorative
+          stretch
+          highlight={view}
+          className="timeline--overview"
+        />
+      )}
     </div>
   );
 }
