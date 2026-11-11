@@ -403,6 +403,13 @@ func patternHint(id string, meter *music.TimeSignature) string {
 // on a bar line; the progression ends on a bar line.
 func (c Candidate) validateBeats(ts music.TimeSignature) []error {
 	if c.Beats == nil {
+		// One length for every chord can end mid-bar too: three chords of
+		// a beat in 4/4 (BL-304, #448). A length the meter does not allow
+		// is reported on its own.
+		bar, at := ts.BeatsPerBar(), len(c.Progression)*c.BeatsPerChord
+		if bar > 0 && c.BeatsPerChord > 0 && at%bar != 0 {
+			return []error{fmt.Errorf("the progression ends mid-bar (%d chords of %d beats is %d beats, bars of %d)%s", len(c.Progression), c.BeatsPerChord, at, bar, wholeBarsHint(c.BeatsPerChord, bar))}
+		}
 		return nil
 	}
 	if len(c.Beats) != len(c.Progression) {
@@ -428,6 +435,20 @@ func (c Candidate) validateBeats(ts music.TimeSignature) []error {
 		errs = append(errs, fmt.Errorf("the progression ends mid-bar (%d beats, bars of %d)", at, bar))
 	}
 	return errs
+}
+
+// wholeBarsHint says how to end on a bar line: add or drop chords, or set
+// per-chord beats so the last one fills the bar.
+func wholeBarsHint(each, bar int) string {
+	per := bar / max(1, gcd(bar, each)) // chords that make whole bars
+	return fmt.Sprintf("; use a multiple of %d chords, or set beats so the last chord fills the bar", per)
+}
+
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
 }
 
 // startBeats lists where a chord of length b may start in a bar: "1 or 3".
