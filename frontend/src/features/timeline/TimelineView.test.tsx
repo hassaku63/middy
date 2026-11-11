@@ -312,3 +312,16 @@ describe('the grid (#435)', () => {
     expect(container.querySelectorAll('.timeline__bar-line').length).toBeGreaterThan(0);
   });
 });
+
+describe('the bar numbers (#435)', () => {
+  it('numbers each bar above the chord lane, and not on a thin strip', () => {
+    const { container, rerender } = render(<TimelineView timeline={timeline} positionTick={0} />);
+    const numbers = Array.from(
+      container.querySelectorAll('.timeline__bar-number'),
+      (t) => t.textContent,
+    );
+    expect(numbers).toEqual(['1', '2', '3']);
+    rerender(<TimelineView timeline={timeline} positionTick={0} stretch />);
+    expect(container.querySelectorAll('.timeline__bar-number')).toHaveLength(0);
+  });
+});

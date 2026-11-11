@@ -52,7 +52,7 @@ export function ChordLane({
   ppq,
 }: Props) {
   return (
-    <g aria-label="コード" role="listbox">
+    <g aria-label="コード" role="listbox" transform={`translate(0 ${String(layout.chordTop)})`}>
       {harmony.map((h, i) => {
         const active = i === activeIndex;
         const selected = i === selectedIndex;

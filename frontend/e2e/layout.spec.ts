@@ -80,6 +80,8 @@ test.describe('at phone width', () => {
       expect(await scroll.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     }).toPass();
     await expect(labels.getByText('キック')).toBeInViewport();
+    // The bar numbers above the chords are drawn at 12 px too (#435).
+    await expect(result.locator('.timeline__bar-number').first()).toHaveText('1');
   });
 });
 

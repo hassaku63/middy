@@ -27,7 +27,7 @@ describe('TimelineOverview (#360)', () => {
     expect(container.querySelectorAll('svg.timeline')).toHaveLength(1);
     const labels = container.querySelector('.timeline-overview__scroll > svg.timeline-labels');
     expect(labels?.getAttribute('aria-hidden')).toBe('true');
-    expect(labels?.getAttribute('viewBox')).toBe('0 0 40 164');
+    expect(labels?.getAttribute('viewBox')).toBe('0 0 40 182');
   });
 
   it('draws a long one whole in a scrolling box, with a strip of the whole piece', () => {
