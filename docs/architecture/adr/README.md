@@ -59,6 +59,7 @@
 | [0053](0053-bass-line-under-slash-examples.md) | 分数コードのある例では、すべての和音のベースを、前のベースに近い高さで 1 本の線として鳴らす | Accepted |
 | [0054](0054-borrowed-function-in-the-major-key.md) | 借用和音の機能の根拠は「長調の中での働き」（♭VI は iv の代わり）。短調の VI はトニックの代理のまま | Accepted |
 | [0055](0055-sounding-chord-by-lightness.md) | 鳴っている和音は明るさの反転と琥珀の縁で示し、機能の色（緑・青・橙）は地図と札だけが使う | Accepted |
+| [0056](0056-degree-map-current-chord-glow.md) | 度数の地図の今の和音は、セルの外側の枠と動かない光で示す（追従は琥珀、固定は青。動く案は却下） | Accepted |
 
 ## いつ ADR を書くか
 

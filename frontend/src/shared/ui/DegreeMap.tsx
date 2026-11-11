@@ -25,6 +25,12 @@ export type DegreeMapProps = {
    * tritone. The caller asks for it in a mode, where the engine gives roles.
    */
   roles?: boolean;
+  /**
+   * The chord is pinned rather than followed: its mark is blue instead of
+   * the amber of the sounding chord, as on the chord lane and the frame's
+   * edge (#412).
+   */
+  pinned?: boolean;
 };
 
 const FLOW: HarmonicFunction[] = ['T', 'S', 'D'];
@@ -55,9 +61,11 @@ export function DegreeMap({
   flow = false,
   functions = true,
   roles = false,
+  pinned = false,
 }: DegreeMapProps) {
   const captionId = useId();
   if (degrees.length === 0) return null;
+  const pin = pinned ? ' degree-map--pinned' : '';
   const current = currentDegree(event);
   const cell = (d: DegreeChord) => (
     <DegreeCell key={d.degree} d={d} current={current} functions={functions} />
@@ -65,7 +73,7 @@ export function DegreeMap({
   if (roles && degrees.some((d) => d.role)) {
     return (
       <div
-        className="degree-map degree-map--flow"
+        className={`degree-map degree-map--flow${pin}`}
         role="group"
         aria-label="度数の地図（和音の役割）"
       >
@@ -88,7 +96,7 @@ export function DegreeMap({
   }
   if (!flow) {
     return (
-      <ol className="degree-map" aria-label="度数の地図">
+      <ol className={`degree-map${pin}`} aria-label="度数の地図">
         {degrees.map(cell)}
       </ol>
     );
@@ -99,7 +107,7 @@ export function DegreeMap({
   // D → S (V → IV in blues and rock), and the arrows alone read as a law.
   return (
     <div
-      className="degree-map degree-map--flow degree-map--captioned"
+      className={`degree-map degree-map--flow degree-map--captioned${pin}`}
       role="group"
       aria-label="度数の地図（機能の流れ）"
       aria-describedby={captionId}

@@ -45,6 +45,19 @@ describe('DegreeMap', () => {
     expect(items.filter((li) => li.getAttribute('aria-current'))).toHaveLength(1);
   });
 
+  it('marks a pinned chord apart from a followed one, in every layout (#412)', () => {
+    const event = chord({ degree: 4, function: 'S', explanation: '' });
+    for (const layout of [{}, { flow: true }, { functions: false, roles: true }]) {
+      const { rerender, unmount } = render(
+        <DegreeMap degrees={dorian} event={event} {...layout} />,
+      );
+      expect(screen.getByLabelText(/^度数の地図/)).not.toHaveClass('degree-map--pinned');
+      rerender(<DegreeMap degrees={dorian} event={event} {...layout} pinned />);
+      expect(screen.getByLabelText(/^度数の地図/)).toHaveClass('degree-map--pinned');
+      unmount();
+    }
+  });
+
   it('lights nothing when the explained chord is not one of the key (borrowed, applied)', () => {
     expect(
       currentDegree(chord({ degree: 4, function: 'S', borrowed: true, explanation: '' })),
