@@ -161,7 +161,10 @@ main {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    /* The column takes 30 % of a wide screen, 320–400 px: the examples'
+       cards and the replies read in longer lines, and the result keeps
+       760 px or more for the chord's band and one line of tools (#437). */
+    grid-template-columns: clamp(320px, 30vw, 400px) minmax(0, 1fr);
     gap: 20px;
   }
 
@@ -190,7 +193,7 @@ main {
     flex-wrap: wrap;
   }
 
-  /* 320 px is too narrow for the input and its buttons on one line. */
+  /* The column is too narrow for the input and its buttons on one line. */
   .app--desk .chat__form input {
     flex-basis: 100%;
   }

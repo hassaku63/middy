@@ -194,7 +194,8 @@
 /* On a wide stage the frame is a band above the timeline (#360): the map
    on its left, the chord beside it, so the lit chord and its explanation
    are next to each other. Beside the map at 1280 px a line holds about
-   32 characters, so five lines take the longest text (141, #279). */
+   27 characters next to the conversation's wider column (#437), so six
+   lines take the longest text (141, #279), as in the stacked frame. */
 @container stage (min-width: 760px) {
   .explanation--frame {
     flex-direction: row;
@@ -213,6 +214,6 @@
   .explanation__chord {
     flex: 1 1 auto;
     min-width: 0;
-    height: calc(8.5em + 40px);
+    height: calc(10.2em + 40px);
   }
 }

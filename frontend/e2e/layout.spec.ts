@@ -277,3 +277,36 @@ for (const { width, height } of [
     });
   });
 }
+
+/**
+ * #437: on a wide screen the conversation's column takes 30 % (320–400 px),
+ * so a card's spec reads without breaking inside a word, while the result
+ * keeps the width of the chord's band (760 px, ADR-0044).
+ */
+for (const { width, height, column } of [
+  { width: 1024, height: 800, column: 320 },
+  { width: 1280, height: 800, column: 384 },
+  { width: 1920, height: 1080, column: 400 },
+]) {
+  test.describe(`the conversation's column at ${width}×${height}`, () => {
+    test.use({ viewport: { width, height } });
+
+    test(`is ${column} px, and a card's spec items do not break`, async ({ page }) => {
+      await page.goto('/');
+      await openExample(page, '雨の日曜の午後', '遠い記憶');
+      const side = await page.locator('.app__side').boundingBox();
+      expect(Math.abs((side?.width ?? 0) - column)).toBeLessThanOrEqual(1);
+      if (width >= 1280) {
+        const stage = await page.locator('.app__stage').boundingBox();
+        expect(stage?.width ?? 0).toBeGreaterThanOrEqual(760);
+      }
+      const broken = await page.evaluate(
+        () =>
+          Array.from(document.querySelectorAll('.candidate__spec > span')).filter(
+            (el) => el.getClientRects().length > 1,
+          ).length,
+      );
+      expect(broken).toBe(0);
+    });
+  });
+}
