@@ -161,6 +161,39 @@ for (const { width, height, band } of [
 }
 
 /**
+ * #419: on a wide stage the chord's frame and the whole example's notes stop
+ * at what they hold, instead of stretching with the right half empty; their
+ * right edges line up, and the unpin button stays by the chord's heading.
+ */
+for (const { width, height } of [
+  { width: 1920, height: 1080 },
+  { width: 2560, height: 1440 },
+]) {
+  test.describe(`the explanations' width at ${width}×${height}`, () => {
+    test.use({ viewport: { width, height } });
+
+    test('end near their text and line up', async ({ page }) => {
+      await page.goto('/');
+      const { result } = await openExample(page, '雨の日曜の午後', '遠い記憶');
+      await result.getByRole('listbox', { name: 'コード' }).getByRole('option').first().click();
+      const frameRegion = result.getByRole('region', { name: 'コードの解説' });
+      const frame = await frameRegion.boundingBox();
+      const notes = await result.getByRole('region', { name: '解説', exact: true }).boundingBox();
+      const unpin = await frameRegion.getByRole('button', { name: /固定を解除/ }).boundingBox();
+      const text = await frameRegion.locator('.explanation__chord p').first().boundingBox();
+      expect(frame && notes && unpin && text).toBeTruthy();
+      if (!frame || !notes || !unpin || !text) return;
+      const right = (b: { x: number; width: number }) => b.x + b.width;
+      expect(Math.abs(right(frame) - right(notes))).toBeLessThanOrEqual(1);
+      expect(right(frame) - right(unpin)).toBeLessThanOrEqual(48);
+      // The text's box is at most 40 characters wide; the frame ends within
+      // its padding of where those 40 characters would end.
+      expect(right(frame) - (text.x + 40 * 16)).toBeLessThanOrEqual(48);
+    });
+  });
+}
+
+/**
  * ADR-0041 (#353): on a wide screen the page uses its width up to QHD and
  * the timeline's height is capped, so that the timeline and the frame of
  * the sounding chord are in view together while it plays.
