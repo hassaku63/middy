@@ -8,7 +8,7 @@ type Props = {
   player: UsePlayer;
 };
 
-/** Play/stop buttons with a bar.beat read-out. Purely presentational. */
+/** A play/stop button with a bar.beat read-out. Purely presentational. */
 export function PlayerControls({ timeline, player }: Props) {
   const playing = player.state === 'playing';
   const position = timeline
@@ -18,19 +18,22 @@ export function PlayerControls({ timeline, player }: Props) {
   return (
     <div role="group" aria-label="再生" className="player">
       {/* The main operation once an example is open (experience.md): it
-          stands out from the toolbar's other buttons (#279). */}
+          stands out from the toolbar's other buttons (#279). One button
+          plays and stops, in the same place and size, so the operation
+          that can be done now is the one that stands out (#402 B). */}
       <button
         type="button"
         className="player__play"
         onClick={() => {
-          if (timeline) void player.play(timeline);
+          if (playing) player.stop();
+          else if (timeline) void player.play(timeline);
         }}
-        disabled={!timeline || playing}
+        disabled={!timeline}
       >
-        再生
-      </button>
-      <button type="button" onClick={() => player.stop()} disabled={!playing}>
-        停止
+        <span className="player__icon" aria-hidden="true">
+          {playing ? '■' : '▶'}
+        </span>
+        {playing ? '停止' : '再生'}
       </button>
       <output aria-label="再生位置">{position}</output>
     </div>
