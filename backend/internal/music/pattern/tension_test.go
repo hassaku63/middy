@@ -322,3 +322,42 @@ func TestLofiBalladOneBeatNamesItsNinths(t *testing.T) {
 		t.Fatalf("the ninths sound but the notes do not say so: %+v", out.Rhythm.Style)
 	}
 }
+
+// TestChordsNameTheirTensions (BL-307, #450): each chord lists the
+// tensions its notes sound, for the symbol to show as Fmaj7(9); a style
+// without colour names none.
+func TestChordsNameTheirTensions(t *testing.T) {
+	key := music.Key{Tonic: music.F, Mode: music.Major}
+	var prog music.Progression
+	for _, l := range []string{"Imaj7", "IV", "V7"} {
+		s, err := music.StepFromLabel(key, l, 4)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := music.FromProgression(key, prog, 90)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := Render(tl, Choice{Accompaniment: "pulse", Style: "pop", Tensions: TensionsNinths13})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := [][]string{out.Harmony[0].Tensions, out.Harmony[1].Tensions, out.Harmony[2].Tensions}
+	want := [][]string{{"9"}, {"add9"}, {"9", "13"}}
+	for i := range want {
+		if !slices.Equal(got[i], want[i]) {
+			t.Errorf("chord %d: got %v, want %v", i, got[i], want[i])
+		}
+	}
+	plain, err := Render(tl, Choice{Accompaniment: "pulse", Style: "pop"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, h := range plain.Harmony {
+		if len(h.Tensions) != 0 {
+			t.Errorf("pop without colour: chord %d names %v", i, h.Tensions)
+		}
+	}
+}

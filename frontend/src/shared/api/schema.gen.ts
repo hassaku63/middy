@@ -405,6 +405,8 @@ export interface components {
       symbol?: string;
       /** @description 分数コードのベース音（ADR-0020）。省略時は和音の根音がベース */
       bass?: components['schemas']['PitchClass'];
+      /** @description その和音で実際に鳴っているテンション（BL-307）。和音記号と分析は 7 度までのまま（ADR-0037）で、画面は `Fmaj7(9)` のように添えて書く。鳴っていなければ省略 */
+      tensions?: ('9' | '13' | 'add9')[];
       /** @description 押し（BL-085）。音は `start` より早く鳴るが、`start` は和音の属する拍のまま */
       push?: components['schemas']['Push'];
       /** @description 解説データ。分析前のタイムラインでは省略される */

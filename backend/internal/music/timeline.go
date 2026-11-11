@@ -113,6 +113,11 @@ type HarmonyEvent struct {
 	// Bass is the note under the chord when it is a slash chord (ADR-0020);
 	// nil means the chord's root.
 	Bass *PitchClass `json:"bass,omitempty"`
+	// Tensions names the tensions that actually sound on the chord, in
+	// order ("9", "13", or "add9" on a major triad; BL-307, #450). The
+	// symbol and the analysis stay at the seventh (ADR-0037); the UI writes
+	// them as Fmaj7(9).
+	Tensions []string `json:"tensions,omitempty"`
 	// Push, when set, strikes the chord before Start (BL-085); Start stays
 	// on the beat the chord belongs to.
 	Push     Push      `json:"push,omitempty"`

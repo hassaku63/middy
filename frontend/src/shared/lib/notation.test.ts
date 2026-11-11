@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chordSymbol, pitchClassName, pitchName } from './notation';
+import { chordSymbol, harmonySymbol, pitchClassName, pitchName } from './notation';
 
 describe('notation', () => {
   it('names pitch classes with sharps and wraps', () => {
@@ -20,5 +20,15 @@ describe('notation', () => {
     expect(chordSymbol({ root: 9, quality: 'min' })).toBe('Am');
     expect(chordSymbol({ root: 11, quality: 'm7b5' })).toBe('Bm7b5');
     expect(chordSymbol({ root: 0, quality: 'maj' })).toBe('C');
+  });
+});
+
+describe('harmonySymbol with tensions (BL-307)', () => {
+  const chord = { root: 5, quality: 'maj7' as const };
+  it('adds the sounding tensions in brackets, before a slash bass', () => {
+    expect(harmonySymbol({ chord, symbol: 'Fmaj7' })).toBe('Fmaj7');
+    expect(harmonySymbol({ chord, symbol: 'Fmaj7', tensions: ['9'] })).toBe('Fmaj7(9)');
+    expect(harmonySymbol({ chord, symbol: 'C7', tensions: ['9', '13'] })).toBe('C7(9,13)');
+    expect(harmonySymbol({ chord, symbol: 'Cmaj7/E', tensions: ['9'] })).toBe('Cmaj7(9)/E');
   });
 });
