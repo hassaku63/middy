@@ -161,6 +161,34 @@ for (const { width, height, band } of [
 }
 
 /**
+ * #402 F: the timeline spans the stage's width; where its height is capped,
+ * the bars widen instead of the drawing shrinking and leaving the right
+ * empty.
+ */
+for (const { width, height } of [
+  { width: 1280, height: 800 },
+  { width: 1920, height: 1080 },
+]) {
+  test.describe(`the timeline's width at ${width}×${height}`, () => {
+    test.use({ viewport: { width, height } });
+
+    test('fills the stage, under the height cap', async ({ page }) => {
+      await page.goto('/');
+      const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+      const timeline = result.getByRole('group', { name: 'タイムライン' });
+      await expect(async () => {
+        const box = await timeline.boundingBox();
+        const stage = await page.locator('.app__stage').boundingBox();
+        expect(box && stage).toBeTruthy();
+        if (!box || !stage) return;
+        expect(Math.abs(box.width - stage.width)).toBeLessThanOrEqual(2);
+        expect(box.height).toBeLessThanOrEqual(height * 0.45 + 1);
+      }).toPass();
+    });
+  });
+}
+
+/**
  * #419: on a wide stage the chord's frame and the whole example's notes stop
  * at what they hold, instead of stretching with the right half empty; their
  * right edges line up, and the unpin button stays by the chord's heading.

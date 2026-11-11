@@ -1,9 +1,10 @@
-import { useMemo, type CSSProperties } from 'react';
+import { useMemo, useRef, type CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { ChordLane } from './ChordLane';
 import { DrumLane } from './DrumLane';
 import { PianoRoll } from './PianoRoll';
-import { CHORD_LANE_HEIGHT, DRUM_CHANNEL, computeLayout, harmonyAt } from './layout';
+import { CHORD_LANE_HEIGHT, DRUM_CHANNEL, computeLayout, fitBarWidth, harmonyAt } from './layout';
+import { useBoxSize } from './useBoxSize';
 import './TimelineView.css';
 
 export type TimelineViewProps = {
@@ -23,6 +24,11 @@ export type TimelineViewProps = {
   highlight?: { x: number; width: number };
   /** Fill the box it is given, out of proportion (an overview strip). */
   stretch?: boolean;
+  /**
+   * Fill the width of a box whose height is capped by widening the bars,
+   * keeping the rows and the text at their size (#402 F).
+   */
+  fit?: boolean;
   /** Accessible name; several timelines on one screen need distinct names. */
   label?: string;
   /** ▶ on the chord followed, ■ on the pinned one (see ChordLane). */
@@ -45,19 +51,25 @@ export function TimelineView({
   onSelectHarmony,
   highlight,
   stretch = false,
+  fit = false,
   label = 'タイムライン',
   decorative = false,
   marks,
   className,
 }: TimelineViewProps) {
-  // The playhead re-renders this every frame; the layout only changes with the timeline.
+  const ref = useRef<SVGSVGElement>(null);
+  const box = useBoxSize(ref, fit);
+  // The playhead re-renders this every frame; the layout only changes with
+  // the timeline and the box it fills.
+  const natural = useMemo(() => computeLayout(timeline), [timeline]);
+  const barWidth = box ? fitBarWidth(natural, box) : natural.barWidth;
   const { layout, notes, drumNotes } = useMemo(
     () => ({
-      layout: computeLayout(timeline),
+      layout: barWidth === natural.barWidth ? natural : computeLayout(timeline, barWidth),
       notes: timeline.tracks.filter((t) => t.channel !== DRUM_CHANNEL).flatMap((t) => t.notes),
       drumNotes: timeline.tracks.filter((t) => t.channel === DRUM_CHANNEL).flatMap((t) => t.notes),
     }),
-    [timeline],
+    [timeline, natural, barWidth],
   );
 
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
@@ -72,8 +84,10 @@ export function TimelineView({
       aria-hidden={decorative || undefined}
       width={layout.width}
       height={layout.height}
-      // The drawing's proportions, for CSS to cap the height (ADR-0041).
-      style={{ '--timeline-aspect': layout.width / layout.height } as CSSProperties}
+      ref={ref}
+      // The drawing's own proportions at BAR_WIDTH, for CSS to cap the
+      // height (ADR-0041); a fitted drawing widens its bars from there.
+      style={{ '--timeline-aspect': natural.width / natural.height } as CSSProperties}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
       preserveAspectRatio={stretch ? 'none' : undefined}
     >

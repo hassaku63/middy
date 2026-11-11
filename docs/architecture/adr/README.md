@@ -60,6 +60,7 @@
 | [0054](0054-borrowed-function-in-the-major-key.md) | 借用和音の機能の根拠は「長調の中での働き」（♭VI は iv の代わり）。短調の VI はトニックの代理のまま | Accepted |
 | [0055](0055-sounding-chord-by-lightness.md) | 鳴っている和音は明るさの反転と琥珀の縁で示し、機能の色（緑・青・橙）は地図と札だけが使う | Accepted |
 | [0056](0056-degree-map-current-chord-glow.md) | 度数の地図の今の和音は、セルの外側の枠と動かない光で示す（追従は琥珀、固定は青。動く案は却下） | Accepted |
+| [0057](0057-timeline-fills-the-stage.md) | タイムラインは結果の幅いっぱいに描き、高さの上限（45 %）に当たるときは小節を横に伸ばす。文字と行の高さは変えない（ADR-0041 の縦横比を置き換える） | Accepted |
 
 ## いつ ADR を書くか
 

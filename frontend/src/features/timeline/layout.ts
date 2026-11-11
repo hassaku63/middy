@@ -49,6 +49,8 @@ export function harmonyAt(harmony: HarmonyEvent[], tick: number): number {
 export type Layout = {
   /** The label column: wide enough for the longest drum name in it. */
   labelWidth: number;
+  /** Pixels per bar in the drawing: BAR_WIDTH, or wider to fill a box (fitBarWidth). */
+  barWidth: number;
   perBar: number;
   bars: number;
   width: number;
@@ -65,8 +67,13 @@ export type Layout = {
   y: (pitch: number) => number;
 };
 
-/** Geometry shared by the chord lane, the piano roll and the playhead. */
-export function computeLayout(tl: Timeline): Layout {
+/**
+ * Geometry shared by the chord lane, the piano roll and the playhead. A
+ * bar is BAR_WIDTH wide unless a wider one is asked for, to fill a box
+ * whose height is capped (fitBarWidth, #402 F); only time stretches, the
+ * rows and the text keep their size.
+ */
+export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH): Layout {
   const perBar = ticksPerBar(tl.ppq, tl.timeSignature);
   const lengthTicks = Math.max(timelineLengthTicks(tl), perBar);
   const bars = Math.ceil(lengthTicks / perBar);
@@ -85,7 +92,7 @@ export function computeLayout(tl: Timeline): Layout {
     LABEL_WIDTH,
     ...drumNotes.map((n) => 4 + drumName(n).length * DRUM_LABEL_FONT + 4),
   );
-  const x = (tick: number) => labelWidth + (tick / perBar) * BAR_WIDTH;
+  const x = (tick: number) => labelWidth + (tick / perBar) * barWidth;
   const hi = pitches.length ? Math.max(...pitches) : 71;
   const lo = Math.min(pitches.length ? Math.min(...pitches) : 60, hi - MIN_ROWS + 1);
   const rows = hi - lo + 1;
@@ -95,6 +102,7 @@ export function computeLayout(tl: Timeline): Layout {
 
   return {
     labelWidth,
+    barWidth,
     perBar,
     bars,
     width: x(bars * perBar),
@@ -108,4 +116,16 @@ export function computeLayout(tl: Timeline): Layout {
     x,
     y,
   };
+}
+
+/**
+ * The bar width that fills a box of the given size at the drawing's own
+ * height (#402 F): where the box is wider than the drawing at BAR_WIDTH,
+ * the bars stretch to its width instead of the drawing shrinking to fit
+ * the capped height and leaving the right of the box empty.
+ */
+export function fitBarWidth(natural: Layout, box: { width: number; height: number }): number {
+  if (box.width <= 0 || box.height <= 0) return BAR_WIDTH;
+  const width = (box.width / box.height) * natural.height; // drawing units across the box
+  return Math.max(BAR_WIDTH, (width - natural.labelWidth) / natural.bars);
 }
