@@ -3,7 +3,7 @@ import type { Timeline } from '@/shared/api/client';
 import { ChordLane } from './ChordLane';
 import { DrumLane } from './DrumLane';
 import { PianoRoll } from './PianoRoll';
-import { DRUM_CHANNEL, computeLayout, harmonyAt } from './layout';
+import { CHORD_LANE_HEIGHT, DRUM_CHANNEL, computeLayout, harmonyAt } from './layout';
 import './TimelineView.css';
 
 export type TimelineViewProps = {
@@ -108,12 +108,15 @@ export function TimelineView({
           height={layout.height}
         />
       )}
+      {/* The playhead runs under the chord lane, where the sounding chord
+          already shows by its own mark: across the lane it hid the chord's
+          numeral at the start of each chord (#402 I). */}
       <line
         className="timeline__playhead"
         data-testid="playhead"
         x1={layout.x(positionTick)}
         x2={layout.x(positionTick)}
-        y1={0}
+        y1={CHORD_LANE_HEIGHT}
         y2={layout.height}
       />
     </svg>
