@@ -578,3 +578,42 @@
 | 当たるべき場面 | 日付・数・言語名などの表示を言語に合わせるとき。UI を日本語以外に広げることを考えるとき |
 | middy との接点 | `frontend/src/features/projects/ProjectList.tsx` が `toLocaleString('ja-JP')` で日時を出す。CLDR のページに、多くの開発者は ICU などのライブラリを通して間接に CLDR を使うとある（ブラウザがどのデータを使うかは確かめていない）。UI の言語は日本語（`frontend/index.html` の `lang="ja"`） |
 | 確認日 | 2026-11-09 |
+
+## コンテナとビルド
+
+### Dockerfile（BuildKit の Dockerfile フロントエンドの構文）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | Docker, Inc. と Moby プロジェクト（BuildKit。フロントエンドのイメージは `docker/dockerfile`） |
+| 何を決めているか | コンテナイメージを組み立てる命令の書き方。パーサー指令（`syntax`・`escape`・`check`）、命令（`FROM`・`RUN`・`COPY` など）、BuildKit の拡張（`RUN --mount` の bind・cache・tmpfs・secret・ssh、`RUN --network`、ヒアドキュメント、`COPY --link`・`--parents`・`--exclude`）と、それぞれが要るフロントエンドの最小の版 |
+| 一次情報 | https://docs.docker.com/reference/dockerfile/ （正典。登録なしで読める）。同じ文書の元は https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/reference.md 。以前の `syntax.md`（例: https://github.com/moby/buildkit/blob/dockerfile/1.4.3/frontend/dockerfile/docs/syntax.md ）は master では「reference.md に移った」とだけある。版ごとの変更は https://github.com/moby/buildkit/releases （`dockerfile/` で始まるタグ。docs.docker.com の release notes のページはここへ転送される）。書き方の指針は https://docs.docker.com/build/building/best-practices/ |
+| 状態 | 現行。最新の安定版は `dockerfile/1.28.0`（2026-10-07）。1.29.0 は rc。`syntax` 指令は「多くの利用者は `docker/dockerfile:1` にするとよい」（最新の安定版の 1.x を取ってくる）とある。`labs` の系列は、major を上げずに機能を外すことがある |
+| 当たるべき場面 | `Dockerfile` を書く・変えるとき。`RUN --mount`、ヒアドキュメント、`COPY` の新しい旗を使う前に、要る最小の版を確かめるとき。`syntax` の版を決めるとき。ベースイメージの固定（タグかダイジェストか）を決めるとき |
+| middy との接点 | `Dockerfile`（`# syntax=docker/dockerfile:1.7`、`RUN --mount=type=cache`、多段ビルド、`--target web` と `api`。ADR-0027）。CI は hadolint で検査する（`docs/dev/harness.md`） |
+| middy との違い | `syntax` を 1.7 に固定していて、指針の `docker/dockerfile:1` とも最新の 1.28 とも違う。ベースイメージはタグだけで固定し、指針の勧める Dependabot の `docker` の更新はない（`.github/dependabot.yml`）。直すかどうかは #408 |
+| 確認日 | 2026-11-11 |
+
+### Build checks（BuildKit の組み込みの検査）
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | Docker, Inc.（BuildKit） |
+| 何を決めているか | Dockerfile とビルドの設定を、決まった規則（`StageNameCasing`、`JSONArgsRecommended`、`UndefinedVar`、`SecretsUsedInArgOrEnv`、`CopyIgnoredFile` など）で検査する仕組み。`docker build --check` で、イメージを作らずに検査だけ走らせる。`# check=skip=…`・`# check=error=true` の指令で、外す規則と、失敗をエラーにするかを決める。既定では警告 |
+| 一次情報 | https://docs.docker.com/reference/build-checks/ （規則の一覧。登録なしで読める）。指令の書き方は https://docs.docker.com/reference/dockerfile/ の `check` の節 |
+| 状態 | 現行。規則は増えていく（一覧に experimental の印が付くものがある） |
+| 当たるべき場面 | Dockerfile の検査を足す・変えるとき。hadolint と役割が重なるか確かめるとき |
+| middy との接点 | 今はない。Dockerfile の静的な検査は hadolint だけ（`Makefile` の `dockerfile-lint`、CI の `shell, workflows and Dockerfile` のジョブ） |
+| 確認日 | 2026-11-11 |
+
+### Compose Specification
+
+| 欄 | 内容 |
+| --- | --- |
+| 発行元 | Compose Specification のプロジェクト（compose-spec。Docker Compose がその実装） |
+| 何を決めているか | 複数のコンテナからなるアプリを 1 つのファイル（`compose.yaml`）で定める形式。サービス、ネットワーク、ボリューム、設定、秘密情報の書き方 |
+| 一次情報 | https://github.com/compose-spec/compose-spec の `spec.md`（https://raw.githubusercontent.com/compose-spec/compose-spec/main/spec.md で開いた）。Docker Compose の実装としての参照は https://docs.docker.com/reference/compose-file/ 。どちらも登録なしで読める |
+| 状態 | 現行。旧い 2.x と 3.x の形式は Compose Specification に統合された。最上位の `version` は後方互換のためだけに残り、書くと廃止の警告が出る。既定のファイル名は `compose.yaml`（`compose.yml` も可。`docker-compose.yaml` は後方互換） |
+| 当たるべき場面 | `compose.yaml` を書く・変えるとき。ローカルの検証の構成（`make up`）を変えるとき |
+| middy との接点 | `compose.yaml`（`web` と `api` の 2 つのコンテナ。ADR-0027、ADR-0008）。`version` は書いていない |
+| 確認日 | 2026-11-11 |
