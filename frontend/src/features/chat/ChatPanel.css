@@ -23,6 +23,18 @@
   line-height: 1.6;
 }
 
+/* A reply uses the column's width; the user's own line keeps to 80 % on
+   the right, so the two still read apart (#437). */
+.chat__turn--assistant > p {
+  max-width: 100%;
+}
+
+/* An item of a card's spec breaks before or after, never inside a word
+   such as アルペジオ (#437). */
+.candidate__spec > span {
+  white-space: nowrap;
+}
+
 .chat__turn--user {
   text-align: right;
 }
@@ -121,7 +133,8 @@
 
 .candidate__spec {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  column-gap: 10px;
   font-size: 0.85rem;
   color: var(--text-muted);
 }
