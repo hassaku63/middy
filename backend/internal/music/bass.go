@@ -2,6 +2,7 @@ package music
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -277,4 +278,64 @@ func BassClash(key Key, label string) error {
 		}
 	}
 	return nil
+}
+
+// BassCrossesChord reports a slash bass on the same letter as one of the
+// chord's own notes but a semitone away from it (BL-302, #451): in A
+// minor, "V7/7" puts G under E7, whose third is G#. The model meant the
+// chord's note and took the accidental from the wrong scale; the engine
+// would play the clash silently. A bass on another letter (C/B, Am over
+// G# in a line cliché) is a line, not a slip, and passes. It returns nil
+// for a label without a bass, and for one the engine cannot read.
+func BassCrossesChord(key Key, label string) error {
+	head, b, _ := splitBass(label) // a label it cannot read has no bass: its own error says why
+	if b == nil {
+		return nil
+	}
+	step, err := StepFromLabel(key, head, 1)
+	if err != nil {
+		return nil //nolint:nilerr // the label's own check reports it
+	}
+	chord, _, symbol, err := chordOfStep(key, step)
+	if err != nil {
+		return nil //nolint:nilerr // the label's own check reports it
+	}
+	root := symbol[0]
+	bassName := key.spellDegree(b.Degree, b.Accidental)
+	bassPC := b.pitchClass(key)
+	for _, iv := range chord.Quality.Intervals() {
+		tone := chord.Root.Add(iv)
+		letter := letters[(slices.Index(letters, root)+genericStep(chord.Quality, iv))%7]
+		if bassName[0] != letter || tone.Normalize() == bassPC.Normalize() {
+			continue
+		}
+		want := int(tone.Normalize()) - int(key.Scale()[b.Degree-1].Normalize())
+		want = ((want+6)%12+12)%12 - 6
+		fix := Bass{Degree: b.Degree, Accidental: want}
+		return fmt.Errorf("music: %q: the bass %s in %s is a semitone from the chord's own %s; write \"%s%s\" to stand on %s",
+			label, bassName, key, spell(letter, tone), head, fix.suffix(), spell(letter, tone))
+	}
+	return nil
+}
+
+// genericStep is how many letters a chord tone lies above the root: the
+// third two, the fifth four, the seventh six; a sus4's fourth three and a
+// sixth chord's sixth five.
+func genericStep(q ChordQuality, semitones int) int {
+	switch semitones {
+	case 0:
+		return 0
+	case 3, 4:
+		return 2
+	case 5:
+		return 3
+	case 6, 7, 8:
+		return 4
+	case 9:
+		if q == Diminished7 {
+			return 6
+		}
+		return 5
+	}
+	return 6
 }

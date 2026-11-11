@@ -183,3 +183,38 @@ func TestBassClash(t *testing.T) {
 		}
 	}
 }
+
+// TestBassCrossesChord (BL-302, #451): a bass on a chord note's letter but
+// a semitone off it is the model's slip and is refused with the fix; a
+// bass on another letter is a line and passes.
+func TestBassCrossesChord(t *testing.T) {
+	aMinor, cMajor := Key{Tonic: A, Mode: Minor}, Key{Tonic: C, Mode: Major}
+	for _, tt := range []struct {
+		key   Key
+		label string
+		want  string // "" passes
+	}{
+		{aMinor, "V7/7", `write "V7/#7" to stand on G#`},
+		{aMinor, "V/#7", ""},
+		{aMinor, "i/7", ""},
+		{aMinor, "i/#7", ""},
+		{aMinor, "i/#6", ""},
+		{aMinor, "iv/6", ""},
+		{cMajor, "I/7", ""},
+		{cMajor, "I/3", ""},
+		{cMajor, "IV/1", ""},
+		{cMajor, "V7/V/#4", ""},
+		{cMajor, "V/4", ""}, // G/F: F is the seventh's letter, but G has no seventh here
+		{cMajor, "V7/b7", `write "V7/7" to stand on B`},
+		{cMajor, "I", ""},
+		{cMajor, "nonsense/3", ""},
+	} {
+		err := BassCrossesChord(tt.key, tt.label)
+		switch {
+		case tt.want == "" && err != nil:
+			t.Errorf("%s %s: unexpected %v", tt.key, tt.label, err)
+		case tt.want != "" && (err == nil || !strings.Contains(err.Error(), tt.want)):
+			t.Errorf("%s %s: got %v, want %q", tt.key, tt.label, err, tt.want)
+		}
+	}
+}

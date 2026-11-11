@@ -266,6 +266,21 @@ func TestBassOnAnotherDegreeIsRejectedWithTheFix(t *testing.T) {
 	}
 }
 
+// TestBassOffTheChordsOwnNoteIsRejectedWithTheFix (BL-302, #451): A
+// minor's "V7/7" puts G under E7, whose third is G#; the model meant G#.
+func TestBassOffTheChordsOwnNoteIsRejectedWithTheFix(t *testing.T) {
+	in := valid() // A minor
+	in.Candidates[0].Progression = []string{"i", "i/#7", "i/7", "i/#6", "iv/6", "V7/7"}
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), `progression[5]: music: "V7/7": the bass G in A minor is a semitone from the chord's own G#; write "V7/#7"`) {
+		t.Fatalf("want the slip reported with its fix, got %v", err)
+	}
+	in.Candidates[0].Progression[5] = "V7/#7"
+	if err := in.Validate(); err != nil {
+		t.Fatalf("E7 over G# is valid: %v", err)
+	}
+}
+
 func TestLabelsThatTheKeyWouldChangeAreRejectedWithTheFix(t *testing.T) {
 	in := valid() // A minor
 	in.Candidates[0].Progression = []string{"i", "II", "V"}
