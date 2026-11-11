@@ -184,3 +184,34 @@ func TestWaltzFillSaysWhatItPlays(t *testing.T) {
 		t.Errorf("4/4 fill text lost its tom round: %s", e)
 	}
 }
+
+// TestSwingSaysWhatItDoesToSixteenths (#404 S8): a swing of eighths over
+// sixteenths says they go long, long, short, short, and a chord pushed a
+// sixteenth says it comes in just before the beat; eighths alone say
+// neither.
+func TestSwingSaysWhatItDoesToSixteenths(t *testing.T) {
+	tl := soundAuditTimeline(t, 4, "I", "IV", "V", "I")
+	feel := func(tl music.Timeline, drums string) string {
+		out, err := Render(tl, Choice{Accompaniment: "pulse", Drums: drums, Feel: FeelSwing})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.Rhythm.Feel.Explanation
+	}
+	if e := feel(tl, "sixteen-beat"); !strings.Contains(e, "16 分の音も") {
+		t.Errorf("a swing over sixteenths does not say what it does to them: %s", e)
+	}
+	if e := feel(tl, "eight-beat"); strings.Contains(e, "16 分") {
+		t.Errorf("a swing over eighths speaks of sixteenths: %s", e)
+	}
+	key := music.Key{Tonic: music.C, Mode: music.Major}
+	pushed, err := music.FromProgression(key, music.Progression{
+		{Degree: 1, Beats: 4}, {Degree: 4, Beats: 4, Push: music.PushSixteenth},
+	}, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := feel(pushed, "eight-beat"); !strings.Contains(e, "拍のすぐ手前") {
+		t.Errorf("a sixteenth push under a swing is not said to land before the beat: %s", e)
+	}
+}
