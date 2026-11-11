@@ -6,7 +6,7 @@
       "description": "歌ものの土台。8 ビートや 4 分刻みで拍をはっきりさせる。",
       "accompaniments": ["pulse", "ballad", "arpeggio", "strum", "waltz", "arpeggio-3", "rocking-6", "arpeggio-6", "strum-16"],
       "drums": ["eight-beat", "ballad", "waltz", "six-eight", "sixteen-beat"],
-      "feels": ["straight", "swing", "shuffle"]
+      "feels": ["straight", "swing", "shuffle", "swing-16"]
     },
     {
       "id": "ballad",
@@ -73,7 +73,7 @@
       "description": "軽く跳ねるハーフタイムのビートの上で、エレクトリック・ピアノが 9 度を足した和音をゆったり鳴らす、ローファイ・ヒップホップ。",
       "accompaniments": ["ballad", "arpeggio"],
       "drums": ["lofi", "ballad"],
-      "feels": ["swing", "straight"],
+      "feels": ["swing", "straight", "swing-16"],
       "program": 4,
       "instrument": "エレクトリック・ピアノ",
       "tensions": {

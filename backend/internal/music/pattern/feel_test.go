@@ -193,3 +193,34 @@ func TestShuffle(t *testing.T) {
 		t.Errorf("6/8 shuffle: %v", err)
 	}
 }
+
+// TestSwing16 (BL-243, ADR-0060): the sixteenth swing delays the second
+// sixteenth of each pair to about 57 % at any tempo, leaves the eighths
+// where they are, says so, and is refused in 6/8 like swing.
+func TestSwing16(t *testing.T) {
+	for _, bpm := range []float64{70, 160} {
+		tl := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 4, 1)
+		tl.TempoBPM = bpm
+		out, err := Render(tl, Choice{Accompaniment: "strum", Drums: "sixteen-beat", Feel: FeelSwing16})
+		if err != nil {
+			t.Fatal(err)
+		}
+		f := out.Rhythm.Feel
+		if f == nil || f.ID != "swing-16" || f.Ratio != 1.3 || f.Unit != "sixteenth" || !strings.Contains(f.Explanation, "57 %") {
+			t.Fatalf("%v BPM: feel %+v", bpm, f)
+		}
+		// The second sixteenth (120) moves to 136; the and (240) stays.
+		starts := map[music.Tick]bool{}
+		for _, n := range out.Tracks[1].Notes {
+			starts[n.Start] = true
+		}
+		if !starts[136] || starts[120] || !starts[240] {
+			t.Errorf("%v BPM: hi-hat starts in the first beat: 120 %v, 136 %v, 240 %v", bpm, starts[120], starts[136], starts[240])
+		}
+	}
+	six := progression(t, music.Key{Tonic: music.C, Mode: music.Major}, 2, 1)
+	six.TimeSignature = music.SixEight
+	if _, err := Render(six, Choice{Accompaniment: "rocking-6", Feel: FeelSwing16}); err == nil || !strings.Contains(err.Error(), "swing-16 is for simple meters") {
+		t.Errorf("6/8 swing-16: %v", err)
+	}
+}

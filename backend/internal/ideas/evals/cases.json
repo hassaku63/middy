@@ -25,6 +25,7 @@
     {"id": "minor-cliche", "tags": ["slash"], "image": "映画の切ない場面。短調の和音が鳴り続ける下で、ベースだけが半音ずつ下がっていく", "mode": "minor", "wants": ["i/7", "i/b7"]},
     {"id": "swing-jazz", "tags": ["style", "groove", "chords"], "image": "夜のクラブのスウィング・ジャズ。ピアノトリオが 4 ビートで軽快に", "mode": "either", "feel": "swing", "drums": "jazz-ride", "style": "jazz", "wants": ["bII7"]},
     {"id": "shuffle-walk", "tags": ["groove", "chords"], "image": "スキップしたくなるような、跳ねるリズムの散歩", "mode": "either", "feel": "swing/shuffle", "wants": ["VI7", "III7"]},
+    {"id": "lofi-hiphop", "tags": ["style", "groove"], "image": "雨の夜に流しっぱなしにする、少しよれたビートのローファイ・ヒップホップ", "mode": "either", "tempoMax": 100, "feel": "swing-16"},
     {"id": "celtic-reel", "tags": ["style", "groove", "mode"], "image": "アイルランドのパブで演奏されるケルトのリール。フィドルが跳ね回る", "mode": "major/dorian/mixolydian", "modeInAny": "dorian/mixolydian", "tempoMin": 100, "style": "celtic"},
     {"id": "blues-shuffle", "tags": ["style", "groove", "chords"], "image": "煙たいバーで鳴るスロー・ブルース", "mode": "either", "tempoMax": 100, "wants": ["I7", "IV7"]},
     {"id": "slow-blues", "tags": ["meter", "style", "groove"], "image": "夜更けのバーで、3 連で重く揺れるスロー・ブルース", "mode": "either", "tempoMax": 80, "wants": ["I7", "IV7"]},

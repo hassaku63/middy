@@ -1713,6 +1713,11 @@
       "id": "shuffle",
       "name": "シャッフル",
       "description": "8 分音符を 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。ブルースやロックの「タッカ・タッカ」と跳ねる揺れ。"
+    },
+    {
+      "id": "swing-16",
+      "name": "16 分のスウィング",
+      "description": "16 分音符を長・短でわずかに跳ねさせる（長・短がおよそ 1.3 : 1、組の 57 %）。跳ねるとは聞こえない程度にノリがほどける。ヒップホップやローファイのビートの揺れ。"
     }
   ],
   "styles": [
@@ -1741,7 +1746,8 @@
       "feels": [
         "straight",
         "swing",
-        "shuffle"
+        "shuffle",
+        "swing-16"
       ],
       "grooves": [
         {
@@ -2097,7 +2103,8 @@
       ],
       "feels": [
         "swing",
-        "straight"
+        "straight",
+        "swing-16"
       ],
       "program": 4,
       "instrument": "エレクトリック・ピアノ",
