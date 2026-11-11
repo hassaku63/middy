@@ -113,6 +113,22 @@ main {
   .app__below > .explanation--frame {
     order: -1;
   }
+
+  /* The chord's frame and the whole example's notes stop at what they
+     hold, the map and 40 characters of text, instead of stretching across
+     a wide stage with the right half empty (#419). Both take the same
+     width, so their right edges line up above and below the timeline;
+     the width is fixed, so the frame does not resize from chord to chord. */
+  .app__below > .explanation {
+    box-sizing: border-box;
+    width: min(100%, var(--explanation-width));
+  }
+}
+
+.app__stage {
+  /* The map's column, the gap, 40 characters and the frame's padding and
+     edge (ExplanationPanel.css). */
+  --explanation-width: calc(22rem + 20px + 40em + 32px + 4px);
 }
 
 .app__toolbar {

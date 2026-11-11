@@ -202,12 +202,12 @@
     gap: 20px;
   }
 
+  /* The map takes a column of its own width, the same whatever the key's
+     layout (flow, roles or degrees), so the frame's width is known
+     (global.css, #419). */
   .explanation--frame > .degree-map {
-    flex: 0 0 auto;
-  }
-
-  .explanation--frame > .degree-map:not(.degree-map--flow) {
-    flex-basis: 24rem;
+    flex: 0 0 22rem;
+    min-width: 0;
   }
 
   .explanation__chord {
