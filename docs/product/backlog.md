@@ -17,7 +17,7 @@
 
 | ID | スライス | 受け入れ条件 | サイズ | 依存 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| BL-274 | CI の image のジョブで BuildKit の build checks を走らせる（#408 の 4） | `docker build --check` が警告で落ちる。hadolint は残す。`docs/dev/harness.md` を更新 | S | — | Ready |
+| BL-274 | CI の image のジョブで BuildKit の build checks を走らせる（#408 の 4） | `docker build --check` が警告で落ちる。hadolint は残す。`docs/dev/harness.md` を更新 | S | BL-275（build checks は Dockerfile の構文 1.8 以降の機能で、今の `1.7` では動かない） | 待ち |
 | BL-275 | Dockerfile の `syntax` の版を決めどおりにする（#408 の 2） | 所有者の決定どおり。必要なら ADR | S | #408 の判断 | 待ち |
 
 ## Next
