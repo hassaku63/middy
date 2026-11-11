@@ -192,7 +192,7 @@ func parseRomanNumeral(s string) (degree int, seventh bool, upper bool, err erro
 	lower := strings.ToLower(label)
 
 	// Longest suffixes first so that "maj7" is not read as "7".
-	for _, suf := range []string{"7sus4", "sus4", "maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug", "5"} {
+	for _, suf := range []string{"7sus4", "sus4", "sus2", "maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug", "5"} {
 		if strings.HasSuffix(lower, suf) {
 			lower = strings.TrimSuffix(lower, suf)
 			seventh = strings.Contains(suf, "7")
@@ -301,11 +301,12 @@ func suffixAllows(suffix string, seventh bool, q ChordQuality) bool {
 var suffixQuality = map[string]ChordQuality{
 	"maj7": Major7, "m7": Minor7, "ø7": HalfDiminished7, "m7b5": HalfDiminished7, "m6": MinorSixth,
 	"°": DiminishedTriad, "dim": DiminishedTriad, "+": AugmentedTriad, "aug": AugmentedTriad,
-	"sus4": Sus4, "7sus4": Dominant7Sus4, "5": Power,
+	"sus4": Sus4, "7sus4": Dominant7Sus4, "sus2": Sus2, "5": Power,
 }
 
 // Open chords (BL-132, ADR-0025): sus4 and 7sus4 sound the fourth in place
-// of the third, and the power chord (5) sounds the root and fifth only.
+// of the third, sus2 the second (BL-309, ADR-0062), and the power chord (5)
+// sounds the root and fifth only.
 // Without a third they are neither major nor minor, so the numeral's case
 // does not matter: it is written uppercase (Vsus4, I5). They are allowed on
 // a degree whose notes all lie in the key; a power chord may also stand on
@@ -318,6 +319,8 @@ func openQuality(suffix string) (ChordQuality, bool) {
 		return Sus4, true
 	case "7sus4":
 		return Dominant7Sus4, true
+	case "sus2":
+		return Sus2, true
 	case "5":
 		return Power, true
 	}
@@ -326,7 +329,7 @@ func openQuality(suffix string) (ChordQuality, bool) {
 
 // isOpen reports a chord without a third: a suspended or power chord.
 func (q ChordQuality) isOpen() bool {
-	return q == Sus4 || q == Dominant7Sus4 || q == Power
+	return q == Sus4 || q == Dominant7Sus4 || q == Sus2 || q == Power
 }
 
 // openStep checks an open chord's notes against the key (or, for a power
@@ -369,7 +372,7 @@ func parseLabel(s string) (degree int, seventh bool, upper bool, suffix string, 
 		accidental = 1
 	}
 	lower := strings.ToLower(trimmed)
-	for _, suf := range []string{"7sus4", "sus4", "maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug", "5"} {
+	for _, suf := range []string{"7sus4", "sus4", "sus2", "maj7", "ø7", "m7b5", "m7", "m6", "°7", "o7", "dim7", "7", "°", "dim", "+", "aug", "5"} {
 		if strings.HasSuffix(lower, suf) {
 			suffix = suf
 			break

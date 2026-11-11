@@ -30,6 +30,7 @@ const QUALITY_SUFFIX: Record<ChordQuality, string> = {
   sus4: 'sus4',
   dom7sus4: '7sus4',
   power: '5',
+  sus2: 'sus2',
 };
 
 /**

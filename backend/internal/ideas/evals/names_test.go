@@ -47,6 +47,7 @@ func TestUnplayedNames(t *testing.T) {
 	}{
 		{"a wrong substitute", "Dmaj7 から Eb7（subV7/ii）が半音で Em7 へ下りる。", bossa, []string{"Eb7"}},
 		{"names it plays", "Dmaj7 から F7 を経て Em7 へ、A7 で戻る。", bossa, nil},
+		{"a sus2 it plays (BL-309)", "Csus2 の開いた響きから C へ。", []music.HarmonyEvent{chord(music.C, music.Sus2, "Csus2"), chord(music.C, music.MajorTriad, "C")}, nil},
 		{"an enharmonic spelling of a chord it plays", "Em7 の前で D#7 が鳴る。", []music.HarmonyEvent{chord(music.Ds, music.Dominant7, "Eb7"), chord(music.E, music.Minor7, "Em7")}, nil},
 		{"a major for a minor in a run", "Am–G–F–E と下りるアンダルシア終止。", andalusian, []string{"E"}},
 		{"a key name", "A minor の切なさと、E♭ メジャーの明るさ。", andalusian, nil},

@@ -25,6 +25,7 @@ const (
 	Sus4        // the fourth in place of the third (BL-132)
 	Dominant7Sus4
 	Power // root and fifth only, no third (BL-132)
+	Sus2  // the second in place of the third (BL-309)
 )
 
 type qualityInfo struct {
@@ -48,6 +49,7 @@ var qualities = map[ChordQuality]qualityInfo{
 	Sus4:            {"sus4", "sus4", []int{0, 5, 7}, true},
 	Dominant7Sus4:   {"dom7sus4", "7sus4", []int{0, 5, 7, 10}, true},
 	Power:           {"power", "5", []int{0, 7}, true},
+	Sus2:            {"sus2", "sus2", []int{0, 2, 7}, true},
 }
 
 // Qualities lists every chord quality the engine knows, in declaration
@@ -236,6 +238,7 @@ var numeralSuffix = map[ChordQuality]string{
 	Sus4:            "sus4",
 	Dominant7Sus4:   "7sus4",
 	Power:           "5",
+	Sus2:            "sus2",
 }
 
 func toLowerASCII(s string) string {

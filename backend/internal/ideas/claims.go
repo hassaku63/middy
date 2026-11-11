@@ -23,7 +23,7 @@ import (
 // optional "sub", accidental, numeral, decoration, seventh or open-chord
 // suffix, and an optional "/x" target. It is matched only where ASCII
 // letters do not continue it on either side (see labelsIn).
-var numeralPattern = regexp.MustCompile(`(?:sub)?(?:b|♭|#|♯)?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:°|ø|o)?(?:maj7|m7b5|ø7|°7|7sus4|sus4|m6|7|5)?(?:/(?:b|♭|#|♯)?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i))?`)
+var numeralPattern = regexp.MustCompile(`(?:sub)?(?:b|♭|#|♯)?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:°|ø|o)?(?:maj7|m7b5|ø7|°7|7sus4|sus4|sus2|m6|7|5)?(?:/(?:b|♭|#|♯)?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i))?`)
 
 // bracketed is what a numeral is followed by in brackets: "（F7）",
 // "(Bb7)", or the names of a whole run of numerals, "I–V–vi–IV（D–A–Bm–G）".

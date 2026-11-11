@@ -37,6 +37,7 @@
 | 裏コード (Tritone substitution) | V7 の代わりに置く、根音が三全音離れた属七。3 度と 7 度が同じなので同じように解決し、根音が半音上から降りる。middy では `subV7/x` と書く（C major の `subV7/I` は D♭7） | `music.Step.Substitute` |
 | パッシング・ディミニッシュ (Passing diminished) | 半音ずつ上がるベースの途中に置く減七。次の和音の導音の上に積み、そこへ半音で解決する。middy では `vii°7/x` と書く（C major の I – `vii°7/ii` – ii は C – C#°7 – Dm） | `music.Step.LeadingTone` |
 | 掛留（sus4） (Suspension) | 3 度の代わりに 4 度を鳴らす和音。長調とも短調とも決まらない響きで、4 度が 3 度へ下がって解決することが多い。middy では `Vsus4`、`V7sus4` と書く | `music.Sus4` |
+| sus2 | 3 度の代わりに 2 度を鳴らす和音。長調とも短調とも決まらない、澄んで開いた響き。sus4 と違い、解決を求めない。middy では `Isus2` と書き、テンションは足さない | `music.Sus2` |
 | パワーコード (Power chord) | 3 度を抜き、根音と 5 度だけを鳴らす和音。ロックのギターに多い。middy では `I5`、`bVII5` と書く | `music.Power` |
 | フィル (Fill) | フレーズの終わりで、ドラムがいつもの型を崩して次へつなぐ短い連打。middy は 4 小節ごとに入れる | `pattern.fillHits` |
 | 押し (Push, anticipation) | 和音を拍の頭より 8 分か 16 分早く弾き、そのまま次の小節へつなぐこと。和音は元の拍に属したまま、音だけが前に出る | `music.Push`, `PushNotes`, `HarmonyEvent.Push` |

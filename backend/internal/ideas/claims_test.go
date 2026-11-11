@@ -164,10 +164,10 @@ func TestClaimsStillContradictedAfterTheRetryAreDropped(t *testing.T) {
 
 func TestLabelsInSkipsWordsAndKeepsNumerals(t *testing.T) {
 	var got []string
-	for _, m := range labelsIn("Vm7 と Ivy、IVmaj7→V7/vi→vi7、subV7/vi（Bb7）、bVII と V7sus4") {
+	for _, m := range labelsIn("Vm7 と Ivy、IVmaj7→V7/vi→vi7、subV7/vi（Bb7）、bVII と V7sus4、Isus2") {
 		got = append(got, m.label)
 	}
-	want := []string{"IVmaj7", "V7/vi", "vi7", "subV7/vi", "bVII", "V7sus4"}
+	want := []string{"IVmaj7", "V7/vi", "vi7", "subV7/vi", "bVII", "V7sus4", "Isus2"}
 	if strings.Join(got, " ") != strings.Join(want, " ") {
 		t.Errorf("labelsIn = %v, want %v", got, want)
 	}

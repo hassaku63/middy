@@ -358,7 +358,8 @@ export interface components {
       | 'dim7'
       | 'sus4'
       | 'dom7sus4'
-      | 'power';
+      | 'power'
+      | 'sus2';
     Chord: {
       root: components['schemas']['PitchClass'];
       quality: components['schemas']['ChordQuality'];
