@@ -144,3 +144,21 @@ func TestShortChordsSound(t *testing.T) {
 		t.Errorf("whole-bar chords are said to be short: %s", e)
 	}
 }
+
+// TestWalkKeepsWalking (#404 S7): over a two-bar chord the walking bass
+// goes up the chord and back down instead of repeating its top note, and
+// stays under the chords (C4).
+func TestWalkKeepsWalking(t *testing.T) {
+	tl := soundAuditTimeline(t, 8, "Imaj7", "ii7")
+	for i := range tl.Harmony {
+		line := walkLine(tl.Harmony, i, 8)
+		for k, p := range line {
+			if p >= 60 {
+				t.Errorf("the walk under %s reaches the chords: %v", tl.Harmony[i].RomanNumeral, line)
+			}
+			if k >= 2 && p == line[k-1] && p == line[k-2] {
+				t.Errorf("the walk under %s repeats a note three times: %v", tl.Harmony[i].RomanNumeral, line)
+			}
+		}
+	}
+}
