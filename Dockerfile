@@ -34,7 +34,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 # The image renders deploy/nginx/templates into conf.d at start from PORT and
 # API_UPSTREAM (a URL, e.g. http://api:8081) and RESOLVER (the DNS that
 # resolves it). It runs as a non-root user.
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS web
+FROM nginxinc/nginx-unprivileged:1.30-alpine AS web
 COPY --from=frontend /src/frontend/dist /usr/share/nginx/html
 COPY deploy/nginx/templates/ /etc/nginx/templates/
 COPY deploy/nginx/snippets/ /etc/nginx/snippets/
