@@ -10,6 +10,23 @@ describe('midiToHz', () => {
 });
 
 describe('drumVoice', () => {
+  it('voices the metals apart, as the lanes name them (#404 S4)', () => {
+    const metal = (pitch: number) => {
+      const v = drumVoice(pitch);
+      if (v.kind !== 'hat') throw new Error(`${pitch} is not a metal`);
+      return v;
+    };
+    const closed = metal(42);
+    expect(metal(49).length).toBeGreaterThan(1); // the crash rings
+    expect(metal(46).length).toBeGreaterThan(closed.length * 3); // the open hat rings on
+    expect(metal(44).dark).toBe(true); // the foot's hat is dull
+    expect(metal(44).length).toBeLessThanOrEqual(closed.length);
+    expect(metal(51).ping).toBeGreaterThan(0); // the ride pings
+    expect(metal(53).ping).toBeGreaterThan(0); // and its bell
+    expect(metal(51)).not.toEqual(closed);
+    expect(metal(81)).toEqual(closed); // anything else: a closed hat
+  });
+
   it('voices the bodhrán-like strokes as drums, not as hats', () => {
     expect(drumVoice(45).kind).toBe('tom'); // low tom: the accents on 1 and 3
     expect(drumVoice(47).kind).toBe('tom'); // low-mid tom: the light eighths

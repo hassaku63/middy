@@ -15,13 +15,51 @@ export type DrumVoice =
   | { kind: 'tom'; startHz: number; endHz: number }
   | { kind: 'stick' }
   | { kind: 'snare' }
-  | { kind: 'hat' };
+  | Metal;
+
+/**
+ * A hi-hat or a cymbal: filtered noise of some length, with the bell's
+ * ping for a ride. Not realistic; enough to tell the lanes apart by ear.
+ */
+export type Metal = {
+  kind: 'hat';
+  /** Seconds the noise rings. */
+  length: number;
+  /** Filter frequency (Hz): high-pass, or band-pass when dark. */
+  cutoff: number;
+  /** Level against a full-velocity hit. */
+  level: number;
+  /** A duller, band-passed noise (the foot's closed hi-hat). */
+  dark?: boolean;
+  /** The pitch (Hz) of a ride's ping under the noise. */
+  ping?: number;
+};
+
+const CLOSED_HAT: Metal = { kind: 'hat', length: 0.06, cutoff: 7000, level: 0.35 };
+
+/**
+ * The metals by GM note (#404 S4): the lanes and the rhythm notes name the
+ * crash, the open and the foot's hi-hat and the ride apart, so they sound
+ * apart too: the crash rings long, the open hat rings on, the foot's is
+ * short and dull, the ride rings with a ping and its bell pings louder.
+ */
+const METALS: Record<number, Metal> = {
+  42: CLOSED_HAT,
+  44: { kind: 'hat', length: 0.05, cutoff: 3500, level: 0.25, dark: true },
+  46: { kind: 'hat', length: 0.35, cutoff: 6500, level: 0.3 },
+  49: { kind: 'hat', length: 1.5, cutoff: 4500, level: 0.4 },
+  57: { kind: 'hat', length: 1.5, cutoff: 4500, level: 0.4 },
+  51: { kind: 'hat', length: 0.45, cutoff: 8000, level: 0.2, ping: 3200 },
+  59: { kind: 'hat', length: 0.45, cutoff: 8000, level: 0.2, ping: 3200 },
+  53: { kind: 'hat', length: 0.5, cutoff: 6000, level: 0.15, ping: 2300 },
+};
 
 /**
  * The voice for a GM drum note: kicks and toms are pitched membranes (a
  * sine that drops), the side stick a short click, the snare a noise burst
- * with a tone, and everything else a short bright noise (hats, bells). The
- * toms carry the bodhrán-like pattern, so they must not sound like hats.
+ * with a tone, and the hi-hats and cymbals filtered noise of their own
+ * length (METALS; any other note, a closed hi-hat). The toms carry the
+ * bodhrán-like pattern, so they must not sound like hats.
  */
 export function drumVoice(pitch: number): DrumVoice {
   if (pitch === 35 || pitch === 36) return { kind: 'kick' };
@@ -32,7 +70,7 @@ export function drumVoice(pitch: number): DrumVoice {
     const startHz = 80 + (pitch - 41) * 14;
     return { kind: 'tom', startHz, endHz: startHz * 0.6 };
   }
-  return { kind: 'hat' };
+  return METALS[pitch] ?? CLOSED_HAT;
 }
 
 /** The instrument families the synth tells apart (BL-110); not a realistic rendering. */
@@ -219,8 +257,36 @@ export class WebAudioSynth implements Synth {
         this.click(gain, time, level);
         return;
       case 'snare':
+        this.snare(gain, time, level);
+        return;
       case 'hat':
-        this.noiseHit(gain, time, level, voice.kind === 'snare');
+        this.metal(gain, time, level, voice);
+    }
+  }
+
+  /** A hi-hat or a cymbal (Metal): filtered noise, and a ride's ping. */
+  private metal(gain: GainNode, time: number, level: number, m: Metal): void {
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noise();
+    src.loop = m.length > 0.9; // the buffer is one second of noise
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = m.dark ? 'bandpass' : 'highpass';
+    filter.frequency.value = m.cutoff;
+    gain.gain.setValueAtTime(level * m.level, time);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + m.length);
+    src.connect(filter).connect(gain);
+    src.start(time);
+    src.stop(time + m.length + 0.02);
+    if (m.ping) {
+      const ping = this.ctx.createOscillator();
+      const pingGain = this.drumGain(time);
+      ping.type = 'sine';
+      ping.frequency.setValueAtTime(m.ping, time);
+      pingGain.gain.setValueAtTime(level * m.level * 0.8, time);
+      pingGain.gain.exponentialRampToValueAtTime(0.0001, time + m.length);
+      ping.connect(pingGain);
+      ping.start(time);
+      ping.stop(time + m.length + 0.02);
     }
   }
 
@@ -256,30 +322,28 @@ export class WebAudioSynth implements Synth {
     osc.stop(time + 0.06);
   }
 
-  /** A snare (band-passed noise and a tone) or a hat (short high-passed noise). */
-  private noiseHit(gain: GainNode, time: number, level: number, isSnare: boolean): void {
-    const length = isSnare ? 0.18 : 0.06;
+  /** A snare: band-passed noise and a tone. */
+  private snare(gain: GainNode, time: number, level: number): void {
+    const length = 0.18;
     const src = this.ctx.createBufferSource();
     src.buffer = this.noise();
     const filter = this.ctx.createBiquadFilter();
-    filter.type = isSnare ? 'bandpass' : 'highpass';
-    filter.frequency.value = isSnare ? 1800 : 7000;
-    gain.gain.setValueAtTime(level * (isSnare ? 0.8 : 0.35), time);
+    filter.type = 'bandpass';
+    filter.frequency.value = 1800;
+    gain.gain.setValueAtTime(level * 0.8, time);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + length);
     src.connect(filter).connect(gain);
     src.start(time);
     src.stop(time + length + 0.02);
-    if (isSnare) {
-      const tone = this.ctx.createOscillator();
-      const toneGain = this.drumGain(time);
-      tone.type = 'triangle';
-      tone.frequency.setValueAtTime(190, time);
-      toneGain.gain.setValueAtTime(level * 0.4, time);
-      toneGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
-      tone.connect(toneGain);
-      tone.start(time);
-      tone.stop(time + 0.12);
-    }
+    const tone = this.ctx.createOscillator();
+    const toneGain = this.drumGain(time);
+    tone.type = 'triangle';
+    tone.frequency.setValueAtTime(190, time);
+    toneGain.gain.setValueAtTime(level * 0.4, time);
+    toneGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
+    tone.connect(toneGain);
+    tone.start(time);
+    tone.stop(time + 0.12);
   }
 
   /** Drum gains, kept so 停止 can silence hits already scheduled ahead. */
