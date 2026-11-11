@@ -23,7 +23,7 @@ for (const path of ['/']) {
     await result.getByRole('listbox', { name: 'コード' }).getByRole('option').nth(1).click();
     await Promise.all([
       page.waitForEvent('download'),
-      page.getByRole('button', { name: 'MIDI を保存' }).click(),
+      page.getByRole('button', { name: 'MIDI 書き出し' }).click(),
     ]);
     expect(violations).toEqual([]);
   });

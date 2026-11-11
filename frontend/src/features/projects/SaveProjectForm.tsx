@@ -6,45 +6,29 @@ import './projects.css';
 
 type Props = {
   projects: Projects;
-  /** The open example; the form exists only while one is open (BL-060). */
+  /** The open example; the button exists only while one is open (BL-060). */
   current: { timeline: Timeline; source: ProjectSource };
 };
 
-/** Saves the open example under a name. Follows 再生 in the result toolbar. */
+/**
+ * Saves the open example in one click, under the candidate's title (#440):
+ * the name is given, not asked for. Follows 再生 in the result toolbar.
+ */
 export function SaveProjectForm({ projects, current }: Props) {
-  const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     setSaving(true);
     try {
-      // Keep the name when the store refused, so the user can try again.
-      if (await projects.save(name, current.timeline, current.source)) setName('');
+      await projects.save('', current.timeline, current.source);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <form
-      className="projects__save"
-      aria-label="この例を保存"
-      onSubmit={(e) => {
-        e.preventDefault();
-        void save();
-      }}
-    >
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="名前（空なら自動）"
-        aria-label="例の名前"
-        disabled={saving}
-      />
-      <button type="submit" disabled={saving}>
-        保存
-      </button>
-    </form>
+    <button type="button" className="projects__save" onClick={() => void save()} disabled={saving}>
+      保存
+    </button>
   );
 }

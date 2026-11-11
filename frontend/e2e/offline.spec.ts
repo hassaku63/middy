@@ -18,7 +18,6 @@ test('a saved project opens offline', async ({ page, context }) => {
     .toBe(true);
 
   await openExample(page, '晴れた朝', '朝の光'); // C major, I - V7/vi - vi - IV
-  await page.getByLabel('例の名前').fill('オフライン用');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(page.getByText('保存した例（1）')).toBeVisible();
 
