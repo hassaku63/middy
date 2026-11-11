@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
-import { BAR_WIDTH, LABEL_WIDTH, computeLayout, type Layout } from './layout';
+import { BAR_WIDTH, computeLayout, type Layout } from './layout';
 import { useTimelineScroll } from './useTimelineScroll';
 import './TimelineOverview.css';
 
@@ -37,7 +37,7 @@ export function TimelineOverview(props: Props) {
   if (!long) return <TimelineView {...props} />;
   // The box shows four bars across its width, unless the height cap
   // (ADR-0041) makes the drawing smaller.
-  const fourBars = geometry.height / (LABEL_WIDTH + BARS_PER_VIEW * BAR_WIDTH);
+  const fourBars = geometry.height / (geometry.labelWidth + BARS_PER_VIEW * BAR_WIDTH);
   return (
     <div className="timeline-overview">
       <div
