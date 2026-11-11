@@ -68,6 +68,17 @@ make check
 - コメントの見出しのコミット（`評価の結果（abc1234、…）`）が PR の最新のコミットか確かめる。push の直後にラベルを付けると、ひとつ前のコミットで走ることがある。違っていたら、ラベルを付け直す。
 - `.github/workflows/eval.yml` を変える PR は、所有者が確認してからマージする（鍵を渡すステップを決めるファイルなので）。
 
+会話をまたいだ答え（長さ・sus4・テンションが鳴ったか・文がテンションを主張するか）は、評価とは別に `backend/cmd/converse` で測る（#453）。所有者の手元で、実 API の鍵を持つサーバーに対して走らせる。CI には入れない。
+
+```bash
+make dev-backend   # 実 API で動かすときは、手元の環境で LLM の設定をしてから
+cd backend
+go run ./cmd/converse collect -base http://localhost:8080 -turns cmd/converse/turns-447.json -runs 3 -out converse-out
+go run ./cmd/converse report converse-out/*.json
+```
+
+送る履歴は画面と同じ形（利用者の文と、答えの要約）。画面の履歴の作り方を変えたら、`conversation` も合わせる。
+
 ### 5. ドキュメントを更新する
 
 | 変更したもの | 更新するもの |

@@ -39,6 +39,7 @@
 
 ```
 cmd/server          配線のみ（config → deps → http.Server）
+cmd/converse        会話をまたいだ答えの計測（所有者の手元で。CI には入れない。#453）
 internal/httpapi    HTTP 境界。decode / validate / encode。ビジネスロジック禁止
 internal/ideas      アプリケーションサービス（S2）: 会話 → LLM → intent → music。1 回だけ再試行
 internal/music      ドメイン。純粋関数、標準ライブラリのみ、I/O なし
