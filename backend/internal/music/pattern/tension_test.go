@@ -252,3 +252,73 @@ func TestRequestedTensions(t *testing.T) {
 		t.Errorf("unknown colour: %v", err)
 	}
 }
+
+// TestTensionTextFollowsTheNotes (BL-306, #449): the notes name a tension
+// exactly when one sounds, for every accompaniment and chord length. A
+// one-beat lo-fi ballad strikes its coloured chord, so its ninths sound
+// and the notes now say so; a bossa arpeggio over two-beat sevenths plays
+// none, and says none.
+func TestTensionTextFollowsTheNotes(t *testing.T) {
+	key := music.Key{Tonic: music.F, Mode: music.Major}
+	for _, st := range Styles() {
+		if st.Tensions == nil {
+			continue
+		}
+		for _, acc := range st.Accompaniments {
+			for _, beats := range []int{1, 2, 4} {
+				var prog music.Progression
+				for _, l := range []string{"Imaj7", "vi7", "ii7", "V7"} {
+					s, err := music.StepFromLabel(key, l, beats)
+					if err != nil {
+						t.Fatal(err)
+					}
+					prog = append(prog, s)
+				}
+				tl, err := music.FromProgression(key, prog, 90)
+				if err != nil {
+					t.Fatal(err)
+				}
+				out, err := Render(tl, Choice{Accompaniment: acc, Style: st.ID})
+				if err != nil {
+					continue // a pattern the meter or the length does not take
+				}
+				said := out.Rhythm != nil && out.Rhythm.Style != nil && out.Rhythm.Style.Tensions != ""
+				heard := false
+				for _, h := range out.Harmony {
+					if len(sounding(out, h, tensionsOf(st.tensions(), key, h))) > 0 {
+						heard = true
+					}
+				}
+				if said != heard {
+					t.Errorf("%s %s %d beats: the notes say %v, the tracks sound %v", st.ID, acc, beats, said, heard)
+				}
+			}
+		}
+	}
+}
+
+// TestLofiBalladOneBeatNamesItsNinths (BL-306): the case the old estimate
+// missed: lo-fi with the ballad pattern over one-beat chords strikes the
+// coloured chord, and now the notes name the ninth it sounds.
+func TestLofiBalladOneBeatNamesItsNinths(t *testing.T) {
+	key := music.Key{Tonic: music.F, Mode: music.Major}
+	var prog music.Progression
+	for _, l := range []string{"Imaj7", "vi7", "ii7", "V7"} {
+		s, err := music.StepFromLabel(key, l, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prog = append(prog, s)
+	}
+	tl, err := music.FromProgression(key, prog, 80)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := Render(tl, Choice{Accompaniment: "ballad", Style: "lofi"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Rhythm.Style == nil || !strings.Contains(out.Rhythm.Style.Tensions, "9 度") {
+		t.Fatalf("the ninths sound but the notes do not say so: %+v", out.Rhythm.Style)
+	}
+}

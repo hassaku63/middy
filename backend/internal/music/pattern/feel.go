@@ -301,7 +301,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		return music.Timeline{}, err
 	}
 	out = applyStyle(applyFeel(out, info, c.Swing), st, acc, c.Tensions == "")
-	return withGrid(withTensions(out, c.Tensions, tensions, acc), c.Grid), nil
+	return withGrid(withTensions(out, c.Tensions, tensions), c.Grid), nil
 }
 
 // withGrid records the grid the drums were written as (BL-123), so a
@@ -357,12 +357,12 @@ func chosenTensions(c Choice, st *Style) (*Tensions, error) {
 
 // withTensions records the colour the candidate asked for (ADR-0037) and
 // what it added, so the notes say so and a rebuild sends it back.
-func withTensions(tl music.Timeline, id string, t *Tensions, acc Accompaniment) music.Timeline {
+func withTensions(tl music.Timeline, id string, t *Tensions) music.Timeline {
 	if id == "" || tl.Rhythm == nil {
 		return tl
 	}
 	rt := &music.RhythmTensions{ID: id}
-	if added := soundedTensions(tl, t, acc); added != "" {
+	if added := soundedTensions(tl, t); added != "" {
 		rt.Explanation = "この例の色付けとして、" + added + "（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。"
 	}
 	rhythm := *tl.Rhythm
@@ -407,7 +407,7 @@ func applyStyle(tl music.Timeline, st *Style, acc Accompaniment, styleColour boo
 		return tl
 	}
 	rs := &music.RhythmStyle{ID: st.ID, Name: st.Name}
-	if added := soundedTensions(tl, st.Tensions, acc); added != "" && styleColour {
+	if added := soundedTensions(tl, st.Tensions); added != "" && styleColour {
 		rs.Tensions = st.Name + "のスタイルなので、" + added + "（調の音階にある音だけ）。ローマ数字と分析は 7 度までのまま。"
 	}
 	if st.Program != nil && acc.Program == 0 && len(tl.Tracks) > 0 {
@@ -449,52 +449,16 @@ func swingText(sw Swing, beatBPM float64) string {
 	return text
 }
 
-// playedTensions is what the pattern sounds of the chord's tensions: all
-// of them on a chord hit; in an arpeggio, the first, in the octave's place
-// (#307), which a seventh chord gives only on its second octave
-// (arpeggioTop); none in a pattern with neither hit within the chord.
-func playedTensions(t *Tensions, key music.Key, h music.HarmonyEvent, acc Accompaniment, bar music.Tick) []music.PitchClass {
-	arp := arpeggiated(acc)
-	voice := VoiceChord
-	if arp {
-		voice = VoiceOctave
-	}
-	need := 1
-	if arp && len(h.Chord.PitchClasses()) >= 4 {
-		need = 2
-	}
-	if hitsWithin(acc, voice, h.Duration, bar) < need {
-		return nil
-	}
-	pcs := tensionsOf(t, key, h)
-	if arp && len(pcs) > 1 {
-		pcs = pcs[:1]
-	}
-	return pcs
-}
-
-// hitsWithin counts the pattern's hits of a voice over a chord of the
-// duration, the template repeated a bar at a time as chordNotes does.
-func hitsWithin(acc Accompaniment, v Voice, dur, bar music.Tick) int {
-	n := 0
-	for barStart := music.Tick(0); barStart < dur; barStart += bar {
-		for _, x := range acc.Hits {
-			if x.Voice == v && barStart+x.Start < dur {
-				n++
-			}
-		}
-	}
-	return n
-}
-
-// soundedTensions says which of the style's tensions sounded: on chords
-// the pattern strikes with its chord voice, and only those the key and the
-// chord allowed (a ii7–Imaj7 adds no 13th, whatever the rule says). Empty
-// when none sounded.
-func soundedTensions(tl music.Timeline, t *Tensions, acc Accompaniment) string {
+// soundedTensions says which of the style's tensions sounded, read from
+// the notes the timeline plays (BL-306, #449): a tension the key and the
+// chord allowed (a ii7–Imaj7 adds no 13th, whatever the rule says) that a
+// pitched note sounds inside the chord. A note running past the chord's
+// end is the next chord pushed early, not this one's colour. Empty when
+// none sounded.
+func soundedTensions(tl music.Timeline, t *Tensions) string {
 	var ninth7, thirteenth, add9 bool
 	for _, h := range tl.Harmony {
-		for _, pc := range playedTensions(t, tl.Key, h, acc, music.BarTicks(tl.TimeSignature, tl.PPQ)) {
+		for _, pc := range sounding(tl, h, tensionsOf(t, tl.Key, h)) {
 			switch {
 			case h.Chord.Quality == music.MajorTriad:
 				add9 = true
@@ -521,4 +485,20 @@ func soundedTensions(tl music.Timeline, t *Tensions, acc Accompaniment) string {
 		return ""
 	}
 	return strings.Join(parts, "、") + "ている"
+}
+
+// sounding is those of the pitch classes that a pitched note plays inside
+// the chord's span.
+func sounding(tl music.Timeline, h music.HarmonyEvent, pcs []music.PitchClass) []music.PitchClass {
+	var out []music.PitchClass
+	for _, pc := range pcs {
+		if slices.ContainsFunc(tl.Tracks, func(tr music.Track) bool {
+			return tr.Channel != DrumChannel && slices.ContainsFunc(tr.Notes, func(n music.NoteEvent) bool {
+				return n.Start >= h.Start && n.Start+n.Duration <= h.Start+h.Duration && n.Pitch.Class() == pc.Normalize()
+			})
+		}) {
+			out = append(out, pc)
+		}
+	}
+	return out
 }
