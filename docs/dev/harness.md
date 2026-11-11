@@ -33,6 +33,7 @@
 | shellcheck（`scripts/*.sh`。意図した一重引用符などは、行ごとに理由つきで止める） | 失敗を見ない `cd`、引用符のない展開、使われない変数など、シェルの典型的な誤り | `make shell-lint` | `make check`, CI `shell` |
 | actionlint（`.github/workflows/*.yml`。`run:` のスクリプトは ShellCheck に渡す。版は `.tool-versions`） | ワークフローの書き間違い（式、イベント、ジョブの依存、権限）と、`run:` の中のシェルの誤り | `make actions-lint` | `make check`, CI `shell` |
 | hadolint（`Dockerfile`。版は `.tool-versions`。手元に hadolint か Docker がないことがあるので `make check` には入れない） | Dockerfile の典型的な誤り（固定しない版、`apt` の後始末、`RUN` の書き方）と、`RUN` の中のシェルの誤り | `make dockerfile-lint`（hadolint か Docker が要る） | CI `shell`（固定した `ghcr.io/hadolint/hadolint` のイメージ） |
+| BuildKit の build checks（`docker buildx build --check`、`api` と `web` の 2 つのターゲット。Dockerfile の構文 1.8 以降の機能） | hadolint にない規則: 定義されていない変数、`ARG`・`ENV` の秘密情報、`.dockerignore` で除いたファイルの `COPY` など（#408） | `docker buildx build --check --target api .`（Docker が要る） | CI `image` |
 | `depguard`（Go） | 境界違反: `music` の I/O、`httpapi` からアダプタ直 import、`net/http` の漏れ | `make backend-lint` | `make check`, CI `backend` |
 | `funlen` 80 行 / `gocognit` 20 / `gocyclo` 15 | 肥大した関数（テストは除外） | `make backend-lint` | `make check`, CI `backend` |
 | ESLint 型つき strict と stylistic（typescript-eslint `strictTypeChecked`・`stylisticTypeChecked`。矢印の短縮形が返す `void` と、テンプレート文字列の数値は許す。型の形は `type` で書く）+ react-hooks | 典型的なバグ、要らない条件、非推奨の API、`void` の値の取り違え、書き方の不統一 | `make frontend-lint` | `make check`, CI `frontend` |
