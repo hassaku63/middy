@@ -3,9 +3,9 @@ import { ticksPerBar, ticksPerBeat, timelineLengthTicks } from '@/shared/lib/tim
 
 /** Pixels per bar; every lane shares this scale so columns line up. */
 export const BAR_WIDTH = 160;
-export const CHORD_LANE_HEIGHT = 44;
+export const CHORD_LANE_HEIGHT = 42;
 /** The bar numbers above the chord lane (#435), on every drawing but a thin strip. */
-export const RULER_HEIGHT = 18;
+export const RULER_HEIGHT = 16;
 export const ROW_HEIGHT = 10;
 /** The narrowest label column: pitch names such as C#4. */
 export const LABEL_WIDTH = 40;
