@@ -56,7 +56,7 @@ describe('PlayerControls + usePlayer', () => {
   it('is disabled without a timeline', () => {
     render(<Harness engine={engine} tl={null} />);
     expect(screen.getByRole('button', { name: '再生' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '停止' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: '停止' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('再生位置')).toHaveTextContent('-');
     expect(created).toBe(0);
   });
@@ -70,8 +70,10 @@ describe('PlayerControls + usePlayer', () => {
     await user.click(screen.getByRole('button', { name: '再生' }));
     expect(created).toBe(1);
     expect(synth.played).toBe(1);
-    expect(screen.getByRole('button', { name: '再生' })).toBeDisabled();
+    // One button: while playing it stops, in the same place (#402 B).
+    expect(screen.queryByRole('button', { name: '再生' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '停止' })).toBeEnabled();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100); // just over two beats at 120 BPM

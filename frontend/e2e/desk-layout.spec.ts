@@ -199,13 +199,13 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
   await page.getByRole('article', { name: '遠い記憶' }).click();
   await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
   await page.getByRole('article', { name: '遠い記憶' }).click();
-  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '再生' })).toBeEnabled();
 
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Space');
   await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
   await page.keyboard.press('Space');
-  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '再生' })).toBeEnabled();
 
   await page.getByLabel('候補を選んだら再生').uncheck();
   await page.reload();
@@ -213,7 +213,7 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
   await expect(page.getByLabel('候補を選んだら再生')).not.toBeChecked();
   await page.getByRole('article', { name: '遠い記憶' }).click();
   await expect(result).toContainText('候補: 遠い記憶');
-  await expect(page.getByRole('button', { name: '停止' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '再生' })).toBeEnabled();
 });
 
 /**
