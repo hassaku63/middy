@@ -62,6 +62,18 @@ describe('TimelineView', () => {
     expect(screen.getByRole('option', { current: true })).toHaveAttribute('aria-label', 'vi Am');
   });
 
+  it('runs the playhead under the chord lane, so it never hides a numeral (#402 I)', () => {
+    render(<TimelineView timeline={timeline} positionTick={0} />);
+    const playhead = screen.getByTestId('playhead');
+    const lane = screen.getByRole('listbox', { name: 'コード' });
+    const laneBottom = Math.max(
+      ...Array.from(lane.querySelectorAll('rect')).map(
+        (r) => Number(r.getAttribute('y')) + Number(r.getAttribute('height')),
+      ),
+    );
+    expect(Number(playhead.getAttribute('y1'))).toBeGreaterThanOrEqual(laneBottom);
+  });
+
   it('moves the playhead one bar width per bar', () => {
     const { rerender } = render(<TimelineView timeline={timeline} positionTick={0} />);
     const x0 = Number(screen.getByTestId('playhead').getAttribute('x1'));
