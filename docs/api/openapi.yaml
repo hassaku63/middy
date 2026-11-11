@@ -606,6 +606,12 @@ components:
         bass:
           $ref: '#/components/schemas/PitchClass'
           description: 分数コードのベース音（ADR-0020）。省略時は和音の根音がベース
+        tensions:
+          type: array
+          items:
+            type: string
+            enum: ['9', '13', add9]
+          description: その和音で実際に鳴っているテンション（BL-307）。和音記号と分析は 7 度までのまま（ADR-0037）で、画面は `Fmaj7(9)` のように添えて書く。鳴っていなければ省略
         push:
           $ref: '#/components/schemas/Push'
           description: 押し（BL-085）。音は `start` より早く鳴るが、`start` は和音の属する拍のまま

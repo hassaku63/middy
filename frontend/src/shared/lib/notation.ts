@@ -52,9 +52,17 @@ export function keyName(key: Key): string {
   return `${TONICS[key.mode][((key.tonic % 12) + 12) % 12] ?? 'C'} ${key.mode}`;
 }
 
-/** The engine's key-spelled symbol when present; older saved timelines fall back to sharps. */
-export function harmonySymbol(h: Pick<HarmonyEvent, 'chord' | 'symbol'>): string {
-  return h.symbol ?? chordSymbol(h.chord);
+/**
+ * The engine's key-spelled symbol when present (older saved timelines fall
+ * back to sharps), with the tensions that sound in brackets before any
+ * slash bass: Fmaj7(9), C7(9,13), F(add9), Cmaj7(9)/E (BL-307).
+ */
+export function harmonySymbol(h: Pick<HarmonyEvent, 'chord' | 'symbol' | 'tensions'>): string {
+  const symbol = h.symbol ?? chordSymbol(h.chord);
+  if (!h.tensions?.length) return symbol;
+  const colour = `(${h.tensions.join(',')})`;
+  const slash = symbol.indexOf('/');
+  return slash < 0 ? symbol + colour : symbol.slice(0, slash) + colour + symbol.slice(slash);
 }
 
 export function pitchClassName(pc: PitchClass): string {

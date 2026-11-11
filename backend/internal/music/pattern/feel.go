@@ -301,7 +301,7 @@ func Render(tl music.Timeline, c Choice) (music.Timeline, error) {
 		return music.Timeline{}, err
 	}
 	out = applyStyle(applyFeel(out, info, c.Swing), st, acc, c.Tensions == "")
-	return withGrid(withTensions(out, c.Tensions, tensions), c.Grid), nil
+	return withGrid(withTensions(namedTensions(out, tensions), c.Tensions, tensions), c.Grid), nil
 }
 
 // withGrid records the grid the drums were written as (BL-123), so a
@@ -485,6 +485,33 @@ func soundedTensions(tl music.Timeline, t *Tensions) string {
 		return ""
 	}
 	return strings.Join(parts, "、") + "ている"
+}
+
+// namedTensions writes on each chord the tensions its notes sound (BL-307):
+// "add9" on a major triad, else "9" and "13", in that order.
+func namedTensions(tl music.Timeline, t *Tensions) music.Timeline {
+	if t == nil {
+		return tl
+	}
+	harmony := slices.Clone(tl.Harmony)
+	for i, h := range harmony {
+		var names []string
+		for _, pc := range sounding(tl, h, tensionsOf(t, tl.Key, h)) {
+			switch {
+			case h.Chord.Quality == music.MajorTriad:
+				names = append(names, "add9")
+			case pc == h.Chord.Root.Add(9):
+				names = append(names, "13")
+			default:
+				names = append(names, "9")
+			}
+		}
+		slices.Sort(names) // "13" before "9" by bytes; put the ninth first
+		slices.Reverse(names)
+		harmony[i].Tensions = names
+	}
+	tl.Harmony = harmony
+	return tl
 }
 
 // sounding is those of the pitch classes that a pitched note plays inside
