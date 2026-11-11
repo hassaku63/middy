@@ -184,6 +184,10 @@ func (c Candidate) validateProgression() []error {
 			// another scale (#331); the answer is checked, not the
 			// labels an example sends back when it is rebuilt.
 			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
+		} else if err := music.BassCrossesChord(c.Key, label); err != nil {
+			// The bass is a semitone off one of the chord's own notes
+			// (E7 over G in A minor): the model meant that note (BL-302).
+			errs = append(errs, fmt.Errorf("progression[%d]: %w", i, err))
 		}
 	}
 	if _, ok := Meters[c.Meter]; c.Meter != "" && !ok {
