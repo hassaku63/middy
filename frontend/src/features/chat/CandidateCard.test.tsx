@@ -109,3 +109,48 @@ describe('CandidateCard as a whole (#313)', () => {
     expect(card.queryByText('開いています')).not.toBeInTheDocument();
   });
 });
+
+describe('CandidateCard progression (#451)', () => {
+  const harmony = [
+    {
+      start: 0,
+      duration: 1920,
+      chord: { root: 10, quality: 'maj7' as const },
+      romanNumeral: 'I',
+      symbol: 'Bbmaj7',
+    },
+    {
+      start: 1920,
+      duration: 1920,
+      chord: { root: 10, quality: 'maj7' as const },
+      bass: 9,
+      romanNumeral: 'I/7',
+      symbol: 'Bbmaj7/A',
+    },
+    {
+      start: 3840,
+      duration: 1920,
+      chord: { root: 8, quality: 'dom7' as const },
+      romanNumeral: '♭VII7',
+      symbol: 'Ab7',
+    },
+  ];
+  const withHarmony: IdeaCandidate = {
+    ...base,
+    key: { tonic: 10, mode: 'major' },
+    progression: ['I/1', 'I/7', 'bVII7'],
+    timeline: { ...base.timeline, harmony },
+  };
+
+  it('shows the numerals as the chord lane spells them, and the chords by name', () => {
+    render(<CandidateCard candidate={withHarmony} open={false} onOpen={vi.fn()} />);
+    expect(screen.getByText('I - I/7 - ♭VII7')).toBeInTheDocument();
+    expect(screen.getByText('Bbmaj7 - Bbmaj7/A - Ab7')).toBeInTheDocument();
+    expect(screen.queryByText(/bVII7/)).not.toBeInTheDocument();
+  });
+
+  it('falls back to the labels as written while there is no harmony', () => {
+    render(<CandidateCard candidate={base} open={false} onOpen={vi.fn()} />);
+    expect(screen.getByText('i - IV - i - VII')).toBeInTheDocument();
+  });
+});
