@@ -62,6 +62,7 @@
 | [0056](0056-degree-map-current-chord-glow.md) | 度数の地図の今の和音は、セルの外側の枠と動かない光で示す（追従は琥珀、固定は青。動く案は却下） | Accepted |
 | [0057](0057-timeline-fills-the-stage.md) | タイムラインは結果の幅いっぱいに描き、高さの上限（45 %）に当たるときは小節を横に伸ばす。文字と行の高さは変えない（ADR-0041 の縦横比を置き換える） | Accepted |
 | [0058](0058-layout-e2e-in-required.md) | 配置の E2E（全サイズで横スクロールなし・axe・操作の集合・固定が残る）を、フロントエンドを変える PR の CI `layout` ジョブで走らせ、必須の検査に入れる。イメージに頼らない | Accepted |
+| [0059](0059-timeline-scrolls-on-narrow-screens.md) | 狭い画面のタイムラインは縮めずに横へスクロールし、行名の列を左に留める。行名は 12 px | Accepted |
 
 ## いつ ADR を書くか
 

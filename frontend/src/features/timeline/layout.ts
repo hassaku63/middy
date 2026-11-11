@@ -7,9 +7,9 @@ export const CHORD_LANE_HEIGHT = 44;
 export const ROW_HEIGHT = 10;
 /** The narrowest label column: pitch names such as C#4. */
 export const LABEL_WIDTH = 40;
-/** The drum rows' labels: 9 px text, one em per character. */
-const DRUM_LABEL_FONT = 9;
-export const DRUM_ROW_HEIGHT = 12;
+/** The labels' text: 12 px, one em per character (#402 A: 12 px or more at the drawing's own size). */
+export const LABEL_FONT = 12;
+export const DRUM_ROW_HEIGHT = 16;
 const MIN_ROWS = 12;
 /** GM percussion channel (0-based); its notes are drawn in the drum lane. */
 export const DRUM_CHANNEL = 9;
@@ -90,7 +90,7 @@ export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH): Layout {
   ].sort((a, b) => b - a);
   const labelWidth = Math.max(
     LABEL_WIDTH,
-    ...drumNotes.map((n) => 4 + drumName(n).length * DRUM_LABEL_FONT + 4),
+    ...drumNotes.map((n) => 4 + drumName(n).length * LABEL_FONT + 4),
   );
   const x = (tick: number) => labelWidth + (tick / perBar) * barWidth;
   const hi = pitches.length ? Math.max(...pitches) : 71;

@@ -90,17 +90,6 @@ main {
   container: stage / inline-size;
 }
 
-/* Across the whole stage, but no taller than 45 % of the screen, so that
-   the chord's frame stays in view on a wide screen (ADR-0041, #353). Where
-   the cap bites, the drawing widens its bars to the stage's width instead
-   of shrinking and leaving the right empty (TimelineView's fit, #402 F);
-   the rows and the text keep their size. A long timeline scrolls in its
-   own box instead (TimelineOverview.css). */
-.app__stage > .timeline {
-  width: 100%;
-  height: min(45vh, calc(100cqw / var(--timeline-aspect)));
-}
-
 .app__below {
   display: grid;
   gap: 12px;
