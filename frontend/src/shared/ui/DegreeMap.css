@@ -113,6 +113,13 @@
   padding: 6px; /* room for the glow of the chord being explained */
 }
 
+/* The role groups are told apart by space as well as by their headings
+   (#402 D): twice the gap between the cells of a group, so the four groups
+   read as four even without the words. */
+.degree-map--roles {
+  gap: 12px;
+}
+
 /* The flow with its caption under it (#371): the caption says it is the
    basic flow, not a rule. */
 .degree-map--captioned {

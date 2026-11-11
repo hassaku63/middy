@@ -73,7 +73,7 @@ export function DegreeMap({
   if (roles && degrees.some((d) => d.role)) {
     return (
       <div
-        className={`degree-map degree-map--flow${pin}`}
+        className={`degree-map degree-map--flow degree-map--roles${pin}`}
         role="group"
         aria-label="度数の地図（和音の役割）"
       >
