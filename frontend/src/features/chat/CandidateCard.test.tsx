@@ -146,6 +146,8 @@ describe('CandidateCard progression (#451)', () => {
     render(<CandidateCard candidate={withHarmony} open={false} onOpen={vi.fn()} />);
     expect(screen.getByText('I - I/7 - ♭VII7')).toBeInTheDocument();
     expect(screen.getByText('Bbmaj7 - Bbmaj7/A - Ab7')).toBeInTheDocument();
+    // Three bars of 4/4 at 480 ticks a quarter (BL-305).
+    expect(screen.getByText('3 小節')).toBeInTheDocument();
     expect(screen.queryByText(/bVII7/)).not.toBeInTheDocument();
   });
 

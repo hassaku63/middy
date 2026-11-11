@@ -811,3 +811,29 @@ func TestOpenChordsAndBluesDominantsInTheIntent(t *testing.T) {
 		t.Errorf("IVsus4 in C major needs Bb and must be refused, got %v", err)
 	}
 }
+
+// TestRequestedBars (BL-305, #448): a length the user asked for must be
+// the chords' total; 44 beats in 4/4 are not the 12 bars asked for.
+func TestRequestedBars(t *testing.T) {
+	in := valid() // four chords of a bar
+	c := &in.Candidates[0]
+	c.Bars = 4
+	if err := in.Validate(); err != nil {
+		t.Fatalf("four bars of four is valid: %v", err)
+	}
+	c.Bars = 12
+	err := in.Validate()
+	if err == nil || !strings.Contains(err.Error(), "bars is 12 (48 beats of 4 per bar) but the chords add up to 16 beats (4 bars)") {
+		t.Fatalf("want the shortfall reported, got %v", err)
+	}
+	c.Progression = []string{"i", "VI", "III", "VII", "i", "VI", "III", "VII", "i", "VI", "iv", "V"}
+	c.Beats = []int{4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2}
+	err = in.Validate()
+	if err == nil || !strings.Contains(err.Error(), "add up to 44 beats (11 bars)") {
+		t.Fatalf("44 beats are 11 bars, not 12: %v", err)
+	}
+	c.Bars = 33
+	if err := in.Validate(); err == nil || !strings.Contains(err.Error(), "bars must be 1..32") {
+		t.Fatalf("an out-of-range length is refused: %v", err)
+	}
+}

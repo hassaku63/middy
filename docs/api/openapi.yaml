@@ -444,6 +444,11 @@ components:
           type: integer
           enum: [1, 2, 3, 4, 6, 8]
           description: 和音の長さ（拍子の拍の数）。`beats` がないときは全部の和音がこの長さ。4/4 では 1・2・4・8、3/4 では 3・6、6/8 では 1・2・4
+        bars:
+          type: integer
+          minimum: 1
+          maximum: 32
+          description: 利用者が長さを小節数で頼んだときの小節数（「12小節」なら 12）。和音の長さの合計がちょうどこの小節数になる（BL-305）。頼まれていなければ省略
         beats:
           type: array
           items:
