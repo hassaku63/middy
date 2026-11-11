@@ -292,6 +292,8 @@ export interface components {
        * @enum {integer}
        */
       beatsPerChord: 1 | 2 | 3 | 4 | 6 | 8;
+      /** @description 利用者が長さを小節数で頼んだときの小節数（「12小節」なら 12）。和音の長さの合計がちょうどこの小節数になる（BL-305）。頼まれていなければ省略 */
+      bars?: number;
       /** @description 和音ごとの長さ（拍子の拍の数。BL-109）。`progression` と同じ数。省略時は全部が `beatsPerChord` */
       beats?: (1 | 2 | 3 | 4 | 6 | 8)[];
       /** @description 聴きどころの短い解説（1〜2 文の日本語） */

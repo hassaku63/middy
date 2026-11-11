@@ -23,6 +23,7 @@ const (
 	MinTempoBPM     = 40
 	MaxTempoBPM     = 220
 	MaxChords       = 16
+	MaxBars         = 32 // a requested length (BL-305): 16 chords of two bars
 	MaxMoodTags     = 6
 	MaxSummaryRunes = 300
 	MaxReasonRunes  = 300
@@ -73,6 +74,10 @@ type Candidate struct {
 	// meter (BL-109), one per progression entry; BeatsPerChord is then
 	// only the default the model also states.
 	Beats []int `json:"beats,omitempty"`
+	// Bars, when set, is the length in bars the user asked for ("12 小節",
+	// BL-305): the chords' beats must add up to exactly that many bars.
+	// Omitted when the user named no length.
+	Bars int `json:"bars,omitempty"`
 	// Pushes, when set, pushes chords early (BL-085), one per progression
 	// entry: "none", "eighth" or "sixteenth".
 	Pushes []string `json:"pushes,omitempty"`
@@ -410,7 +415,7 @@ func (c Candidate) validateBeats(ts music.TimeSignature) []error {
 		if bar > 0 && c.BeatsPerChord > 0 && at%bar != 0 {
 			return []error{fmt.Errorf("the progression ends mid-bar (%d chords of %d beats is %d beats, bars of %d)%s", len(c.Progression), c.BeatsPerChord, at, bar, wholeBarsHint(c.BeatsPerChord, bar))}
 		}
-		return nil
+		return c.validateBars(at, bar)
 	}
 	if len(c.Beats) != len(c.Progression) {
 		return []error{fmt.Errorf("beats has %d lengths for %d chords", len(c.Beats), len(c.Progression))}
@@ -434,7 +439,30 @@ func (c Candidate) validateBeats(ts music.TimeSignature) []error {
 	if bar > 0 && at%bar != 0 {
 		errs = append(errs, fmt.Errorf("the progression ends mid-bar (%d beats, bars of %d)", at, bar))
 	}
-	return errs
+	return append(errs, c.validateBars(at, bar)...)
+}
+
+// validateBars checks a requested length (BL-305, #448): the chords' beats
+// add up to exactly Bars bars, or the answer is retried with the count.
+func (c Candidate) validateBars(beats, bar int) []error {
+	if c.Bars == 0 || bar == 0 {
+		return nil
+	}
+	if c.Bars < 0 || c.Bars > MaxBars {
+		return []error{fmt.Errorf("bars must be 1..%d when set, got %d", MaxBars, c.Bars)}
+	}
+	if beats != c.Bars*bar {
+		return []error{fmt.Errorf("bars is %d (%d beats of %d per bar) but the chords add up to %d beats (%s bars); add or lengthen chords to fill %d bars", c.Bars, c.Bars*bar, bar, beats, barCount(beats, bar), c.Bars)}
+	}
+	return nil
+}
+
+// barCount writes beats as bars: "11", or "10.5" for a half bar over.
+func barCount(beats, bar int) string {
+	if beats%bar == 0 {
+		return strconv.Itoa(beats / bar)
+	}
+	return strconv.FormatFloat(float64(beats)/float64(bar), 'f', -1, 64)
 }
 
 // wholeBarsHint says how to end on a bar line: add or drop chords, or set

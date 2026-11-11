@@ -56,6 +56,9 @@ type Case struct {
 	// mixolydian or minor. A miss is reported, not failed: some wants are not
 	// yet expressible, and the report measures exactly that (ADR-0013).
 	Wants []string `json:"wants,omitempty"`
+	// Bars, when set, is the length the image asks for: the first
+	// candidate must last exactly that many bars (BL-305, #448).
+	Bars int `json:"bars,omitempty"`
 }
 
 // Tags are what a case looks at; every case has at least one.
@@ -264,7 +267,24 @@ func judgeFirst(c Case, first ideas.Candidate) []string {
 	if c.Meter != "" && c.Meter != meterOf(first.Meter) {
 		add("expected meter " + c.Meter + ", got " + meterOf(first.Meter))
 	}
+	if c.Bars > 0 {
+		add(judgeBars(c.Bars, first.Timeline))
+	}
 	return problems
+}
+
+// judgeBars checks the length the image asked for against the harmony's
+// end, in whole bars of the candidate's meter (BL-305).
+func judgeBars(want int, tl music.Timeline) string {
+	bar := music.BarTicks(tl.TimeSignature, tl.PPQ)
+	var end music.Tick
+	for _, h := range tl.Harmony {
+		end = max(end, h.Start+h.Duration)
+	}
+	if bar == 0 || end != music.Tick(want)*bar {
+		return fmt.Sprintf("expected %d bars, got %.2f", want, float64(end)/float64(max(bar, 1)))
+	}
+	return ""
 }
 
 // Report renders verdicts as a Markdown table to paste into the PR that
