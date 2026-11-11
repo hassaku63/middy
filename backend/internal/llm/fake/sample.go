@@ -36,6 +36,9 @@ func sampleIntent(req llm.Request) string {
 		in = map[string]any{
 			"summary": "ケルトの舞曲の情景。ドリアンの明るい IV と、ミクソリディアンの導音のない開放感が合います。",
 			"mood":    []string{"素朴", "軽やか"},
+			// What the engine cannot express, as the model writes it
+			// (ADR-0061); the minor sample says "なし" for nothing.
+			"unconstrained": "フィドルの装飾音（カットやロール）は表せないので、裏打ちの伴奏と太鼓で舞曲らしさを出しています。",
 			"candidates": []map[string]any{
 				{"title": "緑の丘のリール", "style": "celtic", "key": map[string]any{"tonic": 2, "mode": "dorian"}, "tempoBpm": 112,
 					"progression": []string{"i", "IV", "i", "VII"}, "beatsPerChord": 4, "beats": []int{8, 4, 2, 2},
@@ -48,8 +51,9 @@ func sampleIntent(req llm.Request) string {
 		}
 	case minor:
 		in = map[string]any{
-			"summary": "静かで少し切ない情景。ゆっくりした短調で、落ち着いた動きが合います。",
-			"mood":    []string{"静か", "切ない"},
+			"summary":       "静かで少し切ない情景。ゆっくりした短調で、落ち着いた動きが合います。",
+			"mood":          []string{"静か", "切ない"},
+			"unconstrained": "なし",
 			"candidates": []map[string]any{
 				{"title": "窓辺の雨", "style": "pop", "key": map[string]any{"tonic": 9, "mode": "minor"}, "tempoBpm": 72,
 					"progression": []string{"i", "VI", "III", "VII"}, "beatsPerChord": 4,

@@ -48,6 +48,17 @@
   background: #1f2937;
 }
 
+/* What the AI says it could not express, under the summary: small and
+   muted, a note and not part of the reply (ADR-0061). */
+.chat__turn > p.chat__unconstrained {
+  display: block;
+  margin: 6px 4px 0;
+  padding: 0;
+  background: none;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .chat__mood {
   list-style: none;
   display: flex;

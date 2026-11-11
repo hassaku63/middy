@@ -21,6 +21,8 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await expect(card).toBeVisible();
   await expect(card).toContainText('A minor');
   await expect(card).toContainText('i - VI - III - VII');
+  // The model said there was nothing it could not express (ADR-0061).
+  await expect(log.getByText(/表せなかったもの/)).toHaveCount(0);
 
   // Nothing is chosen until the user chooses (BL-219); pressing the card opens it.
   const result = page.getByRole('region', { name: '結果' });
@@ -83,6 +85,10 @@ test('a Celtic image gets a modal example with its characteristic tone explained
   const card = page.getByRole('article', { name: '緑の丘のリール' });
   await expect(card).toContainText('D dorian');
   await expect(card).toContainText('i - IV - i - VII');
+  // What the engine cannot express is noted under the summary (ADR-0061).
+  await expect(page.getByRole('list', { name: '会話' })).toContainText(
+    'この例では表せなかったもの（AI の見立て）: フィドルの装飾音',
+  );
   await card.getByRole('button').click();
   const result = page.getByRole('region', { name: '結果' });
   // The dorian IV is a major chord, spelled for the key, and explained by its sixth.

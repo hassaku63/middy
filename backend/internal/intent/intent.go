@@ -57,9 +57,10 @@ type Intent struct {
 	Mood []string `json:"mood"`
 	// Candidates are concrete musical proposals, best first.
 	Candidates []Candidate `json:"candidates"`
-	// Unconstrained is what the model would have written without the
-	// engine's limits. Asked for only by DiagnosticSchema (evaluation);
-	// never rendered, never validated (ADR-0013).
+	// Unconstrained is what the model wanted but could not express with the
+	// engine's vocabulary, in one sentence for the user, or "なし". Shown
+	// under the summary; never rendered as sound, never validated
+	// (ADR-0013, ADR-0061).
 	Unconstrained string `json:"unconstrained,omitempty"`
 }
 

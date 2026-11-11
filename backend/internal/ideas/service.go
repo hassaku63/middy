@@ -60,9 +60,9 @@ type Result struct {
 	Reply      string      `json:"reply"`
 	Mood       []string    `json:"mood"`
 	Candidates []Candidate `json:"candidates"`
-	// Unconstrained is filled only by a diagnostic Service; it never
-	// reaches the API.
-	Unconstrained string `json:"-"`
+	// Unconstrained is what the model could not express (ADR-0061), or
+	// empty when it says there was nothing.
+	Unconstrained string `json:"unconstrained,omitempty"`
 	// Retry is why the first answer was not used, when the turn needed the
 	// one retry: the validation error, or "refused". Empty otherwise. The
 	// evaluation report shows it; it never reaches the API.
@@ -72,9 +72,6 @@ type Result struct {
 // Service turns conversations into candidates.
 type Service struct {
 	llm llm.Client
-	// diagnostics asks the model for intent.DiagnosticSchema's extra
-	// free-text field; the evaluation set turns it on (ADR-0013).
-	diagnostics bool
 }
 
 // New wires the service to an LLM client (real or fake).
@@ -82,25 +79,15 @@ func New(client llm.Client) *Service {
 	return &Service{llm: client}
 }
 
-// NewDiagnostic is New with the evaluation-only "unconstrained" field
-// requested from the model. Not for the HTTP server.
-func NewDiagnostic(client llm.Client) *Service {
-	return &Service{llm: client, diagnostics: true}
-}
-
 // Imagine runs one conversational turn. messages must end with a user turn.
 func (s *Service) Imagine(ctx context.Context, messages []Message) (Result, error) {
 	if err := validateMessages(messages); err != nil {
 		return Result{}, fmt.Errorf("%w: %v", ErrInvalidConversation, err)
 	}
-	schema := intent.Schema
-	if s.diagnostics {
-		schema = intent.DiagnosticSchema
-	}
 	req := llm.Request{
 		System:       SystemPrompt(),
 		Messages:     toLLM(messages),
-		OutputSchema: schema,
+		OutputSchema: intent.Schema,
 		MaxTokens:    maxOutputTokens,
 	}
 
@@ -217,10 +204,20 @@ type contradictionError struct {
 // Unwrap lets the retry treat it as the invalid answer it is.
 func (e contradictionError) Unwrap() error { return e.invalidOutputError }
 
+// unconstrained is the model's note on what it could not express, or ""
+// when it says there was none ("なし", the schema's word for nothing).
+func unconstrained(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "なし" || strings.Trim(s, "。.") == "なし" {
+		return ""
+	}
+	return s
+}
+
 // render turns every candidate into an analysed timeline. A candidate the
 // engine cannot render is a bug in intent.Validate, not user error.
 func render(in intent.Intent) (Result, error) {
-	out := Result{Reply: in.Summary, Mood: in.Mood, Unconstrained: in.Unconstrained}
+	out := Result{Reply: in.Summary, Mood: in.Mood, Unconstrained: unconstrained(in.Unconstrained)}
 	if out.Mood == nil {
 		out.Mood = []string{}
 	}

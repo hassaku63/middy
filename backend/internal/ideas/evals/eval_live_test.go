@@ -76,7 +76,7 @@ func TestLiveEval(t *testing.T) {
 		run, reviewAll = RunTogether, ReviewAllTogether
 	}
 	answers, reviewer := NewMeter(send), NewMeter(send)
-	verdicts := run(runCtx, ideas.NewDiagnostic(answers), cases)
+	verdicts := run(runCtx, ideas.New(answers), cases)
 	reviewNote := ""
 	if review {
 		reviewAll(ctx, reviewer, verdicts)

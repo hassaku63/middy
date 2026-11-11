@@ -75,6 +75,43 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('button', { name: '最初から' })).toBeInTheDocument();
   });
 
+  it('notes under the summary what the AI could not express, only when it says so (ADR-0061)', () => {
+    const note = 'sus2 は使えないので、sus4 で近づけています。';
+    const { rerender } = render(
+      <ChatPanel
+        ideas={ideasWith({
+          turns: [
+            { role: 'user', content: '朝' },
+            {
+              role: 'assistant',
+              content: '澄んだ朝。',
+              mood: [],
+              candidates: [],
+              unconstrained: note,
+            },
+          ],
+        })}
+        onOpenCandidate={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(`この例では表せなかったもの（AI の見立て）: ${note}`),
+    ).toBeInTheDocument();
+
+    rerender(
+      <ChatPanel
+        ideas={ideasWith({
+          turns: [
+            { role: 'user', content: '朝' },
+            { role: 'assistant', content: '澄んだ朝。', mood: [], candidates: [] },
+          ],
+        })}
+        onOpenCandidate={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText(/表せなかったもの/)).not.toBeInTheDocument();
+  });
+
   it('names the candidate patterns from the catalogue, falling back to ids', () => {
     const ideas = ideasWith({
       turns: [
