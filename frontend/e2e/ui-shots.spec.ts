@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test, type Page } from '@playwright/test';
 import { openExample } from './helpers';
+import { SIZES } from './sizes';
 
 /**
  * Screens for the ui-review skill (BL-183, #286): each state at five sizes
@@ -12,14 +13,7 @@ import { openExample } from './helpers';
 test.skip(!process.env.UI_SHOTS, 'run with npm run ui:shots');
 
 const out = process.env.UI_SHOTS_DIR ?? 'ui-review-out';
-const sizes = [
-  { name: 'desktop', width: 1280, height: 800 },
-  { name: 'phone', width: 390, height: 844 },
-  // The width bands of #353: half a window, full HD and QHD.
-  { name: 'half', width: 960, height: 1080 },
-  { name: 'fhd', width: 1920, height: 1080 },
-  { name: 'qhd', width: 2560, height: 1440 },
-];
+const sizes = SIZES;
 const layout = process.env.UI_SHOTS_LAYOUT ?? ''; // a query for a trial, e.g. "lab"
 
 /** The states the result screen is reviewed in. */

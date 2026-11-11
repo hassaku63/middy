@@ -250,6 +250,50 @@ jobs:
           TAG=ci docker compose logs
           TAG=ci docker compose down
 
+  # The layout at every size of the matrix, checked by machine (#359): no
+  # sideways scroll, axe, the same operations at every width, the pinned
+  # chord kept across a resize. Only these deterministic checks; the rest of
+  # the E2E stays weekly (e2e.yml), and screens for review stay out of CI.
+  # It runs the Go server (fake LLM) and `vite preview`, which proxies /api
+  # as the dev server does, so it needs no images and no registry (ADR-0028).
+  layout:
+    name: layout (E2E at every size)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: .tool-versions
+          cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Start the API (fake LLM)
+        working-directory: backend
+        run: |
+          go build -o bin/server ./cmd/server
+          PORT=8080 LLM_PROVIDER=fake nohup bin/server > ../server.log 2>&1 &
+      - name: Build and serve the frontend
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          nohup npx vite preview --port 4173 --strictPort > ../preview.log 2>&1 &
+          npx playwright install --with-deps chromium
+      - name: Layout checks at every size
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://localhost:4173
+        run: npx playwright test e2e/sizes.spec.ts --trace off
+      - name: Server logs
+        if: failure()
+        run: tail -n 50 server.log preview.log
+
   pr-size:
     name: pr size budget
     runs-on: ubuntu-latest
@@ -263,13 +307,14 @@ jobs:
 
   # The one required check on main (ADR-0028, #219). It covers what
   # `make check` covers: the jobs that pick (changes), test and lint the code
-  # (backend, frontend), lint the scripts (shell) and check the docs. A skipped job passes; a failed or
+  # (backend, frontend), check the layout at every size (layout), lint the
+  # scripts (shell) and check the docs. A skipped job passes; a failed or
   # cancelled one fails this. `always()` keeps it from being skipped, and so
   # counted as passed, when a job it needs fails. image and pr-size are left
   # out on purpose: see the ADR.
   required:
     name: required (make check)
-    needs: [changes, backend, frontend, shell, docs]
+    needs: [changes, backend, frontend, layout, shell, docs]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
