@@ -4,6 +4,8 @@ import { ticksPerBar, ticksPerBeat, timelineLengthTicks } from '@/shared/lib/tim
 /** Pixels per bar; every lane shares this scale so columns line up. */
 export const BAR_WIDTH = 160;
 export const CHORD_LANE_HEIGHT = 44;
+/** The bar numbers above the chord lane (#435), on every drawing but a thin strip. */
+export const RULER_HEIGHT = 18;
 export const ROW_HEIGHT = 10;
 /** The narrowest label column: pitch names such as C#4. */
 export const LABEL_WIDTH = 40;
@@ -55,6 +57,8 @@ export type Layout = {
   /** Ticks per beat: a quarter, or a dotted quarter in a compound meter. */
   perBeat: number;
   bars: number;
+  /** The chord lane's top: under the bar numbers, or 0 without them. */
+  chordTop: number;
   width: number;
   height: number;
   /** distinct drum notes, highest first; empty when there is no drum track */
@@ -75,7 +79,7 @@ export type Layout = {
  * whose height is capped (fitBarWidth, #402 F); only time stretches, the
  * rows and the text keep their size.
  */
-export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH): Layout {
+export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH, ruler = true): Layout {
   const perBar = ticksPerBar(tl.ppq, tl.timeSignature);
   const lengthTicks = Math.max(timelineLengthTicks(tl), perBar);
   const bars = Math.ceil(lengthTicks / perBar);
@@ -98,7 +102,8 @@ export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH): Layout {
   const hi = pitches.length ? Math.max(...pitches) : 71;
   const lo = Math.min(pitches.length ? Math.min(...pitches) : 60, hi - MIN_ROWS + 1);
   const rows = hi - lo + 1;
-  const rollTop = CHORD_LANE_HEIGHT;
+  const chordTop = ruler ? RULER_HEIGHT : 0;
+  const rollTop = chordTop + CHORD_LANE_HEIGHT;
   const y = (pitch: number) => rollTop + (hi - pitch) * ROW_HEIGHT;
   const drumTop = rollTop + rows * ROW_HEIGHT + (drumNotes.length ? 4 : 0);
 
@@ -108,6 +113,7 @@ export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH): Layout {
     perBar,
     perBeat: ticksPerBeat(tl.ppq, tl.timeSignature),
     bars,
+    chordTop,
     width: x(bars * perBar),
     height: drumTop + drumNotes.length * DRUM_ROW_HEIGHT,
     drumNotes,

@@ -19,6 +19,15 @@
   stroke-width: 1.5;
 }
 
+.timeline__ruler-ground {
+  fill: #111827;
+}
+
+.timeline__bar-number {
+  fill: #d1d5db;
+  font-size: 12px; /* LABEL_FONT in layout.ts */
+}
+
 .timeline__beat {
   stroke: rgb(156 163 175 / 0.3);
   stroke-width: 1;
@@ -30,6 +39,12 @@
   }
   .timeline__beat {
     stroke: rgb(75 85 99 / 0.25);
+  }
+  .timeline__ruler-ground {
+    fill: #d1d5db;
+  }
+  .timeline__bar-number {
+    fill: #111827;
   }
 }
 

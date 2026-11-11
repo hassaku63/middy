@@ -4,14 +4,8 @@ import { ChordLane } from './ChordLane';
 import { DrumLane } from './DrumLane';
 import { PianoRoll } from './PianoRoll';
 import { TimelineGrid } from './TimelineGrid';
-import {
-  CHORD_LANE_HEIGHT,
-  DRUM_CHANNEL,
-  ROW_HEIGHT,
-  computeLayout,
-  fitBarWidth,
-  harmonyAt,
-} from './layout';
+import { TimelineRuler } from './TimelineRuler';
+import { DRUM_CHANNEL, ROW_HEIGHT, computeLayout, fitBarWidth, harmonyAt } from './layout';
 import { useBoxSize } from './useBoxSize';
 import './TimelineView.css';
 
@@ -69,15 +63,16 @@ export function TimelineView({
   const box = useBoxSize(ref, fit);
   // The playhead re-renders this every frame; the layout only changes with
   // the timeline and the box it fills.
-  const natural = useMemo(() => computeLayout(timeline), [timeline]);
+  // A thin strip draws no bar numbers (#435).
+  const natural = useMemo(() => computeLayout(timeline, undefined, !stretch), [timeline, stretch]);
   const barWidth = box ? fitBarWidth(natural, box) : natural.barWidth;
   const { layout, notes, drumNotes } = useMemo(
     () => ({
-      layout: barWidth === natural.barWidth ? natural : computeLayout(timeline, barWidth),
+      layout: barWidth === natural.barWidth ? natural : computeLayout(timeline, barWidth, !stretch),
       notes: timeline.tracks.filter((t) => t.channel !== DRUM_CHANNEL).flatMap((t) => t.notes),
       drumNotes: timeline.tracks.filter((t) => t.channel === DRUM_CHANNEL).flatMap((t) => t.notes),
     }),
-    [timeline, natural, barWidth],
+    [timeline, natural, barWidth, stretch],
   );
 
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
@@ -109,6 +104,7 @@ export function TimelineView({
           y2={layout.height}
         />
       ))}
+      {!stretch && <TimelineRuler layout={layout} />}
       <ChordLane
         harmony={timeline.harmony}
         layout={layout}
@@ -162,7 +158,7 @@ export function TimelineView({
         data-testid="playhead"
         x1={layout.x(positionTick)}
         x2={layout.x(positionTick)}
-        y1={CHORD_LANE_HEIGHT}
+        y1={layout.rollTop}
         y2={layout.height}
       />
     </svg>
