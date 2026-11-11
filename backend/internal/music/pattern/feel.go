@@ -152,6 +152,7 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 		sw.Ratio = shuffleRatio
 	}
 	sw = sw.resolved(tl.TempoBPM)
+	finer := sw.Unit == UnitEighth && finerThanEighths(tl.Tracks)
 	tracks := make([]music.Track, len(tl.Tracks))
 	beat := music.BeatTicks(tl.TimeSignature, tl.PPQ)
 	for i, tr := range tl.Tracks {
@@ -174,10 +175,33 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 		Name:        info.Name,
 		Ratio:       sw.Ratio,
 		Unit:        string(sw.Unit),
-		Explanation: feelText(info.ID, sw, tl.TempoBPM),
+		Explanation: feelText(info.ID, sw, tl.TempoBPM) + finerText(finer, tl.Harmony),
 	}
 	tl.Rhythm = &rhythm
 	return tl
+}
+
+// finerThanEighths reports notes between the eighths (sixteenths) on a
+// track that is not in triplets.
+func finerThanEighths(tracks []music.Track) bool {
+	return slices.ContainsFunc(tracks, func(tr music.Track) bool {
+		return !onTriplets(tr.Notes, 2*eighth) && slices.ContainsFunc(tr.Notes, func(n music.NoteEvent) bool { return n.Start%eighth != 0 })
+	})
+}
+
+// finerText says what a swing of eighths does to finer notes (#404 S8):
+// it stretches them with their pair, so sixteenths go long, long, short,
+// short, and a chord pushed a sixteenth comes in just before the beat,
+// sooner than a straight sixteenth.
+func finerText(finer bool, harmony []music.HarmonyEvent) string {
+	s := ""
+	if finer {
+		s += "16 分の音も 8 分の組と一緒に伸び縮みするので、前の 2 つが長く、後の 2 つが短くなる。"
+	}
+	if slices.ContainsFunc(harmony, func(h music.HarmonyEvent) bool { return h.Push == music.PushSixteenth }) {
+		s += "16 分の押しも縮んだ側に入るので、拍のすぐ手前で鳴る。"
+	}
+	return s
 }
 
 // onTriplets reports a track already written in triplets (a grid of three
