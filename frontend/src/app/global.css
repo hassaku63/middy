@@ -51,8 +51,16 @@ main {
   gap: 20px;
 }
 
-.app__header h1 {
+.app__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   margin: 0 0 4px;
+}
+
+.app__header h1 {
+  margin: 0;
 }
 
 .app__header p {
@@ -155,6 +163,16 @@ main {
     max-width: 2560px;
     height: 100vh;
     box-sizing: border-box;
+  }
+
+  /* The title heads the conversation's column (#436): smaller, so the
+     column keeps its room for the conversation. */
+  .app--desk .app__header h1 {
+    font-size: 1.4rem;
+  }
+
+  .app--desk .app__header p {
+    font-size: 0.85rem;
   }
 
   .app--desk .app__columns {

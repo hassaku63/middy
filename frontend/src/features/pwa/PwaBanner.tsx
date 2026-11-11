@@ -2,9 +2,10 @@ import type { Pwa } from './usePwa';
 import './PwaBanner.css';
 
 /**
- * One-line notices about the app itself: offline, a new version and the
- * install offer. Renders nothing when there is nothing to say; being ready
- * to work offline is normal and says nothing (principle 7, BL-071).
+ * One-line notices about the app itself: offline and a new version. Renders
+ * nothing when there is nothing to say; being ready to work offline is
+ * normal and says nothing (principle 7, BL-071). The install offer is a
+ * small button by the title instead (InstallButton, #439).
  */
 export function PwaBanner({ pwa }: { pwa: Pwa }) {
   const notices = [
@@ -22,14 +23,6 @@ export function PwaBanner({ pwa }: { pwa: Pwa }) {
         </button>
       </p>
     ),
-    pwa.installable && (
-      <p key="install" className="pwa__notice">
-        middy をアプリとして使えます。
-        <button type="button" onClick={() => void pwa.promptInstall()}>
-          インストール
-        </button>
-      </p>
-    ),
   ].filter(Boolean);
 
   if (notices.length === 0) return null;
@@ -37,5 +30,23 @@ export function PwaBanner({ pwa }: { pwa: Pwa }) {
     <div className="pwa" aria-label="アプリの状態">
       {notices}
     </div>
+  );
+}
+
+/**
+ * The install offer, by the title (#439, web.dev's header pattern): shown
+ * only while the browser offers to install, taking no line of its own.
+ */
+export function InstallButton({ pwa }: { pwa: Pwa }) {
+  if (!pwa.installable) return null;
+  return (
+    <button
+      type="button"
+      className="pwa__install"
+      title="middy をアプリとしてインストールする"
+      onClick={() => void pwa.promptInstall()}
+    >
+      <span aria-hidden="true">⤓ </span>アプリにする
+    </button>
   );
 }

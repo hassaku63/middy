@@ -310,3 +310,25 @@ for (const { width, height, column } of [
     });
   });
 }
+
+/**
+ * #436: on a wide screen the title heads the conversation's column, so the
+ * result starts at the top of the page; stacked, the title still comes
+ * first.
+ */
+test.describe('the title at 1280×800', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('heads the column, and the result starts at the top', async ({ page }) => {
+    await page.goto('/');
+    const { result } = await openExample(page, '雨の日曜の午後', '遠い記憶');
+    const title = await page.getByRole('heading', { level: 1, name: 'middy' }).boundingBox();
+    const side = await page.locator('.app__side').boundingBox();
+    const stage = await result.boundingBox();
+    expect(title && side && stage).toBeTruthy();
+    if (!title || !side || !stage) return;
+    expect(title.x).toBeGreaterThanOrEqual(side.x - 1);
+    expect(title.x + title.width).toBeLessThanOrEqual(side.x + side.width + 1);
+    expect(stage.y).toBeLessThanOrEqual(title.y + 1);
+  });
+});

@@ -8,7 +8,7 @@ import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/pl
 import { usePatterns } from '@/features/chat/usePatterns';
 import { ProjectList } from '@/features/projects/ProjectList';
 import { SaveProjectForm } from '@/features/projects/SaveProjectForm';
-import { PwaBanner } from '@/features/pwa/PwaBanner';
+import { InstallButton, PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
 import type { IdeaCandidate, Timeline } from '@/shared/api/client';
@@ -141,23 +141,32 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
 
   return (
     <main className="app app--desk">
-      <AppHeader pwa={pwa} backendDown={backend === 'down'} />
       {/* The conversation in a left column beside the stage on wide screens;
-          stacked below 1024 px (BL-184, #279). */}
+          stacked below 1024 px (BL-184, #279). The title heads the column,
+          so the stage starts at the top of the page (#436). */}
       <div className="app__columns">
-        <div className="app__side">{conversation}</div>
+        <div className="app__side">
+          <AppHeader pwa={pwa} backendDown={backend === 'down'} />
+          {conversation}
+        </div>
         <div className="app__main">{result}</div>
       </div>
     </main>
   );
 }
 
-/** The title, the PWA banner and, when the backend is unreachable, a word. */
+/**
+ * The title with the install offer beside it, the app's notices and, when
+ * the backend is unreachable, a word.
+ */
 function AppHeader({ pwa, backendDown }: { pwa: ReturnType<typeof usePwa>; backendDown: boolean }) {
   return (
     <>
       <header className="app__header">
-        <h1>middy</h1>
+        <div className="app__title">
+          <h1>middy</h1>
+          <InstallButton pwa={pwa} />
+        </div>
         <p>曲のイメージから例を鳴らして、その成り立ちを見る。</p>
       </header>
       <PwaBanner pwa={pwa} />
