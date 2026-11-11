@@ -40,6 +40,7 @@ export function ChordFrame({ timeline, positionTick, selectedHarmony, onClearSel
           flow={functional}
           functions={functional}
           roles={!functional}
+          pinned={pinned}
         />
       )}
       {/* A long text scrolls inside; the keyboard can reach it (WCAG 2.1.1). */}

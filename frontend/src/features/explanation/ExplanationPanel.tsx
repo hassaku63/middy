@@ -81,6 +81,7 @@ function ExplainedChord({
           event={event}
           functions={functional}
           roles={!functional}
+          pinned={pinned}
         />
       )}
       <ChordStatus event={event} functional={functional} />

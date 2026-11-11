@@ -38,8 +38,29 @@
   background: var(--function);
 }
 
+/* The chord being explained (#412): an edge drawn outside the cell, on the
+   page rather than on the cell's colour, so it shows whatever the
+   function colour, with a steady glow like neon. Amber while it follows
+   the playhead, the colour of every sounding note (ADR-0055); blue when
+   pinned, as on the chord lane and the frame's edge. It does not move:
+   the playhead is what moves while playing. */
+.degree-map {
+  --now: #f59e0b;
+  --now-glow: rgb(245 158 11 / 0.9);
+  --now-haze: rgb(245 158 11 / 0.45);
+}
+
+.degree-map--pinned {
+  --now: #93c5fd;
+  --now-glow: rgb(147 197 253 / 0.9);
+  --now-haze: rgb(147 197 253 / 0.45);
+}
+
 .degree-map__chord.is-current {
-  border-color: #f9fafb;
+  outline: 2px solid var(--now);
+  outline-offset: 2px;
+  --glow: 0 0 6px 3px var(--now-glow), 0 0 14px 5px var(--now-haze);
+  box-shadow: var(--glow);
 }
 
 .degree-map__numeral {
@@ -73,6 +94,13 @@
   box-shadow: inset 0 0 0 2px currentColor;
 }
 
+/* The tonic being explained keeps its ring inside the glow. */
+.degree-map__chord.is-tonic.is-current {
+  box-shadow:
+    inset 0 0 0 2px currentColor,
+    var(--glow);
+}
+
 /* The flow of functions (#360): a column per function, T → S → D → T,
    reading left to right like the timeline. A column holds two rows at
    most; a third chord (minor's T: i, III, VI) starts a second column, so
@@ -82,6 +110,7 @@
   align-items: flex-start;
   gap: 6px;
   margin: 0;
+  padding: 6px; /* room for the glow of the chord being explained */
 }
 
 /* The flow with its caption under it (#371): the caption says it is the
@@ -142,7 +171,14 @@
   .degree-map__chord.is-current {
     color: #f9fafb;
   }
-  .degree-map__chord.is-current {
-    border-color: #111827;
+  /* Darker edges for the light page, at 3:1 or more against the frame
+     (WCAG 1.4.11): a dark gold, not the dominant's orange, and blue. */
+  .degree-map {
+    --now: #a16207;
+  }
+  .degree-map--pinned {
+    --now: #2563eb;
+    --now-glow: rgb(37 99 235 / 0.6);
+    --now-haze: rgb(37 99 235 / 0.3);
   }
 }
