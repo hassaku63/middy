@@ -281,3 +281,34 @@ describe('marks (BL-185)', () => {
     expect(screen.getByRole('option', { name: 'vi Am' })).toBeInTheDocument();
   });
 });
+
+describe('the grid (#435)', () => {
+  it('draws each bar and, fainter, each beat under the notes', () => {
+    const { container } = render(<TimelineView timeline={timeline} positionTick={0} />);
+    const roll = container.querySelector('.timeline__note')?.parentElement;
+    const grid = roll?.querySelector('.timeline__grid');
+    // Three bars: four bar lines, and three beats inside each bar.
+    expect(grid?.querySelectorAll('.timeline__bar-line')).toHaveLength(4);
+    expect(grid?.querySelectorAll('.timeline__beat')).toHaveLength(9);
+    // Over the rows, under the notes.
+    const children = Array.from(roll?.children ?? []);
+    const at = (cls: string) => children.findIndex((c) => c.classList.contains(cls));
+    expect(at('timeline__grid')).toBeGreaterThan(-1);
+    expect(at('timeline__grid')).toBeLessThan(at('timeline__note'));
+  });
+
+  it('counts a compound meter in dotted quarters', () => {
+    const six = { ...timeline, timeSignature: { numerator: 6, denominator: 8 } };
+    const { container } = render(<TimelineView timeline={six} positionTick={0} />);
+    const grid = container.querySelector('.timeline__grid');
+    const bars = grid?.querySelectorAll('.timeline__bar-line').length ?? 0;
+    // A 6/8 bar has two beats: one beat line in each bar.
+    expect(grid?.querySelectorAll('.timeline__beat')).toHaveLength(bars - 1);
+  });
+
+  it('leaves the beats off a stretched overview strip', () => {
+    const { container } = render(<TimelineView timeline={timeline} positionTick={0} stretch />);
+    expect(container.querySelectorAll('.timeline__beat')).toHaveLength(0);
+    expect(container.querySelectorAll('.timeline__bar-line').length).toBeGreaterThan(0);
+  });
+});

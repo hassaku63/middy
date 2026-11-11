@@ -1,5 +1,5 @@
 import type { HarmonyEvent, Timeline } from '@/shared/api/client';
-import { ticksPerBar, timelineLengthTicks } from '@/shared/lib/timing';
+import { ticksPerBar, ticksPerBeat, timelineLengthTicks } from '@/shared/lib/timing';
 
 /** Pixels per bar; every lane shares this scale so columns line up. */
 export const BAR_WIDTH = 160;
@@ -52,6 +52,8 @@ export type Layout = {
   /** Pixels per bar in the drawing: BAR_WIDTH, or wider to fill a box (fitBarWidth). */
   barWidth: number;
   perBar: number;
+  /** Ticks per beat: a quarter, or a dotted quarter in a compound meter. */
+  perBeat: number;
   bars: number;
   width: number;
   height: number;
@@ -104,6 +106,7 @@ export function computeLayout(tl: Timeline, barWidth = BAR_WIDTH): Layout {
     labelWidth,
     barWidth,
     perBar,
+    perBeat: ticksPerBeat(tl.ppq, tl.timeSignature),
     bars,
     width: x(bars * perBar),
     height: drumTop + drumNotes.length * DRUM_ROW_HEIGHT,

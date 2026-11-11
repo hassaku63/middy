@@ -11,6 +11,28 @@
   stroke-width: 1;
 }
 
+/* The grid over the rows and under the notes (#435): a bar's line plainly
+   stronger than a beat's, as in a DAW's editor. The bar's line is 3:1 or
+   more on both rows (WCAG 1.4.11); a beat's is a hint, not a boundary. */
+.timeline__bar-line {
+  stroke: #9ca3af;
+  stroke-width: 1.5;
+}
+
+.timeline__beat {
+  stroke: rgb(156 163 175 / 0.3);
+  stroke-width: 1;
+}
+
+@media (prefers-color-scheme: light) {
+  .timeline__bar-line {
+    stroke: #4b5563;
+  }
+  .timeline__beat {
+    stroke: rgb(75 85 99 / 0.25);
+  }
+}
+
 .timeline__chord rect {
   fill: #374151;
   stroke: #6b7280;

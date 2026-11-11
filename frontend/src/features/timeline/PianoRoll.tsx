@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { NoteEvent } from '@/shared/api/client';
 import { pitchName } from '@/shared/lib/notation';
 import { ROW_HEIGHT, type Layout } from './layout';
@@ -6,6 +7,8 @@ type Props = {
   notes: NoteEvent[];
   layout: Layout;
   positionTick: number;
+  /** Drawn over the rows and under the notes (TimelineGrid). */
+  grid?: ReactNode;
 };
 
 const BLACK_KEYS = new Set([1, 3, 6, 8, 10]);
@@ -15,7 +18,7 @@ const BLACK_KEYS = new Set([1, 3, 6, 8, 10]);
  * marked. A picture only: assistive technology gets the chords (ChordLane)
  * and the explanation instead of dozens of note names (BL-162).
  */
-export function PianoRoll({ notes, layout, positionTick }: Props) {
+export function PianoRoll({ notes, layout, positionTick, grid }: Props) {
   return (
     <g aria-hidden="true">
       {Array.from({ length: layout.rows }, (_, i) => {
@@ -37,6 +40,7 @@ export function PianoRoll({ notes, layout, positionTick }: Props) {
           </g>
         );
       })}
+      {grid}
       {notes.map((n, i) => {
         const sounding = positionTick >= n.start && positionTick < n.start + n.duration;
         return (
