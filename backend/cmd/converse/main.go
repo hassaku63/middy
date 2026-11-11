@@ -98,8 +98,8 @@ func collect(args []string) error {
 }
 
 // conversation sends the turns one by one with the history the app sends:
-// the user's words, and for each answer its reply (useIdeas.ts). Keep the
-// two in step when the app's history changes (BL-310).
+// the user's words, and for each answer its reply and the gist of its
+// examples (frontend/src/features/chat/history.ts). Keep the two in step.
 func conversation(client *http.Client, base string, turns []string) []Turn {
 	var history []message
 	var out []Turn
@@ -115,9 +115,50 @@ func conversation(client *http.Client, base string, turns []string) []Turn {
 		}
 		t.Answer = res
 		out = append(out, t)
-		history = append(history, message{Role: "assistant", Content: res.Reply})
+		history = append(history, message{Role: "assistant", Content: answerMessage(res)})
 	}
 	return out
+}
+
+// answerMessage is an answer as the next request carries it, as the app's
+// historyMessage writes it (BL-310): the reply, then one line per example.
+func answerMessage(res *ideas.Result) string {
+	if len(res.Candidates) == 0 {
+		return res.Reply
+	}
+	var b strings.Builder
+	b.WriteString(res.Reply + "\n前回の候補:")
+	for _, c := range res.Candidates {
+		b.WriteString("\n" + gist(c))
+	}
+	return string([]rune(b.String())[:min(len([]rune(b.String())), 1000)])
+}
+
+// gist is one example in a line, as candidateGist writes it in the app.
+func gist(c ideas.Candidate) string {
+	meter := c.Meter
+	if meter == "" {
+		meter = "4/4"
+	}
+	parts := []string{c.Key.String(), meter, strconv.FormatFloat(c.TempoBPM, 'f', -1, 64) + " BPM"}
+	if c.Bars > 0 {
+		parts = append(parts, strconv.Itoa(c.Bars)+" bars")
+	}
+	chords := make([]string, len(c.Progression))
+	for i, l := range c.Progression {
+		beats := c.BeatsPerChord
+		if i < len(c.Beats) {
+			beats = c.Beats[i]
+		}
+		chords[i] = l + ":" + strconv.Itoa(beats)
+	}
+	parts = append(parts, strings.Join(chords, " "))
+	for _, kv := range [][2]string{{"style", c.Style}, {"accompaniment", c.Accompaniment}, {"drums", c.Drums}, {"feel", c.Feel}, {"tensions", c.Tensions}} {
+		if kv[1] != "" {
+			parts = append(parts, kv[0]+" "+kv[1])
+		}
+	}
+	return "- " + c.Title + ": " + strings.Join(parts, ", ")
 }
 
 func imagine(client *http.Client, base string, history []message) (*ideas.Result, error) {
