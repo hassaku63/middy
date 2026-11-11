@@ -1,5 +1,6 @@
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { keyName } from '@/shared/lib/notation';
+import { chordNamesOf, numeralsOf } from './progression';
 
 type Props = {
   candidate: IdeaCandidate;
@@ -15,7 +16,8 @@ type Props = {
  * hit area covers the card.
  */
 export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
-  const { title, key, tempoBpm, progression, beatsPerChord, beats, reason } = candidate;
+  const { title, key, tempoBpm, beatsPerChord, beats, reason } = candidate;
+  const names = chordNamesOf(candidate);
   const labels = patternLabels(candidate, patterns);
   return (
     <article className={`candidate${open ? ' is-open' : ''}`} aria-label={title}>
@@ -29,7 +31,8 @@ export function CandidateCard({ candidate, open, onOpen, patterns }: Props) {
         <span>{tempoBpm} BPM</span>
         <span>{beats?.length ? `長さ: ${beats.join('・')} 拍` : `${beatsPerChord} 拍/コード`}</span>
       </p>
-      <p className="candidate__progression">{progression.join(' - ')}</p>
+      <p className="candidate__progression">{numeralsOf(candidate).join(' - ')}</p>
+      {names.length > 0 && <p className="candidate__chords">{names.join(' - ')}</p>}
       {labels.length > 0 && (
         <p className="candidate__spec">
           {labels.map((l) => (

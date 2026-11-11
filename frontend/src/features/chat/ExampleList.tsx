@@ -1,6 +1,7 @@
 import type { IdeaCandidate } from '@/shared/api/client';
 import { keyName } from '@/shared/lib/notation';
 import type { Exchange } from './exchanges';
+import { numeralsOf } from './progression';
 
 type Props = {
   exchanges: Exchange[];
@@ -34,7 +35,7 @@ export function ExampleList({ exchanges, openExample, onOpen }: Props) {
                   <span className="visually-hidden">{ex.number} 回目：</span>
                   <span className="chat__line-title">{c.title}</span>{' '}
                   <span className="chat__line-spec">
-                    {keyName(c.key)} {c.tempoBpm} BPM {c.progression.join(' - ')}
+                    {keyName(c.key)} {c.tempoBpm} BPM {numeralsOf(c).join(' - ')}
                   </span>
                 </button>
               </li>

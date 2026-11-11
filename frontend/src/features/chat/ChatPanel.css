@@ -144,6 +144,14 @@
   font-size: 1rem;
 }
 
+/* The chords' names under the numerals, so a slash label such as I/7
+   reads as the chord it is (Bb/A, #451). */
+.candidate__chords {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .candidate__reason {
   font-size: 0.9rem;
   line-height: 1.6;
