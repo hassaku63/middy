@@ -1,6 +1,6 @@
 import type { HarmonyEvent } from '@/shared/api/client';
 import { harmonySymbol } from '@/shared/lib/notation';
-import { CHORD_LANE_HEIGHT, LABEL_WIDTH, type Layout } from './layout';
+import { CHORD_LANE_HEIGHT, type Layout } from './layout';
 
 type Props = {
   harmony: HarmonyEvent[];
@@ -57,7 +57,7 @@ export function ChordLane({
         const active = i === activeIndex;
         const selected = i === selectedIndex;
         const x = layout.x(h.start);
-        const width = layout.x(h.duration) - LABEL_WIDTH;
+        const width = layout.x(h.duration) - layout.labelWidth;
         const mark = selected ? '■' : active && selectedIndex === null ? '▶' : null;
         const early = pushTicks(h, ppq);
         return (

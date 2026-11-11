@@ -1,6 +1,6 @@
 import type { NoteEvent } from '@/shared/api/client';
 import { pitchName } from '@/shared/lib/notation';
-import { LABEL_WIDTH, ROW_HEIGHT, type Layout } from './layout';
+import { ROW_HEIGHT, type Layout } from './layout';
 
 type Props = {
   notes: NoteEvent[];
@@ -24,9 +24,9 @@ export function PianoRoll({ notes, layout, positionTick }: Props) {
           <g key={`row-${pitch}`}>
             <rect
               className={`timeline__row${BLACK_KEYS.has(pitch % 12) ? ' is-black' : ''}`}
-              x={LABEL_WIDTH}
+              x={layout.labelWidth}
               y={layout.y(pitch)}
-              width={layout.width - LABEL_WIDTH}
+              width={layout.width - layout.labelWidth}
               height={ROW_HEIGHT}
             />
             {pitch % 12 === 0 && (
@@ -47,7 +47,7 @@ export function PianoRoll({ notes, layout, positionTick }: Props) {
             data-pitch={pitchName(n.pitch)}
             x={layout.x(n.start)}
             y={layout.y(n.pitch) + 1}
-            width={Math.max(2, layout.x(n.duration) - LABEL_WIDTH - 1)}
+            width={Math.max(2, layout.x(n.duration) - layout.labelWidth - 1)}
             height={ROW_HEIGHT - 2}
             rx={2}
           />

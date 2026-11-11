@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
-import { BAR_WIDTH, harmonyAt } from './layout';
+import { BAR_WIDTH, computeLayout, DRUM_NAMES, harmonyAt, LABEL_WIDTH } from './layout';
 import { TimelineView } from './TimelineView';
 
 /** C | G | Am (one bar each, block triads) at 120 BPM. */
@@ -122,8 +122,32 @@ describe('TimelineView', () => {
     expect(lane.querySelectorAll('.timeline__drum-hit.is-sounding')).toHaveLength(2); // kick + hat at 0
     // Drum notes must not appear as pitched notes nor stretch the pitch range.
     expect(container.querySelectorAll('.timeline__note')).toHaveLength(9);
-    expect(screen.getByText('Kick')).toBeInTheDocument();
-    expect(screen.getByText('Snare')).toBeInTheDocument();
+    expect(screen.getByText('キック')).toBeInTheDocument();
+    expect(screen.getByText('スネア')).toBeInTheDocument();
+  });
+
+  it("names the drums in the rhythm notes' words, in a column wide enough (#402 E)", () => {
+    const withAll: Timeline = {
+      ...timeline,
+      tracks: [
+        {
+          name: 'drums',
+          channel: 9,
+          program: 0,
+          notes: Object.keys(DRUM_NAMES).map((pitch) => ({
+            pitch: Number(pitch),
+            velocity: 80,
+            start: 0,
+            duration: 120,
+          })),
+        },
+      ],
+    };
+    const layout = computeLayout(withAll);
+    const longest = Math.max(...Object.values(DRUM_NAMES).map((n) => n.length));
+    expect(layout.labelWidth).toBeGreaterThanOrEqual(longest * 9 + 4);
+    expect(computeLayout(timeline).labelWidth).toBe(LABEL_WIDTH); // no drums: the pitch names'
+    expect(layout.x(0)).toBe(layout.labelWidth);
   });
 
   it('names the bodhrán and grid drums: toms and side stick (review)', () => {
@@ -145,7 +169,7 @@ describe('TimelineView', () => {
       ],
     };
     render(<TimelineView timeline={bodhran} positionTick={0} />);
-    for (const name of ['Tom L', 'Tom M', 'Tom H', 'Stick']) {
+    for (const name of ['低いタム', '中くらいのタム', '高いタム', 'サイドスティック']) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
   });
@@ -190,7 +214,7 @@ describe('TimelineView', () => {
       ],
     };
     render(<TimelineView timeline={jazz} positionTick={0} />);
-    for (const name of ['HH', 'HH foot', 'Ride']) {
+    for (const name of ['ハイハット', '足のハイハット', 'ライド']) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
   });
