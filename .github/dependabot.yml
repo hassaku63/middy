@@ -36,3 +36,19 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  # The Dockerfile's base images (#408). node and golang take their versions
+  # from .tool-versions through build args, which Dependabot cannot resolve,
+  # so this tracks the nginx image of the web target; distroless's `nonroot`
+  # is not a version. A new nginx line ending (1.27 stopped in 2025-06) shows
+  # up as a PR instead of going unnoticed.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      docker-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      docker-major:
+        patterns: ["*"]
+        update-types: ["major"]
