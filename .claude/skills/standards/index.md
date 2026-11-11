@@ -590,8 +590,7 @@
 | 一次情報 | https://docs.docker.com/reference/dockerfile/ （正典。登録なしで読める）。同じ文書の元は https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/reference.md 。以前の `syntax.md`（例: https://github.com/moby/buildkit/blob/dockerfile/1.4.3/frontend/dockerfile/docs/syntax.md ）は master では「reference.md に移った」とだけある。版ごとの変更は https://github.com/moby/buildkit/releases （`dockerfile/` で始まるタグ。docs.docker.com の release notes のページはここへ転送される）。書き方の指針は https://docs.docker.com/build/building/best-practices/ |
 | 状態 | 現行。最新の安定版は `dockerfile/1.28.0`（2026-10-07）。1.29.0 は rc。`syntax` 指令は「多くの利用者は `docker/dockerfile:1` にするとよい」（最新の安定版の 1.x を取ってくる）とある。`labs` の系列は、major を上げずに機能を外すことがある |
 | 当たるべき場面 | `Dockerfile` を書く・変えるとき。`RUN --mount`、ヒアドキュメント、`COPY` の新しい旗を使う前に、要る最小の版を確かめるとき。`syntax` の版を決めるとき。ベースイメージの固定（タグかダイジェストか）を決めるとき |
-| middy との接点 | `Dockerfile`（`# syntax=docker/dockerfile:1.7`、`RUN --mount=type=cache`、多段ビルド、`--target web` と `api`。ADR-0027）。CI は hadolint で検査する（`docs/dev/harness.md`） |
-| middy との違い | `syntax` を 1.7 に固定していて、指針の `docker/dockerfile:1` とも最新の 1.28 とも違う。ベースイメージはタグだけで固定し、指針の勧める Dependabot の `docker` の更新はない（`.github/dependabot.yml`）。直すかどうかは #408 |
+| middy との接点 | `Dockerfile`（`# syntax=docker/dockerfile:1`。リファレンスの勧めどおり、最新の安定版の 1.x を使う。#408、`RUN --mount=type=cache`、多段ビルド、`--target web` と `api`。ADR-0027）。CI は hadolint で検査する（`docs/dev/harness.md`） |
 | 確認日 | 2026-11-11 |
 
 ### Build checks（BuildKit の組み込みの検査）

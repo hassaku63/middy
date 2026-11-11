@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1
 # Two images from one file (ADR-0027), picked with --target:
 #   web  nginx serving the built SPA and passing /api to the API container
 #   api  the Go server on a minimal non-root runtime (the default target)
