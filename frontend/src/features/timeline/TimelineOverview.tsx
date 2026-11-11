@@ -46,9 +46,16 @@ export function TimelineOverview(props: Props) {
         onScroll={onScroll}
         style={{ '--timeline-four-bars': fourBars } as CSSProperties}
       >
-        <TimelineView {...props} />
+        <TimelineView {...props} fit={false} />
       </div>
-      <TimelineView {...props} decorative stretch highlight={view} className="timeline--overview" />
+      <TimelineView
+        {...props}
+        fit={false}
+        decorative
+        stretch
+        highlight={view}
+        className="timeline--overview"
+      />
     </div>
   );
 }

@@ -34,6 +34,7 @@ export function Stage({ timeline, player, selectedHarmony, onSelectHarmony }: Pr
       selectedHarmony={selectedHarmony}
       onSelectHarmony={onSelectHarmony}
       marks
+      fit
     />
   );
   const frame = (

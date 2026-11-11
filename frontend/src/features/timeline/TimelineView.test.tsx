@@ -2,7 +2,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
-import { BAR_WIDTH, computeLayout, DRUM_NAMES, harmonyAt, LABEL_WIDTH } from './layout';
+import {
+  BAR_WIDTH,
+  computeLayout,
+  DRUM_NAMES,
+  fitBarWidth,
+  harmonyAt,
+  LABEL_WIDTH,
+} from './layout';
 import { TimelineView } from './TimelineView';
 
 /** C | G | Am (one bar each, block triads) at 120 BPM. */
@@ -72,6 +79,21 @@ describe('TimelineView', () => {
       ),
     );
     expect(Number(playhead.getAttribute('y1'))).toBeGreaterThanOrEqual(laneBottom);
+  });
+
+  it('widens the bars to fill a box wider than the drawing, never narrows them (#402 F)', () => {
+    const natural = computeLayout(timeline);
+    // A box exactly the drawing's proportions keeps BAR_WIDTH.
+    expect(fitBarWidth(natural, { width: natural.width, height: natural.height })).toBe(BAR_WIDTH);
+    // Twice as wide at the same height: the bars take the extra width.
+    const wide = fitBarWidth(natural, { width: natural.width * 2, height: natural.height });
+    const fitted = computeLayout(timeline, wide);
+    expect(fitted.width).toBeCloseTo(natural.width * 2);
+    expect(fitted.height).toBe(natural.height); // the rows keep their size
+    // A narrower box shrinks the drawing as before; the bars stay at BAR_WIDTH.
+    expect(fitBarWidth(natural, { width: natural.width / 2, height: natural.height })).toBe(
+      BAR_WIDTH,
+    );
   });
 
   it('moves the playhead one bar width per bar', () => {
