@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 
 	"github.com/hassaku63/middy/backend/internal/music"
@@ -42,7 +43,14 @@ func Write(tl music.Timeline) ([]byte, error) {
 		last = e.tick
 		track.Write(e.data)
 	}
-	writeMeta(&track, 0, 0x2F, nil) // end of track
+	// The track ends where the timeline does, the end of its last bar, not
+	// at the last note-off: a DAW loops or appends the file by its length,
+	// as the app's player runs to the end of the harmony (#404 S5).
+	end := max(tl.LengthTicks()-last, 0)
+	if end > maxVarLen {
+		return nil, fmt.Errorf("smf: end of track %d ticks after the last event; SMF allows 0..%d", end, maxVarLen)
+	}
+	writeMeta(&track, uint32(end), 0x2F, nil)
 
 	var out bytes.Buffer
 	out.WriteString("MThd")
@@ -81,7 +89,7 @@ func collectEvents(tl music.Timeline) []event {
 	for _, tr := range tl.Tracks {
 		ch := byte(tr.Channel)                //nolint:gosec // validated: 0..15
 		push(0, 0, 0xC0|ch, byte(tr.Program)) //nolint:gosec // validated: 0..127
-		for _, n := range tr.Notes {
+		for _, n := range merged(tr.Notes) {
 			push(n.Start, 2, 0x90|ch, byte(n.Pitch), byte(n.Velocity)) //nolint:gosec // validated: 0..127
 			push(n.End(), 1, 0x80|ch, byte(n.Pitch), 0)                //nolint:gosec // validated: 0..127
 		}
@@ -98,10 +106,35 @@ func collectEvents(tl music.Timeline) []event {
 	return events
 }
 
-// writeMeta writes one meta event. Every SMF event starts with its delta
-// time, so the parameter mirrors the format even though today's meta
-// events all sit at the start or right after the last note.
-func writeMeta(w *bytes.Buffer, delta uint32, typ byte, payload []byte) { //nolint:unparam // the delta is part of every SMF event
+// merged joins notes of one pitch that overlap into one, from the first
+// start to the last end (#404 S6). A channel has one note per pitch, so
+// the first note-off of two overlapping notes would cut the other: a
+// drone's held tonic would stop when the bass on the same pitch ends,
+// while the app's player sounds both. Notes that only touch stay apart.
+func merged(notes []music.NoteEvent) []music.NoteEvent {
+	sorted := slices.Clone(notes)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		if sorted[i].Pitch != sorted[j].Pitch {
+			return sorted[i].Pitch < sorted[j].Pitch
+		}
+		return sorted[i].Start < sorted[j].Start
+	})
+	out := make([]music.NoteEvent, 0, len(sorted))
+	for _, n := range sorted {
+		if k := len(out) - 1; k >= 0 && out[k].Pitch == n.Pitch && n.Start < out[k].End() {
+			if e := n.End(); e > out[k].End() {
+				out[k].Duration = e - out[k].Start
+			}
+			continue
+		}
+		out = append(out, n)
+	}
+	return out
+}
+
+// writeMeta writes one meta event after its delta time: the tempo, meter
+// and key at the start, the end of track at the timeline's end.
+func writeMeta(w *bytes.Buffer, delta uint32, typ byte, payload []byte) {
 	writeVarLen(w, delta)
 	w.WriteByte(0xFF)
 	w.WriteByte(typ)

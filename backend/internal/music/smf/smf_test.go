@@ -247,3 +247,40 @@ func TestWriteRefusesAGapSMFCannotHold(t *testing.T) {
 		t.Fatalf("want the gap refused, got %v", err)
 	}
 }
+
+// TestTrackEndsWithTheTimeline (#404 S5): the end of track sits at the
+// end of the harmony, not at the last note-off.
+func TestTrackEndsWithTheTimeline(t *testing.T) {
+	tl := oneNote()
+	tl.Harmony = []music.HarmonyEvent{{Start: 0, Duration: 1920, Chord: music.Chord{Root: music.C, Quality: music.MajorTriad}, RomanNumeral: "I"}}
+	data, err := Write(tl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// ... note off at 480, then 1440 ticks (0x8B 0x20) to the end of track.
+	if want := []byte{0x80, 60, 0, 0x8B, 0x20, 0xFF, 0x2F, 0x00}; !bytes.HasSuffix(data, want) {
+		t.Errorf("track does not end at tick 1920: % X", data[len(data)-8:])
+	}
+}
+
+// TestOverlappingPitchesMerge (#404 S6): a note under a held note of the
+// same pitch on the same channel does not cut it off; notes that only
+// touch stay two.
+func TestOverlappingPitchesMerge(t *testing.T) {
+	tl := music.NewTimeline(music.Key{Tonic: music.D, Mode: music.Major}, 100)
+	tl.Tracks = []music.Track{{Name: "chords", Channel: 0, Notes: []music.NoteEvent{
+		{Pitch: 50, Velocity: 60, Start: 0, Duration: 7680}, // the drone's D3
+		{Pitch: 50, Velocity: 80, Start: 0, Duration: 1920}, // a bass on D3
+		{Pitch: 62, Velocity: 80, Start: 0, Duration: 480},
+		{Pitch: 62, Velocity: 80, Start: 480, Duration: 480},
+	}}}
+	data, err := Write(tl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"0 C0 00", "0 90 32 3C", "0 90 3E 50", "480 80 3E 00", "480 90 3E 50", "960 80 3E 00", "7680 80 32 00"}
+	evs := parseTrack(t, data)
+	if strings.Join(evs, "|") != strings.Join(want, "|") {
+		t.Errorf("events %v, want %v", evs, want)
+	}
+}
