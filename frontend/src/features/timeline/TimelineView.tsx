@@ -3,7 +3,15 @@ import type { Timeline } from '@/shared/api/client';
 import { ChordLane } from './ChordLane';
 import { DrumLane } from './DrumLane';
 import { PianoRoll } from './PianoRoll';
-import { CHORD_LANE_HEIGHT, DRUM_CHANNEL, computeLayout, fitBarWidth, harmonyAt } from './layout';
+import { TimelineGrid } from './TimelineGrid';
+import {
+  CHORD_LANE_HEIGHT,
+  DRUM_CHANNEL,
+  ROW_HEIGHT,
+  computeLayout,
+  fitBarWidth,
+  harmonyAt,
+} from './layout';
 import { useBoxSize } from './useBoxSize';
 import './TimelineView.css';
 
@@ -111,8 +119,32 @@ export function TimelineView({
         marks={marks}
         ppq={timeline.ppq}
       />
-      <PianoRoll notes={notes} layout={layout} positionTick={sounding} />
-      <DrumLane notes={drumNotes} layout={layout} positionTick={sounding} />
+      <PianoRoll
+        notes={notes}
+        layout={layout}
+        positionTick={sounding}
+        grid={
+          <TimelineGrid
+            layout={layout}
+            top={layout.rollTop}
+            bottom={layout.rollTop + layout.rows * ROW_HEIGHT}
+            beats={!stretch}
+          />
+        }
+      />
+      <DrumLane
+        notes={drumNotes}
+        layout={layout}
+        positionTick={sounding}
+        grid={
+          <TimelineGrid
+            layout={layout}
+            top={layout.drumTop}
+            bottom={layout.height}
+            beats={!stretch}
+          />
+        }
+      />
       {highlight && (
         <rect
           className="timeline__highlight"
