@@ -21,15 +21,24 @@ const (
 	// FeelShuffle is the blues and rock shuffle (#308, ADR-0036): eighths
 	// swung on the triplet, 2:1, whatever the tempo.
 	FeelShuffle Feel = "shuffle"
+	// FeelSwing16 is the sixteenth swing of hip-hop and lo-fi beats
+	// (BL-243, ADR-0060): sixteenths swung lightly, about 57 %, whatever
+	// the tempo.
+	FeelSwing16 Feel = "swing-16"
 )
 
 // shuffleRatio is the shuffle's long-short: the first and third notes of
 // a triplet.
 const shuffleRatio = 2.0
 
+// swing16Ratio is the sixteenth swing's long-short: 1.3 : 1, the long
+// sixteenth about 57 % of the pair, within the 54–58 % a drum machine's
+// swing is set to for hip-hop (the owner's choice, #308).
+const swing16Ratio = 1.3
+
 // Swings reports whether the feel delays the offbeats, which a compound
 // meter does not take: its beat is already divided in three.
-func (f Feel) Swings() bool { return f == FeelSwing || f == FeelShuffle }
+func (f Feel) Swings() bool { return f == FeelSwing || f == FeelShuffle || f == FeelSwing16 }
 
 // FeelInfo names and explains a feel for the prompt and the panel.
 type FeelInfo struct {
@@ -42,6 +51,7 @@ var feels = []FeelInfo{
 	{FeelStraight, "ストレート", "8 分音符を均等に刻む。"},
 	{FeelSwing, "スウィング", "8 分音符を長・短で跳ねさせる。跳ね方はテンポに合わせる（遅いほど深い）。ジャズの揺れ。"},
 	{FeelShuffle, "シャッフル", "8 分音符を 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。ブルースやロックの「タッカ・タッカ」と跳ねる揺れ。"},
+	{FeelSwing16, "16 分のスウィング", "16 分音符を長・短でわずかに跳ねさせる（長・短がおよそ 1.3 : 1、組の 57 %）。跳ねるとは聞こえない程度にノリがほどける。ヒップホップやローファイのビートの揺れ。"},
 }
 
 // Feels lists the feels in a stable order.
@@ -150,6 +160,12 @@ func applyFeel(tl music.Timeline, info FeelInfo, sw Swing) music.Timeline {
 	}
 	if info.ID == FeelShuffle && sw.Ratio == 0 {
 		sw.Ratio = shuffleRatio
+	}
+	if info.ID == FeelSwing16 {
+		sw.Unit = UnitSixteenth
+		if sw.Ratio == 0 {
+			sw.Ratio = swing16Ratio
+		}
 	}
 	sw = sw.resolved(tl.TempoBPM)
 	finer := sw.Unit == UnitEighth && finerThanEighths(tl.Tracks)
@@ -411,6 +427,9 @@ func applyStyle(tl music.Timeline, st *Style, acc Accompaniment, styleColour boo
 func feelText(f Feel, sw Swing, beatBPM float64) string {
 	if f == FeelShuffle && sw.Ratio == shuffleRatio && sw.Unit == UnitEighth {
 		return "シャッフル。8 分音符を 2 つずつ組にし、3 連符の 1 つ目と 3 つ目で弾く（長・短が 2 : 1）。「タッカ・タッカ」と跳ね、ブルースやロックの重いノリになる。テンポが変わっても跳ね方は変わらない。"
+	}
+	if f == FeelSwing16 && sw.Ratio == swing16Ratio {
+		return "16 分のスウィング。16 分音符を 2 つずつ組にし、裏の 16 分を少しだけ遅らせて、長・短をおよそ 1.3 : 1（組の 57 %）にしている。8 分と拍の頭は動かない。跳ねるとは聞こえない程度にノリがほどけ、ヒップホップやローファイのビートの揺れになる。テンポが変わっても揺れ方は変わらない。"
 	}
 	return swingText(sw, beatBPM)
 }

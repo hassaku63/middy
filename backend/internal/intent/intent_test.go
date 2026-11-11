@@ -305,6 +305,7 @@ func TestTwelveEightCandidate(t *testing.T) {
 		{"three beats", func(c *Candidate) { c.BeatsPerChord = 3 }, "beatsPerChord must be one of [1 2 4 8] in 12/8"},
 		{"4/4 shuffle drums", func(c *Candidate) { c.Drums = "shuffle" }, "drums must be one of"},
 		{"the shuffle feel", func(c *Candidate) { c.Feel = "shuffle" }, "not used in 12/8"},
+		{"the swing-16 feel", func(c *Candidate) { c.Feel = "swing-16" }, "not used in 12/8"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -75,7 +75,7 @@ var Schema = json.RawMessage(fmt.Sprintf(`{
               "basedOn": { "type": "string", "enum": [%s], "description": "もとにしたドラムの型。スタイルの型から選ぶ" }
             }
           },
-          "feel": { "type": "string", "enum": [%s], "description": "8 分音符のノリ。straight は均等、swing は長・短で跳ねる（跳ね方はテンポに合わせる）、shuffle は 3 連符で跳ねる（ブルースやロックのシャッフル）。伴奏かドラムがあるときに効く。swing と shuffle は 6/8 では使わない。省略するとストレート" },
+          "feel": { "type": "string", "enum": [%s], "description": "ノリ。straight は均等、swing は 8 分を長・短で跳ねさせる（跳ね方はテンポに合わせる）、shuffle は 3 連符で跳ねる（ブルースやロックのシャッフル）、swing-16 は 16 分をわずかに揺らす（ローファイやヒップホップ）。伴奏かドラムがあるときに効く。swing・shuffle・swing-16 は 6/8 と 12/8 では使わない。省略するとストレート" },
           "tensions": { "type": "string", "enum": [%s], "description": "和音に足すテンション。スタイルの決まりの代わりに使う。none は足さない、9 は 9 度（長三和音には add9）、9-13 は 9 度と 13 度。どの音を足すかはエンジンが調の音階から選び、ローマ数字には書かない。省略するとスタイルのまま" }
         }
       }

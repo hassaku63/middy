@@ -156,10 +156,10 @@ export interface components {
       timeSignature?: components['schemas']['TimeSignature'];
     };
     /**
-     * @description 8 分音符のノリ。swing は裏拍を遅らせる（長・短の比はテンポから決まる。BL-084）。shuffle は 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2:1 で、テンポによらない。ADR-0036）。伴奏かドラムがあるときに効く。6/8 では拍がすでに 3 つに分かれるので swing と shuffle は使えない。省略時は straight
+     * @description ノリ。swing は裏拍を遅らせる（長・短の比はテンポから決まる。BL-084）。shuffle は 3 連符の 1 つ目と 3 つ目で弾く（長・短が 2:1 で、テンポによらない。ADR-0036）。swing-16 は 16 分の裏をわずかに遅らせる（長・短がおよそ 1.3:1、テンポによらない。ADR-0060）。伴奏かドラムがあるときに効く。6/8 と 12/8 では拍がすでに 3 つに分かれるので swing・shuffle・swing-16 は使えない。省略時は straight
      * @enum {string}
      */
-    Feel: 'straight' | 'swing' | 'shuffle';
+    Feel: 'straight' | 'swing' | 'shuffle' | 'swing-16';
     PatternsResponse: {
       accompaniments: components['schemas']['Accompaniment'][];
       drums: components['schemas']['DrumPattern'][];

@@ -31,7 +31,7 @@ func SystemPrompt() string {
 				fmt.Fprintf(&b, "- %s: %s %s\n", d.ID, d.Name, d.Description)
 			}
 		}
-		b.WriteString("8 分音符のノリ（feel）:\n")
+		b.WriteString("ノリ（feel）:\n")
 		for _, f := range pattern.Feels() {
 			fmt.Fprintf(&b, "- %s: %s %s\n", f.ID, f.Name, f.Description)
 		}
@@ -48,7 +48,7 @@ func SystemPrompt() string {
 		b.WriteString("和音の長さは beatsPerChord で一律にできるが、和音ごとに変えたいときは beats に progression と同じ数の長さを書く（例: 4/4 で [8, 4, 2, 2] は、最初の和音を 2 小節保ち、最後の 2 つを 2 拍ずつ替える）。ケルトや民謡では、主和音を長く保つと素朴さが出る。毎小節同じ間隔で替えるとポップスに聞こえやすい。")
 		b.WriteString("drumGrid は任意。カタログのドラムでは足りない打ち方（ハーフタイム、キメ、型の 1〜2 打の変化）が欲しいときだけ、drums の代わりに書き、もとにした型を basedOn に書く。")
 		b.WriteString("pushes は任意。前のめりの勢いが欲しいロックやポップで、小節の頭の和音を 8 分早く（eighth）弾きたいときだけ、progression と同じ数で書き、押す和音は 1〜2 個にする（最初の和音は none）。")
-		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。ジャズやシャッフルのように跳ねるイメージなら feel を swing にする。")
+		b.WriteString("イメージに合うなら候補ごとに accompaniment と drums を選ぶ。静かな曲ではドラムを省略してよい。ジャズやシャッフルのように跳ねるイメージなら feel を swing にする。ローファイやヒップホップのように、8 分は跳ねずに 16 分がわずかによれるイメージなら feel を swing-16 にする。")
 		prompt = b.String()
 	})
 	return prompt
