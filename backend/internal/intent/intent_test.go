@@ -406,6 +406,7 @@ func TestPerChordBeats(t *testing.T) {
 		{"bar-long chord mid-bar", "", []string{"i", "VI", "III", "VII"}, []int{2, 4, 2, 4}, "beats[1]: a chord of 4 beats must start on a bar line"},
 		{"ends mid-bar", "", []string{"i", "VI", "III", "VII"}, []int{4, 4, 4, 2}, "the progression ends mid-bar"},
 		{"6/8 half bars", "6/8", []string{"i", "VI", "III", "VII"}, []int{2, 1, 1, 2}, ""},
+		{"one length ends mid-bar (BL-304)", "", []string{"i", "VI", "III"}, nil, "the progression ends mid-bar (3 chords of 2 beats is 6 beats, bars of 4); use a multiple of 2 chords"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -414,6 +415,9 @@ func TestPerChordBeats(t *testing.T) {
 			c.Progression, c.Beats = tt.prog, tt.beats
 			if tt.meter == "6/8" {
 				c.Meter, c.BeatsPerChord = "6/8", 2
+			}
+			if tt.beats == nil {
+				c.BeatsPerChord = 2 // one length for every chord
 			}
 			err := in.Validate()
 			switch {
