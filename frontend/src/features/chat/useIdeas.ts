@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ApiError, imagine, type ChatMessage, type IdeaCandidate } from '@/shared/api/client';
+import { historyMessage } from './history';
 
 /** A rendered turn of the conversation: what was said and what came back. */
 export type ChatTurn =
@@ -17,7 +18,8 @@ export type Ideas = {
 
 /**
  * Owns the conversation of scenario S2. The server is stateless, so the
- * history (user texts and assistant replies) goes with every turn, cut to
+ * history (user texts, and assistant replies with the gist of their
+ * examples, historyMessage) goes with every turn, cut to
  * the latest MAX_MESSAGES by recentHistory. An answer opens nothing by
  * itself: the user chooses (docs/product/experience.md, BL-219).
  */
@@ -30,10 +32,7 @@ export function useIdeas(): Ideas {
     async (text: string) => {
       const content = text.trim();
       if (!content || busy) return;
-      const history = recentHistory([
-        ...turns.map((t) => ({ role: t.role, content: t.content })),
-        { role: 'user', content },
-      ]);
+      const history = recentHistory([...turns.map(historyMessage), { role: 'user', content }]);
       setTurns((prev) => [...prev, { role: 'user', content }]);
       setBusy(true);
       setError(null);

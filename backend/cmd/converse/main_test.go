@@ -30,3 +30,16 @@ func TestMeasure(t *testing.T) {
 		t.Fatalf("got %+v", m)
 	}
 }
+
+// TestGistMatchesTheApp (BL-310): the same line history.test.ts expects.
+func TestGistMatchesTheApp(t *testing.T) {
+	c := ideas.Candidate{Candidate: intent.Candidate{
+		Title: "窓辺の雨", Key: music.Key{Tonic: music.A, Mode: music.Minor}, TempoBPM: 72,
+		Progression: []string{"i", "VI", "III", "VII"}, BeatsPerChord: 4, Beats: []int{4, 4, 2, 2}, Bars: 3,
+		Style: "pop", Accompaniment: "arpeggio", Drums: "ballad", Tensions: "9",
+	}}
+	want := "- 窓辺の雨: A minor, 4/4, 72 BPM, 3 bars, i:4 VI:4 III:2 VII:2, style pop, accompaniment arpeggio, drums ballad, tensions 9"
+	if got := gist(c); got != want {
+		t.Fatalf("got  %q\nwant %q", got, want)
+	}
+}

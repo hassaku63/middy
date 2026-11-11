@@ -77,7 +77,7 @@ go run ./cmd/converse collect -base http://localhost:8080 -turns cmd/converse/tu
 go run ./cmd/converse report converse-out/*.json
 ```
 
-送る履歴は画面と同じ形（利用者の文と、答えの要約）。画面の履歴の作り方を変えたら、`conversation` も合わせる。
+送る履歴は画面と同じ形（利用者の文と、答えの要約に続く各候補の要点）。画面の履歴の作り方（`frontend/src/features/chat/history.ts`）を変えたら、`answerMessage` も合わせる。
 
 ### 5. ドキュメントを更新する
 
