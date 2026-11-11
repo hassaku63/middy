@@ -162,3 +162,25 @@ func TestWalkKeepsWalking(t *testing.T) {
 		}
 	}
 }
+
+// TestWaltzFillSaysWhatItPlays (#404 S9): 3/4's fill has two strokes,
+// the snare and the low tom, and its notes do not say it goes round the
+// toms; 4/4's fill does go round them and says so.
+func TestWaltzFillSaysWhatItPlays(t *testing.T) {
+	waltz := soundAuditTimelineIn(t, music.ThreeFour, 3, "I", "IV", "V", "I")
+	out, err := Render(waltz, Choice{Accompaniment: "waltz", Drums: "waltz"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := out.Rhythm.Drums.Explanation; strings.Contains(e, "高い方から低い方へ回す") || !strings.Contains(e, "スネアから低いタムへ") {
+		t.Errorf("3/4 fill text does not match its two strokes: %s", e)
+	}
+	rock := soundAuditTimeline(t, 4, "I", "IV", "V", "I")
+	out, err = Render(rock, Choice{Accompaniment: "pulse", Drums: "eight-beat"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e := out.Rhythm.Drums.Explanation; !strings.Contains(e, "高い方から低い方へ回す") {
+		t.Errorf("4/4 fill text lost its tom round: %s", e)
+	}
+}

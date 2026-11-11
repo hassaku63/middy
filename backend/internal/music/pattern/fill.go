@@ -137,6 +137,12 @@ func fillText(d Drums, ts music.TimeSignature, length music.Tick) string {
 	}
 	k := kitOf(d)
 	how := "タムを高い方から低い方へ回すフィルを入れ"
+	// A fill of two eighths (3/4's last beat) has room for its first and
+	// last strokes only, the snare and the low tom: it does not go round
+	// the toms (#404 S9).
+	if (bar-fillFrom(ts))/eighth < 3 {
+		how = "スネアから低いタムへ下りる短いフィルを入れ"
+	}
 	switch k {
 	case kitHand:
 		how = "太鼓を細かく転がすフィルを入れ"
