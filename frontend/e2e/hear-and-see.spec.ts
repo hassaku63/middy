@@ -46,7 +46,7 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
   // Download the MIDI file with a descriptive name.
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'MIDI を保存' }).click(),
+    page.getByRole('button', { name: 'MIDI 書き出し' }).click(),
   ]);
   expect(download.suggestedFilename()).toMatch(/^middy-E-minor-i-iv-VII-III-VI-.*-V7-i\.mid$/);
   expect(await download.path()).not.toBeNull();
@@ -81,7 +81,7 @@ test('change the key of an example: the numerals stay, the chords move (BL-078)'
   await expect(result.getByTestId('drum-lane')).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'MIDI を保存' }).click(),
+    page.getByRole('button', { name: 'MIDI 書き出し' }).click(),
   ]);
   expect(download.suggestedFilename()).toBe('middy-C-minor-i-VI-III-VII.mid');
 });

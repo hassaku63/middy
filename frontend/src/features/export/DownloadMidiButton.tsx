@@ -21,7 +21,7 @@ export function DownloadMidiButton({ timeline, saveFile }: DownloadMidiButtonPro
         }}
         disabled={!timeline || busy}
       >
-        {busy ? '書き出し中…' : 'MIDI を保存'}
+        {busy ? '書き出し中…' : 'MIDI 書き出し'}
       </button>
       {error && <span role="alert"> {error}</span>}
     </span>

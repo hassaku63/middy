@@ -147,7 +147,6 @@ describe('App docs/product/experience.md', () => {
     expect(screen.queryByRole('button', { name: '保存' })).not.toBeInTheDocument();
     await sendImage(user);
 
-    await user.type(screen.getByLabelText('例の名前'), '練習 1');
     await user.click(screen.getByRole('button', { name: '保存' }));
     await user.click(await screen.findByText('保存した例（1）'));
     const list = screen.getByRole('list', { name: '保存した例の一覧' });
@@ -160,7 +159,7 @@ describe('App docs/product/experience.md', () => {
     });
 
     await user.click(within(list).getByRole('button', { name: '開く' }));
-    expect(screen.getByText('保存した例: 練習 1')).toBeInTheDocument();
+    expect(screen.getByText('保存した例: 窓辺の雨')).toBeInTheDocument();
   });
 
   it('opens nothing by itself when an answer arrives, and keeps what the user chose (BL-219)', async () => {

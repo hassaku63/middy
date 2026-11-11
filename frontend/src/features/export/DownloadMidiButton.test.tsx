@@ -18,7 +18,7 @@ describe('DownloadMidiButton', () => {
 
   it('is disabled without a timeline', () => {
     render(<DownloadMidiButton timeline={null} saveFile={vi.fn()} />);
-    expect(screen.getByRole('button', { name: 'MIDI を保存' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'MIDI 書き出し' })).toBeDisabled();
   });
 
   it('fetches the file and saves it under a descriptive name', async () => {
@@ -28,13 +28,13 @@ describe('DownloadMidiButton', () => {
     const user = userEvent.setup();
     render(<DownloadMidiButton timeline={timeline} saveFile={saveFile} />);
 
-    await user.click(screen.getByRole('button', { name: 'MIDI を保存' }));
+    await user.click(screen.getByRole('button', { name: 'MIDI 書き出し' }));
 
     await waitFor(() => expect(saveFile).toHaveBeenCalledTimes(1));
     const [blob, name] = saveFile.mock.calls[0] as [Blob, string];
     expect(name).toBe('middy-G-major-I.mid');
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(bytes);
-    expect(screen.getByRole('button', { name: 'MIDI を保存' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'MIDI 書き出し' })).toBeEnabled();
   });
 
   it('says the export failed, in Japanese, and does not save', async () => {
@@ -50,7 +50,7 @@ describe('DownloadMidiButton', () => {
     const user = userEvent.setup();
     render(<DownloadMidiButton timeline={timeline} saveFile={saveFile} />);
 
-    await user.click(screen.getByRole('button', { name: 'MIDI を保存' }));
+    await user.click(screen.getByRole('button', { name: 'MIDI 書き出し' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('MIDI の書き出しに失敗しました');
     expect(saveFile).not.toHaveBeenCalled();

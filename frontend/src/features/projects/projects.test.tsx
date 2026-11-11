@@ -30,39 +30,31 @@ function Harness({ store, onOpen }: { store: MemoryProjectStore; onOpen: (p: Pro
 }
 
 describe('SaveProjectForm + ProjectList + useProjects', () => {
-  it('saves with a typed name, lists, opens and deletes', async () => {
+  it('saves in one click under the candidate title, lists, opens and deletes (#440)', async () => {
     const store = new MemoryProjectStore();
     const onOpen = vi.fn();
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={onOpen} />);
 
-    await user.type(screen.getByLabelText('例の名前'), '雨の曲');
+    // No name is asked for.
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '保存' }));
 
     // The list stays folded until asked for.
     await user.click(await screen.findByText('保存した例（1）'));
     const list = screen.getByRole('list', { name: '保存した例の一覧' });
     const item = within(list).getByRole('listitem');
-    expect(item).toHaveTextContent('雨の曲');
+    expect(item).toHaveTextContent('窓辺の雨');
     expect(item).toHaveTextContent('A minor · 90 BPM');
-    expect(screen.getByLabelText('例の名前')).toHaveValue('');
 
     await user.click(within(item).getByRole('button', { name: '開く' }));
-    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ name: '雨の曲', timeline }));
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ name: '窓辺の雨', timeline }));
 
-    await user.click(within(item).getByRole('button', { name: '雨の曲 を削除' }));
+    await user.click(within(item).getByRole('button', { name: '窓辺の雨 を削除' }));
     await waitFor(() =>
       expect(screen.queryByRole('list', { name: '保存した例の一覧' })).not.toBeInTheDocument(),
     );
     expect(await store.list()).toHaveLength(0);
-  });
-
-  it('falls back to the candidate title when no name is typed', async () => {
-    const store = new MemoryProjectStore();
-    const user = userEvent.setup();
-    render(<Harness store={store} onOpen={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: '保存' }));
-    expect(await screen.findByText('窓辺の雨')).toBeInTheDocument();
   });
 
   it('shows no list while nothing is saved', () => {
@@ -74,16 +66,14 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     expect(screen.queryByRole('region', { name: '保存した例' })).not.toBeInTheDocument();
   });
 
-  it('says so and keeps the name when the store refuses a save (review)', async () => {
+  it('says so when the store refuses a save, and can be tried again (review)', async () => {
     const store = new MemoryProjectStore();
     store.save = () => Promise.reject(new Error('QuotaExceededError'));
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={vi.fn()} />);
-    const input = screen.getByRole('textbox');
-    await user.type(input, '雨の例');
     await user.click(screen.getByRole('button', { name: '保存' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('保存できませんでした');
-    expect(input).toHaveValue('雨の例');
+    expect(screen.getByRole('button', { name: '保存' })).toBeEnabled();
   });
 
   it('keeps a save that lands before a slow first load (review)', async () => {
@@ -97,7 +87,6 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     };
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={vi.fn()} />);
-    await user.type(screen.getByLabelText('例の名前'), '雨の曲');
     await user.click(screen.getByRole('button', { name: '保存' }));
     expect(await screen.findByText('保存した例（1）')).toBeInTheDocument();
     firstLoad([]); // the first load answers last, with the list from before the save
