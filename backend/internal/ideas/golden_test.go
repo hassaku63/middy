@@ -12,7 +12,7 @@ var update = flag.Bool("update", false, "rewrite the golden files in testdata/go
 // TestGoldenSystemPrompt fixes the system prompt, catalogue included
 // (BL-176, #207): moving the catalogue to data must not change what the
 // model is told. A prompt change refreshes it on purpose with
-// go test ./internal/ideas -run Golden -update, and needs-eval as before.
+// go test ./internal/ideas -run Golden -update, and an eval label as before.
 func TestGoldenSystemPrompt(t *testing.T) {
 	got := SystemPrompt()
 	path := filepath.Join("testdata", "golden", "system-prompt.txt")

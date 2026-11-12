@@ -17,7 +17,7 @@ import (
 
 // TestLiveEval runs the evaluation set against the real API. It is behind
 // the "eval" build tag and needs ANTHROPIC_API_KEY. Locally run `make eval`;
-// in CI it runs when a pull request gets the `needs-eval` label (eval.yml,
+// in CI it runs when a pull request gets the `needs-eval-cases` label (eval.yml,
 // ADR-0018), which posts the printed table as a comment.
 func TestLiveEval(t *testing.T) {
 	key := os.Getenv("ANTHROPIC_API_KEY")

@@ -28,7 +28,7 @@ image='^(backend/|frontend/|Dockerfile|\.dockerignore|compose\.yaml|deploy/|scri
 # the real-API evaluation (eval.yml, ADR-0018) only matters when what the
 # model is told, or how its answer is read and rendered, may have changed.
 # It costs money, so it does not follow the "everything" paths above.
-eval='^(backend/internal/(ideas|intent|llm|music)/|backend/go\.(mod|sum)|\.github/workflows/eval\.yml|Makefile)'
+eval='^(backend/internal/(ideas|intent|llm|music)/|backend/cmd/converse/|backend/go\.(mod|sum)|\.github/workflows/eval\.yml|scripts/converse-ci\.sh|Makefile)'
 
 touches() { grep -qE "$1" <<<"$changed"; }
 job() { if touches "$all" || touches "$2"; then echo "$1=true"; else echo "$1=false"; fi; }
