@@ -188,16 +188,20 @@ main {
     flex: 1;
     min-height: 0;
     display: grid;
-    /* The column takes 30 % of a wide screen, 320–400 px: the examples'
-       cards and the replies read in longer lines, and the result keeps
-       760 px or more for the chord's band and one line of tools (#437). */
-    grid-template-columns: clamp(320px, 30vw, 400px) minmax(0, 1fr);
-    gap: 20px;
+    /* The column's content takes 30 % of a wide screen, 320–400 px: the
+       examples' cards and the replies read in longer lines, and the result
+       keeps 760 px or more for the chord's band and one line of tools
+       (#437). The column adds its 12 px gutter and 1 px edge (below); no
+       gap is left between the halves, so the line between them is the
+       column's edge. */
+    grid-template-columns: calc(clamp(320px, 30vw, 400px) + 13px) minmax(0, 1fr);
+    gap: 0;
   }
 
   .app--desk .app__main {
     min-height: 0;
     overflow-y: auto;
+    padding-left: 20px;
   }
 
   /* The column is one screen tall and scrolls as a whole: saved projects,
@@ -207,6 +211,10 @@ main {
   .app--desk .app__side {
     min-height: 0;
     overflow-y: auto;
+    padding-right: 12px;
+    /* Drawn only while an example is open (below); kept so opening one
+       does not narrow the column. */
+    border-right: 1px solid transparent;
   }
 
   .app--desk .chat__composer {
@@ -244,15 +252,17 @@ main {
   white-space: nowrap;
 }
 
-/* Side by side, the line between the halves stands upright (BL-212). */
+/* Side by side, the line between the halves stands upright (BL-212): it is
+   the conversation column's own right edge, so the column's scroll bar
+   sits against it, inside the column, and nothing belongs to neither half
+   (BL-319). A splitter, if one is ever added, is this line. */
 @media (min-width: 1024px) {
   .app--desk .app__timeline {
     border-top: 0;
     padding-top: 0;
   }
 
-  .app--desk .app__main:has(.app__timeline) {
-    border-left: 1px solid var(--rule);
-    padding-left: 20px;
+  .app--desk .app__columns:has(.app__timeline) .app__side {
+    border-right-color: var(--rule);
   }
 }
