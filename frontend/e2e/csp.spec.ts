@@ -19,7 +19,7 @@ for (const path of ['/']) {
     const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
     await page.getByRole('button', { name: '再生' }).click();
     await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
-    await page.getByRole('button', { name: '停止' }).click();
+    await page.getByRole('button', { name: '停止', exact: true }).click();
     await result.getByRole('listbox', { name: 'コード' }).getByRole('option').nth(1).click();
     await Promise.all([
       page.waitForEvent('download'),

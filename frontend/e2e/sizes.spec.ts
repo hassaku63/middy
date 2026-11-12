@@ -35,8 +35,9 @@ for (const size of SIZES) {
     }) => {
       await page.goto('/');
       const { result } = await openExample(page, '雨の日曜の午後', '遠い記憶');
-      const stop = page.getByRole('button', { name: '停止' });
-      if (await stop.isVisible()) await stop.click();
+      if (await page.getByRole('button', { name: '一時停止' }).isVisible()) {
+        await page.getByRole('button', { name: '停止', exact: true }).click();
+      }
       await result.getByRole('option', { name: 'V7 B7' }).click();
       await expect(page.getByRole('button', { name: /固定を解除/ })).toBeVisible();
 

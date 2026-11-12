@@ -37,7 +37,7 @@ test('a saved project opens offline', async ({ page, context }) => {
   ]);
   await page.getByRole('button', { name: '再生' }).click();
   await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
-  await page.getByRole('button', { name: '停止' }).click();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
 
   await context.setOffline(false);
   await expect(page.getByText(/オフラインです/)).toHaveCount(0);

@@ -38,6 +38,17 @@
   outline-offset: 2px;
 }
 
+/* Stop goes back to the beginning (BL-334): an outlined button next to
+   play, so play stays the one that stands out. */
+.player__stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
 /* The glyph of the operation, as on the chord lane's marks. */
 .player__icon {
   font-size: 0.8em;

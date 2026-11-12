@@ -228,7 +228,7 @@ describe('TimelinePlayer from a point (BL-327)', () => {
     expect(p.positionTick).toBeCloseTo(6720, 6);
   });
 
-  it('stop goes back to where play was set to start; stopped, seek sets where the next starts', () => {
+  it('pause stays where it is; stop goes back to the beginning (BL-334)', () => {
     const synth = fakeSynth();
     const p = newPlayer(synth);
     const events: [number, string][] = [];
@@ -236,12 +236,18 @@ describe('TimelinePlayer from a point (BL-327)', () => {
     p.seek(1920);
     expect(p.positionTick).toBe(1920);
     expect(events.at(-1)).toEqual([1920, 'stopped']);
-    p.play();
-    expect(p.positionTick).toBe(0); // play() alone starts at the beginning
-    p.seek(3840);
-    vi.advanceTimersByTime(1000);
+    p.play(1920);
+    vi.advanceTimersByTime(1000); // two beats at 120 BPM
+    p.pause();
+    expect(synth.allOffCalls).toBe(1);
+    expect(events.at(-1)?.[1]).toBe('stopped');
+    expect(p.positionTick).toBeCloseTo(2880, 0);
     p.stop();
-    expect(events.at(-1)).toEqual([3840, 'stopped']);
+    expect(events.at(-1)).toEqual([0, 'stopped']);
+    p.play();
+    vi.advanceTimersByTime(500);
+    p.stop();
+    expect(p.positionTick).toBe(0);
   });
 
   it('a point outside the timeline is the beginning', () => {

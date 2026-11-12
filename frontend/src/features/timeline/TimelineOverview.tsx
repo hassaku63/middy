@@ -106,7 +106,11 @@ export function TimelineOverview(props: Props) {
   );
 }
 
-/** The point kept in view, in drawing units: the playhead, or the pinned chord's middle. */
+/**
+ * The point kept in view, in drawing units: the playhead while playing;
+ * stopped, the pinned chord's middle, else the beginning once ■ took the
+ * playhead back there (BL-334), else nothing (the box stays where it was).
+ */
 function followed(
   geometry: Layout,
   positionTick: number,
@@ -114,5 +118,6 @@ function followed(
   pinned: Timeline['harmony'][number] | undefined,
 ) {
   if (playing) return geometry.x(positionTick);
-  return pinned ? geometry.x(pinned.start + pinned.duration / 2) : null;
+  if (pinned) return geometry.x(pinned.start + pinned.duration / 2);
+  return positionTick === 0 ? geometry.x(0) : null;
 }

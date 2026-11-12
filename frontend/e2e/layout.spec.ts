@@ -36,7 +36,7 @@ test.describe('at 1280×800', () => {
       page,
       result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
     );
-    await page.getByRole('button', { name: '停止' }).click();
+    await page.getByRole('button', { name: '停止', exact: true }).click();
   });
 });
 
@@ -281,7 +281,7 @@ for (const { width, height } of [
       // The page grows past the old 1440 px.
       const stage = await result.boundingBox();
       expect(stage?.width ?? 0).toBeGreaterThan(1440 - 340);
-      await page.getByRole('button', { name: '停止' }).click();
+      await page.getByRole('button', { name: '停止', exact: true }).click();
     });
   });
 }

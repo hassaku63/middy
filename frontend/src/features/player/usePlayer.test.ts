@@ -110,7 +110,7 @@ describe('usePlayer from a point (BL-327)', () => {
     return { e, play };
   }
 
-  it('stopped, a seek before the first play sets where it starts; stop goes back there', async () => {
+  it('stopped, a seek before the first play sets where it starts', async () => {
     const { e, play } = engine();
     const { result } = renderHook(() => usePlayer(() => e));
     act(() => result.current.seek(960));
@@ -118,30 +118,32 @@ describe('usePlayer from a point (BL-327)', () => {
     await act(() => result.current.play(fourBeats));
     expect(play.mock.calls.map(([n]) => n.pitch)).toEqual([64]);
     act(() => result.current.stop());
-    expect(result.current.positionTick).toBe(960);
-    await act(() => result.current.play(fourBeats));
-    expect(result.current.positionTick).toBe(960);
-    act(() => result.current.stop());
   });
 
-  it('playing, a seek moves on from there and stop goes back to it', async () => {
+  it('pause stays where it is and play goes on from there (BL-334)', async () => {
     const { e } = engine();
     const { result } = renderHook(() => usePlayer(() => e));
     await act(() => result.current.play(fourBeats));
     act(() => result.current.seek(1440));
     expect(result.current.state).toBe('playing');
+    act(() => result.current.pause());
+    expect(result.current.state).toBe('stopped');
     expect(result.current.positionTick).toBe(1440);
-    act(() => result.current.stop());
+    await act(() => result.current.play(fourBeats));
     expect(result.current.positionTick).toBe(1440);
+    act(() => result.current.pause());
   });
 
-  it('reset stops and sets play to start at the beginning', async () => {
+  it('stop goes back to the beginning, playing or not (BL-334)', async () => {
     const { e } = engine();
     const { result } = renderHook(() => usePlayer(() => e));
     act(() => result.current.seek(960));
     await act(() => result.current.play(fourBeats));
-    act(() => result.current.reset());
+    act(() => result.current.stop());
     expect(result.current.state).toBe('stopped');
+    expect(result.current.positionTick).toBe(0);
+    act(() => result.current.seek(960));
+    act(() => result.current.stop());
     expect(result.current.positionTick).toBe(0);
     await act(() => result.current.play(fourBeats));
     expect(result.current.positionTick).toBe(0);
