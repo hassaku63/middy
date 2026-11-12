@@ -214,8 +214,11 @@
   }
 }
 
+/* The part in view on the overview strip: a line for its edges, and a
+   faint fill so the frame reads as something to hold and drag (BL-336,
+   the owner's choice); the notes under it still show. */
 .timeline__highlight {
-  fill: none;
+  fill: rgb(245 158 11 / 0.15);
   stroke: #f59e0b;
   stroke-width: 3;
   pointer-events: none;
