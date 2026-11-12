@@ -12,15 +12,18 @@ import (
 )
 
 // Step is one turn of a script: what the user says, and optionally what
-// the answer should then be (#473, BL-314). An expectation is a direction
-// to check, not a pass mark: the report counts the examples that meet it.
+// the answer should then take up (#473, BL-314). An expectation is a
+// direction to check, not a pass mark: the report counts, per answer, how
+// many of its examples take it up (ADR-0065).
 type Step struct {
 	Say    string  `json:"say"`
 	Expect *Expect `json:"expect,omitempty"`
 }
 
-// Expect is what a turn asks of every example of its answer. Each field is
-// optional; an empty Expect checks nothing.
+// Expect is what a turn asks of its answer. Each field is optional; an
+// empty Expect checks nothing. An answer takes a request up when any of
+// its examples does; how far it goes (some examples, some of the words) is
+// within the tolerance of ADR-0065 and shows as △, not ✗.
 type Expect struct {
 	// Meter is the time signature, e.g. "3/4".
 	Meter string `json:"meter,omitempty"`
@@ -31,11 +34,14 @@ type Expect struct {
 	// Tempo is "up", "down" or "same", against the previous answer's first
 	// example: a turn that asks for faster expects "up".
 	Tempo string `json:"tempo,omitempty"`
-	// Has are words each example must carry in its labels or patterns
-	// (progression, style, accompaniment, drums, feel, tensions): "sus4"
-	// kept, "bossa" kept, "swing" asked for. A word matches inside a label
-	// ("V7" in "V7/vi").
+	// Has are words the answer should carry in its examples' labels or
+	// patterns (progression, style, accompaniment, drums, feel, tensions):
+	// "sus4" kept, "bossa" kept, "swing" asked for. Each word is counted on
+	// its own. A word matches inside a label ("V7" in "V7/vi").
 	Has []string `json:"has,omitempty"`
+	// HasAny are words of which any one will do: an example that carries
+	// one of them takes the request up ("ii7", "iiø7" or "V7" for ii–V–I).
+	HasAny []string `json:"hasAny,omitempty"`
 }
 
 // Script is a named conversation: a kind of user and the turns they say.
@@ -73,47 +79,83 @@ func readScript(data []byte) (Script, error) {
 	return s, nil
 }
 
-// check says, for one example, which expectations it meets ("✓ meter")
-// and which it does not ("✗ tempo up"), in a fixed order. prevTempo is the
-// previous answer's first example's tempo, or 0 when there is none.
-func check(e *Expect, c ideas.Candidate, prevTempo float64) []string {
+// Tally is how one expectation fared in one answer: how many of its
+// examples took it up (Met of Of, and which), and the mark ✓ (all), △
+// (some: within the tolerance) or ✗ (none).
+type Tally struct {
+	What  string
+	Met   int
+	Of    int
+	Which []int // 1-based examples that took it up, when not all did
+}
+
+// Mark is ✓ when every example took the request up, △ when some did, ✗
+// when none did.
+func (t Tally) Mark() string {
+	switch {
+	case t.Of > 0 && t.Met == t.Of:
+		return "✓"
+	case t.Met > 0:
+		return "△"
+	}
+	return "✗"
+}
+
+// tally counts, for each expectation of a turn, the examples of its answer
+// that take it up, in a fixed order. prevTempo is the previous answer's
+// first example's tempo, or 0 when there is none (no tempo to compare).
+func tally(e *Expect, cs []ideas.Candidate, prevTempo float64) []Tally {
 	if e == nil {
 		return nil
 	}
-	var out []string
-	mark := func(ok bool, what string) {
-		if ok {
-			out = append(out, "✓ "+what)
-		} else {
-			out = append(out, "✗ "+what)
+	var out []Tally
+	count := func(what string, ok func(ideas.Candidate) bool) {
+		t := Tally{What: what, Of: len(cs)}
+		for i, c := range cs {
+			if ok(c) {
+				t.Met++
+				t.Which = append(t.Which, i+1)
+			}
 		}
+		if t.Met == t.Of {
+			t.Which = nil
+		}
+		out = append(out, t)
 	}
 	if e.Meter != "" {
-		mark(meterOf(c) == e.Meter, "meter "+e.Meter)
+		count("meter "+e.Meter, func(c ideas.Candidate) bool { return meterOf(c) == e.Meter })
 	}
 	if e.Bars > 0 {
-		mark(measure(c, "").Bars == strconv.Itoa(e.Bars), strconv.Itoa(e.Bars)+" bars")
+		count(strconv.Itoa(e.Bars)+" bars", func(c ideas.Candidate) bool { return measure(c, "").Bars == strconv.Itoa(e.Bars) })
 	}
 	if len(e.Modes) > 0 {
-		mark(slices.Contains(e.Modes, c.Key.Mode.String()), strings.Join(e.Modes, "/"))
+		count(strings.Join(e.Modes, "/"), func(c ideas.Candidate) bool { return slices.Contains(e.Modes, c.Key.Mode.String()) })
 	}
 	if e.Tempo != "" && prevTempo > 0 {
-		var ok bool
-		switch e.Tempo {
-		case "up":
-			ok = c.TempoBPM > prevTempo
-		case "down":
-			ok = c.TempoBPM < prevTempo
-		default:
-			ok = c.TempoBPM == prevTempo
-		}
-		mark(ok, "tempo "+e.Tempo)
+		count("tempo "+e.Tempo, func(c ideas.Candidate) bool {
+			switch e.Tempo {
+			case "up":
+				return c.TempoBPM > prevTempo
+			case "down":
+				return c.TempoBPM < prevTempo
+			}
+			return c.TempoBPM == prevTempo
+		})
 	}
-	fields := strings.Join(append(slices.Clone(c.Progression), c.Style, c.Accompaniment, c.Drums, c.Feel, c.Tensions), " ")
 	for _, w := range e.Has {
-		mark(strings.Contains(fields, w), w)
+		count(w, func(c ideas.Candidate) bool { return strings.Contains(fieldsOf(c), w) })
+	}
+	if len(e.HasAny) > 0 {
+		count(strings.Join(e.HasAny, " or "), func(c ideas.Candidate) bool {
+			return slices.ContainsFunc(e.HasAny, func(w string) bool { return strings.Contains(fieldsOf(c), w) })
+		})
 	}
 	return out
+}
+
+// fieldsOf is an example's labels and patterns, for the words of has.
+func fieldsOf(c ideas.Candidate) string {
+	return strings.Join(append(slices.Clone(c.Progression), c.Style, c.Accompaniment, c.Drums, c.Feel, c.Tensions), " ")
 }
 
 func meterOf(c ideas.Candidate) string {

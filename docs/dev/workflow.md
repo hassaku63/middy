@@ -81,7 +81,7 @@ go run ./cmd/converse report converse-out/*.json
 go run ./cmd/converse judge converse-out/*.json   # 実 API の鍵が要る
 ```
 
-`-turns` には、利用者の文の配列（`turns-447.json`）のほか、利用の型ごとの台本（`backend/cmd/converse/scenarios/*.json`、`{name, turns: [{say, expect}]}`）を渡せる。`expect` は、その回の答えのすべての例に求めること（拍子 `meter`、小節数 `bars`、調の種類 `modes`、前の回の最初の例と比べたテンポの向き `tempo`、ラベルや型に含む語 `has`）で、台本に期待があると `report` は「expected」の列で例ごとに ✓／✗ を出す（#473、BL-314）。報告だけで、合否には使わない。台本ごとに別の `-out` に集め、まとめて `report` に渡すと、run の列に台本のディレクトリ名が付く。`collect` は回ごとに進み具合（`run 1, turn 2/4: ok (35s)`）を標準エラーに出す。実 API では 1 回に 1 分ほどかかることがある。`judge` は、集めた会話を 1 本ずつ査読のモデルに読ませ、依頼に従わなかったところを 4 つの区分で数えて一覧にする（ADR-0064、BL-315）。鍵が要るのは `judge` だけで（`collect` と `report` は要らない）、サーバーと同じ設定を読む。報告だけで、合否には使わない。
+`-turns` には、利用者の文の配列（`turns-447.json`）のほか、利用の型ごとの台本（`backend/cmd/converse/scenarios/*.json`、`{name, turns: [{say, expect}]}`）を渡せる。`expect` は、その回の答えに採り入れてほしいこと（拍子 `meter`、小節数 `bars`、調の種類 `modes`、前の回の最初の例と比べたテンポの向き `tempo`、ラベルや型に含む語 `has`、どれか 1 つでよい語 `hasAny`）。台本に期待があると、`report` は表のあとに「期待との照らし合わせ」を出し、期待ごとに、採った例の数（`1/3（例 2）`）と、✓（すべての例）・△（一部の例。幅の内）・✗（どの例も採っていない）を示す（#473、BL-314、ADR-0065）。報告だけで、合否には使わない。台本ごとに別の `-out` に集め、まとめて `report` に渡すと、run の列に台本のディレクトリ名が付く。`collect` は回ごとに進み具合（`run 1, turn 2/4: ok (35s)`）を標準エラーに出す。実 API では 1 回に 1 分ほどかかることがある。`judge` は、集めた会話を 1 本ずつ査読のモデルに読ませ、依頼に従わなかったところを 4 つの区分で数えて一覧にする（ADR-0064、BL-315）。鍵が要るのは `judge` だけで（`collect` と `report` は要らない）、サーバーと同じ設定を読む。報告だけで、合否には使わない。
 
 送る履歴は画面と同じ形（利用者の文と、答えの要約に続く各候補の要点）。画面の履歴の作り方（`frontend/src/features/chat/history.ts`）を変えたら、`answerMessage` も合わせる。
 

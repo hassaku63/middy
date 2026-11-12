@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -94,17 +95,29 @@ func TestScenariosRead(t *testing.T) {
 	}
 }
 
-// TestCheck (BL-314): each expectation is marked for one example, in order.
-func TestCheck(t *testing.T) {
+// TestTally (ADR-0065): each expectation is counted over the answer's
+// examples: ✓ when all take it up, △ when some do (within the tolerance),
+// ✗ when none do.
+func TestTally(t *testing.T) {
 	waltz := music.TimeSignature{Numerator: 3, Denominator: 4}
-	c := ideas.Candidate{
-		Candidate: intent.Candidate{
-			Key: music.Key{Tonic: music.C, Mode: music.Major}, TempoBPM: 90,
-			Progression: []string{"I", "Vsus4", "V"}, Style: "bossa",
-		},
-		Timeline: music.Timeline{PPQ: 480, TimeSignature: waltz, Harmony: []music.HarmonyEvent{
-			{Start: 0, Duration: 1440 * 8},
-		}},
+	four := music.FourFour
+	example := func(ts music.TimeSignature, tempo float64, labels ...string) ideas.Candidate {
+		return ideas.Candidate{
+			Candidate: intent.Candidate{Key: music.Key{Tonic: music.C, Mode: music.Major}, TempoBPM: tempo, Progression: labels, Style: "bossa"},
+			Timeline:  music.Timeline{PPQ: 480, TimeSignature: ts, Harmony: []music.HarmonyEvent{{Duration: music.Tick(480 * ts.Numerator * 8)}}},
+		}
+	}
+	answer := []ideas.Candidate{
+		example(waltz, 90, "I", "Vsus4", "V"),
+		example(four, 120, "I", "IV", "V7"),
+		example(waltz, 100, "ii7", "V7", "I"),
+	}
+	mark := func(ts []Tally) []string {
+		out := make([]string, len(ts))
+		for i, tl := range ts {
+			out[i] = fmt.Sprintf("%s %s %d/%d %v", tl.Mark(), tl.What, tl.Met, tl.Of, tl.Which)
+		}
+		return out
 	}
 	tests := []struct {
 		name string
@@ -112,18 +125,23 @@ func TestCheck(t *testing.T) {
 		prev float64
 		want []string
 	}{
-		{"nothing to check", nil, 0, nil},
-		{"all met", &Expect{Meter: "3/4", Bars: 8, Modes: []string{"major"}, Tempo: "down", Has: []string{"sus4", "bossa"}}, 100,
-			[]string{"✓ meter 3/4", "✓ 8 bars", "✓ major", "✓ tempo down", "✓ sus4", "✓ bossa"}},
-		{"none met", &Expect{Meter: "6/8", Bars: 4, Modes: []string{"minor", "dorian"}, Tempo: "up", Has: []string{"jazz"}}, 100,
-			[]string{"✗ meter 6/8", "✗ 4 bars", "✗ minor/dorian", "✗ tempo up", "✗ jazz"}},
-		{"no previous tempo to compare", &Expect{Tempo: "same"}, 0, nil},
-		{"the same tempo", &Expect{Tempo: "same"}, 90, []string{"✓ tempo same"}},
+		{"nothing to check", nil, 0, []string{}},
+		{"all, some and none", &Expect{Meter: "3/4", Modes: []string{"major"}, Has: []string{"sus4", "bossa", "jazz"}}, 0, []string{
+			"△ meter 3/4 2/3 [1 3]",
+			"✓ major 3/3 []",
+			"△ sus4 1/3 [1]",
+			"✓ bossa 3/3 []",
+			"✗ jazz 0/3 []",
+		}},
+		{"any one of the words will do", &Expect{HasAny: []string{"ii7", "iiø7", "V7"}}, 0, []string{"△ ii7 or iiø7 or V7 2/3 [2 3]"}},
+		{"the tempo against the previous answer", &Expect{Tempo: "down"}, 110, []string{"△ tempo down 2/3 [1 3]"}},
+		{"no previous tempo to compare", &Expect{Tempo: "up"}, 0, []string{}},
+		{"bars", &Expect{Bars: 8}, 0, []string{"✓ 8 bars 3/3 []"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := check(tt.e, c, tt.prev); !slices.Equal(got, tt.want) {
-				t.Errorf("got %q, want %q", got, tt.want)
+			if got := mark(tally(tt.e, answer, tt.prev)); !slices.Equal(got, tt.want) {
+				t.Errorf("got  %q\nwant %q", got, tt.want)
 			}
 		})
 	}
@@ -176,7 +194,9 @@ func TestCollectAndReport(t *testing.T) {
 	if err := report(&out, []string{path}); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "| expected |") || !strings.Contains(out.String(), "| ✗ major, ✓ tempo down |") {
+	if !strings.Contains(out.String(), "- 期待 2 件: ✓ 1、△ 0、✗ 1") ||
+		!strings.Contains(out.String(), "| run-1 | 2 | ゆっくり | major | 0/1 | ✗ |") ||
+		!strings.Contains(out.String(), "| run-1 | 2 | ゆっくり | tempo down | 1/1 | ✓ |") {
 		t.Errorf("report:\n%s", out.String())
 	}
 
@@ -193,7 +213,7 @@ func TestCollectAndReport(t *testing.T) {
 	if err := report(&out, []string{path}); err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(out.String(), "expected") {
+	if strings.Contains(out.String(), "期待との照らし合わせ") {
 		t.Errorf("a run without expectations grew a column:\n%s", out.String())
 	}
 }

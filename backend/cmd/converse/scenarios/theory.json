@@ -1,7 +1,7 @@
 {
   "name": "理論の語で頼む人",
   "turns": [
-    { "say": "ii–V–I を使った、休日のカフェの BGM", "expect": { "has": ["ii7", "V7"] } },
+    { "say": "ii–V–I を使った、休日のカフェの BGM", "expect": { "hasAny": ["ii7", "iiø7", "V7"] } },
     { "say": "裏コードも 1 つ入れて", "expect": { "has": ["subV7"] } },
     { "say": "ベースが一歩ずつ下がるようにして" }
   ]
