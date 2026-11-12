@@ -1,4 +1,5 @@
 import type { Rhythm, RhythmPart } from '@/shared/api/client';
+import { colourNotes } from './explanationText';
 
 /** The rhythm half of the explanation: what each applied pattern does and why it feels that way. */
 export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
@@ -37,18 +38,4 @@ export function RhythmNotes({ rhythm }: { rhythm: Rhythm }) {
       )}
     </section>
   );
-}
-
-/**
- * What colours the chords: the style's instrument and tensions, or the
- * tensions the candidate asked for (ADR-0037).
- */
-function colourNotes(rhythm: Rhythm): string[] {
-  const style = rhythm.style;
-  const out: string[] = [];
-  if (style?.instrument)
-    out.push(`${style.name}のスタイルなので、和音は${style.instrument}で鳴らす。`);
-  if (style?.tensions) out.push(style.tensions);
-  if (rhythm.tensions?.explanation) out.push(rhythm.tensions.explanation);
-  return out;
 }

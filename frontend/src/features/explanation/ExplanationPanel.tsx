@@ -3,6 +3,7 @@ import type { HarmonyEvent, Timeline } from '@/shared/api/client';
 import { isFunctional } from '@/shared/lib/notation';
 import { DegreeMap } from '@/shared/ui/DegreeMap';
 import { ChordNotes, ChordStatus } from './ChordNotes';
+import { CopyButton } from './CopyButton';
 import { explainedIndex } from './explainedIndex';
 import { OverviewNotes } from './OverviewNotes';
 import { RhythmNotes } from './RhythmNotes';
@@ -23,6 +24,8 @@ export type ExplanationPanelProps = {
   chord?: boolean;
   /** The AI's proposal for the open example, ahead of the engine's notes (BL-298). */
   example?: ReactNode;
+  /** The explanation as text, for the copy button (BL-300); no button without it. */
+  copyText?: string | undefined;
 };
 
 /**
@@ -37,6 +40,7 @@ export function ExplanationPanel({
   onClearSelection,
   chord = true,
   example,
+  copyText,
 }: ExplanationPanelProps) {
   const harmony = timeline?.harmony ?? [];
   const index = explainedIndex(harmony, positionTick, selectedHarmony);
@@ -46,6 +50,7 @@ export function ExplanationPanel({
 
   return (
     <section className="explanation" aria-label="解説">
+      {copyText && <CopyButton text={copyText} />}
       {example}
       {overview && <OverviewNotes overview={overview} />}
       {chord && (
