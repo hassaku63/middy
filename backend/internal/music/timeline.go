@@ -3,6 +3,7 @@ package music
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // Tick is a position or duration in the timeline. DefaultPPQ ticks equal one
@@ -122,6 +123,21 @@ type HarmonyEvent struct {
 	// on the beat the chord belongs to.
 	Push     Push      `json:"push,omitempty"`
 	Analysis *Analysis `json:"analysis,omitempty"`
+}
+
+// SoundingSymbol is the chord's name with the tensions that sound, as the
+// UI writes it (BL-307): "Fmaj7(9)", "C7(9,13)", "Cmaj7(9)/E". Readers of
+// the answer that see only text (the reviewers) need it to know what
+// sounds; Symbol alone stays at the seventh.
+func (h HarmonyEvent) SoundingSymbol() string {
+	if len(h.Tensions) == 0 {
+		return h.Symbol
+	}
+	colour := "(" + strings.Join(h.Tensions, ",") + ")"
+	if i := strings.Index(h.Symbol, "/"); i >= 0 {
+		return h.Symbol[:i] + colour + h.Symbol[i:]
+	}
+	return h.Symbol + colour
 }
 
 // Timeline is the central artifact of middy: everything the player, the

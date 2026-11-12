@@ -98,3 +98,24 @@ func TestTimelineJSONRoundTrip(t *testing.T) {
 		t.Fatalf("round trip mismatch: %+v", back)
 	}
 }
+
+// TestSoundingSymbol (BL-307): the tensions that sound go in brackets
+// before any slash bass, as the UI writes them.
+func TestSoundingSymbol(t *testing.T) {
+	tests := []struct {
+		symbol   string
+		tensions []string
+		want     string
+	}{
+		{"Fmaj7", nil, "Fmaj7"},
+		{"Fmaj7", []string{"9"}, "Fmaj7(9)"},
+		{"C7", []string{"9", "13"}, "C7(9,13)"},
+		{"F", []string{"add9"}, "F(add9)"},
+		{"Cmaj7/E", []string{"9"}, "Cmaj7(9)/E"},
+	}
+	for _, tt := range tests {
+		if got := (HarmonyEvent{Symbol: tt.symbol, Tensions: tt.tensions}).SoundingSymbol(); got != tt.want {
+			t.Errorf("%s %v: got %q, want %q", tt.symbol, tt.tensions, got, tt.want)
+		}
+	}
+}

@@ -93,7 +93,7 @@ func reviewInput(image string, res ideas.Result) string {
 		fmt.Fprintf(&b, "）\n理由: %s\n和音: ", c.Reason)
 		chords := make([]string, 0, len(c.Timeline.Harmony))
 		for _, h := range c.Timeline.Harmony {
-			chords = append(chords, fmt.Sprintf("%s（%s）", h.RomanNumeral, h.Symbol))
+			chords = append(chords, fmt.Sprintf("%s（%s）", h.RomanNumeral, h.SoundingSymbol()))
 		}
 		b.WriteString(strings.Join(chords, " → "))
 		b.WriteString("\nエンジンの解説:\n")
