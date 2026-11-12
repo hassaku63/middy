@@ -56,7 +56,7 @@ describe('PlayerControls + usePlayer', () => {
   it('is disabled without a timeline', () => {
     render(<Harness engine={engine} tl={null} />);
     expect(screen.getByRole('button', { name: '再生' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: '停止' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '停止' })).toBeDisabled();
     expect(screen.getByLabelText('再生位置')).toHaveTextContent('-');
     expect(created).toBe(0);
   });
@@ -70,18 +70,22 @@ describe('PlayerControls + usePlayer', () => {
     await user.click(screen.getByRole('button', { name: '再生' }));
     expect(created).toBe(1);
     expect(synth.played).toBe(1);
-    // One button: while playing it stops, in the same place (#402 B).
+    // Play turns into pause in the same place (#402 B); stop is beside it (BL-334).
     expect(screen.queryByRole('button', { name: '再生' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '一時停止' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '停止' })).toBeEnabled();
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getAllByRole('button')).toHaveLength(2);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100); // just over two beats at 120 BPM
     });
     expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.3');
 
-    await user.click(screen.getByRole('button', { name: '停止' }));
+    // Pause stays at 1.3; stop goes back to the beginning (BL-334).
+    await user.click(screen.getByRole('button', { name: '一時停止' }));
     expect(synth.allOffCalls).toBe(1);
+    expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.3');
+    await user.click(screen.getByRole('button', { name: '停止' }));
     expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.1');
     expect(screen.getByRole('button', { name: '再生' })).toBeEnabled();
 

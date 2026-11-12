@@ -35,7 +35,7 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
   await expect(
     result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
   ).toContainText('VI');
-  await page.getByRole('button', { name: '停止' }).click();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   await expect(page.getByLabel('再生位置')).toHaveText('1.1');
 
   // 遠い記憶: E minor, ending iiø7 - V7 - i. Pin the dominant by clicking it.

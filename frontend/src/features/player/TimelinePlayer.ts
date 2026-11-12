@@ -65,7 +65,7 @@ export class TimelinePlayer {
   private nextNote = 0;
   /** Audio-clock time of the timeline's tick 0 (in the past after a seek). */
   private startTime = 0;
-  /** Where play starts and where stop returns (BL-327); 0 after the end. */
+  /** Where play starts (BL-327): where it paused; 0 after stop or the end (BL-334). */
   private cueTick = 0;
   private timer: TimerHandle | null = null;
   private state: PlayerState = 'stopped';
@@ -81,7 +81,7 @@ export class TimelinePlayer {
   }
 
   load(timeline: Timeline): void {
-    this.stop();
+    if (this.state === 'playing') this.halt();
     this.cueTick = 0;
     this.timeline = timeline;
     this.notes = scheduleNotes(timeline);
@@ -106,10 +106,7 @@ export class TimelinePlayer {
     );
   }
 
-  /**
-   * Starts at fromTick (the beginning by default); stop returns there. No-op
-   * without a loaded timeline.
-   */
+  /** Starts at fromTick (the beginning by default). No-op without a loaded timeline. */
   play(fromTick = 0): void {
     if (!this.timeline || this.state === 'playing') return;
     this.state = 'playing';
@@ -125,8 +122,7 @@ export class TimelinePlayer {
 
   /**
    * Moves the position to tick (BL-327). Playing, the sounding notes stop
-   * and play goes on from there; stopped, the next play starts there. Stop
-   * returns there either way.
+   * and play goes on from there; stopped, the next play starts there.
    */
   seek(tick: number): void {
     this.cueTick = this.clamp(tick);
@@ -139,9 +135,25 @@ export class TimelinePlayer {
     this.notify();
   }
 
-  /** Stops immediately and goes back to where play started. */
+  /** Stops where it is: the next play goes on from there (BL-334). */
+  pause(): void {
+    if (this.state !== 'playing') return;
+    this.cueTick = this.clamp(this.positionTick);
+    this.halt();
+  }
+
+  /** Stops and goes back to the beginning (BL-334, as a recorder's ■). */
   stop(): void {
-    if (this.state === 'stopped') return;
+    this.cueTick = 0;
+    if (this.state === 'stopped') {
+      this.notify();
+      return;
+    }
+    this.halt();
+  }
+
+  /** Silences everything and reports the stop. */
+  private halt(): void {
     this.state = 'stopped';
     if (this.timer !== null) {
       this.clearInterval(this.timer);

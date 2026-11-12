@@ -28,7 +28,7 @@ test('the desk shows the input, the timeline and the explanation at once (?layou
   // The stage works as in today's layout: play, pin, unpin.
   await page.getByRole('button', { name: '再生' }).click();
   await expect(page.getByLabel('再生位置')).toHaveText(/^2\./, { timeout: 7_000 });
-  await page.getByRole('button', { name: '停止' }).click();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   await result.getByRole('option', { name: 'VII G' }).click();
   await expect(
     result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
@@ -80,7 +80,7 @@ test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', asyn
     heights.add(Math.round((await frame.boundingBox())?.height ?? 0));
     await page.waitForTimeout(400);
   }
-  await page.getByRole('button', { name: '停止' }).click();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   expect(heights.size).toBe(1);
   // 141 characters of the widest kind fit at 1280 px without scrolling.
   // The chord's part of the frame scrolls a longer text (#360).
@@ -201,13 +201,13 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
   await expect(result).toHaveCount(0);
 
   await page.getByRole('article', { name: '遠い記憶' }).click();
-  await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '一時停止' })).toBeEnabled();
   await page.getByRole('article', { name: '遠い記憶' }).click();
   await expect(page.getByRole('button', { name: '再生' })).toBeEnabled();
 
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Space');
-  await expect(page.getByRole('button', { name: '停止' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: '一時停止' })).toBeEnabled();
   await page.keyboard.press('Space');
   await expect(page.getByRole('button', { name: '再生' })).toBeEnabled();
 

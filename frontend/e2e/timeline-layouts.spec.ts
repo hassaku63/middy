@@ -15,9 +15,8 @@ async function send(page: Page, image: string, path = '/') {
   // An answer opens nothing by itself (BL-219): open its first example.
   await page.getByRole('article').first().getByRole('button').click();
   // Choosing plays it (#315); stopped, the detail stays where it is put.
-  const stop = page.getByRole('button', { name: '停止' });
-  await expect(stop).toBeVisible();
-  if (await stop.isEnabled()) await stop.click();
+  await expect(page.getByRole('button', { name: '一時停止' })).toBeVisible();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   const result = page.getByRole('region', { name: '結果' });
   await expect(result.getByRole('group', { name: 'タイムライン' }).first()).toBeVisible();
   const width = page.viewportSize()?.width ?? 0;

@@ -3,18 +3,17 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * BL-328 (the owner's rules): clicking the timeline anywhere but on a
  * chord moves the playhead to the start of the beat under it. Stopped, the
- * next play starts there and stop comes back to it; playing, play jumps
- * there. A chord still pins. The fake LLM's 長い例 is 16 bars of 4/4.
+ * next play starts there; playing, play jumps there. A chord still pins.
+ * BL-334: ⏸ stays where it is, ■ goes back to the beginning. The fake LLM's 長い例 is 16 bars of 4/4.
  */
 async function open(page: Page) {
   await page.goto('/');
   await page.getByLabel('イメージ', { exact: true }).fill('長い雨の日');
   await page.getByRole('button', { name: '送る' }).click();
   await page.getByRole('article').first().getByRole('button').click();
-  // Choosing plays it (#315): stop, so each test starts stopped.
-  const stop = page.getByRole('button', { name: '停止' });
-  await expect(stop).toBeVisible();
-  if (await stop.isEnabled()) await stop.click();
+  // Choosing plays it (#315): stop, so each test starts at the beginning.
+  await expect(page.getByRole('button', { name: '一時停止' })).toBeVisible();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   const result = page.getByRole('region', { name: '結果' });
   const drawing = result.locator('.timeline-overview__scroll svg.timeline');
   await expect(drawing).toBeVisible();
@@ -37,14 +36,23 @@ for (const viewport of [
   test.describe(`at ${String(viewport.width)} px`, () => {
     test.use({ viewport });
 
-    test('stopped, a click sets where play starts; stop comes back to it', async ({ page }) => {
+    test('stopped, a click sets where play starts; pause stays, stop goes to the beginning', async ({
+      page,
+    }) => {
       const { position } = await open(page);
       await clickBar(page, 3);
       await expect(position).toHaveText('3.1');
       await page.getByRole('button', { name: '再生' }).click();
       await expect(position).toHaveText(/^3\.[2-4]$/, { timeout: 5000 });
-      await page.getByRole('button', { name: '停止' }).click();
-      await expect(position).toHaveText('3.1');
+      await page.getByRole('button', { name: '一時停止' }).click();
+      const paused = await position.textContent();
+      expect(paused).toMatch(/^3\.[2-4]$/);
+      await page.getByRole('button', { name: '再生' }).click();
+      await expect(position).not.toHaveText(paused ?? '');
+      await expect(position).toHaveText(/^[34]\./);
+      await page.getByRole('button', { name: '停止', exact: true }).click();
+      await expect(position).toHaveText('1.1');
+      await expect(page.getByRole('button', { name: '停止', exact: true })).toBeDisabled();
     });
 
     test('playing, a click moves play there', async ({ page }) => {
@@ -53,7 +61,7 @@ for (const viewport of [
       await expect(position).toHaveText(/^1\.[2-4]$/, { timeout: 5000 });
       await clickBar(page, 2);
       await expect(position).toHaveText(/^2\./);
-      await expect(page.getByRole('button', { name: '停止' })).toBeVisible();
+      await expect(page.getByRole('button', { name: '一時停止' })).toBeVisible();
     });
 
     test('a chord still pins and leaves the playhead alone', async ({ page }) => {
@@ -112,10 +120,10 @@ test('with the keyboard alone, a pinned chord plays from its start', async ({ pa
   expect(size && size.height >= 24 && size.width >= 24).toBe(true);
   await play.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: '停止' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '一時停止' })).toBeVisible();
   await expect(position).toHaveText(new RegExp(`^${String(bar)}\\.`));
-  await page.getByRole('button', { name: '停止' }).click();
-  await expect(position).toHaveText(`${String(bar)}.1`);
+  await page.getByRole('button', { name: '停止', exact: true }).click();
+  await expect(position).toHaveText('1.1');
 });
 
 /**
@@ -133,5 +141,17 @@ test('playing, a click on the strip moves the view, not the playhead', async ({ 
   await expect(position).toHaveText(/^1\./);
   const box = result.locator('.timeline-overview__scroll');
   expect(await box.evaluate((el) => el.scrollLeft)).toBeGreaterThan(1000);
-  await expect(page.getByRole('button', { name: '停止' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '一時停止' })).toBeVisible();
+});
+
+/** BL-334: ■ takes the playhead back to the beginning, and the box with it. */
+test('stop brings the box back to the beginning', async ({ page }) => {
+  const { result, position } = await open(page);
+  const box = result.locator('.timeline-overview__scroll');
+  await clickBar(page, 3);
+  await page.getByRole('button', { name: '再生' }).click();
+  await expect.poll(() => box.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+  await page.getByRole('button', { name: '停止', exact: true }).click();
+  await expect(position).toHaveText('1.1');
+  await expect.poll(() => box.evaluate((el) => el.scrollLeft)).toBe(0);
 });

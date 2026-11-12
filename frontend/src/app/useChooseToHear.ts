@@ -12,8 +12,8 @@ type Options = {
 
 /**
  * Choosing an example by the learner's own hand (a card, a line, a digit)
- * also plays it, and choosing the playing one again stops it;
- * Space plays or stops (#315). An arriving answer still opens silently.
+ * also plays it, and choosing the playing one again pauses it;
+ * Space plays or pauses (#315, BL-334). An arriving answer still opens silently.
  */
 export function useChooseToHear({ openExample, timeline, player, open }: Options) {
   const hear = useHearOnOpen();
@@ -21,14 +21,14 @@ export function useChooseToHear({ openExample, timeline, player, open }: Options
   const openChosen = (c: IdeaCandidate) => {
     const plays = hear.on;
     if (plays && c === openExample && playing) {
-      player.stop();
+      player.pause();
       return;
     }
     if (c !== openExample) open(c);
     if (plays) void player.play(c.timeline);
   };
   useSpaceToPlay(timeline !== null, () => {
-    if (playing) player.stop();
+    if (playing) player.pause();
     else if (timeline) void player.play(timeline);
   });
   return { openChosen, hear };

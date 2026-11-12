@@ -47,7 +47,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   // Playback and explanation work on the example (vision.md S1).
   await page.getByRole('button', { name: '再生' }).click();
   await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
-  await page.getByRole('button', { name: '停止' }).click();
+  await page.getByRole('button', { name: '停止', exact: true }).click();
 
   // Refining sends the whole history; the fake switches mood on keywords.
   await page.getByLabel('イメージ', { exact: true }).fill('もっと晴れた感じに');

@@ -28,17 +28,17 @@ export function createWebAudioEngine(): AudioEngine {
 export type UsePlayer = {
   state: PlayerState;
   positionTick: number;
-  /** Plays from where play is set to start (the beginning by default). */
+  /** Plays from the playhead: where it paused or was moved to, else the beginning. */
   play(timeline: Timeline): Promise<void>;
-  /** Stops and goes back to where play started. */
-  stop(): void;
+  /** Stops where it is; play goes on from there (BL-334). */
+  pause: () => void;
+  /** Stops and goes back to the beginning, as a recorder's ■ (BL-334). */
+  stop: () => void;
   /**
    * Moves the position (BL-327): playing, play goes on from tick; stopped,
    * the next play starts there.
    */
   seek: (tick: number) => void;
-  /** Stops and sets play to start at the beginning (another timeline shows). */
-  reset(): void;
 };
 
 /**
@@ -90,27 +90,28 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
     [ensurePlayer],
   );
 
+  const pause = useCallback(() => {
+    requests.current += 1;
+    playerRef.current?.pause(); // reports where it paused, which sets the cue
+  }, []);
+
   const stop = useCallback(() => {
     requests.current += 1;
     playerRef.current?.stop();
+    cue.current = 0;
+    setPositionTick(0);
   }, []);
 
   const seek = useCallback((tick: number) => {
     // Stopped, the player may still hold the timeline shown before.
     const player = playerRef.current;
     if (player?.isPlaying) {
-      player.seek(tick); // reports the position; stopping later sets the cue
+      player.seek(tick); // pausing later reports where it stopped, which sets the cue
       return;
     }
     cue.current = Math.max(0, Math.round(tick));
     setPositionTick(cue.current);
   }, []);
-
-  const reset = useCallback(() => {
-    stop();
-    cue.current = 0;
-    setPositionTick(0);
-  }, [stop]);
 
   // Unmounting stops the sound and releases the AudioContext: browsers
   // cap how many may be open at once.
@@ -125,5 +126,5 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
     [],
   );
 
-  return { state, positionTick, play, stop, seek, reset };
+  return { state, positionTick, play, pause, stop, seek };
 }
