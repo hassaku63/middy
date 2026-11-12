@@ -8,6 +8,7 @@
 //
 //	go run ./cmd/converse collect -base http://localhost:8080 -turns turns.json -runs 3 -out out/
 //	go run ./cmd/converse report out/*.json
+//	go run ./cmd/converse judge out/*.json   # the conversation reviewer; needs the key (ADR-0064)
 package main
 
 import (
@@ -32,7 +33,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: converse collect|report ...")
+		fmt.Fprintln(os.Stderr, "usage: converse collect|report|judge ...")
 		os.Exit(2)
 	}
 	var err error
@@ -41,6 +42,8 @@ func main() {
 		err = collect(os.Args[2:])
 	case "report":
 		err = report(os.Stdout, os.Args[2:])
+	case "judge":
+		err = judgeCmd(os.Stdout, os.Args[2:])
 	default:
 		err = fmt.Errorf("unknown command %q", os.Args[1])
 	}

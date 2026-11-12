@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/hassaku63/middy/backend/internal/ideas"
 	"github.com/hassaku63/middy/backend/internal/intent"
+	"github.com/hassaku63/middy/backend/internal/llm"
+	"github.com/hassaku63/middy/backend/internal/llm/fake"
 	"github.com/hassaku63/middy/backend/internal/music"
 )
 
@@ -205,5 +208,63 @@ func TestRunName(t *testing.T) {
 	several := []string{"out/length/run-1.json", "out/genre/run-1.json"}
 	if got := runName(several, 1); got != "genre/run-1" {
 		t.Errorf("several directories: %q", got)
+	}
+}
+
+// TestJudgeInput (BL-315): the reviewer reads each turn's words, the reply
+// and every example as it sounds, but not the script's expectations.
+func TestJudgeInput(t *testing.T) {
+	res := ideas.Result{Reply: "3 拍子にしました。", Candidates: []ideas.Candidate{{
+		Candidate: intent.Candidate{Title: "海辺のワルツ", Key: music.Key{Tonic: music.C, Mode: music.Major}, TempoBPM: 90,
+			Style: "pop", Reason: "3 拍子で揺れる。"},
+		Timeline: music.Timeline{PPQ: 480, TimeSignature: music.TimeSignature{Numerator: 3, Denominator: 4}, Harmony: []music.HarmonyEvent{
+			{Duration: 1440, RomanNumeral: "I", Symbol: "C"},
+		}},
+	}}}
+	turns := []Turn{
+		{Sent: "海辺", Answer: &res},
+		{Sent: "3 拍子にして", Expect: &Expect{Meter: "3/4"}, Answer: &res},
+		{Sent: "もっと", Error: "status 502"},
+	}
+	got := judgeInput(turns)
+	for _, want := range []string{"## 2 回目\nユーザー: 3 拍子にして", "返事: 3 拍子にしました。", "候補 1: 海辺のワルツ（C major、3/4、90 BPM、1 小節）", "和音: I（C）", "型: スタイル pop", "理由: 3 拍子で揺れる。", "## 3 回目\nユーザー: もっと\n（答えなし）"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "expect") || strings.Contains(got, "期待") {
+		t.Errorf("the expectations leaked:\n%s", got)
+	}
+}
+
+// TestJudge (BL-315): the reviewer's findings are kept, an unknown
+// category is dropped, and a failed call reads as not reviewed.
+func TestJudge(t *testing.T) {
+	answer := `{"findings": [
+		{"category": 1, "turn": 2, "candidate": 0, "quote": "3 拍子にして", "why": "どの候補も 4/4 のまま。"},
+		{"category": 9, "turn": 1, "candidate": 1, "quote": "x", "why": "y"}
+	]}`
+	client := fake.New(llm.Response{Text: answer}, llm.Response{Text: "not json"})
+	ok := judge(context.Background(), client, "stacking/run-1", []Turn{{Sent: "x"}})
+	if ok.Err != "" || len(ok.Findings) != 1 || ok.Findings[0].Turn != 2 {
+		t.Fatalf("got %+v", ok)
+	}
+	if req := client.Requests()[0]; !strings.Contains(string(req.OutputSchema), "findings") || req.System == "" {
+		t.Errorf("request: %+v", req)
+	}
+	bad := judge(context.Background(), client, "genre/run-1", []Turn{{Sent: "x"}})
+	if bad.Err == "" {
+		t.Fatal("an unreadable answer must read as not reviewed")
+	}
+	report := judgeReport([]Verdict{ok, bad})
+	for _, want := range []string{
+		"- 査読した会話: 1（査読できなかったもの: 1）",
+		"反映されていない 1、頼んでいないのに変わった 0",
+		"| stacking/run-1 | 2 | 返事 | 反映されていない | 3 拍子にして：どの候補も 4/4 のまま。 |",
+		"| genre/run-1 | | | 査読できず |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Errorf("missing %q in:\n%s", want, report)
+		}
 	}
 }
