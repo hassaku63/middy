@@ -89,6 +89,7 @@ export function TimelineOverview(props: Props) {
             // A place to look, not a chord to pin or a point to play.
             onSelectHarmony={undefined}
             onSeek={undefined}
+            onScrub={undefined}
             fit={false}
             decorative
             stretch
