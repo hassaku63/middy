@@ -1,9 +1,10 @@
-import type { CSSProperties, MouseEvent } from 'react';
+import type { CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineLabels } from './TimelineLabels';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
 import { BAR_WIDTH, computeLayout, type Layout } from './layout';
 import { useReducedMotion } from './useReducedMotion';
+import { useStripDrag } from './useStripDrag';
 import { useTimelineScroll } from './useTimelineScroll';
 import './TimelineOverview.css';
 
@@ -23,8 +24,8 @@ type Props = Omit<
  * of the drawing in view (BL-127, BL-326, ADR-0066), or turns a page when
  * the person asked the system for less motion; stopped, it centres the
  * pinned chord, else it stays where it was scrolled. Clicking the drawing
- * moves the playhead (BL-328, ADR-0067); clicking the strip only brings
- * the box there (BL-333, ADR-0069). Scrolling the box by hand or from the
+ * moves the playhead (BL-328, ADR-0067); pressing or dragging the strip
+ * only brings the box there (BL-333, BL-331, ADR-0069). Scrolling the box by hand or from the
  * strip while playing pauses the following until 「再生位置へ戻る」 or the
  * next play (BL-332, ADR-0068). The strip is a duplicate
  * drawing, hidden from assistive tech.
@@ -46,14 +47,8 @@ export function TimelineOverview(props: Props) {
     geometry.labelWidth,
     playing,
   );
-  // The strip picks where to look, not where to play (ADR-0069): a click
-  // on it brings the box there, as a DAW's overview does.
-  const lookFromStrip = (e: MouseEvent<HTMLDivElement>) => {
-    const strip = e.target instanceof Element ? e.target.closest('svg') : null;
-    const box = strip?.getBoundingClientRect();
-    if (!box?.width) return;
-    look(((e.clientX - box.left) / box.width) * geometry.width);
-  };
+  // The strip picks where to look, not where to play (ADR-0069).
+  const stripDrag = useStripDrag(look, view, geometry.width);
   // One box for every timeline, so the tree does not change with the
   // width (ADR-0042): it scrolls sideways when the drawing is wider than
   // the box, with the label column held at its left (#402 A). A short
@@ -88,7 +83,7 @@ export function TimelineOverview(props: Props) {
         </button>
       )}
       {long && (
-        <div className="timeline-overview__strip" onClick={lookFromStrip}>
+        <div className="timeline-overview__strip" {...stripDrag}>
           <TimelineView
             {...props}
             // A place to look, not a chord to pin or a point to play.
