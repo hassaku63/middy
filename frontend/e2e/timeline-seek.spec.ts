@@ -165,6 +165,8 @@ test('dragging the frame on the strip scrolls the box, not the playhead', async 
   const box = result.locator('.timeline-overview__scroll');
   const frame = result.locator('svg.timeline--overview .timeline__highlight');
   await result.locator('svg.timeline--overview').scrollIntoViewIfNeeded();
+  // The frame is filled faintly, so it reads as something to hold (BL-336).
+  expect(await frame.evaluate((el) => getComputedStyle(el).fill)).toBe('rgba(245, 158, 11, 0.15)');
   const f = await frame.boundingBox();
   if (!f) throw new Error('no frame');
   const y = f.y + f.height / 2;
