@@ -288,6 +288,10 @@ describe('App docs/product/experience.md', () => {
     });
     // Still the same example: the AI was not asked again.
     expect(fetchMock.mock.calls.filter(([u]) => u.endsWith('/ideas'))).toHaveLength(1);
+    // The explanation still shows the card, as the original example (BL-298).
+    const notes = within(result).getByLabelText('この例（AI の提案）');
+    expect(notes).toHaveTextContent('テスト用。');
+    expect(notes).toHaveTextContent('元の例');
     expect(within(result).getByRole('heading', { name: '窓辺の雨' })).toBeInTheDocument();
   });
 });
