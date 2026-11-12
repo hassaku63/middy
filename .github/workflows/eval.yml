@@ -11,6 +11,8 @@
 #                           aspect (#334)
 #   needs-eval-converse     a conversation measured by cmd/converse (#453,
 #                           BL-313)
+#   needs-eval-scenarios    the scripted conversations of cmd/converse, and
+#                           the conversation reviewer (#473, BL-316)
 # A run of many cases (the full one) goes as Message Batches, at half the
 # price, and waits longer for the answers; a small one sends one request at
 # a time (EVAL_BATCH=auto, ADR-0039).
@@ -35,14 +37,14 @@ permissions:
 # runs of other labels (which skip every job) in their own group, or they
 # would cancel an evaluation in progress.
 concurrency:
-  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'needs-eval-cases' || github.event.label.name == 'needs-eval-converse' || startsWith(github.event.label.name, 'needs-eval-cases:') }}
+  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'needs-eval-cases' || github.event.label.name == 'needs-eval-converse' || github.event.label.name == 'needs-eval-scenarios' || startsWith(github.event.label.name, 'needs-eval-cases:') }}
   cancel-in-progress: true
 
 jobs:
   eval:
     name: eval (real API)
     if: >-
-      (github.event.label.name == 'needs-eval-cases' || github.event.label.name == 'needs-eval-converse' || startsWith(github.event.label.name, 'needs-eval-cases:')) &&
+      (github.event.label.name == 'needs-eval-cases' || github.event.label.name == 'needs-eval-converse' || github.event.label.name == 'needs-eval-scenarios' || startsWith(github.event.label.name, 'needs-eval-cases:')) &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     # A full run waits for Message Batches (EVAL_TIMEOUT below, ADR-0039).
@@ -90,10 +92,11 @@ jobs:
             exit 1
           fi
           case "$LABEL" in
-            needs-eval-converse)
-              # A conversation instead of the cases (#453, BL-313): the
-              # server gets the key, the client does not.
-              bash scripts/converse-ci.sh report/report.md
+            needs-eval-converse | needs-eval-scenarios)
+              # Conversations instead of the cases (#453, #473): the
+              # server and the conversation reviewer get the key, the
+              # client that sends the conversations does not.
+              bash scripts/converse-ci.sh "${LABEL#needs-eval-}" report/report.md
               exit 0
               ;;
             needs-eval-cases) ;;
@@ -118,7 +121,7 @@ jobs:
         if: always() && steps.changes.outputs.eval == 'true'
         run: |
           mkdir -p report
-          # needs-eval-converse wrote its report already.
+          # The conversation labels wrote their report already.
           if [ ! -s report/report.md ]; then
             awk '/^\| case \|/ { on = 1 } /^(--- (PASS|FAIL)|PASS$|FAIL$)/ { on = 0 } on' "$RUNNER_TEMP/eval.log" > report/report.md || true
           fi
@@ -136,7 +139,7 @@ jobs:
     needs: eval
     if: >-
       always() &&
-      (github.event.label.name == 'needs-eval-cases' || github.event.label.name == 'needs-eval-converse' || startsWith(github.event.label.name, 'needs-eval-cases:')) &&
+      (github.event.label.name == 'needs-eval-cases' || github.event.label.name == 'needs-eval-converse' || github.event.label.name == 'needs-eval-scenarios' || startsWith(github.event.label.name, 'needs-eval-cases:')) &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
