@@ -218,19 +218,71 @@ func report(w io.Writer, paths []string) error {
 		return err
 	}
 	var b strings.Builder
-	// A script with expectations adds a column; one without keeps the
-	// table as it was (BL-314).
-	head, rule := "", ""
-	if expects {
-		head, rule = " expected |", " --- |"
-	}
-	b.WriteString("| run | turn | example | meter | bars | sus4 | tension sounded | words claim a tension |" + head + "\n")
-	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- |" + rule + "\n")
+	b.WriteString("| run | turn | example | meter | bars | sus4 | tension sounded | words claim a tension |\n")
+	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- |\n")
+	var rows []string
+	var marks map[string]int
 	for i, turns := range runs {
-		writeRun(&b, runName(paths, i), turns, expects)
+		run := runName(paths, i)
+		writeRun(&b, run, turns)
+		if expects {
+			r, m := expectRows(run, turns)
+			rows = append(rows, r...)
+			marks = addMarks(marks, m)
+		}
+	}
+	// A script with expectations adds a table of them, per answer: what
+	// each turn asked and how many examples took it up (ADR-0065).
+	if expects {
+		total := marks["✓"] + marks["△"] + marks["✗"]
+		fmt.Fprintf(&b, "\n### 期待との照らし合わせ（答え単位。報告だけ）\n\n- 期待 %d 件: ✓ %d、△ %d、✗ %d（✓ すべての例が採った、△ 一部の例が採った（幅の内）、✗ どの例も採っていない）\n\n", total, marks["✓"], marks["△"], marks["✗"])
+		b.WriteString("| run | turn | 依頼 | 期待 | 採った例 | |\n| --- | --- | --- | --- | --- | --- |\n")
+		b.WriteString(strings.Join(rows, "\n"))
+		if len(rows) > 0 {
+			b.WriteString("\n")
+		}
 	}
 	_, err = io.WriteString(w, b.String())
 	return err
+}
+
+// expectRows writes one row per expectation of each answered turn, and
+// counts the marks.
+func expectRows(run string, turns []Turn) ([]string, map[string]int) {
+	var rows []string
+	marks := map[string]int{}
+	prevTempo := 0.0
+	for n, t := range turns {
+		if t.Answer == nil {
+			continue
+		}
+		for _, tl := range tally(t.Expect, t.Answer.Candidates, prevTempo) {
+			took := fmt.Sprintf("%d/%d", tl.Met, tl.Of)
+			if len(tl.Which) > 0 {
+				ex := make([]string, len(tl.Which))
+				for i, w := range tl.Which {
+					ex[i] = strconv.Itoa(w)
+				}
+				took += "（例 " + strings.Join(ex, "・") + "）"
+			}
+			marks[tl.Mark()]++
+			rows = append(rows, fmt.Sprintf("| %s | %d | %s | %s | %s | %s |", run, n+1, oneLine(t.Sent), tl.What, took, tl.Mark()))
+		}
+		if len(t.Answer.Candidates) > 0 {
+			prevTempo = t.Answer.Candidates[0].TempoBPM
+		}
+	}
+	return rows, marks
+}
+
+func addMarks(to, from map[string]int) map[string]int {
+	if to == nil {
+		to = map[string]int{}
+	}
+	for k, v := range from {
+		to[k] += v
+	}
+	return to
 }
 
 // readRuns reads the collected runs, and whether any turn has expectations.
@@ -252,30 +304,17 @@ func readRuns(paths []string) ([][]Turn, bool, error) {
 	return runs, expects, nil
 }
 
-// writeRun writes one run's rows: one per example, checked against its
-// turn's expectations and the previous answer's tempo.
-func writeRun(b *strings.Builder, run string, turns []Turn, expects bool) {
-	blank := ""
-	if expects {
-		blank = " |"
-	}
-	prevTempo := 0.0
+// writeRun writes one run's rows: one per example, what it sounds like.
+func writeRun(b *strings.Builder, run string, turns []Turn) {
 	for n, t := range turns {
 		if t.Answer == nil {
-			fmt.Fprintf(b, "| %s | %d | (error: %s) | | | | | |%s\n", run, n+1, t.Error, blank)
+			fmt.Fprintf(b, "| %s | %d | (error: %s) | | | | | |\n", run, n+1, t.Error)
 			continue
 		}
 		for _, c := range t.Answer.Candidates {
 			m := measure(c, t.Answer.Reply)
-			fmt.Fprintf(b, "| %s | %d | %s | %s | %s | %s | %d / %d | %s |",
+			fmt.Fprintf(b, "| %s | %d | %s | %s | %s | %s | %d / %d | %s |\n",
 				run, n+1, c.Title, m.Meter, m.Bars, yes(m.Sus4), m.Tensioned, m.Chords, yes(m.Claims))
-			if expects {
-				fmt.Fprintf(b, " %s |", strings.Join(check(t.Expect, c, prevTempo), ", "))
-			}
-			b.WriteString("\n")
-		}
-		if len(t.Answer.Candidates) > 0 {
-			prevTempo = t.Answer.Candidates[0].TempoBPM
 		}
 	}
 }
