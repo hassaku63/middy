@@ -29,7 +29,7 @@
    ```bash
    cd backend && go test ./internal/golden ./internal/httpapi ./internal/ideas -run Golden -update
    ```
-5. **評価を走らせる。** プロンプトのカタログの一部が変わるので、PR に `eval-cases:style` か `eval-cases:groove` を付ける（ADR-0038、`docs/dev/workflow.md` の 4.1）。AI が新しい型を選ぶ場面が評価のケースにないなら、ケースを足す。
+5. **評価を走らせる。** プロンプトのカタログの一部が変わるので、PR に `needs-eval-cases:style` か `needs-eval-cases:groove` を付ける（ADR-0038、`docs/dev/workflow.md` の 4.1）。AI が新しい型を選ぶ場面が評価のケースにないなら、ケースを足す。
 
 ## してはいけないこと
 

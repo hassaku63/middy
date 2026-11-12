@@ -66,7 +66,7 @@
 | [0060](0060-sixteenth-swing-feel.md) | 16 分のスウィング `swing-16` を名前のついたノリとして足す。比 1.3 : 1（約 57 %）、テンポによらない。pop と lofi で選べる | Accepted |
 | [0061](0061-show-what-could-not-be-expressed.md) | 表せなかったもの（`unconstrained`）を本番の答えでも求め、要約の下に「AI の見立て」として小さく出す | Accepted |
 | [0062](0062-sus2.md) | sus2 を 3 度のない和音に足す（テンションは足さない）。3 度のない和音の分数コードのベースは、根音からの音程で読む | Accepted |
-| [0063](0063-eval-label-names.md) | 評価のラベルは `eval-` のあとが走らせるもの、`:` のあとが絞り込み（`eval-cases`、`eval-cases:<tag>`、`eval-converse`） | Accepted |
+| [0063](0063-eval-label-names.md) | 評価のラベルは `needs-eval-` のあとが走らせるもの、`:` のあとが絞り込み（`needs-eval-cases`、`needs-eval-cases:<tag>`、`needs-eval-converse`） | Accepted |
 
 ## いつ ADR を書くか
 

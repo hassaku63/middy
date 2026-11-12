@@ -107,6 +107,6 @@ CodeQL は `.github/workflows/codeql.yml` で動く（ADR-0031）。`docs/**` �
 | 自己レビュー（`/code-review` 等） | 人間のレビュー負荷の低減 | PR 前 |
 | `ui-review`（画面を撮り、文脈を共有しないサブエージェントがレビューする。`.claude/skills/ui-review`） | 作った文脈を知らない目での画面の見直し。指摘は仮説で、CI には組み込まない（#286） | 画面の構成・配置・状態の見せ方を変える PR の前、配置の案を見比べるとき |
 | `make e2e` を 1 回通す | モックでは見えない失敗 | UI スライスの PR 前（`docs/dev/testing.md`） |
-| PR に `eval-cases` ラベルを付けて実 API の評価を走らせる（結果は PR のコメント。ADR-0018）。`eval-cases:<tag>`（例: `eval-cases:meter`）は、そのタグと smoke のケースだけ（ADR-0038）。全件は Message Batches で送るので、結果のコメントまで数分から 1 時間ほどかかる（ADR-0039） | プロンプトの退行、語彙を足したのに使われないこと | プロンプト・スキーマ・インテント・語彙・評価のケースを変えた PR で、マージ前（`docs/dev/workflow.md`） |
+| PR に `needs-eval-cases` ラベルを付けて実 API の評価を走らせる（結果は PR のコメント。ADR-0018）。`needs-eval-cases:<tag>`（例: `needs-eval-cases:meter`）は、そのタグと smoke のケースだけ（ADR-0038）。全件は Message Batches で送るので、結果のコメントまで数分から 1 時間ほどかかる（ADR-0039） | プロンプトの退行、語彙を足したのに使われないこと | プロンプト・スキーマ・インテント・語彙・評価のケースを変えた PR で、マージ前（`docs/dev/workflow.md`） |
 | WIP 上限 3 | レビュー処理能力の保護 | 常時（`AGENTS.md`） |
 | ハーネスの見直し | 効かない検査の削除、CI 時間（予算 10 分）の確認 | 四半期 |
