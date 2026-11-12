@@ -16,7 +16,7 @@ export type ChatPanelProps = {
   patterns?: PatternsResponse | undefined;
   /**
    * Earlier exchanges as a list of one line per example instead of folded
-   * away (the desk under trial, BL-186).
+   * away (BL-186). The app always asks for the list.
    */
   list?: boolean;
   /**

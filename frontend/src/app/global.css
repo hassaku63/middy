@@ -153,10 +153,10 @@ main {
   gap: 20px;
 }
 
-/* The desk under trial (BL-184, #279): on wide screens the page is one
+/* The wide layout (BL-184, BL-226, #279): on wide screens the page is one
    screen tall; the conversation is a left column that scrolls on its own,
-   its input pinned at the bottom, beside the stage, which scrolls on its
-   own too. Narrower screens keep today's stacked order. */
+   beside the stage, which scrolls on its own too. Narrower screens stack
+   the two. */
 @media (min-width: 1024px) {
   /* Wide screens use their width up to QHD (ADR-0041). */
   main.app--desk {

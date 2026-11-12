@@ -10,7 +10,7 @@ type Props = {
 };
 
 /**
- * Earlier exchanges on the desk under trial (BL-186, #279): one line per
+ * Earlier exchanges (BL-186, #279): one line per
  * example (name, key, BPM, progression), so four exchanges fit in the
  * column without scrolling. The exchange's number tells apart examples of
  * the same name.
