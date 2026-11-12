@@ -14,6 +14,7 @@ import {
   type Layout,
 } from './layout';
 import { useBoxSize } from './useBoxSize';
+import { GRIP_HALF, useHeadGrip } from './useHeadGrip';
 import { useSeekByClick, type Scrub } from './useSeekByClick';
 import './TimelineView.css';
 
@@ -90,6 +91,7 @@ export function TimelineView({
   );
 
   const seek = useSeekByClick(ref, layout, onSeek, onSelectHarmony !== undefined, onScrub);
+  const grip = useHeadGrip(ref, layout, positionTick, onSeek, onScrub);
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (
@@ -167,17 +169,7 @@ export function TimelineView({
         />
       )}
       {seek.hint !== null && <SeekHint layout={layout} tick={seek.hint} />}
-      {/* The playhead runs under the chord lane, where the sounding chord
-          already shows by its own mark: across the lane it hid the chord's
-          numeral at the start of each chord (#402 I). */}
-      <line
-        className="timeline__playhead"
-        data-testid="playhead"
-        x1={layout.x(positionTick)}
-        x2={layout.x(positionTick)}
-        y1={layout.rollTop}
-        y2={layout.height}
-      />
+      <Playhead layout={layout} tick={positionTick} grip={grip} />
     </svg>
   );
 }
@@ -192,5 +184,46 @@ function SeekHint({ layout, tick }: { layout: Layout; tick: number }) {
       y1={layout.rollTop}
       y2={layout.height}
     />
+  );
+}
+
+/**
+ * The playhead, and the band a finger holds it by (BL-337). It runs under
+ * the chord lane, where the sounding chord already shows by its own mark:
+ * across the lane it hid the chord's numeral at the start of each chord
+ * (#402 I).
+ */
+function Playhead({
+  layout,
+  tick,
+  grip,
+}: {
+  layout: Layout;
+  tick: number;
+  grip: ReturnType<typeof useHeadGrip>;
+}) {
+  const x = layout.x(tick);
+  return (
+    <>
+      <line
+        className="timeline__playhead"
+        data-testid="playhead"
+        x1={x}
+        x2={x}
+        y1={layout.rollTop}
+        y2={layout.height}
+      />
+      {grip && (
+        <rect
+          className="timeline__head-grip"
+          data-testid="head-grip"
+          x={x - GRIP_HALF}
+          y={layout.rollTop}
+          width={GRIP_HALF * 2}
+          height={layout.height - layout.rollTop}
+          {...grip}
+        />
+      )}
+    </>
   );
 }
