@@ -74,3 +74,62 @@ test.describe('at 1920×1080', () => {
     await expect(result.getByRole('region', { name: 'コードの解説' })).toBeInViewport({ ratio: 1 });
   });
 });
+
+/**
+ * BL-326 (BL-127, the owner's choice): playing, the playhead keeps to the
+ * middle of the drawing in view and the drawing flows under it; when the
+ * person asked the system for less motion, the box turns a page instead.
+ */
+for (const viewport of [
+  { width: 1920, height: 1080 },
+  { width: 390, height: 844 },
+]) {
+  test.describe(`following the playhead at ${String(viewport.width)} px`, () => {
+    test.use({ viewport });
+
+    test('playing, the playhead stays in the middle of the drawing in view', async ({ page }) => {
+      const result = await send(page, '長い雨の日');
+      const box = result.locator('.timeline-overview__scroll');
+      await page.getByRole('button', { name: '再生' }).click();
+      // Into the second bar at 72 BPM, past where the scroll can start.
+      await expect
+        .poll(() => box.evaluate((el) => el.scrollLeft), { timeout: 15000 })
+        .toBeGreaterThan(0);
+      const offset = await box.evaluate((el) => {
+        const head = el.querySelector('[data-testid=playhead]')?.getBoundingClientRect();
+        const labels = el.querySelector('.timeline-labels')?.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        if (!head || !labels) return Infinity;
+        const middle = labels.right + (rect.right - labels.right) / 2;
+        return Math.abs(head.left - middle);
+      });
+      expect(offset).toBeLessThanOrEqual(8);
+    });
+  });
+}
+
+test.describe('following the playhead with less motion', () => {
+  test.use({ viewport: { width: 1920, height: 1080 }, reducedMotion: 'reduce' });
+
+  test('the box turns a page and holds still in between', async ({ page }) => {
+    const result = await send(page, '長い雨の日');
+    const box = result.locator('.timeline-overview__scroll');
+    await page.getByRole('button', { name: '再生' }).click();
+    // Past the middle of the first page (centring would scroll here), the
+    // drawing still holds still: a page turns only near the right edge.
+    await expect
+      .poll(
+        () =>
+          box.evaluate((el) => {
+            const head = el.querySelector('[data-testid=playhead]')?.getBoundingClientRect();
+            const labels = el.querySelector('.timeline-labels')?.getBoundingClientRect();
+            const rect = el.getBoundingClientRect();
+            if (!head || !labels) return false;
+            return head.left > labels.right + (rect.right - labels.right) / 2 + 20;
+          }),
+        { timeout: 15000 },
+      )
+      .toBe(true);
+    expect(await box.evaluate((el) => el.scrollLeft)).toBe(0);
+  });
+});
