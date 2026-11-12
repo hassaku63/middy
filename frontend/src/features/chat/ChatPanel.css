@@ -223,7 +223,7 @@
   margin-bottom: 10px;
 }
 
-/* Earlier exchanges on the desk under trial (BL-186): one line per example. */
+/* Earlier exchanges (BL-186): one line per example. */
 .chat__exchanges,
 .chat__lines {
   list-style: none;

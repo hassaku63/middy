@@ -3,8 +3,8 @@ import type { IdeaCandidate } from '@/shared/api/client';
 import { typing } from './useChordKeys';
 
 /**
- * 1, 2 and 3 open the latest answer's examples in turn (the desk under
- * trial, BL-186, #279). Digits typed into a field stay with the field.
+ * 1, 2 and 3 open the latest answer's examples in turn (BL-186, #279).
+ * Digits typed into a field stay with the field.
  */
 export function useCandidateKeys(
   enabled: boolean,

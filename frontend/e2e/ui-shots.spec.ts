@@ -14,7 +14,7 @@ test.skip(!process.env.UI_SHOTS, 'run with npm run ui:shots');
 
 const out = process.env.UI_SHOTS_DIR ?? 'ui-review-out';
 const sizes = SIZES;
-const layout = process.env.UI_SHOTS_LAYOUT ?? ''; // a query for a trial, e.g. "lab"
+const layout = process.env.UI_SHOTS_LAYOUT ?? ''; // the query of a layout under trial, if any
 
 /** The states the result screen is reviewed in. */
 const states: { name: string; reach: (page: Page) => Promise<void> }[] = [

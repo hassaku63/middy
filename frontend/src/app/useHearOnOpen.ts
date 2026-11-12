@@ -12,8 +12,8 @@ function stored(): boolean {
 }
 
 /**
- * Whether choosing an example also plays it, on the desks under trial
- * (#315). On by default; the choice is remembered in this browser.
+ * Whether choosing an example also plays it (#315). On by default; the
+ * choice is remembered in this browser.
  */
 export function useHearOnOpen() {
   const [on, setOn] = useState(stored);

@@ -3,7 +3,7 @@ import type { HarmonyEvent } from '@/shared/api/client';
 import { explainedIndex } from '@/features/explanation/explainedIndex';
 
 type Options = {
-  /** Off unless the desk under trial shows a timeline (BL-185). */
+  /** Whether the keys act; the stage turns them on while it shows a timeline (BL-185). */
   enabled: boolean;
   harmony: HarmonyEvent[];
   positionTick: number;

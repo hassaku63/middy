@@ -12,7 +12,7 @@ type Props = {
   focusable?: boolean;
   /**
    * Mark the chord the explanation follows with ▶ and the pinned one with ■,
-   * so pinning shows without colour (WCAG 1.4.1; the desk under trial, BL-185).
+   * so pinning shows without colour (WCAG 1.4.1, BL-185).
    */
   marks?: boolean | undefined;
   /** Ticks per quarter note, to draw where a pushed chord starts to sound. */
