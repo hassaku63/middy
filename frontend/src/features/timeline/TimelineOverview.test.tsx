@@ -51,8 +51,8 @@ describe('TimelineOverview (#360)', () => {
   });
 });
 
-describe('the strip picks a place (BL-330)', () => {
-  it('a click on the strip, even on a chord, moves the playhead and pins nothing', () => {
+describe('the strip picks where to look (BL-333, ADR-0069)', () => {
+  it('a click on the strip, even on a chord, neither moves the playhead nor pins', () => {
     const onSeek = vi.fn<(tick: number) => void>();
     const onSelect = vi.fn();
     const { container } = render(
@@ -66,15 +66,13 @@ describe('the strip picks a place (BL-330)', () => {
     );
     const strip = container.querySelector('svg.timeline--overview');
     if (!(strip instanceof SVGSVGElement)) throw new Error('no strip');
-    // The strip squeezes the whole drawing (40 + 16 × 160 px) into 650 px.
-    const width = 40 + 16 * 160;
-    strip.getBoundingClientRect = () => new DOMRect(0, 0, width / 4, 48);
+    strip.getBoundingClientRect = () => new DOMRect(0, 0, 650, 48);
     const chord = strip.querySelectorAll('[role=option]')[11];
     if (!chord) throw new Error('no chord');
-    // The twelfth bar's first beat, in the strip's quarter scale.
-    fireEvent.click(chord, { clientX: (40 + 11 * 160 + 10) / 4 });
-    expect(onSeek).toHaveBeenCalledWith(11 * 1920);
+    fireEvent.click(chord, { clientX: 450 });
+    expect(onSeek).not.toHaveBeenCalled();
     expect(onSelect).not.toHaveBeenCalled();
+    expect(strip.classList.contains('timeline--seekable')).toBe(false);
   });
 });
 

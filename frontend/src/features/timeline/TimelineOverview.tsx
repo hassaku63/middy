@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import type { CSSProperties, MouseEvent } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineLabels } from './TimelineLabels';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
@@ -23,10 +23,10 @@ type Props = Omit<
  * of the drawing in view (BL-127, BL-326, ADR-0066), or turns a page when
  * the person asked the system for less motion; stopped, it centres the
  * pinned chord, else it stays where it was scrolled. Clicking the drawing
- * or the strip moves the playhead (BL-328, BL-330, ADR-0067): stopped, a
- * click on the strip also brings the box there. Scrolling the box by hand
- * while playing pauses the following until 「再生位置へ戻る」, a click on
- * the strip or the next play (BL-332, ADR-0068). The strip is a duplicate
+ * moves the playhead (BL-328, ADR-0067); clicking the strip only brings
+ * the box there (BL-333, ADR-0069). Scrolling the box by hand or from the
+ * strip while playing pauses the following until 「再生位置へ戻る」 or the
+ * next play (BL-332, ADR-0068). The strip is a duplicate
  * drawing, hidden from assistive tech.
  */
 export function TimelineOverview(props: Props) {
@@ -35,29 +35,25 @@ export function TimelineOverview(props: Props) {
   const pinned =
     props.selectedHarmony != null ? props.timeline.harmony[props.selectedHarmony] : undefined;
   const playing = props.playing !== false;
-  // Where a click on the strip put the playhead while stopped (BL-330):
-  // the box goes there, until another chord is pinned.
-  const [aimed, setAimed] = useState<{ tick: number; pin: number | null | undefined } | null>(null);
-  const aim = aimed && aimed.pin === props.selectedHarmony ? aimed.tick : null;
   // Any timeline may scroll (a narrow screen), so the box follows the
-  // playhead, the point clicked on the strip or the pinned chord.
-  const target = followed(geometry, props.positionTick, playing, aim, pinned);
+  // playhead or the pinned chord.
+  const target = followed(geometry, props.positionTick, playing, pinned);
   const lessMotion = useReducedMotion();
-  const { ref, view, onScroll, paused, resume } = useTimelineScroll(
+  const { ref, view, onScroll, paused, resume, look } = useTimelineScroll(
     geometry.width,
     target,
     playing && lessMotion ? 'page' : 'centre',
     geometry.labelWidth,
     playing,
   );
-  // A click on the strip says where to look: the box follows again.
-  const seekFromStrip = props.onSeek
-    ? (tick: number) => {
-        props.onSeek?.(tick);
-        setAimed({ tick, pin: props.selectedHarmony });
-        resume();
-      }
-    : undefined;
+  // The strip picks where to look, not where to play (ADR-0069): a click
+  // on it brings the box there, as a DAW's overview does.
+  const lookFromStrip = (e: MouseEvent<HTMLDivElement>) => {
+    const strip = e.target instanceof Element ? e.target.closest('svg') : null;
+    const box = strip?.getBoundingClientRect();
+    if (!box?.width) return;
+    look(((e.clientX - box.left) / box.width) * geometry.width);
+  };
   // One box for every timeline, so the tree does not change with the
   // width (ADR-0042): it scrolls sideways when the drawing is wider than
   // the box, with the label column held at its left (#402 A). A short
@@ -92,35 +88,31 @@ export function TimelineOverview(props: Props) {
         </button>
       )}
       {long && (
-        <TimelineView
-          {...props}
-          // The strip picks a place, not a chord: a click anywhere on it
-          // moves the playhead (BL-330, the owner's choice).
-          onSelectHarmony={undefined}
-          onSeek={seekFromStrip}
-          fit={false}
-          decorative
-          stretch
-          highlight={view}
-          className="timeline--overview"
-        />
+        <div className="timeline-overview__strip" onClick={lookFromStrip}>
+          <TimelineView
+            {...props}
+            // A place to look, not a chord to pin or a point to play.
+            onSelectHarmony={undefined}
+            onSeek={undefined}
+            fit={false}
+            decorative
+            stretch
+            highlight={view}
+            className="timeline--overview"
+          />
+        </div>
       )}
     </div>
   );
 }
 
-/**
- * The point kept in view, in drawing units: the playhead while playing;
- * stopped, the point clicked on the strip, else the pinned chord's middle.
- */
+/** The point kept in view, in drawing units: the playhead, or the pinned chord's middle. */
 function followed(
   geometry: Layout,
   positionTick: number,
   playing: boolean,
-  aim: number | null,
   pinned: Timeline['harmony'][number] | undefined,
 ) {
   if (playing) return geometry.x(positionTick);
-  if (aim !== null) return geometry.x(aim);
   return pinned ? geometry.x(pinned.start + pinned.duration / 2) : null;
 }
