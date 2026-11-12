@@ -239,3 +239,46 @@ test.describe('dragging the playhead with a mouse', () => {
     await expect(position).toHaveText(/^3\./);
   });
 });
+
+/**
+ * BL-337 (ADR-0072): on a touch screen a finger holds the playhead by a
+ * wide band and pulls the score: the playhead stays in the middle and a
+ * swipe to the left brings later bars under it.
+ */
+test.describe('holding the playhead with a finger', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test('a swipe on the playhead moves it a bar on, and it stays in the middle', async ({
+    page,
+  }) => {
+    const { result, position } = await open(page);
+    const box = result.locator('.timeline-overview__scroll');
+    await page
+      .locator('.timeline-overview__scroll .timeline__bar-number', { hasText: /^2$/ })
+      .tap();
+    await expect(position).toHaveText('2.1');
+    const grip = box.getByTestId('head-grip');
+    const g = await grip.boundingBox();
+    if (!g) throw new Error('no grip');
+    const x = g.x + g.width / 2;
+    const y = g.y + g.height / 2;
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', at: number) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: type === 'touchEnd' ? [] : [{ x: at, y }],
+      });
+    await touch('touchStart', x);
+    for (let i = 1; i <= 8; i += 1) await touch('touchMove', x - i * 20);
+    await touch('touchEnd', 0);
+    await expect(position).toHaveText(/^3\./);
+    const offset = await box.evaluate((el) => {
+      const head = el.querySelector('[data-testid=playhead]')?.getBoundingClientRect();
+      const labels = el.querySelector('.timeline-labels')?.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      if (!head || !labels) return Infinity;
+      return Math.abs(head.left - (labels.right + (rect.right - labels.right) / 2));
+    });
+    expect(offset).toBeLessThanOrEqual(8);
+  });
+});

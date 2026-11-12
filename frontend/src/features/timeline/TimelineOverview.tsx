@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineLabels } from './TimelineLabels';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
@@ -36,9 +36,18 @@ export function TimelineOverview(props: Props) {
   const pinned =
     props.selectedHarmony != null ? props.timeline.harmony[props.selectedHarmony] : undefined;
   const playing = props.playing !== false;
+  // A finger holding the playhead keeps it in the middle while the score
+  // moves under it (BL-337, ADR-0072).
+  const [holding, setHolding] = useState(false);
+  const onScrub = props.onScrub
+    ? (phase: 'start' | 'end', by?: 'head') => {
+        setHolding(phase === 'start' && by === 'head');
+        props.onScrub?.(phase, by);
+      }
+    : undefined;
   // Any timeline may scroll (a narrow screen), so the box follows the
   // playhead or the pinned chord.
-  const target = followed(geometry, props.positionTick, playing, pinned);
+  const target = followed(geometry, props.positionTick, playing || holding, pinned);
   const lessMotion = useReducedMotion();
   const { ref, view, onScroll, paused, resume, look } = useTimelineScroll(
     geometry.width,
@@ -73,7 +82,7 @@ export function TimelineOverview(props: Props) {
         style={vars}
       >
         <TimelineLabels layout={geometry} />
-        <TimelineView {...props} fit={!long && props.fit === true} />
+        <TimelineView {...props} onScrub={onScrub} fit={!long && props.fit === true} />
       </div>
       {paused && (
         // Scrolled by hand while playing, the box stops following (BL-332,

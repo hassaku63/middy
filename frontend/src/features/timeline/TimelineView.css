@@ -138,6 +138,19 @@
   stroke-width: 2;
 }
 
+/* A finger holds the playhead by a band wider than the line (BL-337),
+   shown faintly on a touch screen (useHeadGrip keeps the drag from
+   panning the box). */
+.timeline__head-grip {
+  fill: transparent;
+}
+
+@media (pointer: coarse) {
+  .timeline__head-grip {
+    fill: rgb(248 113 113 / 0.12);
+  }
+}
+
 /* Clicking the drawing moves the playhead (BL-328): the pointer says it
    can be pressed, and a thin dashed line shows the beat it would go to. */
 .timeline--seekable {

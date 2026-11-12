@@ -1,8 +1,11 @@
 import { useRef, useState, type MouseEvent, type PointerEvent, type RefObject } from 'react';
 import { beatAt, type Layout } from './layout';
 
-/** A drag that moves the playhead begins and ends (the app pauses play meanwhile). */
-export type Scrub = (phase: 'start' | 'end') => void;
+/**
+ * A drag that moves the playhead begins and ends (the app pauses play
+ * meanwhile); by 'head' when a finger holds the playhead (BL-337).
+ */
+export type Scrub = (phase: 'start' | 'end', by?: 'head') => void;
 
 export type SeekByClick = {
   /** The beat under a mouse or pen, in ticks: where a click would go. */
