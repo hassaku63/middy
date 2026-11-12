@@ -70,6 +70,7 @@ export function TimelineOverview(props: Props) {
       {long && (
         <TimelineView
           {...props}
+          onSeek={undefined}
           fit={false}
           decorative
           stretch

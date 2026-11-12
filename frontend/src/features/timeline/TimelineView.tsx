@@ -5,8 +5,16 @@ import { DrumLane } from './DrumLane';
 import { PianoRoll } from './PianoRoll';
 import { TimelineGrid } from './TimelineGrid';
 import { TimelineRuler } from './TimelineRuler';
-import { DRUM_CHANNEL, ROW_HEIGHT, computeLayout, fitBarWidth, harmonyAt } from './layout';
+import {
+  DRUM_CHANNEL,
+  ROW_HEIGHT,
+  computeLayout,
+  fitBarWidth,
+  harmonyAt,
+  type Layout,
+} from './layout';
 import { useBoxSize } from './useBoxSize';
+import { useSeekByClick } from './useSeekByClick';
 import './TimelineView.css';
 
 export type TimelineViewProps = {
@@ -22,6 +30,8 @@ export type TimelineViewProps = {
   /** Index into timeline.harmony the user pinned by clicking, if any. */
   selectedHarmony?: number | null;
   onSelectHarmony?: (index: number) => void;
+  /** Clicking anywhere but a chord moves the playhead there (BL-328). */
+  onSeek?: ((tick: number) => void) | undefined;
   /** Outline this slice, e.g. the part in view next to an overview. */
   highlight?: { x: number; width: number };
   /** Fill the box it is given, out of proportion (an overview strip). */
@@ -51,6 +61,7 @@ export function TimelineView({
   playing = true,
   selectedHarmony = null,
   onSelectHarmony,
+  onSeek,
   highlight,
   stretch = false,
   fit = false,
@@ -75,11 +86,12 @@ export function TimelineView({
     [timeline, natural, barWidth, stretch],
   );
 
+  const seek = useSeekByClick(ref, layout, onSeek);
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (
     <svg
-      className={className ? `timeline ${className}` : 'timeline'}
+      className={['timeline', onSeek && 'timeline--seekable', className].filter(Boolean).join(' ')}
       // A group, not an img: an img's children are hidden from assistive
       // technology, and the chord lane inside is an interactive listbox.
       role="group"
@@ -93,6 +105,7 @@ export function TimelineView({
       style={{ '--timeline-aspect': natural.width / natural.height } as CSSProperties}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
       preserveAspectRatio={stretch ? 'none' : undefined}
+      {...seek.handlers}
     >
       {Array.from({ length: layout.bars + 1 }, (_, i) => (
         <line
@@ -150,6 +163,7 @@ export function TimelineView({
           height={layout.height}
         />
       )}
+      {seek.hint !== null && <SeekHint layout={layout} tick={seek.hint} />}
       {/* The playhead runs under the chord lane, where the sounding chord
           already shows by its own mark: across the lane it hid the chord's
           numeral at the start of each chord (#402 I). */}
@@ -162,5 +176,18 @@ export function TimelineView({
         y2={layout.height}
       />
     </svg>
+  );
+}
+
+/** Where a click would move the playhead (BL-328), drawn like a thin playhead. */
+function SeekHint({ layout, tick }: { layout: Layout; tick: number }) {
+  return (
+    <line
+      className="timeline__seek-hint"
+      x1={layout.x(tick)}
+      x2={layout.x(tick)}
+      y1={layout.rollTop}
+      y2={layout.height}
+    />
   );
 }

@@ -45,6 +45,7 @@ export function Stage({
       playing={player.state === 'playing'}
       selectedHarmony={selectedHarmony}
       onSelectHarmony={onSelectHarmony}
+      onSeek={player.seek}
       marks
       fit
     />

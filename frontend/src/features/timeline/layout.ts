@@ -138,3 +138,15 @@ export function fitBarWidth(natural: Layout, box: { width: number; height: numbe
   const width = (box.width / box.height) * natural.height; // drawing units across the box
   return Math.max(BAR_WIDTH, (width - natural.labelWidth) / natural.bars);
 }
+
+/**
+ * The tick a click at drawing x moves the playhead to (BL-328): the start
+ * of the beat under it, so play starts where the bar.beat read-out says;
+ * null over the label column.
+ */
+export function beatAt(layout: Layout, x: number): number | null {
+  if (x < layout.labelWidth) return null;
+  const tick = ((x - layout.labelWidth) / layout.barWidth) * layout.perBar;
+  const beat = Math.floor(tick / layout.perBeat) * layout.perBeat;
+  return Math.min(beat, layout.bars * layout.perBar - layout.perBeat);
+}
