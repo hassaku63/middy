@@ -141,9 +141,18 @@ main {
   color: #f87171;
 }
 
-.app__open-title {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+/* The open example's title above the result, with the star that keeps it
+   (BL-296). */
+.app__example-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.app__example-title {
+  margin: 0;
+  font-size: 1.1rem;
 }
 
 .app--desk .app__columns,

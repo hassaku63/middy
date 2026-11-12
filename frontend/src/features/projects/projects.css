@@ -52,3 +52,30 @@
     background: #e5e7eb;
   }
 }
+
+/* The star that keeps the open example (BL-296): the symbol is the label,
+   so it is drawn large, and the button is at least 28 px square (WCAG
+   2.2 2.5.8 asks 24). A kept star is filled and coloured; the colour is
+   never the only sign (☆ and ★ differ in shape, WCAG 1.4.1) and keeps 3:1
+   against the page in both themes (1.4.11). */
+.projects__keep {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.projects__keep[aria-pressed='true'] {
+  color: #fbbf24;
+}
+
+@media (prefers-color-scheme: light) {
+  .projects__keep[aria-pressed='true'] {
+    color: #b45309;
+  }
+}

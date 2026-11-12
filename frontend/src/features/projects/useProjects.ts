@@ -32,7 +32,7 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
       setProjects(list);
       setError(null);
     } catch {
-      if (read === reads.current) setError('保存した例を読み込めませんでした');
+      if (read === reads.current) setError('とっておいた例を読み込めませんでした');
     }
   }, [store]);
 
@@ -47,7 +47,7 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
         if (current()) setProjects(list);
       })
       .catch(() => {
-        if (current()) setError('保存した例を読み込めませんでした');
+        if (current()) setError('とっておいた例を読み込めませんでした');
       });
     return () => {
       cancelled = true;
@@ -68,7 +68,7 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
       try {
         await store.save(project);
       } catch {
-        setError('保存できませんでした（ブラウザの保存領域を確かめてください）');
+        setError('とっておけませんでした（ブラウザの保存領域を確かめてください）');
         return null;
       }
       await refresh();
@@ -82,7 +82,7 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
       try {
         await store.remove(id);
       } catch {
-        setError('削除できませんでした');
+        setError('とっておいた例から外せませんでした');
         return;
       }
       await refresh();

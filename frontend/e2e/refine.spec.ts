@@ -14,7 +14,9 @@ test('after three refinements, 再生 is still on the first screen', async ({ pa
     await page.getByLabel('イメージ', { exact: true }).fill(text);
     await page.getByRole('button', { name: '送る' }).click();
     await page.getByRole('article', { name: title }).last().getByRole('button').click();
-    await expect(page.getByRole('region', { name: '結果' })).toContainText(`候補: ${title}`);
+    await expect(
+      page.getByRole('region', { name: '結果' }).getByRole('heading', { name: title }),
+    ).toBeVisible();
   };
   await say('雨の日曜の午後', '窓辺の雨');
   await say('もっと晴れた感じに', '朝の光');

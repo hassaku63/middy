@@ -21,7 +21,9 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
     /III.*C/,
     /VII.*G/,
   ]);
-  await expect(result.getByRole('heading', { level: 2 })).toContainText('i');
+  await expect(
+    result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
+  ).toContainText('i');
 
   // Play: at 72 BPM a bar lasts 3.3 s; the panel follows into bar 2.
   await page.getByRole('button', { name: '再生' }).click();
@@ -30,7 +32,9 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
     'aria-label',
     'VI F',
   );
-  await expect(result.getByRole('heading', { level: 2 })).toContainText('VI');
+  await expect(
+    result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
+  ).toContainText('VI');
   await page.getByRole('button', { name: '停止' }).click();
   await expect(page.getByLabel('再生位置')).toHaveText('1.1');
 
@@ -38,7 +42,9 @@ test('play an example, follow it, pin a chord, download', async ({ page }) => {
   // The whole card opens it (#313): press the card, not a button in it.
   await page.getByRole('article', { name: '遠い記憶' }).click();
   await result.getByRole('option', { name: 'V7 B7' }).click();
-  await expect(result.getByRole('heading', { level: 2 })).toContainText('V7');
+  await expect(
+    result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
+  ).toContainText('V7');
   // Uppercase V in minor is the harmonic-minor dominant.
   await expect(result.locator('.explanation__text').first()).toContainText('和声的短音階');
   await page.getByRole('button', { name: /固定を解除/ }).click();

@@ -32,7 +32,10 @@ test.describe('at 1280×800', () => {
     await timeline.scrollIntoViewIfNeeded();
     await expect(result.locator('[role=option][aria-current=true]')).toBeVisible();
     await inViewport(page, timeline);
-    await inViewport(page, result.getByRole('heading', { level: 2 }));
+    await inViewport(
+      page,
+      result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
+    );
     await page.getByRole('button', { name: '停止' }).click();
   });
 });

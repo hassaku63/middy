@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
 import { MemoryProjectStore, type Project } from '@/shared/lib/storage/projects';
 import { ProjectList } from './ProjectList';
-import { SaveProjectForm } from './SaveProjectForm';
+import { KeepToggle } from './KeepToggle';
+import { keptAs } from './keptAs';
 import { useProjects } from './useProjects';
 
 const timeline: Timeline = {
@@ -20,29 +21,39 @@ function Harness({ store, onOpen }: { store: MemoryProjectStore; onOpen: (p: Pro
   const projects = useProjects(store);
   return (
     <>
-      <SaveProjectForm
+      <KeepToggle
         projects={projects}
-        current={{ timeline, source: { kind: 'idea', image: '雨', candidateTitle: '窓辺の雨' } }}
+        current={{
+          timeline,
+          source: { kind: 'idea', image: '雨', candidateTitle: '窓辺の雨' },
+        }}
       />
       <ProjectList projects={projects} onOpen={onOpen} />
     </>
   );
 }
 
-describe('SaveProjectForm + ProjectList + useProjects', () => {
-  it('saves in one click under the candidate title, lists, opens and deletes (#440)', async () => {
+describe('KeepToggle + ProjectList + useProjects', () => {
+  it('keeps in one click under the candidate title, lists, opens and deletes (#440)', async () => {
     const store = new MemoryProjectStore();
     const onOpen = vi.fn();
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={onOpen} />);
 
-    // No name is asked for.
+    // No name is asked for; the star says it is not kept yet.
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: '保存' }));
+    const star = screen.getByRole('button', { name: 'とっておく' });
+    expect(star).toHaveAttribute('aria-pressed', 'false');
+    expect(star).toHaveAttribute('title', 'とっておく');
+    expect(star).toHaveTextContent('☆');
+    await user.click(star);
+    await waitFor(() => expect(star).toHaveAttribute('aria-pressed', 'true'));
+    expect(star).toHaveAttribute('title', 'とっておいた例から外す');
+    expect(star).toHaveTextContent('★');
 
     // The list stays folded until asked for.
-    await user.click(await screen.findByText('保存した例（1）'));
-    const list = screen.getByRole('list', { name: '保存した例の一覧' });
+    await user.click(await screen.findByText('とっておいた例（1）'));
+    const list = screen.getByRole('list', { name: 'とっておいた例の一覧' });
     const item = within(list).getByRole('listitem');
     expect(item).toHaveTextContent('窓辺の雨');
     expect(item).toHaveTextContent('A minor · 90 BPM');
@@ -52,9 +63,37 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
 
     await user.click(within(item).getByRole('button', { name: '窓辺の雨 を削除' }));
     await waitFor(() =>
-      expect(screen.queryByRole('list', { name: '保存した例の一覧' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('list', { name: 'とっておいた例の一覧' })).not.toBeInTheDocument(),
     );
     expect(await store.list()).toHaveLength(0);
+    expect(star).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('lets a kept example go with a second press, and never keeps it twice (BL-296)', async () => {
+    const store = new MemoryProjectStore();
+    const user = userEvent.setup();
+    render(<Harness store={store} onOpen={vi.fn()} />);
+    const star = screen.getByRole('button', { name: 'とっておく' });
+    await user.click(star);
+    await waitFor(() => expect(star).toHaveAttribute('aria-pressed', 'true'));
+    expect(await store.list()).toHaveLength(1);
+    await user.click(star);
+    await waitFor(() => expect(star).toHaveAttribute('aria-pressed', 'false'));
+    expect(await store.list()).toHaveLength(0);
+  });
+
+  it('treats the same candidate in another key as another example (BL-296)', () => {
+    const kept: Project = {
+      id: 'a',
+      name: '窓辺の雨',
+      createdAt: 0,
+      updatedAt: 0,
+      timeline,
+      source: { kind: 'idea', image: '雨', candidateTitle: '窓辺の雨' },
+    };
+    // A copy that sounds the same is the kept one; another key is not.
+    expect(keptAs([kept], structuredClone(timeline))).toBe(kept);
+    expect(keptAs([kept], { ...timeline, key: { tonic: 0, mode: 'minor' } })).toBeUndefined();
   });
 
   it('shows no list while nothing is saved', () => {
@@ -63,7 +102,7 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
       return <ProjectList projects={projects} onOpen={vi.fn()} />;
     }
     render(<Empty />);
-    expect(screen.queryByRole('region', { name: '保存した例' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'とっておいた例' })).not.toBeInTheDocument();
   });
 
   it('says so when the store refuses a save, and can be tried again (review)', async () => {
@@ -71,9 +110,13 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     store.save = () => Promise.reject(new Error('QuotaExceededError'));
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: '保存' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('保存できませんでした');
-    expect(screen.getByRole('button', { name: '保存' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'とっておく' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('とっておけませんでした');
+    expect(screen.getByRole('button', { name: 'とっておく' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'とっておく' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 
   it('keeps a save that lands before a slow first load (review)', async () => {
@@ -87,10 +130,10 @@ describe('SaveProjectForm + ProjectList + useProjects', () => {
     };
     const user = userEvent.setup();
     render(<Harness store={store} onOpen={vi.fn()} />);
-    await user.click(screen.getByRole('button', { name: '保存' }));
-    expect(await screen.findByText('保存した例（1）')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'とっておく' }));
+    expect(await screen.findByText('とっておいた例（1）')).toBeInTheDocument();
     firstLoad([]); // the first load answers last, with the list from before the save
     await new Promise((r) => setTimeout(r, 0));
-    expect(screen.getByText('保存した例（1）')).toBeInTheDocument();
+    expect(screen.getByText('とっておいた例（1）')).toBeInTheDocument();
   });
 });
