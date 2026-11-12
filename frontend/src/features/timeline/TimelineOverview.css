@@ -1,8 +1,20 @@
 .timeline-overview {
+  position: relative; /* holds the follow button over the box */
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+}
+
+/* Shown only while following is paused (BL-332): over the box's top right
+   corner, where the bar numbers are, so the notes stay in view. */
+.timeline-overview__follow {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  min-height: 24px; /* WCAG 2.5.8 */
+  font-size: 0.85rem;
 }
 
 /* One box for every timeline, scrolled sideways when the drawing is wider

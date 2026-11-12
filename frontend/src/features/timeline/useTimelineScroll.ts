@@ -32,15 +32,39 @@ export function scrollFor(
   return x - lead;
 }
 
+/** How far, in screen pixels, the box may sit from where it was put before it counts as moved by hand. */
+const MOVED = 2;
+
 /**
  * The scrolling box of a long timeline (#360): scrolls it to keep target
  * (in drawing units) in view whenever target moves, and reports the slice
  * in view for the overview to outline. Between target moves the person
- * scrolls freely.
+ * scrolls freely. Playing, scrolling by hand pauses the following, as a
+ * DAW's follow does (BL-332, ADR-0068): resume() or the next play takes it
+ * up again.
  */
-export function useTimelineScroll(width: number, target: number | null, keep: Keep, inset = 0) {
+export function useTimelineScroll(
+  width: number,
+  target: number | null,
+  keep: Keep,
+  inset = 0,
+  playing = false,
+) {
   const ref = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<Slice>({ x: 0, width });
+  const [paused, setPaused] = useState(false);
+  // Playing or stopping takes the following up again.
+  const [wasPlaying, setWasPlaying] = useState(playing);
+  if (wasPlaying !== playing) {
+    setWasPlaying(playing);
+    setPaused(false);
+  }
+  /** Where this hook last left the box; elsewhere, a hand moved it. */
+  const placed = useRef<number | null>(null);
+  const movedByHand = useCallback((box: HTMLDivElement) => {
+    const at = placed.current;
+    return at !== null && Math.abs(box.scrollLeft - at) > MOVED;
+  }, []);
 
   const measure = useCallback(() => {
     const box = ref.current;
@@ -52,13 +76,29 @@ export function useTimelineScroll(width: number, target: number | null, keep: Ke
 
   useLayoutEffect(() => {
     const box = ref.current;
-    if (box?.scrollWidth && target !== null) {
+    if (!box) return;
+    if (playing && !paused && movedByHand(box)) {
+      setPaused(true); // a scroll the scroll event has not reported yet
+    } else if (box.scrollWidth && target !== null && !(playing && paused)) {
       const scale = box.scrollWidth / width;
       const left = scrollFor(box.scrollLeft, box.clientWidth, target * scale, keep, inset * scale);
       if (left !== null) box.scrollLeft = left;
     }
+    placed.current = box.scrollLeft;
     measure();
-  }, [target, keep, width, inset, measure]);
+  }, [target, keep, width, inset, measure, playing, paused, movedByHand]);
 
-  return { ref, view, onScroll: measure };
+  const onScroll = useCallback(() => {
+    const box = ref.current;
+    if (box && playing && movedByHand(box)) setPaused(true);
+    // Stopped, a hand may put the box anywhere: play follows from there.
+    if (box && !playing) placed.current = box.scrollLeft;
+    measure();
+  }, [measure, playing, movedByHand]);
+
+  const resume = useCallback(() => {
+    setPaused(false);
+  }, []);
+
+  return { ref, view, onScroll, paused: playing && paused, resume };
 }

@@ -141,3 +141,36 @@ test.describe('following the playhead with less motion', () => {
     expect(await box.evaluate((el) => el.scrollLeft)).toBe(0);
   });
 });
+
+/**
+ * BL-332 (ADR-0068, as a DAW's follow): playing, scrolling the box by hand
+ * pauses the following; 「再生位置へ戻る」 takes it up again.
+ */
+test.describe('scrolling by hand while playing', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('pauses the following until the person asks for it back', async ({ page }) => {
+    const result = await send(page, '長い雨の日');
+    const box = result.locator('.timeline-overview__scroll');
+    await page.getByRole('button', { name: '再生' }).click();
+    const back = result.getByRole('button', { name: '再生位置へ戻る' });
+    await expect(back).toHaveCount(0);
+    // Scroll far ahead of the playhead, as a person reading ahead would.
+    await box.hover();
+    await page.mouse.wheel(1200, 0);
+    await expect(back).toBeVisible();
+    const left = await box.evaluate((el) => el.scrollLeft);
+    expect(left).toBeGreaterThan(600);
+    await page.waitForTimeout(500);
+    expect(await box.evaluate((el) => el.scrollLeft)).toBe(left);
+    await back.click();
+    await expect(back).toHaveCount(0);
+    // Back near the start of the piece: the playhead is in view again.
+    await expect.poll(() => box.evaluate((el) => el.scrollLeft)).toBeLessThan(left);
+    const [b, head] = await Promise.all([
+      box.boundingBox(),
+      box.getByTestId('playhead').boundingBox(),
+    ]);
+    expect(b && head && head.x >= b.x && head.x <= b.x + b.width).toBe(true);
+  });
+});
