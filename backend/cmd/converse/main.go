@@ -2,8 +2,9 @@
 // the same turns to a running server as the app does, keeps every answer,
 // and reports, turn by turn, each example's length in bars, whether it
 // keeps sus4, and how many of its chords sound a tension next to whether
-// its words claim one. It is a measuring tool for the owner's machine,
-// not part of CI; with LLM_PROVIDER=fake it runs without a key.
+// its words claim one. A script (scenarios/*.json) may also say what each
+// turn should change; the report then checks every example against it
+// (#473, BL-314). With LLM_PROVIDER=fake it runs without a key.
 //
 //	go run ./cmd/converse collect -base http://localhost:8080 -turns turns.json -runs 3 -out out/
 //	go run ./cmd/converse report out/*.json
@@ -57,6 +58,7 @@ type message struct {
 // Turn is one exchange as collected: what was sent and what came back.
 type Turn struct {
 	Sent   string        `json:"sent"`
+	Expect *Expect       `json:"expect,omitempty"`
 	Answer *ideas.Result `json:"answer,omitempty"`
 	Error  string        `json:"error,omitempty"`
 }
@@ -64,7 +66,7 @@ type Turn struct {
 func collect(args []string) error {
 	fs := flag.NewFlagSet("collect", flag.ContinueOnError)
 	base := fs.String("base", "http://localhost:8080", "the running server")
-	turnsPath := fs.String("turns", "", "JSON array of the user's messages, in order")
+	turnsPath := fs.String("turns", "", "a script: a JSON array of the user's messages, or {name, turns: [{say, expect}]}")
 	runs := fs.Int("runs", 3, "how many times to send the whole conversation")
 	out := fs.String("out", "converse-out", "directory for one JSON file per run")
 	if err := fs.Parse(args); err != nil {
@@ -74,8 +76,8 @@ func collect(args []string) error {
 	if err != nil {
 		return err
 	}
-	var turns []string
-	if err := json.Unmarshal(data, &turns); err != nil {
+	script, err := readScript(data)
+	if err != nil {
 		return fmt.Errorf("%s: %w", *turnsPath, err)
 	}
 	if err := os.MkdirAll(*out, 0o750); err != nil {
@@ -83,7 +85,7 @@ func collect(args []string) error {
 	}
 	client := &http.Client{Timeout: 5 * time.Minute}
 	for r := 1; r <= *runs; r++ {
-		got := conversation(client, *base, turns)
+		got := conversation(client, *base, script.Steps, progress(os.Stderr, r))
 		b, err := json.MarshalIndent(got, "", "  ")
 		if err != nil {
 			return err
@@ -100,13 +102,15 @@ func collect(args []string) error {
 // conversation sends the turns one by one with the history the app sends:
 // the user's words, and for each answer its reply and the gist of its
 // examples (frontend/src/features/chat/history.ts). Keep the two in step.
-func conversation(client *http.Client, base string, turns []string) []Turn {
+func conversation(client *http.Client, base string, steps []Step, done func(turn, of int, d time.Duration, err error)) []Turn {
 	var history []message
 	var out []Turn
-	for _, text := range turns {
-		history = append(history, message{Role: "user", Content: text})
+	for i, st := range steps {
+		history = append(history, message{Role: "user", Content: st.Say})
+		start := time.Now()
 		res, err := imagine(client, base, history)
-		t := Turn{Sent: text}
+		done(i+1, len(steps), time.Since(start), err)
+		t := Turn{Sent: st.Say, Expect: st.Expect}
 		if err != nil {
 			t.Error = err.Error()
 			out = append(out, t)
@@ -118,6 +122,18 @@ func conversation(client *http.Client, base string, turns []string) []Turn {
 		history = append(history, message{Role: "assistant", Content: answerMessage(res)})
 	}
 	return out
+}
+
+// progress writes a line per turn as it comes back, so a slow run on the
+// real API (a turn can take a minute or more) is seen to move.
+func progress(w io.Writer, run int) func(turn, of int, d time.Duration, err error) {
+	return func(turn, of int, d time.Duration, err error) {
+		status := "ok"
+		if err != nil {
+			status = "error: " + err.Error()
+		}
+		_, _ = fmt.Fprintf(w, "run %d, turn %d/%d: %s (%.0fs)\n", run, turn, of, status, d.Seconds())
+	}
 }
 
 // answerMessage is an answer as the next request carries it, as the app's
@@ -194,33 +210,84 @@ func report(w io.Writer, paths []string) error {
 	if len(paths) == 0 {
 		return errors.New("report: give the collected run files")
 	}
+	runs, expects, err := readRuns(paths)
+	if err != nil {
+		return err
+	}
 	var b strings.Builder
-	b.WriteString("| run | turn | example | meter | bars | sus4 | tension sounded | words claim a tension |\n")
-	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- |\n")
-	for _, path := range paths {
+	// A script with expectations adds a column; one without keeps the
+	// table as it was (BL-314).
+	head, rule := "", ""
+	if expects {
+		head, rule = " expected |", " --- |"
+	}
+	b.WriteString("| run | turn | example | meter | bars | sus4 | tension sounded | words claim a tension |" + head + "\n")
+	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- |" + rule + "\n")
+	for i, turns := range runs {
+		writeRun(&b, runName(paths, i), turns, expects)
+	}
+	_, err = io.WriteString(w, b.String())
+	return err
+}
+
+// readRuns reads the collected runs, and whether any turn has expectations.
+func readRuns(paths []string) ([][]Turn, bool, error) {
+	runs := make([][]Turn, len(paths))
+	expects := false
+	for i, path := range paths {
 		data, err := os.ReadFile(path) //nolint:gosec // files the owner names on the command line
 		if err != nil {
-			return err
+			return nil, false, err
 		}
-		var turns []Turn
-		if err := json.Unmarshal(data, &turns); err != nil {
-			return fmt.Errorf("%s: %w", path, err)
+		if err := json.Unmarshal(data, &runs[i]); err != nil {
+			return nil, false, fmt.Errorf("%s: %w", path, err)
 		}
-		run := strings.TrimSuffix(filepath.Base(path), ".json")
-		for i, t := range turns {
-			if t.Answer == nil {
-				fmt.Fprintf(&b, "| %s | %d | (error: %s) | | | | | |\n", run, i+1, t.Error)
-				continue
-			}
-			for _, c := range t.Answer.Candidates {
-				m := measure(c, t.Answer.Reply)
-				fmt.Fprintf(&b, "| %s | %d | %s | %s | %s | %s | %d / %d | %s |\n",
-					run, i+1, c.Title, m.Meter, m.Bars, yes(m.Sus4), m.Tensioned, m.Chords, yes(m.Claims))
-			}
+		for _, t := range runs[i] {
+			expects = expects || t.Expect != nil
 		}
 	}
-	_, err := io.WriteString(w, b.String())
-	return err
+	return runs, expects, nil
+}
+
+// writeRun writes one run's rows: one per example, checked against its
+// turn's expectations and the previous answer's tempo.
+func writeRun(b *strings.Builder, run string, turns []Turn, expects bool) {
+	blank := ""
+	if expects {
+		blank = " |"
+	}
+	prevTempo := 0.0
+	for n, t := range turns {
+		if t.Answer == nil {
+			fmt.Fprintf(b, "| %s | %d | (error: %s) | | | | | |%s\n", run, n+1, t.Error, blank)
+			continue
+		}
+		for _, c := range t.Answer.Candidates {
+			m := measure(c, t.Answer.Reply)
+			fmt.Fprintf(b, "| %s | %d | %s | %s | %s | %s | %d / %d | %s |",
+				run, n+1, c.Title, m.Meter, m.Bars, yes(m.Sus4), m.Tensioned, m.Chords, yes(m.Claims))
+			if expects {
+				fmt.Fprintf(b, " %s |", strings.Join(check(t.Expect, c, prevTempo), ", "))
+			}
+			b.WriteString("\n")
+		}
+		if len(t.Answer.Candidates) > 0 {
+			prevTempo = t.Answer.Candidates[0].TempoBPM
+		}
+	}
+}
+
+// runName is how the report names a run file: "run-1", or with its
+// directory ("length/run-1") when the runs come from several directories,
+// one per script.
+func runName(paths []string, i int) string {
+	name := strings.TrimSuffix(filepath.Base(paths[i]), ".json")
+	for _, p := range paths {
+		if filepath.Dir(p) != filepath.Dir(paths[i]) {
+			return filepath.Base(filepath.Dir(paths[i])) + "/" + name
+		}
+	}
+	return name
 }
 
 // Measure is what the report says about one example.

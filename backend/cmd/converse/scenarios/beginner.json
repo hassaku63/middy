@@ -1,0 +1,8 @@
+{
+  "name": "イメージだけで言い直す初心者",
+  "turns": [
+    { "say": "雨の日曜の午後" },
+    { "say": "もう少し明るく", "expect": { "modes": ["major", "mixolydian", "dorian"] } },
+    { "say": "サビっぽく盛り上げて" }
+  ]
+}
