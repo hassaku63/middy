@@ -96,6 +96,48 @@ describe('KeepToggle + ProjectList + useProjects', () => {
     expect(keptAs([kept], { ...timeline, key: { tonic: 0, mode: 'minor' } })).toBeUndefined();
   });
 
+  it('renames a kept example by keyboard: Enter keeps, Esc and an empty name do not (BL-297)', async () => {
+    const store = new MemoryProjectStore();
+    const user = userEvent.setup();
+    render(<Harness store={store} onOpen={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'とっておく' }));
+    await user.click(await screen.findByText('とっておいた例（1）'));
+    const list = screen.getByRole('list', { name: 'とっておいた例の一覧' });
+
+    // Enter keeps the new name; focus comes back to the button.
+    const rename = within(list).getByRole('button', { name: '窓辺の雨 の名前を変える' });
+    rename.focus();
+    await user.keyboard('{Enter}');
+    const field = within(list).getByRole('textbox', { name: '窓辺の雨 の新しい名前' });
+    expect(field).toHaveFocus();
+    expect(field).toHaveValue('窓辺の雨');
+    await user.clear(field);
+    await user.type(field, '雨の練習{Enter}');
+    expect(await within(list).findByText('雨の練習')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(within(list).getByRole('button', { name: '雨の練習 の名前を変える' })).toHaveFocus(),
+    );
+    expect((await store.list())[0]?.name).toBe('雨の練習');
+
+    // Esc puts the old name back.
+    await user.keyboard('{Enter}');
+    await user.type(within(list).getByRole('textbox'), 'を書き換え{Escape}');
+    expect(within(list).getByText('雨の練習')).toBeInTheDocument();
+
+    // An empty name changes nothing, even when leaving the field.
+    await user.click(within(list).getByRole('button', { name: '雨の練習 の名前を変える' }));
+    await user.clear(within(list).getByRole('textbox'));
+    await user.tab();
+    expect(await within(list).findByText('雨の練習')).toBeInTheDocument();
+    expect((await store.list())[0]?.name).toBe('雨の練習');
+
+    // Leaving the field with a name keeps it.
+    await user.click(within(list).getByRole('button', { name: '雨の練習 の名前を変える' }));
+    await user.type(within(list).getByRole('textbox'), '（2）');
+    await user.tab();
+    expect(await within(list).findByText('雨の練習（2）')).toBeInTheDocument();
+  });
+
   it('shows no list while nothing is saved', () => {
     function Empty() {
       const projects = useProjects(new MemoryProjectStore());

@@ -1,5 +1,6 @@
 import { keyName } from '@/shared/lib/notation';
 import type { Project } from '@/shared/lib/storage/projects';
+import { ProjectName } from './ProjectName';
 import type { Projects } from './useProjects';
 import './projects.css';
 
@@ -9,7 +10,7 @@ type Props = {
 };
 
 /**
- * Saved examples, folded until asked for (docs/product/experience.md). Shown
+ * Kept examples, folded until asked for (docs/product/experience.md). Shown
  * only when there is something saved, or a storage error to report.
  */
 export function ProjectList({ projects, onOpen }: Props) {
@@ -28,7 +29,7 @@ export function ProjectList({ projects, onOpen }: Props) {
           <ul className="projects__list" aria-label="とっておいた例の一覧">
             {projects.projects.map((p) => (
               <li key={p.id} className="projects__item">
-                <span className="projects__name">{p.name}</span>
+                <ProjectName project={p} onRename={(name) => void projects.rename(p.id, name)} />
                 <span className="projects__meta">
                   {keyName(p.timeline.key)} · {p.timeline.tempoBpm} BPM ·{' '}
                   {new Date(p.updatedAt).toLocaleString('ja-JP')}

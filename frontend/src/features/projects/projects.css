@@ -42,6 +42,13 @@
   flex: 1;
 }
 
+/* The name being changed (BL-297): as wide as a name usually is. */
+.projects__rename {
+  font: inherit;
+  font-weight: 600;
+  min-width: 12em;
+}
+
 .projects__error {
   margin: 0;
   color: #f87171;

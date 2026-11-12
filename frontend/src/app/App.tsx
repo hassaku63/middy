@@ -8,6 +8,7 @@ import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/pl
 import { usePatterns } from '@/features/chat/usePatterns';
 import { ProjectList } from '@/features/projects/ProjectList';
 import { KeepToggle } from '@/features/projects/KeepToggle';
+import { keptAs } from '@/features/projects/keptAs';
 import { InstallButton, PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
@@ -106,7 +107,9 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     </>
   );
 
-  const exampleTitle = openExample?.title ?? projectName;
+  // A kept example opened from the list goes by its current name (BL-297).
+  const exampleTitle =
+    openExample?.title ?? (timeline && keptAs(projects.projects, timeline)?.name) ?? projectName;
   const result = timeline && (
     <section className="app__timeline" aria-label="結果">
       {exampleTitle && (

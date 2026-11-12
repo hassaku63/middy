@@ -13,6 +13,8 @@ export type Projects = {
   /** Resolves to the saved project, or null when the store refused it (see error). */
   save: (name: string, timeline: Timeline, source: ProjectSource) => Promise<Project | null>;
   remove: (id: string) => Promise<void>;
+  /** Renames a kept example; an empty name changes nothing (BL-297). */
+  rename: (id: string, name: string) => Promise<void>;
   error: string | null;
 };
 
@@ -90,7 +92,24 @@ export function useProjects(store: ProjectStore = sharedStore()): Projects {
     [store, refresh],
   );
 
-  return { projects, save, remove, error };
+  const rename = useCallback(
+    async (id: string, name: string) => {
+      const trimmed = name.trim();
+      const project = projects.find((p) => p.id === id);
+      if (!trimmed || !project || project.name === trimmed) return;
+      try {
+        // The order is by updatedAt; a new name does not move the row.
+        await store.save({ ...project, name: trimmed });
+      } catch {
+        setError('名前を変えられませんでした');
+        return;
+      }
+      await refresh();
+    },
+    [store, refresh, projects],
+  );
+
+  return { projects, save, remove, rename, error };
 }
 
 function defaultName(source: ProjectSource): string {
