@@ -1,0 +1,8 @@
+{
+  "name": "例を指して頼む人",
+  "turns": [
+    { "say": "放課後の帰り道、少し寂しい" },
+    { "say": "2 番目の例をもとに、明るくして", "expect": { "modes": ["major", "mixolydian"] } },
+    { "say": "その 1 番目をボサノバ風に", "expect": { "has": ["bossa"] } }
+  ]
+}

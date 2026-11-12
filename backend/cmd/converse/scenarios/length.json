@@ -1,0 +1,8 @@
+{
+  "name": "拍子と長さを指定する人",
+  "turns": [
+    { "say": "ゆりかごを揺らす子守唄を 6/8 拍子で", "expect": { "meter": "6/8" } },
+    { "say": "8 小節にして", "expect": { "meter": "6/8", "bars": 8 } },
+    { "say": "長さはそのまま、明るく", "expect": { "meter": "6/8", "bars": 8, "modes": ["major", "mixolydian"] } }
+  ]
+}

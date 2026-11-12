@@ -1,0 +1,9 @@
+{
+  "name": "条件を重ねる人",
+  "turns": [
+    { "say": "夏の夕方の海辺" },
+    { "say": "3 拍子にして", "expect": { "meter": "3/4" } },
+    { "say": "そのまま、もう少しゆっくり", "expect": { "meter": "3/4", "tempo": "down" } },
+    { "say": "sus4 を入れて", "expect": { "meter": "3/4", "has": ["sus4"] } }
+  ]
+}
