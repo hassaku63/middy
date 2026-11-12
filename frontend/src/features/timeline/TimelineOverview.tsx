@@ -24,8 +24,10 @@ type Props = Omit<
  * the person asked the system for less motion; stopped, it centres the
  * pinned chord, else it stays where it was scrolled. Clicking the drawing
  * or the strip moves the playhead (BL-328, BL-330, ADR-0067): stopped, a
- * click on the strip also brings the box there. The strip is a duplicate drawing, hidden from
- * assistive tech.
+ * click on the strip also brings the box there. Scrolling the box by hand
+ * while playing pauses the following until 「再生位置へ戻る」, a click on
+ * the strip or the next play (BL-332, ADR-0068). The strip is a duplicate
+ * drawing, hidden from assistive tech.
  */
 export function TimelineOverview(props: Props) {
   const geometry = computeLayout(props.timeline);
@@ -40,19 +42,22 @@ export function TimelineOverview(props: Props) {
   // Any timeline may scroll (a narrow screen), so the box follows the
   // playhead, the point clicked on the strip or the pinned chord.
   const target = followed(geometry, props.positionTick, playing, aim, pinned);
-  const seekFromStrip = props.onSeek
-    ? (tick: number) => {
-        props.onSeek?.(tick);
-        setAimed({ tick, pin: props.selectedHarmony });
-      }
-    : undefined;
   const lessMotion = useReducedMotion();
-  const { ref, view, onScroll } = useTimelineScroll(
+  const { ref, view, onScroll, paused, resume } = useTimelineScroll(
     geometry.width,
     target,
     playing && lessMotion ? 'page' : 'centre',
     geometry.labelWidth,
+    playing,
   );
+  // A click on the strip says where to look: the box follows again.
+  const seekFromStrip = props.onSeek
+    ? (tick: number) => {
+        props.onSeek?.(tick);
+        setAimed({ tick, pin: props.selectedHarmony });
+        resume();
+      }
+    : undefined;
   // One box for every timeline, so the tree does not change with the
   // width (ADR-0042): it scrolls sideways when the drawing is wider than
   // the box, with the label column held at its left (#402 A). A short
@@ -79,6 +84,13 @@ export function TimelineOverview(props: Props) {
         <TimelineLabels layout={geometry} />
         <TimelineView {...props} fit={!long && props.fit === true} />
       </div>
+      {paused && (
+        // Scrolled by hand while playing, the box stops following (BL-332,
+        // ADR-0068, as a DAW's follow): this takes it up again.
+        <button type="button" className="timeline-overview__follow" onClick={resume}>
+          再生位置へ戻る
+        </button>
+      )}
       {long && (
         <TimelineView
           {...props}
