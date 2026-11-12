@@ -1,4 +1,5 @@
 .explanation {
+  position: relative;
   padding: 12px 16px;
   border-radius: 8px;
   background: #1f2937;
@@ -216,4 +217,51 @@
     min-width: 0;
     height: calc(10.2em + 40px);
   }
+}
+
+/* Copying the explanation (BL-300): a faint button in the top right corner,
+   always there, at least 28 px square (WCAG 2.2 2.5.8 asks 24). What
+   happened is said beside it and read out. */
+.explanation__copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* The words cover what lies beneath them (a long refusal on a phone), so
+   they take the panel's own background. */
+.explanation__copy-status {
+  max-width: 16em;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: #1f2937;
+}
+
+@media (prefers-color-scheme: light) {
+  .explanation__copy-status {
+    background: #e5e7eb;
+  }
+}
+
+.explanation__copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.explanation__copy-button:hover,
+.explanation__copy-button:focus-visible {
+  opacity: 1;
 }

@@ -7,6 +7,8 @@ import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { usePatterns } from '@/features/chat/usePatterns';
 import { ExampleNotes } from '@/features/chat/ExampleNotes';
+import { cardLines } from '@/features/chat/cardText';
+import { explanationLines } from '@/features/explanation/explanationText';
 import { ProjectList } from '@/features/projects/ProjectList';
 import { KeepToggle } from '@/features/projects/KeepToggle';
 import { keptAs } from '@/features/projects/keptAs';
@@ -144,6 +146,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         selectedHarmony={selectedHarmony}
         onSelectHarmony={setSelectedHarmony}
         example={exampleNotes(openExample, origin, timeline, patterns)}
+        copyText={copyTextOf(openExample, origin, timeline, patterns)}
       />
     </section>
   );
@@ -197,24 +200,56 @@ function latestCandidates(turns: ChatTurn[]) {
 
 /**
  * The card for the head of the explanation (BL-298): the open candidate's,
- * or the one kept with an example opened from the list (BL-299). Nothing
- * for an example kept before cards were stored.
+ * or the one kept with an example opened from the list (BL-299). None for
+ * an example kept before cards were stored.
  */
+function cardOf(open: IdeaCandidate | null, origin: ProjectSource | null) {
+  if (origin?.kind !== 'idea') return undefined;
+  const candidate = open ?? origin.candidate;
+  return candidate && { candidate, image: origin.image };
+}
+
+/** Whether the example sounds otherwise than its card (a new key or style). */
+function changedFrom(candidate: IdeaCandidate, timeline: Timeline): boolean {
+  return JSON.stringify(timeline) !== JSON.stringify(candidate.timeline);
+}
+
 function exampleNotes(
   open: IdeaCandidate | null,
   origin: ProjectSource | null,
   timeline: Timeline,
   patterns: PatternsResponse,
 ) {
-  if (origin?.kind !== 'idea') return undefined;
-  const candidate = open ?? origin.candidate;
-  if (!candidate) return undefined;
+  const card = cardOf(open, origin);
+  if (!card) return undefined;
   return (
     <ExampleNotes
-      candidate={candidate}
-      image={origin.image}
+      candidate={card.candidate}
+      image={card.image}
       patterns={patterns}
-      changed={JSON.stringify(timeline) !== JSON.stringify(candidate.timeline)}
+      changed={changedFrom(card.candidate, timeline)}
     />
   );
+}
+
+/**
+ * The explanation as text for its copy button (BL-300, #442): the card,
+ * then the engine's notes on the whole example, a blank line between.
+ */
+function copyTextOf(
+  open: IdeaCandidate | null,
+  origin: ProjectSource | null,
+  timeline: Timeline,
+  patterns: PatternsResponse,
+): string {
+  const card = cardOf(open, origin);
+  const head = card
+    ? [
+        changedFrom(card.candidate, timeline)
+          ? 'この例（AI の提案。キーやスタイルを変える前の、元の例）'
+          : 'この例（AI の提案）',
+        ...cardLines(card.candidate, card.image, patterns),
+      ].join('\n')
+    : '';
+  return [head, explanationLines(timeline).join('\n')].filter(Boolean).join('\n\n');
 }

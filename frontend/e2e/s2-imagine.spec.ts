@@ -291,3 +291,30 @@ test("the explanation opens with the example's card, from the latest card or an 
   await result.getByLabel('キー').selectOption('4');
   await expect(notes).toContainText('キーやスタイルを変える前の、元の例');
 });
+
+test('the explanation copies as text: the card, the chords, the whole and the rhythm (BL-300)', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/');
+  const { result } = await openExample(page, 'アイルランドのパブのケルト音楽', '緑の丘のリール');
+  const explanation = result.getByRole('region', { name: '解説', exact: true });
+  const copy = explanation.getByRole('button', { name: '解説をコピー' });
+  const box = await copy.boundingBox();
+  expect(box?.width).toBeGreaterThanOrEqual(24);
+  expect(box?.height).toBeGreaterThanOrEqual(24);
+
+  await copy.click();
+  await expect(explanation.getByText('コピーしました')).toBeVisible();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toContain('この例（AI の提案）');
+  expect(copied).toContain('イメージ: アイルランドのパブのケルト音楽');
+  expect(copied).toContain('i - IV - i - VII');
+  expect(copied).toContain('コード: Dm - G - Dm - C');
+  expect(copied).toContain('全体: ');
+  expect(copied).toContain('流れ: ');
+  expect(copied).toContain('伴奏: ');
+  // The words "copied" go away again.
+  await expect(explanation.getByText('コピーしました')).toBeHidden({ timeout: 5000 });
+});

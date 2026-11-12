@@ -293,6 +293,14 @@ describe('App docs/product/experience.md', () => {
     });
     // Still the same example: the AI was not asked again.
     expect(fetchMock.mock.calls.filter(([u]) => u.endsWith('/ideas'))).toHaveLength(1);
+    // Copying writes the card, as the original, and the engine's notes (BL-300).
+    await user.click(within(result).getByRole('button', { name: '解説をコピー' }));
+    expect(await within(result).findByText('コピーしました')).toBeInTheDocument();
+    const copied = await navigator.clipboard.readText();
+    expect(copied).toContain('この例（AI の提案。キーやスタイルを変える前の、元の例）');
+    expect(copied).toContain('テスト用。');
+    expect(copied).toContain('コード: D - A');
+
     // The explanation still shows the card, as the original example (BL-298).
     const notes = within(result).getByLabelText('この例（AI の提案）');
     expect(notes).toHaveTextContent('テスト用。');

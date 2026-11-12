@@ -13,6 +13,8 @@ type Props = {
   onSelectHarmony: (index: number | null) => void;
   /** The open example's card, at the head of the explanation (BL-298). */
   example?: ReactNode;
+  /** The explanation as text, for its copy button (BL-300). */
+  copyText?: string | undefined;
 };
 
 /**
@@ -20,7 +22,14 @@ type Props = {
  * stage, the chord's frame and the other explanations side by side below
  * it (the wide layout the owner chose, #279).
  */
-export function Stage({ timeline, player, selectedHarmony, onSelectHarmony, example }: Props) {
+export function Stage({
+  timeline,
+  player,
+  selectedHarmony,
+  onSelectHarmony,
+  example,
+  copyText,
+}: Props) {
   useChordKeys({
     enabled: true,
     harmony: timeline.harmony,
@@ -56,6 +65,7 @@ export function Stage({ timeline, player, selectedHarmony, onSelectHarmony, exam
       onClearSelection={clear}
       chord={false}
       example={example}
+      copyText={copyText}
     />
   );
   return (
