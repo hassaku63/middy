@@ -259,3 +259,35 @@ test('a half-time image writes its drums as a grid and explains it (BL-077)', as
   await expect(result.getByLabel('キー')).toHaveValue('2');
   await expect(rhythm).toContainText('ハーフタイム');
 });
+
+test("the explanation opens with the example's card, from the latest card or an earlier line (BL-298)", async ({
+  page,
+}) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  await openExample(page, '晴れた朝', '朝の光');
+  const notes = result.getByLabel('この例（AI の提案）');
+  await expect(notes).toContainText('イメージ: 晴れた朝');
+  await expect(notes).toContainText('C major · 104 BPM');
+
+  // From the earlier exchange's line: that example's words and reason.
+  await page
+    .getByRole('list', { name: 'これまでの例' })
+    .getByRole('button', { name: /^1 回目：\s*窓辺の雨/ })
+    .click();
+  await expect(notes).toContainText('イメージ: 雨の日曜の午後');
+  await expect(notes).toContainText('i - VI - III - VII');
+  await expect(notes).toContainText('A minor の定番の下行進行で、落ち着いた切なさを出します。');
+  // Plain text, ahead of the engine's notes (ADR-0003).
+  await expect(notes.getByRole('button')).toHaveCount(0);
+  const explanation = result.getByRole('region', { name: '解説', exact: true });
+  const order = await explanation.evaluate((el) =>
+    [...el.querySelectorAll('[aria-label]')].map((e) => e.getAttribute('aria-label')),
+  );
+  expect(order.indexOf('この例（AI の提案）')).toBeLessThan(order.indexOf('全体と流れ'));
+
+  // Another key: the card is the original example's.
+  await expect(notes).not.toContainText('元の例');
+  await result.getByLabel('キー').selectOption('4');
+  await expect(notes).toContainText('キーやスタイルを変える前の、元の例');
+});

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { HarmonyEvent, Timeline } from '@/shared/api/client';
 import { isFunctional } from '@/shared/lib/notation';
 import { DegreeMap } from '@/shared/ui/DegreeMap';
@@ -20,6 +21,8 @@ export type ExplanationPanelProps = {
    * the whole and the rhythm.
    */
   chord?: boolean;
+  /** The AI's proposal for the open example, ahead of the engine's notes (BL-298). */
+  example?: ReactNode;
 };
 
 /**
@@ -33,6 +36,7 @@ export function ExplanationPanel({
   selectedHarmony,
   onClearSelection,
   chord = true,
+  example,
 }: ExplanationPanelProps) {
   const harmony = timeline?.harmony ?? [];
   const index = explainedIndex(harmony, positionTick, selectedHarmony);
@@ -42,6 +46,7 @@ export function ExplanationPanel({
 
   return (
     <section className="explanation" aria-label="解説">
+      {example}
       {overview && <OverviewNotes overview={overview} />}
       {chord && (
         <ExplainedChord

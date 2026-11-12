@@ -2,6 +2,7 @@ import { ChordFrame } from '@/features/explanation/ChordFrame';
 import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
 import type { UsePlayer } from '@/features/player/usePlayer';
 import { TimelineOverview } from '@/features/timeline/TimelineOverview';
+import type { ReactNode } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { useChordKeys } from './useChordKeys';
 
@@ -10,6 +11,8 @@ type Props = {
   player: UsePlayer;
   selectedHarmony: number | null;
   onSelectHarmony: (index: number | null) => void;
+  /** The open example's card, at the head of the explanation (BL-298). */
+  example?: ReactNode;
 };
 
 /**
@@ -17,7 +20,7 @@ type Props = {
  * stage, the chord's frame and the other explanations side by side below
  * it (the wide layout the owner chose, #279).
  */
-export function Stage({ timeline, player, selectedHarmony, onSelectHarmony }: Props) {
+export function Stage({ timeline, player, selectedHarmony, onSelectHarmony, example }: Props) {
   useChordKeys({
     enabled: true,
     harmony: timeline.harmony,
@@ -52,6 +55,7 @@ export function Stage({ timeline, player, selectedHarmony, onSelectHarmony }: Pr
       selectedHarmony={selectedHarmony}
       onClearSelection={clear}
       chord={false}
+      example={example}
     />
   );
   return (

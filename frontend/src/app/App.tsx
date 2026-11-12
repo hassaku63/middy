@@ -6,13 +6,14 @@ import { DownloadMidiButton } from '@/features/export/DownloadMidiButton';
 import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { usePatterns } from '@/features/chat/usePatterns';
+import { ExampleNotes } from '@/features/chat/ExampleNotes';
 import { ProjectList } from '@/features/projects/ProjectList';
 import { KeepToggle } from '@/features/projects/KeepToggle';
 import { keptAs } from '@/features/projects/keptAs';
 import { InstallButton, PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
-import type { IdeaCandidate, Timeline } from '@/shared/api/client';
+import type { IdeaCandidate, PatternsResponse, Timeline } from '@/shared/api/client';
 import type { Project, ProjectSource } from '@/shared/lib/storage/projects';
 import { useIdeas, type ChatTurn } from '@/features/chat/useIdeas';
 import { useBackendHealth } from './useBackendHealth';
@@ -142,6 +143,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
         player={player}
         selectedHarmony={selectedHarmony}
         onSelectHarmony={setSelectedHarmony}
+        example={exampleNotes(openExample, origin, timeline, patterns)}
       />
     </section>
   );
@@ -191,4 +193,25 @@ function AppHeader({ pwa, backendDown }: { pwa: ReturnType<typeof usePwa>; backe
 function latestCandidates(turns: ChatTurn[]) {
   const last = turns.at(-1);
   return last?.role === 'assistant' ? last.candidates : [];
+}
+
+/**
+ * The open candidate's card for the head of the explanation (BL-298), or
+ * nothing for a kept example opened from the list.
+ */
+function exampleNotes(
+  open: IdeaCandidate | null,
+  origin: ProjectSource | null,
+  timeline: Timeline,
+  patterns: PatternsResponse,
+) {
+  if (!open || origin?.kind !== 'idea') return undefined;
+  return (
+    <ExampleNotes
+      candidate={open}
+      image={origin.image}
+      patterns={patterns}
+      changed={JSON.stringify(timeline) !== JSON.stringify(open.timeline)}
+    />
+  );
 }
