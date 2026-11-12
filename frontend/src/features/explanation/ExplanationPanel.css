@@ -88,8 +88,16 @@
   line-height: 1.7;
 }
 
-.explanation__unpin {
+.explanation__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
   margin-top: 8px;
+}
+
+.explanation__actions > button {
+  min-height: 24px; /* WCAG 2.5.8 */
   font-size: 0.85rem;
 }
 
@@ -177,19 +185,28 @@
   column-gap: 12px;
 }
 
-/* In the frame, the unpin button shares the header's row, so the text
-   keeps its lines. */
+/* In the frame, the text spans the width under the heading. */
 .explanation__chord > .explanation__text,
 .explanation__chord > .explanation__empty {
   grid-column: 1 / -1;
   margin-bottom: 0;
 }
 
-.explanation__chord > .explanation__unpin {
-  grid-row: 1;
-  grid-column: 2;
-  align-self: start;
-  margin-top: 0;
+.explanation__chord > .explanation__actions {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+}
+
+/* Stacked, the frame is too narrow for both buttons beside the heading:
+   they take a row of their own under it, above the text. */
+.explanation__chord {
+  grid-template-rows: auto auto 1fr;
+}
+
+.explanation__chord > .explanation__text,
+.explanation__chord > .explanation__empty {
+  grid-row: 3;
 }
 
 /* On a wide stage the frame is a band above the timeline (#360): the map
@@ -216,6 +233,20 @@
     flex: 1 1 auto;
     min-width: 0;
     height: calc(10.2em + 40px);
+    grid-template-rows: auto 1fr;
+  }
+
+  .explanation__chord > .explanation__actions {
+    grid-row: 1;
+    grid-column: 2;
+    align-self: start;
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+
+  .explanation__chord > .explanation__text,
+  .explanation__chord > .explanation__empty {
+    grid-row: 2;
   }
 }
 

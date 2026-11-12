@@ -13,12 +13,20 @@ type Props = {
   event: HarmonyEvent;
   pinned: boolean;
   onClearSelection?: (() => void) | undefined;
+  /** Plays from the pinned chord's start (BL-329), when given. */
+  onPlayFrom?: (() => void) | undefined;
   /** Label the chord by function; false in a mode (ADR-0045). */
   functional?: boolean;
 };
 
 /** The harmony half of the explanation: one chord's function, cadence and text. */
-export function ChordNotes({ event, pinned, onClearSelection, functional = true }: Props) {
+export function ChordNotes({
+  event,
+  pinned,
+  onClearSelection,
+  onPlayFrom,
+  functional = true,
+}: Props) {
   const analysis = event.analysis;
   return (
     <>
@@ -45,11 +53,7 @@ export function ChordNotes({ event, pinned, onClearSelection, functional = true 
       <p className="explanation__text">
         {analysis?.explanation ?? 'このコードの分析はまだありません。'}
       </p>
-      {pinned && onClearSelection && (
-        <button type="button" className="explanation__unpin" onClick={onClearSelection}>
-          固定を解除して再生に追従
-        </button>
-      )}
+      {pinned && <PinnedActions onPlayFrom={onPlayFrom} onClearSelection={onClearSelection} />}
     </>
   );
 }
@@ -77,5 +81,31 @@ export function ChordStatus({
     <p className="explanation__live" aria-live="polite">
       {event ? `${event.romanNumeral} ${harmonySymbol(event)}${name ? ` ${name}` : ''}` : ''}
     </p>
+  );
+}
+
+/**
+ * What a pinned chord offers: play the music from it (BL-329, the
+ * keyboard's way to the timeline's click, WCAG 2.1.1: ← → pin a chord,
+ * this plays from it) and going back to following the playhead.
+ */
+function PinnedActions({
+  onPlayFrom,
+  onClearSelection,
+}: Pick<Props, 'onPlayFrom' | 'onClearSelection'>) {
+  if (!onPlayFrom && !onClearSelection) return null;
+  return (
+    <div className="explanation__actions">
+      {onPlayFrom && (
+        <button type="button" className="explanation__play-from" onClick={onPlayFrom}>
+          ここから再生
+        </button>
+      )}
+      {onClearSelection && (
+        <button type="button" className="explanation__unpin" onClick={onClearSelection}>
+          固定を解除して再生に追従
+        </button>
+      )}
+    </div>
   );
 }

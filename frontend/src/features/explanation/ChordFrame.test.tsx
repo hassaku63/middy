@@ -57,6 +57,31 @@ describe('ChordFrame (BL-185)', () => {
     expect(onClear).toHaveBeenCalled();
   });
 
+  it('plays from the pinned chord, and offers it only for a pinned chord (BL-329)', async () => {
+    const onPlayFrom = vi.fn();
+    const { rerender } = render(
+      <ChordFrame
+        timeline={timeline}
+        positionTick={0}
+        selectedHarmony={1}
+        onClearSelection={vi.fn()}
+        onPlayFrom={onPlayFrom}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'ここから再生' }));
+    expect(onPlayFrom).toHaveBeenCalledWith(1920);
+    rerender(
+      <ChordFrame
+        timeline={timeline}
+        positionTick={0}
+        selectedHarmony={null}
+        onClearSelection={vi.fn()}
+        onPlayFrom={onPlayFrom}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'ここから再生' })).toBeNull();
+  });
+
   it('says how to move when no chord is under the playhead', () => {
     render(
       <ChordFrame
