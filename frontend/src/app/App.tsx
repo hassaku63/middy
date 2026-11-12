@@ -55,7 +55,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const projects = useProjects(projectStore);
 
   const show = (tl: Timeline) => {
-    player.stop();
+    player.reset();
     setTimeline(tl);
     setSelectedHarmony(null);
   };

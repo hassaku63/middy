@@ -146,3 +146,109 @@ describe('TimelinePlayer', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+describe('TimelinePlayer from a point (BL-327)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  const clock = { now: () => Date.now() / 1000 };
+
+  /** fourBars plus one drum hit per bar on channel 10. */
+  const withDrums: Timeline = {
+    ...fourBars,
+    tracks: [
+      ...fourBars.tracks,
+      {
+        name: 'drums',
+        channel: 9,
+        program: 0,
+        notes: [0, 1, 2, 3].map((bar) => ({
+          pitch: 36,
+          velocity: 90,
+          start: bar * 1920,
+          duration: 960,
+        })),
+      },
+    ],
+  };
+
+  function newPlayer(synth: Synth, tl: Timeline = fourBars) {
+    const p = new TimelinePlayer({ synth, clock, lookAheadSec: 0.1, intervalMs: 25 });
+    p.load(tl);
+    return p;
+  }
+
+  it('starts at a bar: the chords before it stay silent', () => {
+    const synth = fakeSynth();
+    const p = newPlayer(synth);
+    const t0 = clock.now();
+    p.play(3840); // bar 3 (Am)
+    expect(p.positionTick).toBe(3840);
+    expect(synth.played.map((n) => n.pitch)).toEqual([69, 72, 76]);
+    expect(synth.played[0]?.time).toBe(t0);
+    vi.advanceTimersByTime(2000);
+    expect(synth.played.slice(3).map((n) => n.pitch)).toEqual([65, 69, 72]);
+    expect(synth.played[3]?.time).toBeCloseTo(t0 + 2, 6);
+    // Ends after the two bars left, back at the beginning.
+    vi.advanceTimersByTime(2100);
+    expect(p.isPlaying).toBe(false);
+    expect(p.positionTick).toBe(0);
+  });
+
+  it('a note already sounding plays for what is left of it; a drum hit is not struck again', () => {
+    const synth = fakeSynth();
+    const p = newPlayer(synth, withDrums);
+    p.play(480); // beat 2 of bar 1: C sounds 1.5 s more, the kick has ended
+    expect(synth.played.map((n) => n.pitch)).toEqual([60, 64, 67]);
+    expect(synth.played[0]?.durationSec).toBeCloseTo(1.5, 6);
+    synth.played.length = 0;
+    p.stop();
+    p.play(240); // the kick is still ringing: not struck halfway
+    expect(synth.played.map((n) => n.pitch)).toEqual([60, 64, 67]);
+  });
+
+  it('seeking while playing cuts what sounds and goes on from there', () => {
+    const synth = fakeSynth();
+    const p = newPlayer(synth);
+    const t0 = clock.now();
+    p.play();
+    vi.advanceTimersByTime(500);
+    synth.played.length = 0;
+    p.seek(5760); // bar 4 (F)
+    expect(synth.allOffCalls).toBe(1);
+    expect(p.isPlaying).toBe(true);
+    expect(p.positionTick).toBe(5760);
+    expect(synth.played.map((n) => n.pitch)).toEqual([65, 69, 72]);
+    expect(synth.played[0]?.time).toBeCloseTo(t0 + 0.5, 6);
+    vi.advanceTimersByTime(1000);
+    expect(p.positionTick).toBeCloseTo(6720, 6);
+  });
+
+  it('stop goes back to where play was set to start; stopped, seek sets where the next starts', () => {
+    const synth = fakeSynth();
+    const p = newPlayer(synth);
+    const events: [number, string][] = [];
+    p.subscribe((tick, state) => events.push([tick, state]));
+    p.seek(1920);
+    expect(p.positionTick).toBe(1920);
+    expect(events.at(-1)).toEqual([1920, 'stopped']);
+    p.play();
+    expect(p.positionTick).toBe(0); // play() alone starts at the beginning
+    p.seek(3840);
+    vi.advanceTimersByTime(1000);
+    p.stop();
+    expect(events.at(-1)).toEqual([3840, 'stopped']);
+  });
+
+  it('a point outside the timeline is the beginning', () => {
+    const p = newPlayer(fakeSynth());
+    p.seek(7680);
+    expect(p.positionTick).toBe(0);
+    p.seek(-10);
+    expect(p.positionTick).toBe(0);
+  });
+});

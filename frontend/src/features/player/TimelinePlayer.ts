@@ -38,6 +38,9 @@ type IntervalScheduler = {
 };
 type TimerHandle = ReturnType<typeof globalThis.setInterval>;
 
+/** GM percussion (MIDI channel 10). */
+const DRUM_CHANNEL = 9;
+
 type Listener = (positionTick: number, state: PlayerState) => void;
 
 /**
@@ -60,7 +63,10 @@ export class TimelinePlayer {
   private notes: ScheduledNote[] = [];
   private lengthSec = 0;
   private nextNote = 0;
+  /** Audio-clock time of the timeline's tick 0 (in the past after a seek). */
   private startTime = 0;
+  /** Where play starts and where stop returns (BL-327); 0 after the end. */
+  private cueTick = 0;
   private timer: TimerHandle | null = null;
   private state: PlayerState = 'stopped';
   private readonly listeners = new Set<Listener>();
@@ -76,6 +82,7 @@ export class TimelinePlayer {
 
   load(timeline: Timeline): void {
     this.stop();
+    this.cueTick = 0;
     this.timeline = timeline;
     this.notes = scheduleNotes(timeline);
     this.lengthSec = ticksToSeconds(
@@ -89,9 +96,9 @@ export class TimelinePlayer {
     return this.state === 'playing';
   }
 
-  /** Current position in ticks; 0 when stopped. */
+  /** Current position in ticks; stopped, where the next play starts. */
   get positionTick(): number {
-    if (this.state !== 'playing' || !this.timeline) return 0;
+    if (this.state !== 'playing' || !this.timeline) return this.cueTick;
     const elapsed = Math.max(0, this.clock.now() - this.startTime);
     return Math.min(
       secondsToTicks(elapsed, this.timeline.ppq, quarterBpm(this.timeline)),
@@ -99,12 +106,15 @@ export class TimelinePlayer {
     );
   }
 
-  /** Starts from the beginning. No-op without a loaded timeline. */
-  play(): void {
+  /**
+   * Starts at fromTick (the beginning by default); stop returns there. No-op
+   * without a loaded timeline.
+   */
+  play(fromTick = 0): void {
     if (!this.timeline || this.state === 'playing') return;
     this.state = 'playing';
-    this.nextNote = 0;
-    this.startTime = this.clock.now();
+    this.cueTick = this.clamp(fromTick);
+    this.startAt(this.cueTick);
     this.tick();
     // Read through the getter: tick() may have finished an empty timeline,
     // which the narrowing from the assignment above cannot see.
@@ -113,7 +123,23 @@ export class TimelinePlayer {
     this.notify();
   }
 
-  /** Stops immediately and rewinds. */
+  /**
+   * Moves the position to tick (BL-327). Playing, the sounding notes stop
+   * and play goes on from there; stopped, the next play starts there. Stop
+   * returns there either way.
+   */
+  seek(tick: number): void {
+    this.cueTick = this.clamp(tick);
+    if (this.state === 'playing') {
+      this.synth.allOff();
+      this.startAt(this.cueTick);
+      this.tick();
+      return;
+    }
+    this.notify();
+  }
+
+  /** Stops immediately and goes back to where play started. */
   stop(): void {
     if (this.state === 'stopped') return;
     this.state = 'stopped';
@@ -128,6 +154,34 @@ export class TimelinePlayer {
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /** A tick inside the timeline; past its end is the beginning. */
+  private clamp(tick: number): number {
+    if (!this.timeline) return 0;
+    const t = Math.max(0, Math.round(tick));
+    return t < timelineLengthTicks(this.timeline) ? t : 0;
+  }
+
+  /**
+   * Schedules from tick on: notes that start there or later as usual, and
+   * the pitched notes already sounding there for what is left of them.
+   * Drum hits are not struck again halfway (a late hit sounds as a new one).
+   */
+  private startAt(tick: number): void {
+    const tl = this.timeline;
+    if (!tl) return;
+    const now = this.clock.now();
+    const fromSec = ticksToSeconds(tick, tl.ppq, quarterBpm(tl));
+    this.startTime = now - fromSec;
+    this.nextNote = this.notes.findIndex((n) => n.startSec >= fromSec);
+    if (this.nextNote < 0) this.nextNote = this.notes.length;
+    for (const n of this.notes.slice(0, this.nextNote)) {
+      const left = n.startSec + n.durationSec - fromSec;
+      if (left > 0 && n.channel !== DRUM_CHANNEL) {
+        this.synth.play({ ...n, startSec: fromSec, durationSec: left, time: now });
+      }
+    }
   }
 
   private tick(): void {
@@ -146,9 +200,10 @@ export class TimelinePlayer {
     this.notify();
   }
 
-  /** Natural end: timer stops, nothing is cut off, position resets. */
+  /** Natural end: timer stops, nothing is cut off, back to the beginning. */
   private finish(): void {
     this.state = 'stopped';
+    this.cueTick = 0;
     if (this.timer !== null) {
       this.clearInterval(this.timer);
       this.timer = null;
