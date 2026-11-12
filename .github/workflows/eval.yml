@@ -88,19 +88,28 @@ jobs:
             fi
             export EVAL_TAGS="$tag,smoke"
           fi
-          # Message Batches for a run of EVAL_BATCH_MIN cases or more (the
-          # full run); a small narrowed run goes one request at a time.
-          export EVAL_BATCH=auto EVAL_TIMEOUT=80m
           if [ -z "$ANTHROPIC_API_KEY" ]; then
             echo "::error::the eval environment has no ANTHROPIC_API_KEY"
             exit 1
           fi
+          # needs-eval:converse measures a conversation instead of the
+          # cases (#453, BL-313): the server gets the key, the client not.
+          if [ "$tag" = converse ]; then
+            bash scripts/converse-ci.sh report/report.md
+            exit 0
+          fi
+          # Message Batches for a run of EVAL_BATCH_MIN cases or more (the
+          # full run); a small narrowed run goes one request at a time.
+          export EVAL_BATCH=auto EVAL_TIMEOUT=80m
           make eval 2>&1 | tee "$RUNNER_TEMP/eval.log"
       - name: Extract the report
         if: always() && steps.changes.outputs.eval == 'true'
         run: |
           mkdir -p report
-          awk '/^\| case \|/ { on = 1 } /^(--- (PASS|FAIL)|PASS$|FAIL$)/ { on = 0 } on' "$RUNNER_TEMP/eval.log" > report/report.md || true
+          # needs-eval:converse wrote its report already.
+          if [ ! -s report/report.md ]; then
+            awk '/^\| case \|/ { on = 1 } /^(--- (PASS|FAIL)|PASS$|FAIL$)/ { on = 0 } on' "$RUNNER_TEMP/eval.log" > report/report.md || true
+          fi
           [ -s report/report.md ] || echo "評価の表が出力されませんでした（ログを参照）。" > report/report.md
           cat report/report.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
