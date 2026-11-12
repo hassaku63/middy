@@ -42,6 +42,9 @@ test('keep an example, reload, reopen it, let it go, delete it', async ({ page }
   const items = page.getByRole('list', { name: 'とっておいた例の一覧' }).getByRole('listitem');
   const c = items.filter({ hasText: 'C major' });
   await expect(c).toContainText('朝の光');
+  // The card was kept with it: its progression and reason show in the list (BL-299).
+  await expect(c).toContainText('I - V7/vi - vi - IV');
+  await expect(c).toContainText('親しみやすいポップ進行');
 
   await c.getByRole('button', { name: '開く' }).click();
   await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
@@ -51,6 +54,9 @@ test('keep an example, reload, reopen it, let it go, delete it', async ({ page }
     /IV.*F/,
   ]);
   await expect(result.getByRole('heading', { name: '朝の光' })).toBeVisible();
+  // ...and the explanation opens with it, after a reload too.
+  await expect(result.getByLabel('この例（AI の提案）')).toContainText('イメージ: 晴れた朝');
+  await expect(result.getByLabel('この例（AI の提案）')).toContainText('親しみやすいポップ進行');
   // Opened from the list, it is kept; pressing the star again lets it go.
   await expect(star).toHaveAttribute('aria-pressed', 'true');
   await star.click();

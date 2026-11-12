@@ -70,7 +70,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     forget();
     setOpenExample(c);
     setProjectName(null);
-    setOrigin({ kind: 'idea', image, candidateTitle: c.title });
+    setOrigin({ kind: 'idea', image, candidateTitle: c.title, candidate: c });
   };
 
   // An answer opens nothing by itself: the user chooses (BL-219). What the
@@ -196,8 +196,9 @@ function latestCandidates(turns: ChatTurn[]) {
 }
 
 /**
- * The open candidate's card for the head of the explanation (BL-298), or
- * nothing for a kept example opened from the list.
+ * The card for the head of the explanation (BL-298): the open candidate's,
+ * or the one kept with an example opened from the list (BL-299). Nothing
+ * for an example kept before cards were stored.
  */
 function exampleNotes(
   open: IdeaCandidate | null,
@@ -205,13 +206,15 @@ function exampleNotes(
   timeline: Timeline,
   patterns: PatternsResponse,
 ) {
-  if (!open || origin?.kind !== 'idea') return undefined;
+  if (origin?.kind !== 'idea') return undefined;
+  const candidate = open ?? origin.candidate;
+  if (!candidate) return undefined;
   return (
     <ExampleNotes
-      candidate={open}
+      candidate={candidate}
       image={origin.image}
       patterns={patterns}
-      changed={JSON.stringify(timeline) !== JSON.stringify(open.timeline)}
+      changed={JSON.stringify(timeline) !== JSON.stringify(candidate.timeline)}
     />
   );
 }

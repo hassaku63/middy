@@ -166,6 +166,9 @@ describe('App docs/product/experience.md', () => {
       'true',
     );
 
+    // The card was kept with it, so the explanation opens with it (BL-299).
+    expect(screen.getByLabelText('この例（AI の提案）')).toHaveTextContent('テスト用。');
+
     // Renaming it in the list renames the title above the result (BL-297).
     await user.click(within(list).getByRole('button', { name: '窓辺の雨 の名前を変える' }));
     await user.type(within(list).getByRole('textbox'), '（練習）{Enter}');
@@ -227,6 +230,8 @@ describe('App docs/product/experience.md', () => {
     await user.click(await screen.findByText('とっておいた例（1）'));
     await user.click(screen.getByRole('button', { name: '開く' }));
     expect(resultHeading('前の例')).toBeInTheDocument();
+    // Kept before cards were stored: it opens, with no card to show.
+    expect(screen.queryByLabelText('この例（AI の提案）')).not.toBeInTheDocument();
 
     answer(json(200, ideasReply));
     expect(await screen.findByRole('article', { name: '窓辺の雨' })).toBeInTheDocument();

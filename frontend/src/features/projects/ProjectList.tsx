@@ -44,11 +44,28 @@ export function ProjectList({ projects, onOpen }: Props) {
                 >
                   削除
                 </button>
+                <CardLines project={p} />
               </li>
             ))}
           </ul>
         </details>
       )}
     </section>
+  );
+}
+
+/**
+ * What the example is, below its row (BL-299, #441): the progression as it
+ * sounds, and the AI's reason when the card was kept with it.
+ */
+function CardLines({ project }: { project: Project }) {
+  const numerals = project.timeline.harmony.map((h) => h.romanNumeral);
+  const reason = project.source.kind === 'idea' ? project.source.candidate?.reason : undefined;
+  if (numerals.length === 0 && !reason) return null;
+  return (
+    <div className="projects__card">
+      {numerals.length > 0 && <p>{numerals.join(' - ')}</p>}
+      {reason && <p>{reason}</p>}
+    </div>
   );
 }
