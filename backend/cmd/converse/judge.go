@@ -25,6 +25,22 @@ import (
 // expectations, and it is the only part of cmd/converse that needs the
 // key. Its findings are reported, never failed on.
 
+// Kinds of the tolerance of ADR-0065: shown, never counted.
+var withinKinds = []string{
+	1: "程度が小さい",
+	2: "一部だけ",
+	3: "「全部」と言われたが一部",
+	4: "初心者向けの単純化",
+}
+
+// Within is a place where the answer used the tolerance (ADR-0065).
+type Within struct {
+	Kind  int    `json:"kind"`
+	Turn  int    `json:"turn"`
+	Quote string `json:"quote"`
+	Why   string `json:"why"`
+}
+
 // Categories of ADR-0064, as the reviewer numbers them.
 var judgeCategories = []string{
 	1: "反映されていない",
@@ -43,16 +59,21 @@ const judgeSystem = `あなたは、作曲を学ぶアプリとの会話を読�
 3 指した例の取り違え: ユーザーが「2 番目の例をもとに」のように特定の例を指したのに、別の例をもとにした。
 4 返事が変更点を誤って言う: 返事や理由の文が「〜にしました」「〜を残しました」と言うのに、候補の中身がそうなっていない。
 
-このアプリは作曲の初心者のためのものです。頼まれたものをどの程度採り入れるかには、幅を認めます。次のものは数えません。
-- 採り入れる程度の違い: 「テンションを使って」に 1 か所だけ入れるか、全体に入れるか。
-- 複数挙げたもののうち一部だけ採ること: 「sus と add9 を使って」に sus だけ使う、など。「全部使って」と言われていても、一部なら数えない。
-- 初心者向けの意図的な単純化: 和音や進行をやさしくすること。
+このアプリは作曲の初心者のためのものです。頼まれたものをどの程度採り入れるかには、幅を認めます。次の 4 つは数えず、findings ではなく within に書いてください（数えないが、どこで幅を使ったかを残す）。
+1 程度が小さい: 「テンションを使って」に 1 か所だけ入れる、一部の候補にだけ入れる、など。
+2 一部だけ: 複数挙げたもののうち一部だけ採る（「sus と add9 を使って」に sus だけ）。
+3 「全部」と言われたが一部: 「全部使って」と明示されたのに一部だけ採る。
+4 初心者向けの単純化: 和音や進行を、意図してやさしくする。
+
+次のものは、どこにも書きません。
 - 同じ依頼から違う調・テンポ・進行が出ること、アレンジ、好みの違い。
 - 理論の細かな誤り（別の査読が見る）。
 - 表せない語彙を、近い表現に置き換えたことを返事で断っている場合。
-確信が持てないものは数えない。
+確信が持てないものは書かない。
 
-見つけたものごとに、category（1〜4）、turn（何回目か）、candidate（候補の番号。返事なら 0）、quote（根拠になる言葉の短い引用）、why（なぜそう数えるか、1 文）を返してください。なければ findings は空の配列です。`
+区分 4（返事が変更点を誤って言う）は幅の外です。「sus と add9 を入れました」と言って sus だけなら、findings に数えます。
+
+findings には、見つけたものごとに category（1〜4）、turn（何回目か）、candidate（候補の番号。返事なら 0）、quote（根拠になる言葉の短い引用）、why（なぜそう数えるか、1 文）を返してください。within には、kind（1〜4）、turn、quote、why を返してください。どちらも、なければ空の配列です。`
 
 var judgeSchema = json.RawMessage(`{
   "type": "object",
@@ -71,9 +92,23 @@ var judgeSchema = json.RawMessage(`{
         "required": ["category", "turn", "candidate", "quote", "why"],
         "additionalProperties": false
       }
+    },
+    "within": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {"type": "integer", "enum": [1, 2, 3, 4]},
+          "turn": {"type": "integer"},
+          "quote": {"type": "string"},
+          "why": {"type": "string"}
+        },
+        "required": ["kind", "turn", "quote", "why"],
+        "additionalProperties": false
+      }
     }
   },
-  "required": ["findings"],
+  "required": ["findings", "within"],
   "additionalProperties": false
 }`)
 
@@ -91,6 +126,7 @@ type JudgeFinding struct {
 type Verdict struct {
 	Run      string
 	Findings []JudgeFinding
+	Within   []Within
 	Err      string
 }
 
@@ -142,6 +178,7 @@ func judge(ctx context.Context, client llm.Client, run string, turns []Turn) Ver
 	}
 	var out struct {
 		Findings []JudgeFinding `json:"findings"`
+		Within   []Within       `json:"within"`
 	}
 	if err := json.Unmarshal([]byte(resp.Text), &out); err != nil {
 		return Verdict{Run: run, Err: "unreadable review: " + err.Error()}
@@ -152,7 +189,13 @@ func judge(ctx context.Context, client llm.Client, run string, turns []Turn) Ver
 			kept = append(kept, f)
 		}
 	}
-	return Verdict{Run: run, Findings: kept}
+	within := out.Within[:0]
+	for _, w := range out.Within {
+		if w.Kind >= 1 && w.Kind < len(withinKinds) {
+			within = append(within, w)
+		}
+	}
+	return Verdict{Run: run, Findings: kept, Within: within}
 }
 
 // judgeAll reviews every run, a few at once, in the order given.
@@ -204,6 +247,33 @@ func judgeReport(verdicts []Verdict) string {
 	fmt.Fprintf(&b, "- 査読した会話: %d（査読できなかったもの: %d）\n- 区分ごとの件数: %s\n", reviewed, notRun, strings.Join(sums, "、"))
 	if len(lines) > 0 {
 		b.WriteString("\n| run | turn | どこ | 区分 | 引用：理由 |\n| --- | --- | --- | --- | --- |\n")
+		b.WriteString(strings.Join(lines, "\n"))
+		b.WriteString("\n")
+	}
+	b.WriteString(withinReport(verdicts))
+	return b.String()
+}
+
+// withinReport lists where the answers used the tolerance (ADR-0065):
+// shown so the owner can read what it let through, never counted above.
+func withinReport(verdicts []Verdict) string {
+	counts := make([]int, len(withinKinds))
+	var lines []string
+	for _, v := range verdicts {
+		for _, w := range v.Within {
+			counts[w.Kind]++
+			lines = append(lines, fmt.Sprintf("| %s | %d | %s | %s：%s |", v.Run, w.Turn, withinKinds[w.Kind], oneLine(w.Quote), oneLine(w.Why)))
+		}
+	}
+	var b strings.Builder
+	b.WriteString("\n#### 幅の内（ADR-0065。数えない）\n\n")
+	var sums []string
+	for k := 1; k < len(withinKinds); k++ {
+		sums = append(sums, fmt.Sprintf("%s %d", withinKinds[k], counts[k]))
+	}
+	fmt.Fprintf(&b, "- 種類ごとの件数: %s\n", strings.Join(sums, "、"))
+	if len(lines) > 0 {
+		b.WriteString("\n| run | turn | 種類 | 引用：理由 |\n| --- | --- | --- | --- |\n")
 		b.WriteString(strings.Join(lines, "\n"))
 		b.WriteString("\n")
 	}
