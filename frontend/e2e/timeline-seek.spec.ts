@@ -117,3 +117,18 @@ test('with the keyboard alone, a pinned chord plays from its start', async ({ pa
   await page.getByRole('button', { name: '停止' }).click();
   await expect(position).toHaveText(`${String(bar)}.1`);
 });
+
+/** BL-330: playing, a click on the strip moves play there and the box follows. */
+test('playing, a click on the strip moves play there', async ({ page }) => {
+  const { result, position } = await open(page);
+  await page.getByRole('button', { name: '再生' }).click();
+  const strip = result.locator('svg.timeline--overview');
+  const s = await strip.boundingBox();
+  if (!s) throw new Error('no strip');
+  // Three quarters along the strip: about bar 12 of 16.
+  await strip.click({ position: { x: s.width * 0.75, y: s.height / 2 } });
+  await expect(position).toHaveText(/^1[23]\./);
+  await expect(page.getByRole('button', { name: '停止' })).toBeVisible();
+  const box = result.locator('.timeline-overview__scroll');
+  await expect.poll(() => box.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+});

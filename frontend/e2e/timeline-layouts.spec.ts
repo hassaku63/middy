@@ -27,7 +27,7 @@ async function send(page: Page, image: string, path = '/') {
   return result;
 }
 
-test('a long timeline scrolls in its box; pinning a chord in the strip brings it into view', async ({
+test('a long timeline scrolls in its box; a click on the strip moves the playhead there', async ({
   page,
 }) => {
   const result = await send(page, '長い雨の日');
@@ -38,12 +38,20 @@ test('a long timeline scrolls in its box; pinning a chord in the strip brings it
   expect((await strip.boundingBox())?.height ?? 99).toBeLessThanOrEqual(64);
   // The strip is a duplicate drawing: its chords are no tab stops.
   await expect(strip.locator('[role=option][tabindex]')).toHaveCount(0);
-  // Pin the twelfth chord in the strip: the box scrolls to put it in view.
-  await strip.locator('[role=option]').nth(11).click();
-  const twelfth = box.getByRole('option').nth(11);
+  // Stopped, a click on the twelfth bar in the strip (BL-330) moves the
+  // playhead there, and the box scrolls to put it in view; nothing pins.
+  await strip
+    .locator('[role=option]')
+    .nth(11)
+    .click({ position: { x: 1, y: 4 } });
+  await expect(page.getByLabel('再生位置')).toHaveText('12.1');
+  await expect(box.locator('[role=option][aria-selected=true]')).toHaveCount(0);
   await expect.poll(() => box.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
-  const [b, c] = await Promise.all([box.boundingBox(), twelfth.boundingBox()]);
-  expect(b && c && c.x >= b.x - 1 && c.x + c.width <= b.x + b.width + 1).toBe(true);
+  const [b, head] = await Promise.all([
+    box.boundingBox(),
+    box.getByTestId('playhead').boundingBox(),
+  ]);
+  expect(b && head && head.x >= b.x && head.x <= b.x + b.width).toBe(true);
 });
 
 test('a short timeline is drawn once, whole', async ({ page }) => {
