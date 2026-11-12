@@ -387,6 +387,37 @@ describe('clicking to move the playhead (BL-328)', () => {
     expect(svg.querySelector('.timeline__seek-hint')).toBeNull();
   });
 
+  it('a mouse moves the playhead on the press and drags it along (BL-335)', () => {
+    const onSeek = vi.fn<(tick: number) => void>();
+    const onScrub = vi.fn();
+    const { container } = render(
+      <TimelineView timeline={timeline} positionTick={0} onSeek={onSeek} onScrub={onScrub} />,
+    );
+    const svg = container.querySelector('svg.timeline');
+    if (!(svg instanceof SVGSVGElement)) throw new Error('no drawing');
+    svg.getBoundingClientRect = () => new DOMRect(100, 0, layout.width / 2, layout.height / 2);
+    svg.setPointerCapture = vi.fn();
+    const x = (drawing: number) => 100 + drawing / 2;
+    fireEvent.pointerDown(svg, { clientX: x(40 + 10), pointerType: 'mouse', button: 0 });
+    expect(onScrub).toHaveBeenLastCalledWith('start');
+    expect(onSeek).toHaveBeenLastCalledWith(0);
+    fireEvent.pointerMove(svg, { clientX: x(40 + 160 + 10), pointerType: 'mouse' });
+    expect(onSeek).toHaveBeenLastCalledWith(1920);
+    fireEvent.pointerMove(svg, { clientX: x(40 + 160 + 20), pointerType: 'mouse' }); // same beat
+    expect(onSeek).toHaveBeenCalledTimes(2);
+    fireEvent.pointerUp(svg, { pointerType: 'mouse' });
+    expect(onScrub).toHaveBeenLastCalledWith('end');
+    // The click that follows the press does not seek again.
+    fireEvent.click(svg, { clientX: x(40 + 160 + 20) });
+    expect(onSeek).toHaveBeenCalledTimes(2);
+  });
+
+  it('a finger only clicks: a press does not move the playhead', () => {
+    const { svg, onSeek } = renderSeekable();
+    fireEvent.pointerDown(svg, { clientX: 100 + 300 / 2, pointerType: 'touch', button: 0 });
+    expect(onSeek).not.toHaveBeenCalled();
+  });
+
   it('without onSeek, a click does nothing and shows no hint', () => {
     const { container } = render(<TimelineView timeline={timeline} positionTick={0} />);
     const svg = container.querySelector('svg.timeline');

@@ -191,3 +191,49 @@ test('dragging the frame on the strip scrolls the box, not the playhead', async 
   await page.mouse.up();
   await expect(result.getByRole('button', { name: '再生位置へ戻る' })).toBeVisible();
 });
+
+/**
+ * BL-335: with a mouse, pressing the drawing moves the playhead and a drag
+ * carries it along until the release. Playing, the sound holds while
+ * dragging and goes on from where the drag ended.
+ */
+test.describe('dragging the playhead with a mouse', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  async function dragBars(page: Page, from: number, to: number, during?: () => Promise<void>) {
+    const bar = (n: number) =>
+      page
+        .locator('.timeline-overview__scroll .timeline__bar-number', {
+          hasText: new RegExp(`^${String(n)}$`),
+        })
+        .boundingBox();
+    const [a, b] = await Promise.all([bar(from), bar(to)]);
+    if (!a || !b) throw new Error('no bar numbers');
+    await page.mouse.move(a.x + 2, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + 2, b.y + b.height / 2, { steps: 8 });
+    await during?.();
+    await page.mouse.up();
+  }
+
+  test('stopped, a drag sets where play starts', async ({ page }) => {
+    const { position } = await open(page);
+    await dragBars(page, 2, 4, async () => {
+      await expect(position).toHaveText('4.1');
+    });
+    await expect(position).toHaveText('4.1');
+    await expect(page.getByRole('button', { name: '再生' })).toBeVisible();
+  });
+
+  test('playing, the sound holds while dragging and goes on from the release', async ({ page }) => {
+    const { position } = await open(page);
+    await page.getByRole('button', { name: '再生' }).click();
+    await expect(position).toHaveText(/^1\.[2-4]$/, { timeout: 5000 });
+    await dragBars(page, 2, 3, async () => {
+      await expect(page.getByRole('button', { name: '再生' })).toBeVisible();
+      await expect(position).toHaveText('3.1');
+    });
+    await expect(page.getByRole('button', { name: '一時停止' })).toBeVisible();
+    await expect(position).toHaveText(/^3\./);
+  });
+});

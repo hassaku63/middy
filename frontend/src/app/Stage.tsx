@@ -5,6 +5,7 @@ import { TimelineOverview } from '@/features/timeline/TimelineOverview';
 import type { ReactNode } from 'react';
 import type { Timeline } from '@/shared/api/client';
 import { useChordKeys } from './useChordKeys';
+import { useScrub } from './useScrub';
 
 type Props = {
   timeline: Timeline;
@@ -39,6 +40,7 @@ export function Stage({
   });
   const clear = () => onSelectHarmony(null);
   // Stopped, the seek sets where play starts; playing, it jumps there.
+  const scrub = useScrub(player, timeline);
   const playFrom = (tick: number) => {
     player.seek(tick);
     if (player.state !== 'playing') void player.play(timeline);
@@ -51,6 +53,7 @@ export function Stage({
       selectedHarmony={selectedHarmony}
       onSelectHarmony={onSelectHarmony}
       onSeek={player.seek}
+      onScrub={scrub}
       marks
       fit
     />

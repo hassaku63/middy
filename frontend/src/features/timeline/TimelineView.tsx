@@ -14,7 +14,7 @@ import {
   type Layout,
 } from './layout';
 import { useBoxSize } from './useBoxSize';
-import { useSeekByClick } from './useSeekByClick';
+import { useSeekByClick, type Scrub } from './useSeekByClick';
 import './TimelineView.css';
 
 export type TimelineViewProps = {
@@ -32,6 +32,8 @@ export type TimelineViewProps = {
   onSelectHarmony?: ((index: number) => void) | undefined;
   /** Clicking anywhere but a chord moves the playhead there (BL-328). */
   onSeek?: ((tick: number) => void) | undefined;
+  /** A drag that moves the playhead starts or ends (BL-335). */
+  onScrub?: Scrub | undefined;
   /** Outline this slice, e.g. the part in view next to an overview. */
   highlight?: { x: number; width: number };
   /** Fill the box it is given, out of proportion (an overview strip). */
@@ -62,6 +64,7 @@ export function TimelineView({
   selectedHarmony = null,
   onSelectHarmony,
   onSeek,
+  onScrub,
   highlight,
   stretch = false,
   fit = false,
@@ -86,7 +89,7 @@ export function TimelineView({
     [timeline, natural, barWidth, stretch],
   );
 
-  const seek = useSeekByClick(ref, layout, onSeek, onSelectHarmony !== undefined);
+  const seek = useSeekByClick(ref, layout, onSeek, onSelectHarmony !== undefined, onScrub);
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (
