@@ -232,13 +232,14 @@ func TestRunName(t *testing.T) {
 }
 
 // TestJudgeInput (BL-315): the reviewer reads each turn's words, the reply
-// and every example as it sounds, but not the script's expectations.
+// and every example as it sounds, tensions included (a style's add9 is in
+// the sound, not in the plain symbol), but not the script's expectations.
 func TestJudgeInput(t *testing.T) {
 	res := ideas.Result{Reply: "3 拍子にしました。", Candidates: []ideas.Candidate{{
 		Candidate: intent.Candidate{Title: "海辺のワルツ", Key: music.Key{Tonic: music.C, Mode: music.Major}, TempoBPM: 90,
 			Style: "pop", Reason: "3 拍子で揺れる。"},
 		Timeline: music.Timeline{PPQ: 480, TimeSignature: music.TimeSignature{Numerator: 3, Denominator: 4}, Harmony: []music.HarmonyEvent{
-			{Duration: 1440, RomanNumeral: "I", Symbol: "C"},
+			{Duration: 1440, RomanNumeral: "I", Symbol: "C", Tensions: []string{"add9"}},
 		}},
 	}}}
 	turns := []Turn{
@@ -247,7 +248,7 @@ func TestJudgeInput(t *testing.T) {
 		{Sent: "もっと", Error: "status 502"},
 	}
 	got := judgeInput(turns)
-	for _, want := range []string{"## 2 回目\nユーザー: 3 拍子にして", "返事: 3 拍子にしました。", "候補 1: 海辺のワルツ（C major、3/4、90 BPM、1 小節）", "和音: I（C）", "型: スタイル pop", "理由: 3 拍子で揺れる。", "## 3 回目\nユーザー: もっと\n（答えなし）"} {
+	for _, want := range []string{"## 2 回目\nユーザー: 3 拍子にして", "返事: 3 拍子にしました。", "候補 1: 海辺のワルツ（C major、3/4、90 BPM、1 小節）", "和音: I（C(add9)）", "型: スタイル pop", "理由: 3 拍子で揺れる。", "## 3 回目\nユーザー: もっと\n（答えなし）"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}

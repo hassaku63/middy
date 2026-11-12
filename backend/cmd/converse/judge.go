@@ -146,7 +146,7 @@ func judgeInput(turns []Turn) string {
 				fmt.Sprint(c.TempoBPM), m.Bars)
 			chords := make([]string, 0, len(c.Timeline.Harmony))
 			for _, h := range c.Timeline.Harmony {
-				chords = append(chords, fmt.Sprintf("%s（%s）", h.RomanNumeral, h.Symbol))
+				chords = append(chords, fmt.Sprintf("%s（%s）", h.RomanNumeral, h.SoundingSymbol()))
 			}
 			fmt.Fprintf(&b, "  和音: %s\n", strings.Join(chords, " → "))
 			var kinds []string
