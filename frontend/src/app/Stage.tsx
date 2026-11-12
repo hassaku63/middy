@@ -38,6 +38,11 @@ export function Stage({
     onSelect: onSelectHarmony,
   });
   const clear = () => onSelectHarmony(null);
+  // Stopped, the seek sets where play starts; playing, it jumps there.
+  const playFrom = (tick: number) => {
+    player.seek(tick);
+    if (player.state !== 'playing') void player.play(timeline);
+  };
   const overview = (
     <TimelineOverview
       timeline={timeline}
@@ -56,6 +61,7 @@ export function Stage({
       positionTick={player.positionTick}
       selectedHarmony={selectedHarmony}
       onClearSelection={clear}
+      onPlayFrom={playFrom}
     />
   );
   const notes = (

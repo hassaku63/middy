@@ -10,6 +10,8 @@ type Props = {
   positionTick: number;
   selectedHarmony: number | null;
   onClearSelection: () => void;
+  /** Plays from a tick: the pinned chord's start (BL-329). */
+  onPlayFrom?: (tick: number) => void;
 };
 
 /**
@@ -20,7 +22,13 @@ type Props = {
  * Following the playhead or pinned shows twice without a label: the
  * frame's edge colour and, on the chord lane, ▶ or ■ (WCAG 1.4.1).
  */
-export function ChordFrame({ timeline, positionTick, selectedHarmony, onClearSelection }: Props) {
+export function ChordFrame({
+  timeline,
+  positionTick,
+  selectedHarmony,
+  onClearSelection,
+  onPlayFrom,
+}: Props) {
   const index = explainedIndex(timeline.harmony, positionTick, selectedHarmony);
   const event = index >= 0 ? timeline.harmony[index] : undefined;
   const pinned = selectedHarmony !== null && index === selectedHarmony;
@@ -51,6 +59,7 @@ export function ChordFrame({ timeline, positionTick, selectedHarmony, onClearSel
             event={event}
             pinned={pinned}
             onClearSelection={onClearSelection}
+            onPlayFrom={onPlayFrom && (() => onPlayFrom(event.start))}
             functional={functional}
           />
         ) : (

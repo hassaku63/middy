@@ -89,3 +89,31 @@ test.describe('on a touch screen', () => {
     await expect(position).toHaveText('1.1');
   });
 });
+
+/**
+ * BL-329: the keyboard's way to the same thing (WCAG 2.1.1): ← → pin a
+ * chord, and the frame's 「ここから再生」 plays from its start.
+ */
+test('with the keyboard alone, a pinned chord plays from its start', async ({ page }) => {
+  const { result, position } = await open(page);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  const box = result.locator('.timeline-overview__scroll');
+  const pinned = box.locator('[role=option][aria-selected=true]');
+  await expect(pinned).toHaveCount(1);
+  const bar =
+    (await box
+      .getByRole('option')
+      .evaluateAll((all) => all.findIndex((o) => o.getAttribute('aria-selected') === 'true'))) + 1; // one chord a bar
+  const play = result.getByRole('region', { name: 'コードの解説' }).getByRole('button', {
+    name: 'ここから再生',
+  });
+  const size = await play.boundingBox();
+  expect(size && size.height >= 24 && size.width >= 24).toBe(true);
+  await play.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: '停止' })).toBeVisible();
+  await expect(position).toHaveText(new RegExp(`^${String(bar)}\\.`));
+  await page.getByRole('button', { name: '停止' }).click();
+  await expect(position).toHaveText(`${String(bar)}.1`);
+});
