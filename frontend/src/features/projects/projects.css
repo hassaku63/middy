@@ -49,6 +49,20 @@
   min-width: 12em;
 }
 
+/* The example's progression and reason under its row (BL-299). */
+.projects__card {
+  flex-basis: 100%;
+  font-size: 0.85rem;
+}
+
+.projects__card p {
+  margin: 0;
+}
+
+.projects__card p + p {
+  color: var(--text-muted);
+}
+
 .projects__error {
   margin: 0;
   color: #f87171;

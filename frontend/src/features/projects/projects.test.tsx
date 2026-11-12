@@ -138,6 +138,56 @@ describe('KeepToggle + ProjectList + useProjects', () => {
     expect(await within(list).findByText('雨の練習（2）')).toBeInTheDocument();
   });
 
+  it("lists a kept example's progression and the reason kept with its card (BL-299)", async () => {
+    const store = new MemoryProjectStore();
+    const withHarmony: Timeline = {
+      ...timeline,
+      harmony: [
+        { romanNumeral: 'i', start: 0, duration: 1920 },
+        { romanNumeral: 'VI', start: 1920, duration: 1920 },
+      ] as Timeline['harmony'],
+    };
+    await store.save({
+      id: 'p1',
+      name: '窓辺の雨',
+      createdAt: 1,
+      updatedAt: 1,
+      timeline: withHarmony,
+      source: {
+        kind: 'idea',
+        image: '雨',
+        candidateTitle: '窓辺の雨',
+        candidate: {
+          title: '窓辺の雨',
+          key: timeline.key,
+          tempoBpm: 90,
+          progression: ['i', 'VI'],
+          beatsPerChord: 4,
+          reason: '短調で落ち着いた切なさ。',
+          timeline: withHarmony,
+        },
+      },
+    });
+    // A card kept before cards were stored still lists, without a reason.
+    await store.save({
+      id: 'p0',
+      name: '前の例',
+      createdAt: 0,
+      updatedAt: 0,
+      timeline,
+      source: { kind: 'idea', image: '雪', candidateTitle: '前の例' },
+    });
+    const user = userEvent.setup();
+    render(<Harness store={store} onOpen={vi.fn()} />);
+    await user.click(await screen.findByText('とっておいた例（2）'));
+    const items = within(screen.getByRole('list', { name: 'とっておいた例の一覧' })).getAllByRole(
+      'listitem',
+    );
+    expect(items[0]).toHaveTextContent('i - VI');
+    expect(items[0]).toHaveTextContent('短調で落ち着いた切なさ。');
+    expect(items[1]).toHaveTextContent('前の例');
+  });
+
   it('shows no list while nothing is saved', () => {
     function Empty() {
       const projects = useProjects(new MemoryProjectStore());

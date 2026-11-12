@@ -1,9 +1,19 @@
-import type { FromProgressionRequest, Timeline } from '@/shared/api/client';
+import type { FromProgressionRequest, IdeaCandidate, Timeline } from '@/shared/api/client';
 
 /** Where a project came from, so the UI can show it and later re-run it. */
 export type ProjectSource =
   | { kind: 'progression'; request: FromProgressionRequest }
-  | { kind: 'idea'; image: string; candidateTitle: string };
+  | {
+      kind: 'idea';
+      image: string;
+      candidateTitle: string;
+      /**
+       * The card as the AI proposed it, kept with the example so its reason
+       * and patterns can be read again (BL-299). Absent in examples kept
+       * before it was stored.
+       */
+      candidate?: IdeaCandidate;
+    };
 
 export type Project = {
   id: string;
