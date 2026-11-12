@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Measure what survives a conversation (#453) on the real LLM, for the
-# needs-eval:converse label (BL-313). Starts the API server here with
+# eval-converse label (BL-313). Starts the API server here with
 # LLM_PROVIDER=anthropic, sends backend/cmd/converse/turns-447.json three
 # times with cmd/converse, and writes the report's table to <report.md>.
 # The report is for reading, not a gate.

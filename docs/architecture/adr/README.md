@@ -21,7 +21,7 @@
 | [0015](0015-modes.md) | モードを調の属性として足し、特徴音で解説する | Accepted |
 | [0016](0016-ci-speed.md) | CI は、アプリと同じ版をキャッシュで速く取り、検査を 1 回ずつ走らせ、差分でジョブを選ぶ | Accepted |
 | [0017](0017-meter.md) | 拍子を例全体の枠にし、3/4 から足す | Accepted |
-| [0018](0018-eval-in-ci.md) | 実 API の評価を、PR のラベルで CI に走らせる | Accepted |
+| [0018](0018-eval-in-ci.md) | 実 API の評価を、PR のラベルで CI に走らせる | Accepted（ラベルの名前は 0063） |
 | [0019](0019-tempo-counts-the-beat.md) | テンポは拍子の拍で数える | Accepted |
 | [0020](0020-slash-bass.md) | 分数コードのベースは和声に置き、度数で書く | Accepted |
 | [0021](0021-style-groove.md) | スタイルを選び直したときのグルーヴはエンジンが決める | Accepted |
@@ -41,7 +41,7 @@
 | [0035](0035-pattern-catalogue-as-data.md) | 型のカタログは、版管理され検証されるデータとしてエンジンに含める | Accepted |
 | [0036](0036-shuffle-feel.md) | シャッフルを、名前のついたノリとして足す | Accepted |
 | [0037](0037-candidate-tensions.md) | テンションは、候補ごとに AI が頼める（足す音はエンジンが決める） | Accepted |
-| [0038](0038-narrowed-eval.md) | 評価は、タグで絞って走らせられる（`needs-eval:<tag>`。`needs-eval` は全件） | Accepted |
+| [0038](0038-narrowed-eval.md) | 評価は、タグで絞って走らせられる（ラベルの名前は 0063） | Accepted（名前は 0063 で置き換え） |
 | [0039](0039-batched-eval.md) | 全件の評価は Message Batches で送れる（`EVAL_BATCH=1`。アプリ本体には使わない） | Accepted |
 | [0040](0040-security-headers.md) | web のコンテナがセキュリティヘッダと CSP を付ける（snippet を全 location で。Go も nosniff） | Accepted |
 | [0041](0041-wide-screen-bounds.md) | 広い画面の上限: 横幅 2560 px、タイムラインの高さは画面の 45 %（縦横比を保つ） | Accepted |
@@ -66,6 +66,7 @@
 | [0060](0060-sixteenth-swing-feel.md) | 16 分のスウィング `swing-16` を名前のついたノリとして足す。比 1.3 : 1（約 57 %）、テンポによらない。pop と lofi で選べる | Accepted |
 | [0061](0061-show-what-could-not-be-expressed.md) | 表せなかったもの（`unconstrained`）を本番の答えでも求め、要約の下に「AI の見立て」として小さく出す | Accepted |
 | [0062](0062-sus2.md) | sus2 を 3 度のない和音に足す（テンションは足さない）。3 度のない和音の分数コードのベースは、根音からの音程で読む | Accepted |
+| [0063](0063-eval-label-names.md) | 評価のラベルは `eval-` のあとが走らせるもの、`:` のあとが絞り込み（`eval-cases`、`eval-cases:<tag>`、`eval-converse`） | Accepted |
 
 ## いつ ADR を書くか
 

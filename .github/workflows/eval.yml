@@ -1,10 +1,12 @@
-# Real-API evaluation of a pull request (ADR-0018). Runs `make eval` on the
-# pull request's branch when someone with write access adds the `needs-eval`
+# Real-API evaluation of a pull request (ADR-0018). Runs on the pull
+# request's branch when someone with write access adds an evaluation
 # label, posts the table as a comment and removes the label, so the label
-# can be added again after the next fix. `needs-eval` runs every case; a
-# label `needs-eval:<tag>` (a tag of evals.Tags, e.g. `needs-eval:meter`)
-# runs only the cases with that tag and the smoke cases, to spend less
-# credit on a change that touches one aspect (#334). A run of many cases
+# can be added again after the next fix. The part after "eval-" names what
+# runs, and the part after ":" narrows it (ADR-0063):
+#   eval-cases         every case of `make eval`, and the independent reviewer
+#   eval-cases:<tag>   the cases with that tag (evals.Tags, e.g. meter) and the
+#                      smoke cases, to spend less credit on one aspect (#334)
+#   eval-converse      a conversation measured by cmd/converse (#453, BL-313) A run of many cases
 # (the full one) goes as Message Batches, at half the price, and waits
 # longer for the answers; a small one sends one request at a time
 # (EVAL_BATCH=auto, ADR-0039).
@@ -29,14 +31,14 @@ permissions:
 # runs of other labels (which skip every job) in their own group, or they
 # would cancel an evaluation in progress.
 concurrency:
-  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'needs-eval' || startsWith(github.event.label.name, 'needs-eval:') }}
+  group: eval-${{ github.event.pull_request.number }}-${{ github.event.label.name == 'eval-cases' || github.event.label.name == 'eval-converse' || startsWith(github.event.label.name, 'eval-cases:') }}
   cancel-in-progress: true
 
 jobs:
   eval:
     name: eval (real API)
     if: >-
-      (github.event.label.name == 'needs-eval' || startsWith(github.event.label.name, 'needs-eval:')) &&
+      (github.event.label.name == 'eval-cases' || github.event.label.name == 'eval-converse' || startsWith(github.event.label.name, 'eval-cases:')) &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     # A full run waits for Message Batches (EVAL_TIMEOUT below, ADR-0039).
@@ -79,25 +81,31 @@ jobs:
           LABEL: ${{ github.event.label.name }}
         run: |
           set -o pipefail
-          tag="${LABEL#needs-eval}"
-          tag="${tag#:}"
-          if [ -n "$tag" ]; then
-            if ! [[ "$tag" =~ ^[a-z]+$ ]]; then
-              echo "::error::the label's tag must be a lowercase word, got: $tag"
-              exit 1
-            fi
-            export EVAL_TAGS="$tag,smoke"
-          fi
           if [ -z "$ANTHROPIC_API_KEY" ]; then
             echo "::error::the eval environment has no ANTHROPIC_API_KEY"
             exit 1
           fi
-          # needs-eval:converse measures a conversation instead of the
-          # cases (#453, BL-313): the server gets the key, the client not.
-          if [ "$tag" = converse ]; then
-            bash scripts/converse-ci.sh report/report.md
-            exit 0
-          fi
+          case "$LABEL" in
+            eval-converse)
+              # A conversation instead of the cases (#453, BL-313): the
+              # server gets the key, the client does not.
+              bash scripts/converse-ci.sh report/report.md
+              exit 0
+              ;;
+            eval-cases) ;;
+            eval-cases:*)
+              tag="${LABEL#eval-cases:}"
+              if ! [[ "$tag" =~ ^[a-z]+$ ]]; then
+                echo "::error::the label's tag must be a lowercase word, got: $tag"
+                exit 1
+              fi
+              export EVAL_TAGS="$tag,smoke"
+              ;;
+            *)
+              echo "::error::not an evaluation label: $LABEL"
+              exit 1
+              ;;
+          esac
           # Message Batches for a run of EVAL_BATCH_MIN cases or more (the
           # full run); a small narrowed run goes one request at a time.
           export EVAL_BATCH=auto EVAL_TIMEOUT=80m
@@ -106,7 +114,7 @@ jobs:
         if: always() && steps.changes.outputs.eval == 'true'
         run: |
           mkdir -p report
-          # needs-eval:converse wrote its report already.
+          # eval-converse wrote its report already.
           if [ ! -s report/report.md ]; then
             awk '/^\| case \|/ { on = 1 } /^(--- (PASS|FAIL)|PASS$|FAIL$)/ { on = 0 } on' "$RUNNER_TEMP/eval.log" > report/report.md || true
           fi
@@ -124,7 +132,7 @@ jobs:
     needs: eval
     if: >-
       always() &&
-      (github.event.label.name == 'needs-eval' || startsWith(github.event.label.name, 'needs-eval:')) &&
+      (github.event.label.name == 'eval-cases' || github.event.label.name == 'eval-converse' || startsWith(github.event.label.name, 'eval-cases:')) &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
