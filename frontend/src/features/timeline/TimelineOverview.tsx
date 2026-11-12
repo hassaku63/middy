@@ -3,6 +3,7 @@ import type { Timeline } from '@/shared/api/client';
 import { TimelineLabels } from './TimelineLabels';
 import { TimelineView, type TimelineViewProps } from './TimelineView';
 import { BAR_WIDTH, computeLayout, type Layout } from './layout';
+import { useReducedMotion } from './useReducedMotion';
 import { useTimelineScroll } from './useTimelineScroll';
 import './TimelineOverview.css';
 
@@ -18,10 +19,12 @@ type Props = Omit<
  * The timeline as the screen shows it: a short one whole; a long one as
  * one drawing that scrolls sideways, with the whole piece as a thin strip
  * below that outlines the part in view, as an editor's overview (#360,
- * the owner's choice). Playing, the box turns a page when the playhead
- * nears an edge; stopped, it centres the pinned chord, else it stays where
- * it was scrolled. Clicking a chord in the strip pins it. The strip is a
- * duplicate drawing, hidden from assistive tech.
+ * the owner's choice). Playing, the box keeps the playhead in the middle
+ * of the drawing in view (BL-127, BL-326, ADR-0066), or turns a page when
+ * the person asked the system for less motion; stopped, it centres the
+ * pinned chord, else it stays where it was scrolled. Clicking a chord in
+ * the strip pins it. The strip is a duplicate drawing, hidden from
+ * assistive tech.
  */
 export function TimelineOverview(props: Props) {
   const geometry = computeLayout(props.timeline);
@@ -31,10 +34,12 @@ export function TimelineOverview(props: Props) {
   const playing = props.playing !== false;
   // Any timeline may scroll (a narrow screen), so the box follows the playhead or the pinned chord.
   const target = followed(geometry, props.positionTick, playing, pinned);
+  const lessMotion = useReducedMotion();
   const { ref, view, onScroll } = useTimelineScroll(
     geometry.width,
     target,
-    playing ? 'page' : 'centre',
+    playing && lessMotion ? 'page' : 'centre',
+    geometry.labelWidth,
   );
   // One box for every timeline, so the tree does not change with the
   // width (ADR-0042): it scrolls sideways when the drawing is wider than

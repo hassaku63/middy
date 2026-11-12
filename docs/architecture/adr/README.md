@@ -46,7 +46,7 @@
 | [0040](0040-security-headers.md) | web のコンテナがセキュリティヘッダと CSP を付ける（snippet を全 location で。Go も nosniff） | Accepted |
 | [0041](0041-wide-screen-bounds.md) | 広い画面の上限: 横幅 2560 px、タイムラインの高さは画面の 45 %（縦横比を保つ） | Accepted |
 | [0042](0042-layout-rules.md) | 配置の規則: 骨組みは media、部品は container、しきい値は conventions の表に 1 か所。端末の当て推量は ESLint で禁止 | Accepted |
-| [0043](0043-scrolling-timeline.md) | 長いタイムラインは横スクロールの 1 本と縮小図の帯（拡大とスライダーを置き換え）。追随はページめくり | Accepted |
+| [0043](0043-scrolling-timeline.md) | 長いタイムラインは横スクロールの 1 本と縮小図の帯（拡大とスライダーを置き換え） | Accepted（追随の形は 0066） |
 | [0044](0044-chord-band-and-function-map.md) | 1 和音の解説と度数の地図を同じ枠に入れ、広い画面ではタイムラインの上の帯に。地図は長調・短調で機能の列、モードで度数の順 | Accepted |
 | [0045](0045-no-function-labels-in-modes.md) | モードの例では、画面で和音を機能で呼ばない（札・読み上げ・地図の色）。地図は主和音に印。文は #366 | Accepted |
 | [0046](0046-modal-explanations-without-functions.md) | モードの解説の文は機能を名指ししない（主和音は「モードの主和音」、ほかは「N 度の和音」）。長調・短調は今まで通り | Accepted |
@@ -69,6 +69,7 @@
 | [0063](0063-eval-label-names.md) | 評価のラベルは `needs-eval-` のあとが走らせるもの、`:` のあとが絞り込み（`needs-eval-cases`、`needs-eval-cases:<tag>`、`needs-eval-converse`） | Accepted |
 | [0064](0064-conversation-reviewer.md) | 会話の査読は会話 1 本を通して読み、依頼に従ったかを 4 つの区分（反映されていない・頼んでいないのに変わった・指した例の取り違え・返事が変更点を誤って言う）で数える。報告だけ。鍵を持つのは `converse judge` だけ | Accepted |
 | [0065](0065-tolerance-in-taking-up-requests.md) | 頼まれたものを採り入れる程度には幅を認める（程度・一部だけ・初心者向けの単純化）。計測は答え単位に ✓／△／✗ と k/n で数え、幅の内は見せるが数えない | Accepted |
+| [0066](0066-centre-follow.md) | 再生中の追随は、再生位置を（行名の列を除いた）見えている絵の中央に保つ。先頭と末尾はスクロールの端で止め、動きを減らす設定ではページめくり | Accepted |
 
 ## いつ ADR を書くか
 

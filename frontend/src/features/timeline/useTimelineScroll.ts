@@ -11,13 +11,24 @@ const LEAD = 0.1;
 
 /**
  * Where to scroll so that x stays in view, all in screen pixels: null when
- * it already is. A page turns when x comes near either edge, putting x just
- * after the left edge; centre always puts it in the middle.
+ * it already is. inset is the width at the box's left that covers the
+ * drawing (the sticky row names), so "in view" and "the middle" are of the
+ * drawing that shows. A page turns when x comes near either edge, putting
+ * x just after the left edge; centre always puts it in the middle (the
+ * browser stops the scroll at both ends, so at the start and the end the
+ * point moves off the middle instead; BL-326).
  */
-export function scrollFor(left: number, visible: number, x: number, keep: Keep): number | null {
-  if (keep === 'centre') return x - visible / 2;
-  const lead = visible * LEAD;
-  if (x >= left + lead && x <= left + visible - lead) return null;
+export function scrollFor(
+  left: number,
+  visible: number,
+  x: number,
+  keep: Keep,
+  inset = 0,
+): number | null {
+  const shown = visible - inset;
+  if (keep === 'centre') return x - inset - shown / 2;
+  const lead = inset + shown * LEAD;
+  if (x >= left + lead && x <= left + visible - shown * LEAD) return null;
   return x - lead;
 }
 
@@ -27,7 +38,7 @@ export function scrollFor(left: number, visible: number, x: number, keep: Keep):
  * in view for the overview to outline. Between target moves the person
  * scrolls freely.
  */
-export function useTimelineScroll(width: number, target: number | null, keep: Keep) {
+export function useTimelineScroll(width: number, target: number | null, keep: Keep, inset = 0) {
   const ref = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<Slice>({ x: 0, width });
 
@@ -43,11 +54,11 @@ export function useTimelineScroll(width: number, target: number | null, keep: Ke
     const box = ref.current;
     if (box?.scrollWidth && target !== null) {
       const scale = box.scrollWidth / width;
-      const left = scrollFor(box.scrollLeft, box.clientWidth, target * scale, keep);
+      const left = scrollFor(box.scrollLeft, box.clientWidth, target * scale, keep, inset * scale);
       if (left !== null) box.scrollLeft = left;
     }
     measure();
-  }, [target, keep, width, measure]);
+  }, [target, keep, width, inset, measure]);
 
   return { ref, view, onScroll: measure };
 }

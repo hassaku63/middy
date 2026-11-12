@@ -63,3 +63,15 @@ describe('scrollFor (#360)', () => {
     expect(scrollFor(2000, 1000, x, keep)).toBe(want);
   });
 });
+
+describe('scrollFor with the row names over the drawing (BL-326)', () => {
+  // A 1000 px view scrolled to 2000, its left 100 px covered by the sticky
+  // row names: 900 px of drawing show, their middle 550 px from the left.
+  it.each([
+    ['centre: to the middle of the drawing that shows', 2500, 'centre', 1950],
+    ['page: inside the drawing that shows: stays', 2300, 'page', null],
+    ['page: behind the row names turns back', 2120, 'page', 1930],
+  ] as const)('%s', (_, x, keep, want) => {
+    expect(scrollFor(2000, 1000, x, keep, 100)).toBe(want);
+  });
+});
