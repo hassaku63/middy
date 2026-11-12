@@ -36,7 +36,7 @@ export type UsePlayer = {
    * Moves the position (BL-327): playing, play goes on from tick; stopped,
    * the next play starts there.
    */
-  seek(tick: number): void;
+  seek: (tick: number) => void;
   /** Stops and sets play to start at the beginning (another timeline shows). */
   reset(): void;
 };

@@ -138,6 +138,20 @@
   stroke-width: 2;
 }
 
+/* Clicking the drawing moves the playhead (BL-328): the pointer says it
+   can be pressed, and a thin dashed line shows the beat it would go to. */
+.timeline--seekable {
+  cursor: pointer;
+}
+
+.timeline__seek-hint {
+  stroke: #f87171;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
 @media (prefers-color-scheme: light) {
   .timeline {
     background: #e5e7eb;
