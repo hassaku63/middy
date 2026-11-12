@@ -87,3 +87,13 @@
 .timeline--overview text {
   display: none;
 }
+
+/* The strip's own box is the drawing's (display: contents): the wrapper
+   only takes its clicks, which bring the main box there (ADR-0069). */
+.timeline-overview__strip {
+  display: contents;
+}
+
+.timeline-overview__strip > .timeline--overview {
+  cursor: pointer;
+}

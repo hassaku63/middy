@@ -100,5 +100,24 @@ export function useTimelineScroll(
     setPaused(false);
   }, []);
 
-  return { ref, view, onScroll, paused: playing && paused, resume };
+  /**
+   * Puts x (drawing units) in the middle of the box: where the person asked
+   * to look (the overview strip, ADR-0069). Playing, that pauses the
+   * following as a scroll by hand does.
+   */
+  const look = useCallback(
+    (x: number) => {
+      const box = ref.current;
+      if (!box?.scrollWidth) return;
+      const scale = box.scrollWidth / width;
+      const left = scrollFor(box.scrollLeft, box.clientWidth, x * scale, 'centre', inset * scale);
+      if (left !== null) box.scrollLeft = left; // centre always gives one
+      placed.current = box.scrollLeft;
+      if (playing) setPaused(true);
+      measure();
+    },
+    [width, inset, playing, measure],
+  );
+
+  return { ref, view, onScroll, paused: playing && paused, resume, look };
 }
