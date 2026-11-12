@@ -34,7 +34,7 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
     /III.*C/,
     /VII.*G/,
   ]);
-  await expect(result).toContainText('候補: 窓辺の雨');
+  await expect(result.getByRole('heading', { name: '窓辺の雨' })).toBeVisible();
   // The fake's sample carries patterns (arpeggio + ballad drums): a drum lane and rhythm notes appear.
   await expect(result.getByTestId('drum-lane')).toBeVisible();
   await expect(result.getByRole('heading', { name: 'リズム' })).toBeVisible();
@@ -54,9 +54,9 @@ test('describe an image, get candidates, open one, refine', async ({ page }) => 
   await page.getByRole('button', { name: '送る' }).click();
   await expect(page.getByRole('article', { name: '朝の光' })).toBeVisible();
   // A refined answer leaves the chosen example open; the user opens a new one.
-  await expect(result).toContainText('候補: 窓辺の雨');
+  await expect(result.getByRole('heading', { name: '窓辺の雨' })).toBeVisible();
   await page.getByRole('article', { name: '朝の光' }).getByRole('button').click();
-  await expect(result).toContainText('候補: 朝の光');
+  await expect(result.getByRole('heading', { name: '朝の光' })).toBeVisible();
   await expect(result.getByRole('listbox', { name: 'コード' }).getByRole('option')).toHaveText([
     /I.*C/,
     /V7\/vi.*E7/,

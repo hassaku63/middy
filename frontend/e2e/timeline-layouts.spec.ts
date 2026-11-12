@@ -31,7 +31,7 @@ test('a long timeline scrolls in its box; pinning a chord in the strip brings it
   page,
 }) => {
   const result = await send(page, '長い雨の日');
-  await expect(result).toContainText('候補: 窓辺の雨（長め）');
+  await expect(result.getByRole('heading', { name: '窓辺の雨（長め）' })).toBeVisible();
   const box = result.locator('.timeline-overview__scroll');
   await expect(box.getByRole('group', { name: 'タイムライン' })).toHaveCount(1);
   const strip = result.locator('svg.timeline--overview');
@@ -54,7 +54,7 @@ test('a short timeline is drawn once, whole', async ({ page }) => {
 
 test('scrolling the box moves the outline in the strip', async ({ page }) => {
   const result = await send(page, '長い雨の日');
-  await expect(result).toContainText('候補: 窓辺の雨（長め）');
+  await expect(result.getByRole('heading', { name: '窓辺の雨（長め）' })).toBeVisible();
   const highlight = result.locator('svg.timeline--overview .timeline__highlight');
   const x = async () => Number(await highlight.getAttribute('x'));
   const start = await x();
@@ -69,7 +69,7 @@ test.describe('at 1920×1080', () => {
 
   test('a long timeline and the chord frame are in one screen', async ({ page }) => {
     const result = await send(page, '長い雨の日');
-    await expect(result).toContainText('候補: 窓辺の雨（長め）');
+    await expect(result.getByRole('heading', { name: '窓辺の雨（長め）' })).toBeVisible();
     await expect(result.getByRole('group', { name: 'タイムライン' })).toBeInViewport();
     await expect(result.getByRole('region', { name: 'コードの解説' })).toBeInViewport({ ratio: 1 });
   });

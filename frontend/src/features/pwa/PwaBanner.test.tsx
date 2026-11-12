@@ -43,6 +43,8 @@ describe('PwaBanner', () => {
 
   it('explains what still works offline', () => {
     render(<PwaBanner pwa={pwa({ online: false })} />);
-    expect(screen.getByText(/オフラインです。保存した例は開いて再生できます/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/オフラインです。とっておいた例は開いて再生できます/),
+    ).toBeInTheDocument();
   });
 });

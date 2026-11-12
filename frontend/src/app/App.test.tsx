@@ -121,35 +121,35 @@ describe('App docs/product/experience.md', () => {
         .getAllByRole('option')
         .map((o) => o.getAttribute('aria-label')),
     ).toEqual(['I C', 'V G']);
-    expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(within(result).getByRole('heading', { name: '窓辺の雨' })).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: '窓辺の雨' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     // Playhead at 0: the explanation follows the first chord.
-    expect(within(result).getByRole('heading')).toHaveTextContent('IC');
+    expect(chordHeading(result)).toHaveTextContent('IC');
 
     await user.click(within(result).getByRole('option', { name: 'V G' }));
-    expect(within(result).getByRole('heading')).toHaveTextContent('VG');
+    expect(chordHeading(result)).toHaveTextContent('VG');
     expect(within(result).getByText('半終止')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /固定を解除/ }));
-    expect(within(result).getByRole('heading')).toHaveTextContent('IC');
+    expect(chordHeading(result)).toHaveTextContent('IC');
   });
 
-  it('saves the open example and reopens it from the project list', async () => {
+  it('keeps the open example with the star and reopens it from the list (BL-296)', async () => {
     stubBackend();
     const store = new MemoryProjectStore();
     const user = userEvent.setup();
     render(<App createEngine={fakeEngine} projectStore={store} />);
 
-    // Saving belongs to an open example (BL-060).
-    expect(screen.queryByRole('button', { name: '保存' })).not.toBeInTheDocument();
+    // Keeping belongs to an open example (BL-060).
+    expect(screen.queryByRole('button', { name: 'とっておく' })).not.toBeInTheDocument();
     await sendImage(user);
 
-    await user.click(screen.getByRole('button', { name: '保存' }));
-    await user.click(await screen.findByText('保存した例（1）'));
-    const list = screen.getByRole('list', { name: '保存した例の一覧' });
+    await user.click(screen.getByRole('button', { name: 'とっておく' }));
+    await user.click(await screen.findByText('とっておいた例（1）'));
+    const list = screen.getByRole('list', { name: 'とっておいた例の一覧' });
     const saved = await store.list();
     expect(saved).toHaveLength(1);
     expect(saved[0]?.source).toMatchObject({
@@ -159,7 +159,12 @@ describe('App docs/product/experience.md', () => {
     });
 
     await user.click(within(list).getByRole('button', { name: '開く' }));
-    expect(screen.getByText('保存した例: 窓辺の雨')).toBeInTheDocument();
+    // Opened from the list, it is the kept example: its star is filled.
+    expect(resultHeading('窓辺の雨')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'とっておく' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('opens nothing by itself when an answer arrives, and keeps what the user chose (BL-219)', async () => {
@@ -178,13 +183,13 @@ describe('App docs/product/experience.md', () => {
     expect(screen.queryByRole('region', { name: '結果' })).not.toBeInTheDocument();
 
     await user.click(within(card).getByRole('button', { name: '窓辺の雨' }));
-    expect(await screen.findByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(await findResultHeading('窓辺の雨')).toBeInTheDocument();
 
     // A later answer adds its cards; the example the user chose stays open.
     await user.type(screen.getByLabelText('イメージ'), 'もう少し明るく');
     await user.click(screen.getByRole('button', { name: '送る' }));
     await screen.findAllByRole('article', { name: '窓辺の雨' });
-    expect(screen.getByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(resultHeading('窓辺の雨')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1);
   });
 
@@ -214,14 +219,18 @@ describe('App docs/product/experience.md', () => {
 
     await user.type(screen.getByLabelText('イメージ'), '雨の日曜');
     await user.click(screen.getByRole('button', { name: '送る' }));
-    await user.click(await screen.findByText('保存した例（1）'));
+    await user.click(await screen.findByText('とっておいた例（1）'));
     await user.click(screen.getByRole('button', { name: '開く' }));
-    expect(screen.getByText('保存した例: 前の例')).toBeInTheDocument();
+    expect(resultHeading('前の例')).toBeInTheDocument();
 
     answer(json(200, ideasReply));
     expect(await screen.findByRole('article', { name: '窓辺の雨' })).toBeInTheDocument();
-    expect(screen.getByText('保存した例: 前の例')).toBeInTheDocument();
-    expect(screen.queryByText('候補: 窓辺の雨')).not.toBeInTheDocument();
+    expect(resultHeading('前の例')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: '結果' })).queryByRole('heading', {
+        name: '窓辺の雨',
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('reports an unreachable backend', async () => {
@@ -274,6 +283,22 @@ describe('App docs/product/experience.md', () => {
     });
     // Still the same example: the AI was not asked again.
     expect(fetchMock.mock.calls.filter(([u]) => u.endsWith('/ideas'))).toHaveLength(1);
-    expect(within(result).getByText('候補: 窓辺の雨')).toBeInTheDocument();
+    expect(within(result).getByRole('heading', { name: '窓辺の雨' })).toBeInTheDocument();
   });
 });
+
+/** The heading of the one-chord explanation inside the result. */
+function chordHeading(result: HTMLElement) {
+  return within(within(result).getByRole('region', { name: 'コードの解説' })).getByRole('heading');
+}
+
+/** The open example's title above the result (BL-296). */
+function resultHeading(name: string) {
+  return within(screen.getByRole('region', { name: '結果' })).getByRole('heading', { name });
+}
+
+async function findResultHeading(name: string) {
+  return within(await screen.findByRole('region', { name: '結果' })).findByRole('heading', {
+    name,
+  });
+}

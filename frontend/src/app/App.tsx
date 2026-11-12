@@ -7,7 +7,7 @@ import { PlayerControls } from '@/features/player/PlayerControls';
 import { createWebAudioEngine, usePlayer, type AudioEngine } from '@/features/player/usePlayer';
 import { usePatterns } from '@/features/chat/usePatterns';
 import { ProjectList } from '@/features/projects/ProjectList';
-import { SaveProjectForm } from '@/features/projects/SaveProjectForm';
+import { KeepToggle } from '@/features/projects/KeepToggle';
 import { InstallButton, PwaBanner } from '@/features/pwa/PwaBanner';
 import { usePwa } from '@/features/pwa/usePwa';
 import { useProjects } from '@/features/projects/useProjects';
@@ -40,7 +40,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const [selectedHarmony, setSelectedHarmony] = useState<number | null>(null);
   /** The open example itself: titles can repeat across answers (BL-070). */
   const [openExample, setOpenExample] = useState<IdeaCandidate | null>(null);
-  /** Where the loaded timeline came from; what "保存" stores alongside it. */
+  /** Where the loaded timeline came from; what keeping it stores alongside it. */
   const [origin, setOrigin] = useState<ProjectSource | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
   const pwa = usePwa();
@@ -106,8 +106,15 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
     </>
   );
 
+  const exampleTitle = openExample?.title ?? projectName;
   const result = timeline && (
     <section className="app__timeline" aria-label="結果">
+      {exampleTitle && (
+        <div className="app__example-head">
+          <h2 className="app__example-title">{exampleTitle}</h2>
+          {origin && <KeepToggle projects={projects} current={{ timeline, source: origin }} />}
+        </div>
+      )}
       <div className="app__toolbar">
         <PlayerControls timeline={timeline} player={player} />
         <KeySelect
@@ -126,9 +133,6 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
           onChange={(id) => void changeStyle(id)}
         />
         <DownloadMidiButton timeline={timeline} />
-        {origin && <SaveProjectForm projects={projects} current={{ timeline, source: origin }} />}
-        {openExample && <span className="app__open-title">候補: {openExample.title}</span>}
-        {projectName && <span className="app__open-title">保存した例: {projectName}</span>}
       </div>
       <Stage
         timeline={timeline}

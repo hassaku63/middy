@@ -16,7 +16,9 @@ test('the desk shows the input, the timeline and the explanation at once (?layou
   const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
   await expect(page.getByLabel('イメージ', { exact: true })).toBeInViewport({ ratio: 1 });
   await expect(result.getByRole('group', { name: 'タイムライン' })).toBeInViewport();
-  await expect(result.getByRole('heading', { level: 2 })).toBeInViewport({ ratio: 1 });
+  await expect(
+    result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
+  ).toBeInViewport({ ratio: 1 });
   // The column sits beside the stage, not above it.
   const side = await page.getByRole('region', { name: 'イメージから' }).boundingBox();
   const stage = await result.boundingBox();
@@ -28,13 +30,15 @@ test('the desk shows the input, the timeline and the explanation at once (?layou
   await expect(page.getByLabel('再生位置')).toHaveText(/^2\./, { timeout: 7_000 });
   await page.getByRole('button', { name: '停止' }).click();
   await result.getByRole('option', { name: 'VII G' }).click();
-  await expect(result.getByRole('heading', { level: 2 })).toContainText('VII');
+  await expect(
+    result.getByRole('region', { name: 'コードの解説' }).getByRole('heading', { level: 2 }),
+  ).toContainText('VII');
   await page.getByRole('button', { name: /固定を解除/ }).click();
 
   // A second answer arrives in the column; the stage stays beside it.
   await openExample(page, 'もう少し明るく', '朝の光');
   await expect(page.getByLabel('イメージ', { exact: true })).toBeInViewport({ ratio: 1 });
-  await expect(result).toContainText('候補: 朝の光');
+  await expect(result.getByRole('heading', { name: '朝の光' })).toBeVisible();
 });
 
 test('the wide layout is the default: the conversation beside the stage (#279)', async ({
@@ -129,7 +133,7 @@ test('the column lists earlier examples and brings one back as it was left (BL-1
 
   // The same name in two exchanges, told apart by the exchange's number.
   await earlier.getByRole('button', { name: /^1 回目：\s*窓辺の雨/ }).click();
-  await expect(result).toContainText('候補: 窓辺の雨');
+  await expect(result.getByRole('heading', { name: '窓辺の雨' })).toBeVisible();
   const frame = result.getByRole('region', { name: 'コードの解説' });
   await expect(frame).toHaveClass(/is-pinned/);
   await expect(frame.getByRole('heading', { level: 2 })).toContainText('VII');
@@ -141,9 +145,9 @@ test('the column lists earlier examples and brings one back as it was left (BL-1
   // The keys open the latest answer's examples, not the earlier ones.
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('2');
-  await expect(result).toContainText('候補: 出発の朝');
+  await expect(result.getByRole('heading', { name: '出発の朝' })).toBeVisible();
   await page.keyboard.press('1');
-  await expect(result).toContainText('候補: 朝の光');
+  await expect(result.getByRole('heading', { name: '朝の光' })).toBeVisible();
   await expect(frame).toHaveClass(/is-following/);
 });
 
@@ -212,7 +216,7 @@ test('choosing an example on the desk plays it; Space plays and stops (#315)', a
   await openExample(page, '雨の日曜の午後', '窓辺の雨');
   await expect(page.getByLabel('候補を選んだら再生')).not.toBeChecked();
   await page.getByRole('article', { name: '遠い記憶' }).click();
-  await expect(result).toContainText('候補: 遠い記憶');
+  await expect(result.getByRole('heading', { name: '遠い記憶' })).toBeVisible();
   await expect(page.getByRole('button', { name: '再生' })).toBeEnabled();
 });
 
