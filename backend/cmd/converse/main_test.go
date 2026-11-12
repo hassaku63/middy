@@ -288,3 +288,36 @@ func TestJudge(t *testing.T) {
 		}
 	}
 }
+
+// TestJudgeWithin (BL-322, ADR-0065): where an answer used the tolerance
+// is listed apart and never counted; an unknown kind is dropped, and an
+// answer without the list still reads.
+func TestJudgeWithin(t *testing.T) {
+	answer := `{"findings": [], "within": [
+		{"kind": 3, "turn": 4, "quote": "全部使って", "why": "sus2 と sus4 だけで、9 度はない。"},
+		{"kind": 7, "turn": 1, "quote": "x", "why": "y"}
+	]}`
+	client := fake.New(llm.Response{Text: answer}, llm.Response{Text: `{"findings": []}`})
+	v := judge(context.Background(), client, "tolerance/run-1", []Turn{{Sent: "x"}})
+	if v.Err != "" || len(v.Findings) != 0 || len(v.Within) != 1 || v.Within[0].Kind != 3 {
+		t.Fatalf("got %+v", v)
+	}
+	if !strings.Contains(string(client.Requests()[0].OutputSchema), `"within"`) {
+		t.Error("the schema must ask for the tolerance used")
+	}
+	old := judge(context.Background(), client, "genre/run-1", []Turn{{Sent: "x"}})
+	if old.Err != "" || len(old.Within) != 0 {
+		t.Fatalf("an answer without within: %+v", old)
+	}
+	report := judgeReport([]Verdict{v, old})
+	for _, want := range []string{
+		"- 区分ごとの件数: 反映されていない 0、頼んでいないのに変わった 0、指した例の取り違え 0、返事が変更点を誤って言う 0",
+		"#### 幅の内（ADR-0065。数えない）",
+		"- 種類ごとの件数: 程度が小さい 0、一部だけ 0、「全部」と言われたが一部 1、初心者向けの単純化 0",
+		"| tolerance/run-1 | 4 | 「全部」と言われたが一部 | 全部使って：sus2 と sus4 だけで、9 度はない。 |",
+	} {
+		if !strings.Contains(report, want) {
+			t.Errorf("missing %q in:\n%s", want, report)
+		}
+	}
+}
