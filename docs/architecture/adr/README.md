@@ -67,6 +67,7 @@
 | [0061](0061-show-what-could-not-be-expressed.md) | 表せなかったもの（`unconstrained`）を本番の答えでも求め、要約の下に「AI の見立て」として小さく出す | Accepted |
 | [0062](0062-sus2.md) | sus2 を 3 度のない和音に足す（テンションは足さない）。3 度のない和音の分数コードのベースは、根音からの音程で読む | Accepted |
 | [0063](0063-eval-label-names.md) | 評価のラベルは `needs-eval-` のあとが走らせるもの、`:` のあとが絞り込み（`needs-eval-cases`、`needs-eval-cases:<tag>`、`needs-eval-converse`） | Accepted |
+| [0064](0064-conversation-reviewer.md) | 会話の査読は会話 1 本を通して読み、依頼に従ったかを 4 つの区分（反映されていない・頼んでいないのに変わった・指した例の取り違え・返事が変更点を誤って言う）で数える。報告だけ。鍵を持つのは `converse judge` だけ | Accepted |
 
 ## いつ ADR を書くか
 
