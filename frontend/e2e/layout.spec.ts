@@ -130,10 +130,13 @@ test.describe('the boundary between the conversation and the example', () => {
     page,
   }) => {
     await page.goto('/');
-    const main = page.locator('.app__main');
-    expect(await border(main, 'left')).toBe(0);
+    // The line is the conversation column's right edge (BL-319), kept
+    // transparent until there is something to divide.
+    const side = page.locator('.app__side');
+    await expect(side).toHaveCSS('border-right-color', 'rgba(0, 0, 0, 0)');
     const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
-    expect(await border(main, 'left')).toBeGreaterThan(0);
+    await expect(side).not.toHaveCSS('border-right-color', 'rgba(0, 0, 0, 0)');
+    expect(await border(page.locator('.app__main'), 'left')).toBe(0);
     expect(await border(result, 'top')).toBe(0);
   });
 });
@@ -284,9 +287,12 @@ for (const { width, height } of [
 }
 
 /**
- * #437: on a wide screen the conversation's column takes 30 % (320–400 px),
- * so a card's spec reads without breaking inside a word, while the result
- * keeps the width of the chord's band (760 px, ADR-0044).
+ * #437: on a wide screen the conversation's column takes 30 % (320–400 px)
+ * for its content, so a card's spec reads without breaking inside a word,
+ * while the result keeps the width of the chord's band (760 px, ADR-0044).
+ * BL-319: the column adds a 12 px gutter and its 1 px edge, and that edge is
+ * the line between the halves: the result starts right after it, so no strip
+ * between the column's scroll bar and the line belongs to neither half.
  */
 for (const { width, height, column } of [
   { width: 1024, height: 800, column: 320 },
@@ -300,7 +306,17 @@ for (const { width, height, column } of [
       await page.goto('/');
       await openExample(page, '雨の日曜の午後', '遠い記憶');
       const side = await page.locator('.app__side').boundingBox();
-      expect(Math.abs((side?.width ?? 0) - column)).toBeLessThanOrEqual(1);
+      expect(Math.abs((side?.width ?? 0) - (column + 13))).toBeLessThanOrEqual(1);
+      const card = await page.locator('.candidate').first().boundingBox();
+      expect(Math.abs((card?.width ?? 0) - column)).toBeLessThanOrEqual(1);
+      const main = await page.locator('.app__main').boundingBox();
+      expect(Math.abs((main?.x ?? 0) - ((side?.x ?? 0) + (side?.width ?? 0)))).toBeLessThanOrEqual(
+        1,
+      );
+      await expect(page.locator('.app__side')).not.toHaveCSS(
+        'border-right-color',
+        'rgba(0, 0, 0, 0)',
+      );
       if (width >= 1280) {
         const stage = await page.locator('.app__stage').boundingBox();
         expect(stage?.width ?? 0).toBeGreaterThanOrEqual(760);
