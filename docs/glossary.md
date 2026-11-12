@@ -7,7 +7,7 @@
 | 進行 (Progression) | 調に依存しないコード進行テンプレート。度数と拍数の列 | `music.Progression`, `music.FromProgression` |
 | パターン (Pattern) | 再利用可能なコード進行テンプレート、またはリズムテンプレート | `pattern.Accompaniment`, `pattern.Drums`, `pattern.Apply` |
 | タイムライン (Timeline) | 再生・表示・書き出しの対象となる中心データ。テンポ、拍子、調、トラック、ハーモニー注釈 | `music.Timeline` |
-| とっておいた例 (Kept example) | 題名の横の星（☆／★）でブラウザに残した例。名前は候補の題名になる（#440）。あとで開くと同じ例が鳴る。キーやスタイルを変えた例は別の例。画面はこの呼び名で統一する（コードでは project） | `features/projects`, `shared/lib/storage/projects` |
+| とっておいた例 (Kept example) | 題名の横の星（☆／★）でブラウザに残した例。名前は候補の題名になり、一覧で変えられる（#440）。あとで開くと同じ例が鳴る。キーやスタイルを変えた例は別の例。画面はこの呼び名で統一する（コードでは project） | `features/projects`, `shared/lib/storage/projects` |
 | トラック (Track) | 楽器ごとのノート列 | `music.Track` |
 | ノート (NoteEvent) | ピッチ・ベロシティ・開始 tick・長さ | `music.NoteEvent` |
 | ハーモニー注釈 (HarmonyEvent) | ある区間を支配するコードとローマ数字。解説レイヤーの素材 | `music.HarmonyEvent` |

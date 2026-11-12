@@ -165,6 +165,11 @@ describe('App docs/product/experience.md', () => {
       'aria-pressed',
       'true',
     );
+
+    // Renaming it in the list renames the title above the result (BL-297).
+    await user.click(within(list).getByRole('button', { name: '窓辺の雨 の名前を変える' }));
+    await user.type(within(list).getByRole('textbox'), '（練習）{Enter}');
+    expect(await findResultHeading('窓辺の雨（練習）')).toBeInTheDocument();
   });
 
   it('opens nothing by itself when an answer arrives, and keeps what the user chose (BL-219)', async () => {
