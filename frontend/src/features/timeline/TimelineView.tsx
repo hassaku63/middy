@@ -29,7 +29,7 @@ export type TimelineViewProps = {
   playing?: boolean;
   /** Index into timeline.harmony the user pinned by clicking, if any. */
   selectedHarmony?: number | null;
-  onSelectHarmony?: (index: number) => void;
+  onSelectHarmony?: ((index: number) => void) | undefined;
   /** Clicking anywhere but a chord moves the playhead there (BL-328). */
   onSeek?: ((tick: number) => void) | undefined;
   /** Outline this slice, e.g. the part in view next to an overview. */
@@ -86,7 +86,7 @@ export function TimelineView({
     [timeline, natural, barWidth, stretch],
   );
 
-  const seek = useSeekByClick(ref, layout, onSeek);
+  const seek = useSeekByClick(ref, layout, onSeek, onSelectHarmony !== undefined);
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
 
   return (

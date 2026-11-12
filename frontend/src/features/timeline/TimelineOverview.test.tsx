@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Timeline } from '@/shared/api/client';
 import { TimelineOverview } from './TimelineOverview';
@@ -48,6 +48,33 @@ describe('TimelineOverview (#360)', () => {
     expect(strip?.querySelectorAll('[role=option][tabindex]')).toHaveLength(0);
     expect(strip?.querySelector('.timeline__highlight')).not.toBeNull();
     expect(container.querySelector('input[type=range]')).toBeNull();
+  });
+});
+
+describe('the strip picks a place (BL-330)', () => {
+  it('a click on the strip, even on a chord, moves the playhead and pins nothing', () => {
+    const onSeek = vi.fn<(tick: number) => void>();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <TimelineOverview
+        timeline={bars(16)}
+        positionTick={0}
+        playing={false}
+        onSelectHarmony={onSelect}
+        onSeek={onSeek}
+      />,
+    );
+    const strip = container.querySelector('svg.timeline--overview');
+    if (!(strip instanceof SVGSVGElement)) throw new Error('no strip');
+    // The strip squeezes the whole drawing (40 + 16 × 160 px) into 650 px.
+    const width = 40 + 16 * 160;
+    strip.getBoundingClientRect = () => new DOMRect(0, 0, width / 4, 48);
+    const chord = strip.querySelectorAll('[role=option]')[11];
+    if (!chord) throw new Error('no chord');
+    // The twelfth bar's first beat, in the strip's quarter scale.
+    fireEvent.click(chord, { clientX: (40 + 11 * 160 + 10) / 4 });
+    expect(onSeek).toHaveBeenCalledWith(11 * 1920);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });
 
