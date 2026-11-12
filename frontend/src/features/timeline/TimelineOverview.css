@@ -89,11 +89,14 @@
 }
 
 /* The strip's own box is the drawing's (display: contents): the wrapper
-   only takes its clicks, which bring the main box there (ADR-0069). */
+   only takes its presses and drags, which move the main box (ADR-0069). */
 .timeline-overview__strip {
   display: contents;
 }
 
+/* A horizontal drag on the strip moves the box (BL-331); a vertical one
+   still scrolls the page. */
 .timeline-overview__strip > .timeline--overview {
-  cursor: pointer;
+  cursor: grab;
+  touch-action: pan-y;
 }

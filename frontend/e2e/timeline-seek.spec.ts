@@ -155,3 +155,39 @@ test('stop brings the box back to the beginning', async ({ page }) => {
   await expect(position).toHaveText('1.1');
   await expect.poll(() => box.evaluate((el) => el.scrollLeft)).toBe(0);
 });
+
+/**
+ * BL-331 (ADR-0069): dragging the strip's frame scrolls the main box along;
+ * the playhead stays. Playing, the following pauses.
+ */
+test('dragging the frame on the strip scrolls the box, not the playhead', async ({ page }) => {
+  const { result, position } = await open(page);
+  const box = result.locator('.timeline-overview__scroll');
+  const frame = result.locator('svg.timeline--overview .timeline__highlight');
+  await result.locator('svg.timeline--overview').scrollIntoViewIfNeeded();
+  const f = await frame.boundingBox();
+  if (!f) throw new Error('no frame');
+  const y = f.y + f.height / 2;
+  await page.mouse.move(f.x + f.width / 2, y);
+  await page.mouse.down();
+  await page.mouse.move(f.x + f.width / 2 + 100, y, { steps: 5 });
+  const mid = await box.evaluate((el) => el.scrollLeft);
+  expect(mid).toBeGreaterThan(0);
+  await page.mouse.move(f.x + f.width / 2 + 200, y, { steps: 5 });
+  await page.mouse.up();
+  expect(await box.evaluate((el) => el.scrollLeft)).toBeGreaterThan(mid);
+  await expect(position).toHaveText('1.1');
+  // The frame was held where it was pressed: it did not jump to centre.
+  const after = await frame.boundingBox();
+  expect(Math.abs((after?.x ?? 0) - (f.x + 200))).toBeLessThanOrEqual(12);
+
+  // Playing, a drag on the strip pauses the following.
+  await page.getByRole('button', { name: '再生' }).click();
+  const g = await frame.boundingBox();
+  if (!g) throw new Error('no frame');
+  await page.mouse.move(g.x + g.width / 2, y);
+  await page.mouse.down();
+  await page.mouse.move(g.x + g.width / 2 - 80, y, { steps: 4 });
+  await page.mouse.up();
+  await expect(result.getByRole('button', { name: '再生位置へ戻る' })).toBeVisible();
+});

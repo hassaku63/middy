@@ -101,20 +101,25 @@ export function useTimelineScroll(
   }, []);
 
   /**
-   * Puts x (drawing units) in the middle of the box: where the person asked
-   * to look (the overview strip, ADR-0069). Playing, that pauses the
-   * following as a scroll by hand does.
+   * Scrolls the box where the person asked to look from the overview strip
+   * (ADR-0069): x in the middle, or, given from, the box's left edge at x.
+   * Playing, that pauses the following as a scroll by hand does. Returns
+   * the box's left edge in drawing units, where the browser stopped it.
    */
   const look = useCallback(
-    (x: number) => {
+    (x: number, from: 'centre' | 'left' = 'centre') => {
       const box = ref.current;
-      if (!box?.scrollWidth) return;
+      if (!box?.scrollWidth) return 0;
       const scale = box.scrollWidth / width;
-      const left = scrollFor(box.scrollLeft, box.clientWidth, x * scale, 'centre', inset * scale);
+      const left =
+        from === 'left'
+          ? x * scale
+          : scrollFor(box.scrollLeft, box.clientWidth, x * scale, 'centre', inset * scale);
       if (left !== null) box.scrollLeft = left; // centre always gives one
       placed.current = box.scrollLeft;
       if (playing) setPaused(true);
       measure();
+      return box.scrollLeft / scale;
     },
     [width, inset, playing, measure],
   );
