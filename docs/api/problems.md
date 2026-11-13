@@ -39,7 +39,7 @@ API（`/api` の下）が返すエラーの種類の一覧。前段の nginx が
 ## request_too_large
 
 - status: 413、title: `Request too large`
-- API への要求の本文が nginx の上限（4 MiB）を超えた。nginx だけが答える。
+- 要求の本文が上限を超えた。上限は経路ごとに API が持つ（`/timelines/from-progression` は 64 KiB、`/ideas` は契約の最大の会話が入る大きさ、`/export/midi` は 4 MiB）。4 MiB を超える本文は、前段の nginx が先に答える。
 
 ## llm_declined
 

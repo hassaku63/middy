@@ -8,6 +8,13 @@ import (
 	"github.com/hassaku63/middy/backend/internal/ideas"
 )
 
+// maxIdeasBody fits the largest conversation the contract allows:
+// MaxMessages messages of MaxMessageRunes characters each, every one a
+// character outside the BMP written as an escaped surrogate pair (12
+// bytes, "\ud83c\udfb5"), plus room for the roles and the JSON around
+// them (#499). Over it the client gets a 413.
+const maxIdeasBody = ideas.MaxMessages*ideas.MaxMessageRunes*12 + 16<<10
+
 // Request shape for POST /api/v1/ideas (docs/api/openapi.yaml).
 type ideasRequest struct {
 	Messages []ideas.Message `json:"messages"`
@@ -23,8 +30,8 @@ type ideasRequest struct {
 func handleIdeas(svc *ideas.Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ideasRequest
-		if err := decodeJSON(r, &req); err != nil {
-			writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		if err := decodeJSONUpTo(r, &req, maxIdeasBody); err != nil {
+			writeDecodeError(w, err)
 			return
 		}
 		res, err := svc.Imagine(r.Context(), req.Messages)

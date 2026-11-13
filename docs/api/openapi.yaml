@@ -75,6 +75,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '413':
+          description: "`request_too_large`（本文がこの経路の上限を超えた。docs/api/problems.md）"
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '500':
           description: "`internal_error`（作ったタイムラインを分析できなかった。エンジンの不具合で、原因はサーバーのログにだけ残る）"
           content:
@@ -126,6 +132,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '413':
+          description: "`request_too_large`（本文がこの経路の上限を超えた。docs/api/problems.md）"
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '500':
           description: "`internal_error`（検証を通ったタイムラインを書き出せなかった。エンコーダの不具合で、原因はサーバーのログにだけ残る）"
           content:
@@ -161,6 +173,12 @@ paths:
                 $ref: '#/components/schemas/IdeasResponse'
         '400':
           description: "`invalid_json`、または `invalid_request`（空・20 件超・1000 文字超・最後が user でない）"
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '413':
+          description: "`request_too_large`（本文がこの経路の上限を超えた。docs/api/problems.md）"
           content:
             application/problem+json:
               schema:
