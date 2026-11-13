@@ -126,6 +126,13 @@ jobs:
             awk '/^\| case \|/ { on = 1 } /^(--- (PASS|FAIL)|PASS$|FAIL$)/ { on = 0 } on' "$RUNNER_TEMP/eval.log" > report/report.md || true
           fi
           [ -s report/report.md ] || echo "評価の表が出力されませんでした（ログを参照）。" > report/report.md
+          # The report is written by the code under evaluation, and GitHub
+          # masks secrets in logs only: nothing shaped like a key leaves the
+          # job, in the summary, the artifact or the comment (#502).
+          if ! bash scripts/check-no-secrets.sh report/report.md; then
+            echo "報告に鍵の形の文字列があったため、表を出しませんでした（ログを参照）。" > report/report.md
+            exit 1
+          fi
           cat report/report.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always() && steps.changes.outputs.eval == 'true'
@@ -153,6 +160,10 @@ jobs:
         with:
           name: eval-report
           path: report
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/check-no-secrets.sh
+          sparse-checkout-cone-mode: false
       - name: Comment with the result
         env:
           GH_TOKEN: ${{ github.token }}
@@ -174,8 +185,16 @@ jobs:
               cat report/report.md 2>/dev/null || echo "評価の表を取得できませんでした。"
             fi
           } > body.md
+          # Checked again here, where it is posted (#502): a match posts a
+          # notice instead of the table, and fails.
+          leak=false
+          if ! bash scripts/check-no-secrets.sh body.md; then
+            leak=true
+            echo "評価の報告に鍵の形の文字列があったため、表を投稿しませんでした（${SHA:0:7}、[ログ]($RUN_URL)）。" > body.md
+          fi
           # REST rather than `gh pr`, whose GraphQL calls can be refused for GITHUB_TOKEN.
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@body.md --silent
+          [ "$leak" = false ]
       - name: Remove the label that started the run
         if: always()
         env:
