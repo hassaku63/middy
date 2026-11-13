@@ -51,8 +51,10 @@ export function ExplanationPanel({
   return (
     <section className="explanation" aria-label="解説">
       {copyText && <CopyButton text={copyText} />}
-      {example}
+      {/* The whole and the flow first; the example's card and the rhythm,
+          read once per example, folded below (#511). */}
       {overview && <OverviewNotes overview={overview} />}
+      {example}
       {chord && (
         <ExplainedChord
           timeline={timeline}

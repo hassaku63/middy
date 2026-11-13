@@ -1,0 +1,57 @@
+/* A fold in the explanation (#511): one line when closed, a bordered box
+   when open, so what belongs to it reads as one part. */
+.fold {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0 12px;
+}
+
+.fold__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-height: 24px; /* WCAG 2.5.8 */
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+/* The flex row drops the browser's own marker: draw one that turns with
+   the state, so the line reads as something that opens. */
+.fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold__summary::before {
+  content: '▸';
+  color: var(--text-muted);
+}
+
+.fold[open] > .fold__summary::before {
+  content: '▾';
+}
+
+.fold__summary:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.fold__title {
+  font-weight: 600;
+}
+
+/* The heading inside the summary keeps its weight, not a heading's size. */
+.fold__title > h3 {
+  display: inline;
+  margin: 0;
+  font-size: 1em;
+}
+
+.fold__gist {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.fold__body {
+  padding-bottom: 8px;
+}
