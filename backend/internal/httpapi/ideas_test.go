@@ -186,4 +186,3 @@ func TestIdeasLeavesAClientThatWentAway(t *testing.T) {
 		t.Errorf("a client that went away is not an upstream failure:\n%s", logs.String())
 	}
 }
-
