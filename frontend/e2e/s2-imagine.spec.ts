@@ -73,7 +73,11 @@ test('a swing image swings the example and says so (BL-076)', async ({ page }) =
   await expect(card).toContainText('ノリ: スウィング');
   await card.getByRole('button').click();
   const result = page.getByRole('region', { name: '結果' });
-  await expect(result.getByRole('region', { name: 'ノリ: スウィング' })).toBeVisible();
+  // The rhythm is folded at first (#511); its line names the feel.
+  await expect(result.getByLabel('リズム').locator('summary')).toContainText('ノリ: スウィング');
+  await expect(
+    result.getByRole('region', { name: 'ノリ: スウィング', includeHidden: true }),
+  ).toBeAttached();
 });
 
 test('a Celtic image gets a modal example with its characteristic tone explained (BL-091)', async ({
@@ -284,7 +288,9 @@ test("the explanation opens with the example's card, from the latest card or an 
   const order = await explanation.evaluate((el) =>
     [...el.querySelectorAll('[aria-label]')].map((e) => e.getAttribute('aria-label')),
   );
-  expect(order.indexOf('この例（AI の提案）')).toBeLessThan(order.indexOf('全体と流れ'));
+  // The whole and the flow first; the card, read once per example, folded
+  // below it (#511).
+  expect(order.indexOf('全体と流れ')).toBeLessThan(order.indexOf('この例（AI の提案）'));
 
   // Another key: the card is the original example's.
   await expect(notes).not.toContainText('元の例');

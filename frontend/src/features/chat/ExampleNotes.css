@@ -1,29 +1,18 @@
-/* The open example's card at the head of the explanation (BL-298): the
-   AI's proposal, set apart by a rule from the engine's notes below. */
+/* The open example's card in the explanation (BL-298): the AI's proposal,
+   a fold of its own (#511), kept apart from the engine's notes. */
 .example-notes {
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #374151;
+  margin: 12px 0;
 }
 
-.example-notes__label {
-  margin: 0 0 4px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.example-notes__label span {
+.example-notes__changed {
   margin-left: 8px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.85rem;
 }
 
 .example-notes__line {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.6;
-}
-
-@media (prefers-color-scheme: light) {
-  .example-notes {
-    border-bottom-color: #d1d5db;
-  }
 }

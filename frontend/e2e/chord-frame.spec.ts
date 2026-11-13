@@ -47,3 +47,39 @@ for (const viewport of [
     });
   });
 }
+
+/**
+ * #511 slice 2: the example's card and the rhythm are folds, closed at
+ * first with their gist on the line, opened one at a time, and kept as
+ * they were set when another example opens.
+ */
+test('the card and the rhythm are folded, each on its own', async ({ page }) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '長い雨の日', '窓辺の雨（長め）');
+  const explanation = result.getByRole('region', { name: '解説', exact: true });
+  const card = explanation.getByText('この例（AI の提案）', { exact: true });
+  const rhythm = explanation.getByRole('heading', { name: 'リズム' });
+  await expect(card).toBeVisible();
+  await expect(rhythm).toBeVisible();
+  const gists = explanation.locator('.fold__gist');
+  await expect(gists.filter({ hasText: 'A minor · 72 BPM · 16 小節' })).toBeVisible();
+  await expect(gists.filter({ hasText: '伴奏: アルペジオ · ドラム: バラード' })).toBeVisible();
+  await expect(explanation.getByText('イメージ: 長い雨の日')).toBeHidden();
+  await expect(explanation.getByText('全体', { exact: true })).toBeVisible();
+
+  // Opening the rhythm leaves the card closed.
+  await rhythm.click();
+  await expect(explanation.getByRole('region', { name: /^伴奏: / })).toBeVisible();
+  await expect(explanation.getByText('イメージ: 長い雨の日')).toBeHidden();
+
+  // Another example: the rhythm stays open, the card closed.
+  await page.getByRole('article', { name: '遠い記憶' }).getByRole('button').click();
+  await expect(result.getByRole('heading', { name: '遠い記憶' })).toBeVisible();
+  await expect(explanation.getByRole('region', { name: /^伴奏: / })).toBeVisible();
+  await expect(explanation.getByText(/^イメージ: /)).toBeHidden();
+
+  // The keyboard opens a fold too.
+  await explanation.locator('summary').filter({ hasText: 'この例（AI の提案）' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(explanation.getByText(/^イメージ: /)).toBeVisible();
+});
