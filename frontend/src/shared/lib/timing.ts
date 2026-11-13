@@ -43,6 +43,12 @@ export function quarterBpm(tl: Pick<Timeline, 'ppq' | 'tempoBpm' | 'timeSignatur
 }
 
 /** 1-based "bar.beat" position, e.g. tick 0 -> "1.1", one quarter later in 4/4 -> "1.2". */
+/** A position in words, for a screen reader: 「3 小節目 2 拍目」 (#500). */
+export function spokenPosition(tick: number, ppq: number, sig: TimeSignature): string {
+  const [bar, beat] = formatPosition(tick, ppq, sig).split('.');
+  return `${bar ?? '1'} 小節目 ${beat ?? '1'} 拍目`;
+}
+
 export function formatPosition(tick: number, ppq: number, sig: TimeSignature): string {
   const perBar = ticksPerBar(ppq, sig);
   const perBeat = ticksPerBeat(ppq, sig);

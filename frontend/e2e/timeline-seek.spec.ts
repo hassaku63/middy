@@ -282,3 +282,21 @@ test.describe('holding the playhead with a finger', () => {
     expect(offset).toBeLessThanOrEqual(8);
   });
 });
+
+/**
+ * #500: the player speaks only while the music is silent: a pause and a
+ * stop are said in words, and nothing is in the region while it plays.
+ */
+test('the player is heard only when the music stops', async ({ page }) => {
+  const { result } = await open(page);
+  const said = result.getByRole('group', { name: '再生' }).getByRole('status').last();
+  await clickBar(page, 3);
+  await expect(said).toHaveText('3 小節目 1 拍目へ');
+  await page.getByRole('button', { name: '再生' }).click();
+  await expect(said).toHaveText('');
+  await page.getByRole('button', { name: '一時停止' }).click();
+  await expect(said).toHaveText(/^3 小節目 \d 拍目で一時停止$/);
+  await page.getByRole('button', { name: '停止', exact: true }).click();
+  await expect(said).toHaveText('停止。先頭に戻りました');
+  await expect(page.getByLabel('再生位置')).toHaveAccessibleName('再生位置 1 小節目 1 拍目');
+});
