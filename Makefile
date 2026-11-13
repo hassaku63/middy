@@ -1,8 +1,10 @@
 # middy developer harness.
 #
 # `make check` is the single gate every change must pass before commit.
-# CI runs exactly the same targets, so a green `make check` locally means a
-# green CI. Keep this file boring: no hidden behaviour, no network at check time.
+# CI calls these same targets (#501). Besides `check`, it runs the ones that
+# need the network (backend-deps-check, frontend-deps-check), a running API
+# and frontend (layout), or a container (dockerfile-lint, the images). Keep
+# this file boring: no hidden behaviour, no network at check time.
 
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
@@ -12,13 +14,15 @@ FRONTEND := frontend
 # Override when the local toolchain lacks the coverage tools (e.g. an auto-downloaded
 # toolchain module): make check GOTEST_FLAGS=-race
 GOTEST_FLAGS ?= -race -cover
+# Extra vitest flags; CI adds a JSON report for the timing report.
+VITEST_FLAGS ?=
 GO_VERSION   := $(shell awk '$$1 == "golang" { print $$2 }' .tool-versions)
 NODE_VERSION := $(shell awk '$$1 == "nodejs" { print $$2 }' .tool-versions)
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 .PHONY: help setup check test lint fmt fmt-check build docs-check deps-check fixtures test-report doctor e2e smoke eval dev-backend dev-frontend run image up down \
-        backend-test backend-lint backend-fmt backend-fmt-check backend-build \
-        frontend-test frontend-lint shell-lint actions-lint dockerfile-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
+        backend-test backend-lint backend-fmt backend-fmt-check backend-build backend-deps-check layout \
+        frontend-deps-check frontend-test frontend-lint shell-lint actions-lint dockerfile-lint frontend-fmt frontend-fmt-check frontend-build frontend-typecheck \
         clean
 
 help: ## Show this help
@@ -42,6 +46,9 @@ eval: ## Run the prompt evaluation set against the real API (needs ANTHROPIC_API
 
 e2e: ## Playwright scenarios against a running stack (E2E_BASE_URL, default http://localhost:8080; see `make up`)
 	cd $(FRONTEND) && npx playwright test
+
+layout: ## The E2E pull requests run: all but @stack, against a running API and frontend (E2E_BASE_URL; CI uses vite preview)
+	cd $(FRONTEND) && npx playwright test --grep-invert @stack --trace off
 
 smoke: ## Smoke-test a running stack (SMOKE_URL, default http://localhost:8080; see `make up`)
 	bash scripts/smoke.sh $(or $(SMOKE_URL),http://localhost:8080)
@@ -106,8 +113,8 @@ frontend-typecheck: ## tsc -b, after checking the generated API types are curren
 	bash scripts/check-api-types.sh
 	cd $(FRONTEND) && npm run typecheck
 
-frontend-test: ## vitest
-	cd $(FRONTEND) && npm test
+frontend-test: ## vitest (VITEST_FLAGS)
+	cd $(FRONTEND) && npm test -- $(VITEST_FLAGS)
 
 frontend-lint: frontend-typecheck ## eslint and knip (unused exports, files, dependencies; ADR-0007), after typecheck
 	cd $(FRONTEND) && npm run lint && npm run knip
@@ -130,8 +137,12 @@ docs-check: ## Verify links, paths, index and backlog ids in Markdown (scripts/c
 fixtures: ## Regenerate the cross-language fixtures the frontend tests check against (then commit them)
 	cd $(BACKEND) && go run ./cmd/fixtures -out ../$(FRONTEND)/src/shared/api/fixtures
 
-deps-check: ## go.mod tidy check + npm audit of production deps (needs network; CI runs them in the backend and frontend jobs)
+deps-check: backend-deps-check frontend-deps-check ## go.mod tidy check + npm audit of production deps (needs network; CI runs them in the backend and frontend jobs)
+
+backend-deps-check: ## go.mod / go.sum are tidy (go mod tidy -diff)
 	cd $(BACKEND) && go mod tidy -diff
+
+frontend-deps-check: ## production npm dependencies have no high vulnerabilities (npm audit)
 	cd $(FRONTEND) && npm audit --omit=dev --audit-level=high
 
 clean: ## Remove build outputs (backend/bin, frontend/dist, dev-dist, coverage)

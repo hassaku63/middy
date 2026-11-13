@@ -62,7 +62,7 @@
 ## 5. コマンド
 
 ```bash
-make check            # すべてのゲート（これが通れば CI も通る）
+make check            # すべてのゲート（CI は同じターゲットに加えて deps-check と layout を走らせる）
 make test             # テストのみ
 make lint             # lint のみ
 make fmt              # 自動整形
