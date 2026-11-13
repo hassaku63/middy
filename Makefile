@@ -16,6 +16,9 @@ FRONTEND := frontend
 GOTEST_FLAGS ?= -race -cover
 # Extra vitest flags; CI adds a JSON report for the timing report.
 VITEST_FLAGS ?=
+# Playwright flags for `make layout`: no trace by default (it costs CPU);
+# CI records one on the retry of a failure (#501).
+E2E_FLAGS ?= --trace off
 GO_VERSION   := $(shell awk '$$1 == "golang" { print $$2 }' .tool-versions)
 NODE_VERSION := $(shell awk '$$1 == "nodejs" { print $$2 }' .tool-versions)
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
@@ -48,7 +51,7 @@ e2e: ## Playwright scenarios against a running stack (E2E_BASE_URL, default http
 	cd $(FRONTEND) && npx playwright test
 
 layout: ## The E2E pull requests run: all but @stack, against a running API and frontend (E2E_BASE_URL; CI uses vite preview)
-	cd $(FRONTEND) && npx playwright test --grep-invert @stack --trace off
+	cd $(FRONTEND) && npx playwright test --grep-invert @stack $(E2E_FLAGS)
 
 smoke: ## Smoke-test a running stack (SMOKE_URL, default http://localhost:8080; see `make up`)
 	bash scripts/smoke.sh $(or $(SMOKE_URL),http://localhost:8080)
