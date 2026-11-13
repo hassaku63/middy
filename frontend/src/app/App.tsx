@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChatPanel } from '@/features/chat/ChatPanel';
 import { KeySelect } from '@/features/key-change/KeySelect';
 import { StyleSelect } from '@/features/regroove/StyleSelect';
@@ -115,8 +115,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   );
 
   // A kept example opened from the list goes by its current name (BL-297).
-  const exampleTitle =
-    openExample?.title ?? (timeline && keptAs(projects.projects, timeline)?.name) ?? projectName;
+  const kept = useMemo(
+    () => (timeline ? keptAs(projects.projects, timeline) : undefined),
+    [projects.projects, timeline],
+  );
+  const exampleTitle = openExample?.title ?? kept?.name ?? projectName;
   const result = timeline && (
     <section className="app__timeline" aria-label="結果">
       {exampleTitle && (

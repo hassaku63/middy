@@ -1,5 +1,6 @@
 import { ChordFrame } from '@/features/explanation/ChordFrame';
 import { ExplanationPanel } from '@/features/explanation/ExplanationPanel';
+import { usePosition } from '@/features/player/position';
 import type { UsePlayer } from '@/features/player/usePlayer';
 import { TimelineOverview } from '@/features/timeline/TimelineOverview';
 import type { ReactNode } from 'react';
@@ -31,10 +32,12 @@ export function Stage({
   example,
   copyText,
 }: Props) {
+  // The stage shows the position; the screen around it is not drawn again (#500).
+  const positionTick = usePosition(player.position);
   useChordKeys({
     enabled: true,
     harmony: timeline.harmony,
-    positionTick: player.positionTick,
+    positionTick,
     selected: selectedHarmony,
     onSelect: onSelectHarmony,
   });
@@ -48,7 +51,7 @@ export function Stage({
   const overview = (
     <TimelineOverview
       timeline={timeline}
-      positionTick={player.positionTick}
+      positionTick={positionTick}
       playing={player.state === 'playing'}
       selectedHarmony={selectedHarmony}
       onSelectHarmony={onSelectHarmony}
@@ -61,7 +64,7 @@ export function Stage({
   const frame = (
     <ChordFrame
       timeline={timeline}
-      positionTick={player.positionTick}
+      positionTick={positionTick}
       selectedHarmony={selectedHarmony}
       onClearSelection={clear}
       onPlayFrom={playFrom}
@@ -70,7 +73,7 @@ export function Stage({
   const notes = (
     <ExplanationPanel
       timeline={timeline}
-      positionTick={player.positionTick}
+      positionTick={positionTick}
       selectedHarmony={selectedHarmony}
       onClearSelection={clear}
       chord={false}
