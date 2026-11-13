@@ -57,7 +57,7 @@ describe('PlayerControls + usePlayer', () => {
     render(<Harness engine={engine} tl={null} />);
     expect(screen.getByRole('button', { name: '再生' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '停止' })).toBeDisabled();
-    expect(screen.getByLabelText('再生位置')).toHaveTextContent('-');
+    expect(screen.getByLabelText(/^再生位置/)).toHaveTextContent('-');
     expect(created).toBe(0);
   });
 
@@ -65,7 +65,7 @@ describe('PlayerControls + usePlayer', () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<Harness engine={engine} tl={timeline} />);
     expect(created).toBe(0);
-    expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.1');
+    expect(screen.getByLabelText(/^再生位置/)).toHaveTextContent('1.1');
 
     await user.click(screen.getByRole('button', { name: '再生' }));
     expect(created).toBe(1);
@@ -79,14 +79,14 @@ describe('PlayerControls + usePlayer', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100); // just over two beats at 120 BPM
     });
-    expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.3');
+    expect(screen.getByLabelText(/^再生位置/)).toHaveTextContent('1.3');
 
     // Pause stays at 1.3; stop goes back to the beginning (BL-334).
     await user.click(screen.getByRole('button', { name: '一時停止' }));
     expect(synth.allOffCalls).toBe(1);
-    expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.3');
+    expect(screen.getByLabelText(/^再生位置/)).toHaveTextContent('1.3');
     await user.click(screen.getByRole('button', { name: '停止' }));
-    expect(screen.getByLabelText('再生位置')).toHaveTextContent('1.1');
+    expect(screen.getByLabelText(/^再生位置/)).toHaveTextContent('1.1');
     expect(screen.getByRole('button', { name: '再生' })).toBeEnabled();
 
     // Second play reuses the engine.

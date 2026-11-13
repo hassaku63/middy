@@ -150,3 +150,39 @@ describe('usePlayer from a point (BL-327)', () => {
     act(() => result.current.stop());
   });
 });
+
+describe('what a screen reader hears from the player (#500)', () => {
+  function engine() {
+    const e: AudioEngine = {
+      synth: { play: vi.fn(), allOff: vi.fn() },
+      clock: { now: () => 0 },
+      resume: () => Promise.resolve(),
+    };
+    return e;
+  }
+
+  it('tells a pause, a stop and a seek while silent, and not a quiet pause', async () => {
+    const e = engine();
+    const { result } = renderHook(() => usePlayer(() => e));
+    act(() => result.current.seek(240));
+    expect(result.current.notice).toMatchObject({ kind: 'seek', tick: 240 });
+    await act(() => result.current.play(timeline));
+    act(() => result.current.pause());
+    expect(result.current.notice).toMatchObject({ kind: 'pause', tick: 240 });
+    await act(() => result.current.play(timeline));
+    const before = result.current.notice?.n;
+    act(() => result.current.pause({ quiet: true }));
+    expect(result.current.notice?.n).toBe(before);
+    act(() => result.current.stop());
+    expect(result.current.notice).toMatchObject({ kind: 'stop', tick: 0 });
+  });
+
+  it('says nothing for a seek while it plays', async () => {
+    const e = engine();
+    const { result } = renderHook(() => usePlayer(() => e));
+    await act(() => result.current.play(timeline));
+    act(() => result.current.seek(120));
+    expect(result.current.notice).toBeNull();
+    act(() => result.current.pause());
+  });
+});

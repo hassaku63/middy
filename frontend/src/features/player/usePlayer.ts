@@ -25,13 +25,29 @@ export function createWebAudioEngine(): AudioEngine {
   };
 }
 
+/**
+ * What the player last did that a screen reader should hear (#500): only
+ * what leaves it silent, so nothing is said over the music. A seek while
+ * playing and play itself say nothing.
+ */
+export type PlayerNotice = {
+  kind: 'pause' | 'stop' | 'end' | 'seek';
+  tick: number;
+  /** Counts the notices, so the same words twice are said twice. */
+  n: number;
+};
+
 export type UsePlayer = {
   state: PlayerState;
   positionTick: number;
+  notice: PlayerNotice | null;
   /** Plays from the playhead: where it paused or was moved to, else the beginning. */
   play(timeline: Timeline): Promise<void>;
-  /** Stops where it is; play goes on from there (BL-334). */
-  pause: () => void;
+  /**
+   * Stops where it is; play goes on from there (BL-334). Quiet, it says
+   * nothing (a drag of the playhead holds the sound, #500).
+   */
+  pause: (options?: { quiet?: boolean }) => void;
   /** Stops and goes back to the beginning, as a recorder's ■ (BL-334). */
   stop: () => void;
   /**
@@ -56,6 +72,13 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   // Where play starts; kept here too because the player is made on the
   // first play, after a seek may already have set it.
   const cue = useRef(0);
+  const [notice, setNotice] = useState<PlayerNotice | null>(null);
+  const tell = useCallback((kind: PlayerNotice['kind'], tick: number) => {
+    setNotice((prev) => ({ kind, tick, n: (prev?.n ?? 0) + 1 }));
+  }, []);
+  /** Why the player is about to stop; none means it played to the end. */
+  const why = useRef<PlayerNotice['kind'] | 'quiet' | null>(null);
+  const wasPlaying = useRef(false);
 
   /** The player, or null when the hook unmounted while the device resumed. */
   const ensurePlayer = useCallback(async () => {
@@ -72,11 +95,17 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
         setPositionTick(tick);
         setState(s);
         if (s === 'stopped') cue.current = tick; // back to the beginning at the end
+        if (s === 'stopped' && wasPlaying.current) {
+          const kind = why.current ?? 'end';
+          if (kind !== 'quiet') tell(kind, tick);
+        }
+        if (s === 'stopped') why.current = null;
+        wasPlaying.current = s === 'playing';
       });
       playerRef.current = player;
     }
     return playerRef.current;
-  }, [createEngine]);
+  }, [createEngine, tell]);
 
   const play = useCallback(
     async (timeline: Timeline) => {
@@ -84,34 +113,47 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
       const player = await ensurePlayer();
       if (!player || request !== requests.current) return; // stopped or replaced meanwhile
       const from = cue.current; // load() reports the stop of what played before
+      why.current = 'quiet'; // another example takes over: nothing ended
       player.load(timeline);
+      why.current = null;
       player.play(from);
     },
     [ensurePlayer],
   );
 
-  const pause = useCallback(() => {
+  const pause = useCallback((options?: { quiet?: boolean }) => {
     requests.current += 1;
+    why.current = options?.quiet ? 'quiet' : 'pause';
     playerRef.current?.pause(); // reports where it paused, which sets the cue
   }, []);
 
   const stop = useCallback(() => {
     requests.current += 1;
+    const playing = playerRef.current?.isPlaying ?? false;
+    why.current = 'stop';
     playerRef.current?.stop();
+    if (!playing) {
+      why.current = null;
+      tell('stop', 0); // already silent: the player reports no stop
+    }
     cue.current = 0;
     setPositionTick(0);
-  }, []);
+  }, [tell]);
 
-  const seek = useCallback((tick: number) => {
-    // Stopped, the player may still hold the timeline shown before.
-    const player = playerRef.current;
-    if (player?.isPlaying) {
-      player.seek(tick); // pausing later reports where it stopped, which sets the cue
-      return;
-    }
-    cue.current = Math.max(0, Math.round(tick));
-    setPositionTick(cue.current);
-  }, []);
+  const seek = useCallback(
+    (tick: number) => {
+      // Stopped, the player may still hold the timeline shown before.
+      const player = playerRef.current;
+      if (player?.isPlaying) {
+        player.seek(tick); // pausing later reports where it stopped, which sets the cue
+        return;
+      }
+      cue.current = Math.max(0, Math.round(tick));
+      setPositionTick(cue.current);
+      tell('seek', cue.current);
+    },
+    [tell],
+  );
 
   // Unmounting stops the sound and releases the AudioContext: browsers
   // cap how many may be open at once.
@@ -126,5 +168,5 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
     [],
   );
 
-  return { state, positionTick, play, pause, stop, seek };
+  return { state, positionTick, notice, play, pause, stop, seek };
 }

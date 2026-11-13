@@ -13,7 +13,7 @@ export function useScrub(player: UsePlayer, timeline: Timeline) {
   return (phase: 'start' | 'end') => {
     if (phase === 'start') {
       resume.current = player.state === 'playing';
-      if (resume.current) player.pause();
+      if (resume.current) player.pause({ quiet: true });
       return;
     }
     if (!resume.current) return;

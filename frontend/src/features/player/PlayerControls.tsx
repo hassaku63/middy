@@ -1,6 +1,7 @@
 import type { Timeline } from '@/shared/api/client';
-import { formatPosition } from '@/shared/lib/timing';
+import { formatPosition, spokenPosition } from '@/shared/lib/timing';
 import type { UsePlayer } from './usePlayer';
+import { usePlayerNotice } from './usePlayerNotice';
 import './PlayerControls.css';
 
 type Props = {
@@ -18,6 +19,10 @@ export function PlayerControls({ timeline, player }: Props) {
   const position = timeline
     ? formatPosition(player.positionTick, timeline.ppq, timeline.timeSignature)
     : '-';
+  const spoken = timeline
+    ? spokenPosition(player.positionTick, timeline.ppq, timeline.timeSignature)
+    : '-';
+  const notice = usePlayerNotice(player.notice, timeline, playing);
 
   return (
     <div role="group" aria-label="再生" className="player">
@@ -52,7 +57,15 @@ export function PlayerControls({ timeline, player }: Props) {
         </span>
         停止
       </button>
-      <output aria-label="再生位置">{position}</output>
+      {/* Shown as 3.2 and read, when visited, as 3 小節目 2 拍目; never read
+          out by itself, as it changes on every beat (#500). */}
+      <output aria-label={`再生位置 ${spoken}`} aria-live="off">
+        {position}
+      </output>
+      {/* What the player did, said only while the music is silent (#500). */}
+      <span className="visually-hidden" role="status">
+        {notice}
+      </span>
     </div>
   );
 }
