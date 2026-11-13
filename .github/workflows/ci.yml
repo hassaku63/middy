@@ -43,7 +43,13 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: |
           if [ "$EVENT" = "pull_request" ]; then
-            bash scripts/ci-changes.sh "origin/$BASE_REF" | tee -a "$GITHUB_OUTPUT"
+            # The base branch's version decides (#501): a pull request cannot
+            # skip its own jobs by changing the script, and a change to it or
+            # to this file runs every job. Kept in .git, the script's
+            # "$(dirname "$0")/.." is still the checkout. An output a pull
+            # request adds is empty until it is merged.
+            git show "origin/$BASE_REF:scripts/ci-changes.sh" > .git/ci-changes-base.sh
+            bash .git/ci-changes-base.sh "origin/$BASE_REF" | tee -a "$GITHUB_OUTPUT"
           elif [ "$EVENT" = "push" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             bash scripts/ci-changes.sh "$BEFORE" | tee -a "$GITHUB_OUTPUT"
           else
