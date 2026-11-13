@@ -155,3 +155,35 @@ func TestIdeasLogsUpstreamFailures(t *testing.T) {
 		})
 	}
 }
+
+// waitForCancel is an LLM that answers only when the request is called off.
+type waitForCancel struct{}
+
+func (waitForCancel) Complete(ctx context.Context, _ llm.Request) (llm.Response, error) {
+	<-ctx.Done()
+	return llm.Response{}, ctx.Err()
+}
+
+func TestIdeasLeavesAClientThatWentAway(t *testing.T) {
+	var logs bytes.Buffer
+	h := NewHandler(Deps{LLM: waitForCancel{}, Logger: slog.New(slog.NewJSONHandler(&logs, nil))})
+	ctx, cancel := context.WithCancel(context.Background())
+	req := httptest.NewRequestWithContext(ctx, http.MethodPost, "/api/v1/ideas",
+		strings.NewReader(`{"messages":[{"role":"user","content":"x"}]}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	done := make(chan struct{})
+	go func() {
+		h.ServeHTTP(rec, req)
+		close(done)
+	}()
+	cancel()
+	<-done
+	if rec.Body.Len() != 0 {
+		t.Errorf("wrote %q to a client that went away", rec.Body.String())
+	}
+	if strings.Contains(logs.String(), `"level":"WARN"`) || strings.Contains(logs.String(), `"level":"ERROR"`) {
+		t.Errorf("a client that went away is not an upstream failure:\n%s", logs.String())
+	}
+}
+

@@ -17,7 +17,9 @@ type ideasRequest struct {
 // reply with rendered candidates. Provider trouble is a 502, not a 500:
 // the server is fine, the upstream is not. A safety refusal is a 422.
 // Upstream failures are logged with their cause, so a deployment can
-// tell a timeout from a rejected key; the client only gets the code.
+// tell a timeout from a rejected key; the client only gets the code. A
+// client that went away is neither: nothing is written to it and nothing
+// is logged above DEBUG (#499).
 func handleIdeas(svc *ideas.Service, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ideasRequest
@@ -26,6 +28,10 @@ func handleIdeas(svc *ideas.Service, logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 		res, err := svc.Imagine(r.Context(), req.Messages)
+		if err != nil && r.Context().Err() != nil {
+			logger.DebugContext(r.Context(), "ideas: client went away", "error", err)
+			return
+		}
 		switch {
 		case err == nil:
 			writeJSON(w, res)
