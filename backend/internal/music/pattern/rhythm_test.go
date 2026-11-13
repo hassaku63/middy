@@ -181,7 +181,9 @@ func TestSyncopationOnFinerPositions(t *testing.T) {
 	}
 	e := describeDrums(d, music.FourFour).Explanation
 	if !strings.Contains(e, "シンコペーション") {
-		t.Skipf("not syncopated by the rule: %s", e)
+		// The figure is chosen to be syncopated by the rule; a skip would
+		// pass without checking anything once it no longer is (#501).
+		t.Fatalf("not syncopated by the rule: %s", e)
 	}
 	if strings.Contains(e, "裏拍で鳴ったあと") || !strings.Contains(e, "拍の頭のあいだで鳴ったあと") {
 		t.Errorf("sixteenth syncopation:\n%s", e)

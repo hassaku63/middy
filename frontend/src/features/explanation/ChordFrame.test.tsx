@@ -35,7 +35,8 @@ describe('ChordFrame (BL-185)', () => {
       />,
     );
     const frame = screen.getByRole('region', { name: 'コードの解説' });
-    expect(frame).toHaveClass('is-following');
+    // Following: nothing to unpin (#501: by what a person can operate, not a class).
+    expect(screen.queryByRole('button', { name: /固定を解除/ })).not.toBeInTheDocument();
     expect(frame).not.toHaveAttribute('aria-live');
     expect(screen.getByText('V7 G7 ドミナント')).toHaveAttribute('aria-live', 'polite');
     expect(screen.getByText('V7（G7）はドミナント（D）。')).toBeInTheDocument();
@@ -51,7 +52,6 @@ describe('ChordFrame (BL-185)', () => {
         onClearSelection={onClear}
       />,
     );
-    expect(screen.getByRole('region', { name: 'コードの解説' })).toHaveClass('is-pinned');
     expect(screen.getByText('I（C）はトニック（T）。')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /固定を解除/ }));
     expect(onClear).toHaveBeenCalled();
