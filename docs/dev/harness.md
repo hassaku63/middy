@@ -2,7 +2,7 @@
 
 `make check` と CI、定期ジョブが行う検査の全リスト。**検査を足すときは必ずここに 1 行足す。** 四半期に一度、各行を見直し「6 か月以上なにも捕まえておらず、コストだけがある検査」は削除候補にする（ADR-0007）。
 
-実行はすべて `make check`（= CI）に含まれ、個別には右の列のコマンドで走らせる。
+CI のジョブは、`make check` と同じ Makefile のターゲットを呼ぶ（#501）。CI はそれに加えて、ネットワークが要るもの（`make deps-check`）、動いている API と画面が要るもの（`make layout`）、コンテナが要るもの（`make dockerfile-lint`、イメージ）を走らせる。個別には右の列のコマンドで走らせる。
 
 ## コードの正しさ
 
@@ -62,7 +62,7 @@
 | --- | --- | --- | --- |
 | `go build` / `vite build` | ビルド不能 | `make build` | `make check`, CI |
 | コンテナイメージのビルドとスモーク（`scripts/smoke.sh`: health の SHA、`/` の HTML とキャッシュ、`assets/` の `immutable`、存在しないファイルの 404、画面の URL、API の 404、本文の上限、セキュリティヘッダと CSP が 1 回ずつ付くこと。加えて `HEALTHCHECK` healthy） | Dockerfile の腐敗、配信の退行 | `make image` と `make smoke`（`make up` に対して） | CI `image` と `e2e`（どちらも compose で 2 つのコンテナ） |
-| E2E（Playwright, axe-core による主な画面のアクセシビリティの検査（WCAG 2.2 A・AA の機械で見える部分。明るい・暗いテーマ）, イメージから例を聴く通しのシナリオ・言い直し・画面幅ごとの配置・保存・オフライン・SPA フォールバック・Service Worker） | モックでは見えない通しの退行 | `make e2e`（サーバー起動が前提） | CI `layout`（`@stack` の札のものを除く。フロントエンドかバックエンドを変えた PR。#501）と、全部を `e2e` ワークフロー（手動・週次） |
+| E2E（Playwright, axe-core による主な画面のアクセシビリティの検査（WCAG 2.2 A・AA の機械で見える部分。明るい・暗いテーマ）, イメージから例を聴く通しのシナリオ・言い直し・画面幅ごとの配置・保存・オフライン・SPA フォールバック・Service Worker） | モックでは見えない通しの退行 | `make e2e`（サーバー起動が前提）。PR と同じ範囲は `make layout`（API と画面の起動が前提。`E2E_BASE_URL`） | CI `layout`（`@stack` の札のものを除く。フロントエンドかバックエンドを変えた PR。#501）と、全部を `e2e` ワークフロー（手動・週次） |
 | 配置の E2E（`e2e/sizes.spec.ts`: 画面サイズの行列 `e2e/sizes.ts` のすべてで、ページが横にスクロールしない、axe の違反がない、操作の集合が 1280 と同じ、窓の大きさを変えても固定した和音が残る） | 幅による配置の崩れ、狭い幅で操作が消えること（#359、ADR-0042） | `npx playwright test e2e/sizes.spec.ts`（サーバー起動が前提） | CI `layout`（フロントエンドかバックエンドを変えた PR。Go のサーバーと `vite preview` で、イメージに頼らない。`required` に入る） |
 
 ## 依存（削減）

@@ -63,14 +63,11 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: backend
+    # The checks are the Makefile's targets, as `make check` runs them (#501).
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Toolchain versions from .tool-versions
         id: tv
-        working-directory: .
         run: |
           echo "go=$(awk '$1 == "golang" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
           echo "lint=v$(awk '$1 == "golangci-lint" { print $2 }' .tool-versions)" >> "$GITHUB_OUTPUT"
@@ -94,33 +91,26 @@ jobs:
           key: golangci-lint-${{ runner.os }}-${{ runner.arch }}-${{ steps.tv.outputs.lint }}
       - name: Install golangci-lint (cache miss only)
         if: steps.lint-bin.outputs.cache-hit != 'true'
-        run: bash ../scripts/install-golangci-lint.sh "${{ steps.tv.outputs.lint }}" "$HOME/.local/golangci-lint"
+        run: bash scripts/install-golangci-lint.sh "${{ steps.tv.outputs.lint }}" "$HOME/.local/golangci-lint"
       - run: echo "$HOME/.local/golangci-lint" >> "$GITHUB_PATH"
       - name: gofmt
-        run: |
-          out=$(gofmt -l .)
-          if [ -n "$out" ]; then echo "gofmt needed:"; echo "$out"; exit 1; fi
+        run: make backend-fmt-check
       - name: go.mod / go.sum are tidy
-        run: go mod tidy -diff
-      - name: go vet
-        run: go vet ./...
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          install-mode: none # the binary on PATH, installed above
-          working-directory: backend
+        run: make backend-deps-check
+      - name: go vet and golangci-lint
+        run: make backend-lint
       # One run feeds both the log and the timing report (the report used to
       # run the suite a second time).
       - name: test
         run: |
           set -o pipefail
-          go test -race -cover -json ./... | tee "$RUNNER_TEMP/go-test.json" \
+          make -s backend-test GOTEST_FLAGS="-race -cover -json" | tee "$RUNNER_TEMP/go-test.json" \
             | jq -rj 'select(.Action == "output" or .Action == "build-output") | .Output'
       - name: test timing report
         if: ${{ !cancelled() }}
-        run: GO_TEST_JSON="$RUNNER_TEMP/go-test.json" bash ../scripts/test-report.sh backend
+        run: GO_TEST_JSON="$RUNNER_TEMP/go-test.json" bash scripts/test-report.sh backend
       - name: build
-        run: go build -o bin/server ./cmd/server
+        run: make backend-build
       # A changed go.mod may bring a known vulnerability in (#502). Reported
       # here, not failing: the weekly audit (security.yml) is the one that
       # fails. The same pinned version as there.
@@ -136,9 +126,7 @@ jobs:
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: frontend
+    # The checks are the Makefile's targets, as `make check` runs them (#501).
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -147,23 +135,22 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+        working-directory: frontend
       - name: production npm dependencies have no high vulnerabilities
-        run: npm audit --omit=dev --audit-level=high
-      - name: generated API types are current
-        run: bash ../scripts/check-api-types.sh
-      - run: npm run typecheck
-      - run: npm run lint
-      - name: Unused exports, files and dependencies (knip, ADR-0007)
-        run: npm run knip
-      - run: npm run format:check
+        run: make frontend-deps-check
+      # The generated API types, tsc, ESLint and knip (ADR-0007, ADR-0009).
+      - name: typecheck and lint
+        run: make frontend-lint
+      - name: prettier
+        run: make frontend-fmt-check
       - name: test
-        run: npm test -- --reporter=default --reporter=json --outputFile="$RUNNER_TEMP/vitest.json"
+        run: make frontend-test VITEST_FLAGS="--reporter=default --reporter=json --outputFile=$RUNNER_TEMP/vitest.json"
       - name: test timing report
         if: ${{ !cancelled() }}
-        run: VITEST_JSON="$RUNNER_TEMP/vitest.json" bash ../scripts/test-report.sh frontend
-      - run: npm run build
-      - name: bundle size budget
-        run: bash ../scripts/check-bundle-size.sh dist
+        run: VITEST_JSON="$RUNNER_TEMP/vitest.json" bash scripts/test-report.sh frontend
+      # The build and the bundle size budget.
+      - name: build
+        run: make frontend-build
 
   # The shell scripts every job and `make check` call, and the workflows
   # themselves. Runs on every pull request: it takes seconds. shellcheck
@@ -204,7 +191,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: bash scripts/check-docs.sh
+      - run: make docs-check
 
   image:
     name: image (Docker build + smoke)
@@ -307,10 +294,9 @@ jobs:
       # headers, the service worker's caching), which stay weekly (e2e.yml),
       # and the screens for review, which skip themselves (#501).
       - name: E2E at every size and the main flows
-        working-directory: frontend
         env:
           E2E_BASE_URL: http://localhost:4173
-        run: npx playwright test --grep-invert @stack --trace off
+        run: make layout
       - name: Server logs
         if: failure()
         run: tail -n 50 server.log preview.log
