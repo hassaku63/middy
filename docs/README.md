@@ -40,4 +40,4 @@ middy のドキュメント索引。**新しいドキュメントを追加した
 | [dev/patterns.md](dev/patterns.md) | 型の足し方（伴奏・ドラム・スタイルのカタログの JSON、検査、ゴールデン、評価） |
 | [dev/harness.md](dev/harness.md) | 開発ハーネスの全検査の一覧（目的・実行方法・場所）と見直しの規則 |
 | [dev/docs-hygiene.md](dev/docs-hygiene.md) | ドキュメントを腐らせないための原則、機械的検査、自己点検手順、月次の庭仕事 |
-| [glossary.md](glossary.md) | 用語集（音楽用語・プロダクト用語） |
+| [glossary.md](glossary.md) | 用語集（音楽用語・プロダクト用語・画面の部品） |
