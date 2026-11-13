@@ -366,12 +366,6 @@ main {
   .app--desk .app__below > * {
     flex: none;
   }
-
-  /* The chord's name and text first, the degree map under it: what is
-     read while it plays comes into view without scrolling. */
-  .app--desk .app__below .explanation__chord {
-    order: -1;
-  }
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (prefers-reduced-motion: reduce) {

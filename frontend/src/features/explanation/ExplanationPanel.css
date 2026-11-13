@@ -172,6 +172,15 @@
   border-left-color: #2563eb;
 }
 
+/* Stacked (a stage under 760 px), the sounding chord's header and text
+   come before the degree map: they are what is read while it plays, so
+   they stay in view under the timeline when the map would push them off
+   the screen (#511, ADR-0074). The DOM keeps the map first, as on the
+   band, where the two sit side by side. */
+.explanation--frame > .explanation__chord {
+  order: -1;
+}
+
 /* The chord's own part keeps its size: the header row, then six lines of
    text (line-height 1.7). A longer text scrolls inside. */
 .explanation__chord {
@@ -234,6 +243,11 @@
     min-width: 0;
     height: calc(10.2em + 40px);
     grid-template-rows: auto 1fr;
+  }
+
+  /* Side by side, the map on the left again. */
+  .explanation--frame > .explanation__chord {
+    order: 0;
   }
 
   .explanation__chord > .explanation__actions {
