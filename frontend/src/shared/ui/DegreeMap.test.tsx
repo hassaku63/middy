@@ -37,7 +37,8 @@ describe('DegreeMap', () => {
       'vi°Bdim',
       'VIIC',
     ]);
-    expect(items.filter((li) => li.classList.contains('is-used'))).toHaveLength(3);
+    // The used ones say so in their names, as a screen reader hears them (#501).
+    expect(screen.getAllByLabelText(/この例で使う$/)).toHaveLength(3);
     expect(screen.getByLabelText('IV（G）、サブドミナント、この例で使う')).toHaveAttribute(
       'aria-current',
       'true',
