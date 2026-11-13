@@ -1,4 +1,11 @@
-import { useRef, useState, type MouseEvent, type PointerEvent, type RefObject } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+  type RefObject,
+} from 'react';
 import { beatAt, type Layout } from './layout';
 
 /**
@@ -14,8 +21,9 @@ export type SeekByClick = {
     onClick?: (e: MouseEvent<SVGSVGElement>) => void;
     onPointerDown?: (e: PointerEvent<SVGSVGElement>) => void;
     onPointerMove?: (e: PointerEvent<SVGSVGElement>) => void;
-    onPointerUp?: () => void;
-    onPointerCancel?: () => void;
+    onPointerUp?: (e: PointerEvent<SVGSVGElement>) => void;
+    onPointerCancel?: (e: PointerEvent<SVGSVGElement>) => void;
+    onLostPointerCapture?: (e: PointerEvent<SVGSVGElement>) => void;
     onPointerLeave?: () => void;
   };
 };
@@ -37,10 +45,22 @@ export function useSeekByClick(
   scrub?: Scrub,
 ): SeekByClick {
   const [hint, setHint] = useState<number | null>(null);
-  /** The beat a drag last moved to; null when no drag is on. */
-  const dragging = useRef<number | null>(null);
+  /** The pointer dragging and the beat it last moved to; null when no drag is on. */
+  const dragging = useRef<{ id: number; tick: number } | null>(null);
   /** The click that follows a mouse's press is the press itself. */
   const pressed = useRef(false);
+  // Taken away while dragging (the drawing replaced), the drag still ends (#500).
+  const ending = useRef(scrub);
+  useEffect(() => {
+    ending.current = scrub;
+  });
+  useEffect(
+    () => () => {
+      if (dragging.current) ending.current?.('end');
+      dragging.current = null;
+    },
+    [],
+  );
   if (!onSeek) return { hint: null, handlers: {} };
   const beat = (e: MouseEvent<SVGSVGElement>) => {
     const box = ref.current?.getBoundingClientRect();
@@ -49,8 +69,8 @@ export function useSeekByClick(
   };
   const at = (e: MouseEvent<SVGSVGElement>) =>
     chordsPin && e.target instanceof Element && e.target.closest('[role=option]') ? null : beat(e);
-  const end = () => {
-    if (dragging.current === null) return;
+  const end = (e: PointerEvent<SVGSVGElement>) => {
+    if (dragging.current?.id !== e.pointerId) return;
     dragging.current = null;
     scrub?.('end');
   };
@@ -66,28 +86,31 @@ export function useSeekByClick(
         if (tick !== null) onSeek(tick);
       },
       onPointerDown: (e) => {
-        if (e.pointerType === 'touch' || e.button !== 0) return;
+        if (e.pointerType === 'touch' || e.button !== 0 || dragging.current) return;
         const tick = at(e);
         if (tick === null) return;
         pressed.current = true;
-        dragging.current = tick;
+        dragging.current = { id: e.pointerId, tick };
         scrub?.('start');
         onSeek(tick);
         e.currentTarget.setPointerCapture(e.pointerId);
       },
       onPointerMove: (e) => {
-        if (dragging.current === null) {
+        const drag = dragging.current;
+        if (drag === null) {
           setHint(e.pointerType === 'touch' ? null : at(e));
           return;
         }
+        if (drag.id !== e.pointerId) return;
         const tick = beat(e); // over a chord too, once dragging
-        if (tick === null || tick === dragging.current) return;
-        dragging.current = tick;
+        if (tick === null || tick === drag.tick) return;
+        drag.tick = tick;
         setHint(null);
         onSeek(tick);
       },
       onPointerUp: end,
       onPointerCancel: end,
+      onLostPointerCapture: end,
       onPointerLeave: () => {
         setHint(null);
       },
