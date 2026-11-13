@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -140,16 +141,44 @@ func TestRequestLoggerTurnsAPanicIntoTheErrorEnvelope(t *testing.T) {
 	}
 }
 
-func TestRequestLoggerLeavesAStartedResponseAlone(t *testing.T) {
-	logger := slog.New(slog.DiscardHandler)
-	h := requestLogger(logger, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+func TestRequestLoggerCutsAStartedResponse(t *testing.T) {
+	// A panic after the header went out: the client must not take what was
+	// written for a whole answer, so the connection is cut (#499).
+	var logs bytes.Buffer
+	h := requestLogger(slog.New(slog.NewJSONHandler(&logs, nil)), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		panic("late")
 	}))
 	rec := httptest.NewRecorder()
+	defer func() {
+		if v := recover(); v != http.ErrAbortHandler { //nolint:errorlint // the sentinel itself
+			t.Fatalf("recovered %v, want http.ErrAbortHandler", v)
+		}
+		if rec.Code != http.StatusAccepted || rec.Body.Len() != 0 {
+			t.Errorf("got %d %q, want the handler's own 202 with nothing appended", rec.Code, rec.Body.String())
+		}
+		for _, want := range []string{`"panic":"late"`, `"status":202`} {
+			if !strings.Contains(logs.String(), want) {
+				t.Errorf("logs lack %s:\n%s", want, logs.String())
+			}
+		}
+	}()
 	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil))
-	if rec.Code != http.StatusAccepted || rec.Body.Len() != 0 {
-		t.Fatalf("got %d %q, want the handler's own 202 with nothing appended", rec.Code, rec.Body.String())
+}
+
+func TestAnUnencodableAnswerIsA500(t *testing.T) {
+	var logs bytes.Buffer
+	h := requestLogger(slog.New(slog.NewJSONHandler(&logs, nil)), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, math.NaN())
+	}))
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil))
+	var body problem
+	if rec.Code != http.StatusInternalServerError || json.Unmarshal(rec.Body.Bytes(), &body) != nil || body.Code != "internal_error" {
+		t.Fatalf("got %d %q, want the internal_error envelope", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(logs.String(), "encode the response") {
+		t.Errorf("the encoding error is not logged:\n%s", logs.String())
 	}
 }
 

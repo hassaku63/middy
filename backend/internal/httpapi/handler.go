@@ -90,23 +90,31 @@ func methodNotAllowed(methods []string) http.HandlerFunc {
 
 // requestLogger is the only middleware: it logs every request with its
 // status and duration, and turns a handler's panic into the JSON error
-// envelope (500 internal_error) instead of a dropped connection. Add more
-// (CORS) here rather than in main so tests exercise the same stack.
+// envelope (500 internal_error) instead of a dropped connection. A panic
+// after the response has started cannot be answered so: the connection is
+// cut (http.ErrAbortHandler), so the client does not take a cut-off body
+// for a whole one (#499). Add more (CORS) here rather than in main so
+// tests exercise the same stack.
 func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		start := time.Now()
 		defer func() {
-			if v := recover(); v != nil {
-				if v == http.ErrAbortHandler { //nolint:errorlint // sentinel value, compared as net/http does
-					panic(v)
-				}
+			v := recover()
+			if v == http.ErrAbortHandler { //nolint:errorlint // sentinel value, compared as net/http does
+				panic(v)
+			}
+			started := rec.wrote
+			if v != nil {
 				logger.Error("http handler panicked", "method", r.Method, "path", r.URL.Path, "panic", fmt.Sprint(v), "stack", string(debug.Stack()))
-				if !rec.wrote {
+				if !started {
 					writeError(rec, http.StatusInternalServerError, "internal_error", "the server failed on this request")
 				}
 			}
 			logger.Info("http", "method", r.Method, "path", r.URL.Path, "status", rec.status, "duration_ms", time.Since(start).Milliseconds())
+			if v != nil && started {
+				panic(http.ErrAbortHandler)
+			}
 		}()
 		next.ServeHTTP(rec, r)
 	})

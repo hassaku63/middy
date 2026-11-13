@@ -3,7 +3,9 @@ package httpapi
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 )
 
 // problemTypeBase is where each problem type is documented; a type URI is
@@ -42,11 +44,19 @@ func writeJSON(w http.ResponseWriter, v any) {
 	writeBody(w, http.StatusOK, v)
 }
 
+// writeBody encodes v before anything goes out (#499). A value
+// encoding/json cannot write (a NaN, say) is a programming error: it
+// panics, so requestLogger logs it and answers 500, instead of a 200
+// with a cut-off body and no trace.
 func writeBody(w http.ResponseWriter, status int, v any) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(fmt.Errorf("httpapi: encode the response: %w", err))
+	}
+	b = append(b, '\n')
+	w.Header().Set("Content-Length", strconv.Itoa(len(b)))
 	w.WriteHeader(status)
-	// Encoding errors after the header is written cannot be reported to the
-	// client; they are a programming error and surface in tests.
-	_ = json.NewEncoder(w).Encode(v)
+	_, _ = w.Write(b)
 }
 
 // writeError answers with the problem detail of code; detail says what
