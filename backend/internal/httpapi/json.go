@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -11,13 +12,14 @@ const problemTypeBase = "https://github.com/hassaku63/middy/blob/main/docs/api/p
 
 // problemTitles are the problem types the API answers with, by code, and
 // their fixed titles. docs/api/problems.md documents every one of them (a
-// test checks), together with the two nginx answers on its own
-// (request_too_large, api_unavailable).
+// test checks), together with the one nginx answers on its own
+// (api_unavailable).
 var problemTitles = map[string]string{
 	"invalid_json":       "Invalid JSON",
 	"invalid_request":    "Invalid request",
 	"not_found":          "Not found",
 	"method_not_allowed": "Method not allowed",
+	"request_too_large":  "Request too large",
 	"llm_declined":       "Model declined",
 	"internal_error":     "Internal error",
 	"llm_unavailable":    "Model unavailable",
@@ -58,4 +60,14 @@ func writeError(w http.ResponseWriter, status int, code, detail string) {
 		Detail: detail,
 		Code:   code,
 	})
+}
+
+// writeDecodeError answers a body that could not be read: 413 when it is
+// over the endpoint's limit, else 400 invalid_json.
+func writeDecodeError(w http.ResponseWriter, err error) {
+	if errors.Is(err, errBodyTooLarge) {
+		writeError(w, http.StatusRequestEntityTooLarge, "request_too_large", err.Error())
+		return
+	}
+	writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
 }

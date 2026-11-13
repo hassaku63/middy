@@ -186,3 +186,49 @@ func TestIdeasLeavesAClientThatWentAway(t *testing.T) {
 		t.Errorf("a client that went away is not an upstream failure:\n%s", logs.String())
 	}
 }
+
+func TestBodiesOverTheLimitAre413(t *testing.T) {
+	srv := newIdeasServer(t, fake.New(llm.Response{Text: sampleIntent}))
+	tests := []struct {
+		name, path, body string
+	}{
+		{"progression", "/api/v1/timelines/from-progression", `{"pad":"` + strings.Repeat("x", maxRequestBody) + `"}`},
+		{"conversation", "/api/v1/ideas", `{"pad":"` + strings.Repeat("x", maxIdeasBody) + `"}`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := postJSON(t, srv.URL+tt.path, tt.body)
+			if resp.StatusCode != http.StatusRequestEntityTooLarge {
+				t.Fatalf("status = %d, want 413", resp.StatusCode)
+			}
+			var p map[string]any
+			if err := json.NewDecoder(resp.Body).Decode(&p); err != nil || p["code"] != "request_too_large" {
+				t.Errorf("body = %v (%v), want code request_too_large", p, err)
+			}
+		})
+	}
+}
+
+// TestIdeasTakesTheLargestConversation (#499): the contract allows
+// MaxMessages messages of MaxMessageRunes characters; written as escaped
+// surrogate pairs, the largest such body is still read, not refused.
+func TestIdeasTakesTheLargestConversation(t *testing.T) {
+	srv := newIdeasServer(t, fake.New(llm.Response{Text: sampleIntent}))
+	msg := strings.Repeat(`🎵`, ideas.MaxMessageRunes)
+	turns := make([]string, ideas.MaxMessages)
+	for i := range turns {
+		role := "user"
+		if i%2 == 1 {
+			role = "assistant"
+		}
+		turns[i] = `{"role":"` + role + `","content":"` + msg + `"}`
+	}
+	turns[len(turns)-1] = `{"role":"user","content":"` + msg + `"}`
+	if len(turns)%2 == 0 {
+		turns = turns[:len(turns)-1]
+	}
+	resp := postJSON(t, srv.URL+"/api/v1/ideas", `{"messages":[`+strings.Join(turns, ",")+`]}`)
+	if resp.StatusCode == http.StatusRequestEntityTooLarge || resp.StatusCode == http.StatusBadRequest {
+		t.Fatalf("status = %d: the largest conversation the contract allows must be read", resp.StatusCode)
+	}
+}

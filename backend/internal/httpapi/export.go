@@ -27,7 +27,7 @@ func handleExportMIDI(logger *slog.Logger) http.HandlerFunc {
 func exportMIDI(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
 	var req exportMIDIRequest
 	if err := decodeJSONUpTo(r, &req, maxTimelineBody); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		writeDecodeError(w, err)
 		return
 	}
 	if err := req.Timeline.Validate(); err != nil {

@@ -18,6 +18,10 @@ import (
 // is a safety limit, not a product limit.
 const maxRequestBody = 64 << 10
 
+// errBodyTooLarge is a body over its endpoint's limit: a 413, as nginx
+// answers one over its own (docs/api/problems.md, #499).
+var errBodyTooLarge = errors.New("request body too large")
+
 // Request/response shapes for POST /api/v1/timelines/from-progression.
 // They are the contract in docs/api/openapi.yaml; change both together.
 type fromProgressionRequest struct {
@@ -62,7 +66,7 @@ func handleFromProgression(logger *slog.Logger) http.HandlerFunc {
 func fromProgression(w http.ResponseWriter, r *http.Request, logger *slog.Logger) {
 	var req fromProgressionRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_json", err.Error())
+		writeDecodeError(w, err)
 		return
 	}
 
@@ -168,7 +172,7 @@ func decodeJSONUpTo(r *http.Request, v any, limit int64) error {
 		return fmt.Errorf("invalid JSON body: %w", err)
 	}
 	if int64(len(body)) > limit {
-		return fmt.Errorf("invalid JSON body: larger than %d bytes", limit)
+		return fmt.Errorf("%w: larger than %d bytes", errBodyTooLarge, limit)
 	}
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()

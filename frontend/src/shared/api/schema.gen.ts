@@ -659,6 +659,15 @@ export interface operations {
           'application/problem+json': components['schemas']['Problem'];
         };
       };
+      /** @description `request_too_large`（本文がこの経路の上限を超えた。docs/api/problems.md） */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
       /** @description `internal_error`（作ったタイムラインを分析できなかった。エンジンの不具合で、原因はサーバーのログにだけ残る） */
       500: {
         headers: {
@@ -723,6 +732,15 @@ export interface operations {
           'application/problem+json': components['schemas']['Problem'];
         };
       };
+      /** @description `request_too_large`（本文がこの経路の上限を超えた。docs/api/problems.md） */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
       /** @description `internal_error`（検証を通ったタイムラインを書き出せなかった。エンコーダの不具合で、原因はサーバーのログにだけ残る） */
       500: {
         headers: {
@@ -768,6 +786,15 @@ export interface operations {
       };
       /** @description `invalid_json`、または `invalid_request`（空・20 件超・1000 文字超・最後が user でない） */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description `request_too_large`（本文がこの経路の上限を超えた。docs/api/problems.md） */
+      413: {
         headers: {
           [name: string]: unknown;
         };
