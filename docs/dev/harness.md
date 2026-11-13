@@ -72,6 +72,7 @@
 | `go mod tidy -diff` | `go.mod` / `go.sum` の不整合、不要な依存 | `make deps-check` | CI `backend` |
 | `npm audit --omit=dev --audit-level=high` | 本番依存の既知脆弱性 | `make deps-check` | CI `frontend` |
 | `govulncheck` + `npm audit`（全依存） | 新たに公開された脆弱性 | （CI のみ） | 週次 `security audit` |
+| `govulncheck`（報告だけ。落とさない） | `go.mod` の変更で入る既知の脆弱性（#502） | （CI のみ） | CI `backend`（`backend/go.mod` か `go.sum` を変えた PR と push） |
 | Dependabot（週次、minor/patch と major を別グループ。Go module、npm、GitHub Actions、Dockerfile のベースイメージ） | 依存の陳腐化 | — | GitHub |
 
 **Dependabot の方針**: CI が `main` に追従した状態で緑なら、major を含めてマージしてよい（人間でもエージェントでも）。古いブランチは先に `main` へ追従させて CI を回し直す。major で規約や書き方が変わる（設定ファイルの形式変更など）なら、マージと同じ PR かその直後に ADR か文書を更新する。`typescript` と `@types/node` の major は除外（理由は `.github/dependabot.yml`）。Dockerfile のベースイメージのうち、node と golang は `.tool-versions` からビルド引数で版を受けるので Dependabot は追わない（`.tool-versions` を上げる）。追うのは web の nginx（#408）。CI が落ちた更新は閉じて原因を backlog に書く。

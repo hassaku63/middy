@@ -31,6 +31,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       image: ${{ steps.filter.outputs.image }}
+      gomod: ${{ steps.filter.outputs.gomod }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,7 +48,7 @@ jobs:
             bash scripts/ci-changes.sh "$BEFORE" | tee -a "$GITHUB_OUTPUT"
           else
             # No previous head to compare with: check everything.
-            printf 'backend=true\nfrontend=true\nimage=true\n' | tee -a "$GITHUB_OUTPUT"
+            printf 'backend=true\nfrontend=true\nimage=true\ngomod=true\n' | tee -a "$GITHUB_OUTPUT"
           fi
 
   backend:
@@ -114,6 +115,14 @@ jobs:
         run: GO_TEST_JSON="$RUNNER_TEMP/go-test.json" bash ../scripts/test-report.sh backend
       - name: build
         run: go build -o bin/server ./cmd/server
+      # A changed go.mod may bring a known vulnerability in (#502). Reported
+      # here, not failing: the weekly audit (security.yml) is the one that
+      # fails. The same pinned version as there.
+      - name: govulncheck (go.mod changed; report only)
+        if: needs.changes.outputs.gomod == 'true'
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./... \
+            || echo "::warning::govulncheck reports known vulnerabilities; see the step's output"
 
   frontend:
     name: frontend (React)

@@ -30,9 +30,13 @@ image='^(backend/|frontend/|Dockerfile|\.dockerignore|compose\.yaml|deploy/|scri
 # It costs money, so it does not follow the "everything" paths above.
 eval='^(backend/internal/(ideas|intent|llm|music)/|backend/cmd/converse/|backend/go\.(mod|sum)|\.github/workflows/eval\.yml|scripts/converse-ci\.sh|Makefile)'
 
+# a changed module list may bring a known vulnerability in (#502).
+gomod='^backend/go\.(mod|sum)$'
+
 touches() { grep -qE "$1" <<<"$changed"; }
 job() { if touches "$all" || touches "$2"; then echo "$1=true"; else echo "$1=false"; fi; }
 job backend "$backend"
 job frontend "$frontend"
 job image "$image"
 if touches "$eval"; then echo "eval=true"; else echo "eval=false"; fi
+if touches "$gomod"; then echo "gomod=true"; else echo "gomod=false"; fi
