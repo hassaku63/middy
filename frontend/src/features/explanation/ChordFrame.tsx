@@ -12,6 +12,8 @@ type Props = {
   onClearSelection: () => void;
   /** Plays from a tick: the pinned chord's start (BL-329). */
   onPlayFrom?: (tick: number) => void;
+  /** While playing, the chord's line is not announced (ADR-0076). */
+  playing?: boolean;
 };
 
 /**
@@ -28,6 +30,7 @@ export function ChordFrame({
   selectedHarmony,
   onClearSelection,
   onPlayFrom,
+  playing = false,
 }: Props) {
   const index = explainedIndex(timeline.harmony, positionTick, selectedHarmony);
   const event = index >= 0 ? timeline.harmony[index] : undefined;
@@ -53,7 +56,7 @@ export function ChordFrame({
       )}
       {/* A long text scrolls inside; the keyboard can reach it (WCAG 2.1.1). */}
       <div className="explanation__chord" tabIndex={0}>
-        <ChordStatus event={event} functional={functional} />
+        <ChordStatus event={event} functional={functional} quiet={playing} />
         {event ? (
           <ChordNotes
             event={event}

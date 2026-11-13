@@ -61,15 +61,20 @@ export function ChordNotes({
 /**
  * The one live region of the explanation (#274, WCAG 4.1.3): the sounding
  * or pinned chord's name and its function (in major and minor) or its role
- * (in a mode, ADR-0048), short enough to announce at the pace of playback. The longer text is there to read, not announced.
+ * (in a mode, ADR-0048). The longer text is there to read, not announced.
+ * Quiet while the music plays: nothing is said over it (ADR-0076); the
+ * line still reads when visited.
  */
 export function ChordStatus({
   event,
   functional = true,
+  quiet = false,
 }: {
   event: HarmonyEvent | undefined;
   /** Name the chord's function; false in a mode, where its role is named (ADR-0045, 0048). */
   functional?: boolean;
+  /** True while playing: the line changes without being said. */
+  quiet?: boolean;
 }) {
   const analysis = event?.analysis;
   const name = analysis
@@ -78,7 +83,7 @@ export function ChordStatus({
       : roleName(analysis.role)
     : '';
   return (
-    <p className="explanation__live" aria-live="polite">
+    <p className="explanation__live" aria-live={quiet ? 'off' : 'polite'}>
       {event ? `${event.romanNumeral} ${harmonySymbol(event)}${name ? ` ${name}` : ''}` : ''}
     </p>
   );
