@@ -165,7 +165,44 @@ describe('ChatPanel', () => {
     );
     expect(screen.getByText('考え中…')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('AI に接続できませんでした');
-    expect(screen.getByLabelText('イメージ')).toBeDisabled();
+    expect(screen.getByLabelText('イメージ')).toHaveAttribute('readonly');
+  });
+
+  it('keeps the focus in the field while waiting and says how many examples came (#500)', async () => {
+    const user = userEvent.setup();
+    const send = vi.fn(() => Promise.resolve());
+    const { rerender } = render(
+      <ChatPanel ideas={ideasWith({ send })} onOpenCandidate={vi.fn()} />,
+    );
+    const field = screen.getByLabelText('イメージ');
+    await user.type(field, '雨{Enter}');
+    expect(send).toHaveBeenCalledWith('雨');
+
+    const asked = [{ role: 'user' as const, content: '雨' }];
+    rerender(
+      <ChatPanel ideas={ideasWith({ send, turns: asked, busy: true })} onOpenCandidate={vi.fn()} />,
+    );
+    expect(field).toHaveFocus();
+    expect(field).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('考え中');
+    await user.type(field, 'x{Enter}');
+    expect(send).toHaveBeenCalledTimes(1);
+
+    const replied = [
+      ...asked,
+      { role: 'assistant' as const, content: 'x', mood: [], candidates: [candidate, candidate] },
+    ];
+    rerender(<ChatPanel ideas={ideasWith({ send, turns: replied })} onOpenCandidate={vi.fn()} />);
+    expect(field).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('例が 2 件届きました');
+  });
+
+  it('says nothing for a conversation already on the screen (#500)', () => {
+    const ideas = ideasWith({
+      turns: [{ role: 'assistant', content: 'x', mood: [], candidates: [candidate] }],
+    });
+    render(<ChatPanel ideas={ideas} onOpenCandidate={vi.fn()} />);
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('keeps the latest exchange open and folds the earlier ones (BL-068)', () => {

@@ -102,7 +102,8 @@ describe('App docs/product/experience.md', () => {
 
     // Healthy is silent (BL-065): once the probe has answered, no status line remains.
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/v1/health', expect.anything()));
-    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    const said = () => screen.queryAllByRole('status').filter((e) => e.textContent !== '');
+    await waitFor(() => expect(said()).toHaveLength(0));
     expect(screen.getAllByRole('textbox')).toHaveLength(1); // the image only
     expect(screen.getByLabelText('イメージ')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '進行から' })).not.toBeInTheDocument();
@@ -246,7 +247,10 @@ describe('App docs/product/experience.md', () => {
   it('reports an unreachable backend', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network')));
     render(<App createEngine={fakeEngine} />);
-    expect(await screen.findByRole('status')).toHaveTextContent('バックエンドに接続できません');
+    expect(await screen.findByText(/バックエンドに接続できません/)).toBeInTheDocument();
+    expect(screen.getAllByRole('status').map((e) => e.textContent)).toContainEqual(
+      expect.stringContaining('バックエンドに接続できません'),
+    );
   });
 
   it("changes the open example's key through the engine, keeping the numerals (BL-078)", async () => {
