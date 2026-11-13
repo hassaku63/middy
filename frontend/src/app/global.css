@@ -266,3 +266,116 @@ main {
     border-right-color: var(--rule);
   }
 }
+
+/* The conversation's drawer controls show only on a short, wide screen
+   (below). */
+.app__chat-toggle,
+.app__chat-close {
+  display: none;
+}
+
+/* A short, wide screen: a phone held sideways (#498). Stacked, the
+   timeline and the chord's frame do not fit its height together, so once
+   an example is open the conversation folds into a drawer (「会話」) and
+   the result takes the screen: the timeline on the left, the chord's
+   frame and the notes on the right, scrolling on their own. 500 px is the
+   height under which the timeline (at most 45 %) and the frame (about
+   230 px) no longer fit one above the other with the toolbar
+   (docs/dev/conventions.md). The tree stays the same; only CSS moves it
+   (ADR-0042). */
+@media (orientation: landscape) and (max-height: 500px) {
+  main.app--desk:has(.app__timeline) {
+    max-width: none;
+    height: 100dvh;
+    box-sizing: border-box;
+    padding: 8px 12px;
+  }
+
+  .app--desk:has(.app__timeline) .app__columns {
+    height: 100%;
+  }
+
+  .app--desk:has(.app__timeline) .app__main {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .app--desk .app__timeline {
+    border-top: 0;
+    padding-top: 0;
+    gap: 6px;
+  }
+
+  .app--desk .app__example-head {
+    margin-bottom: 0;
+  }
+
+  .app--desk .app__chat-toggle {
+    display: inline-flex;
+  }
+
+  /* The conversation over the result's left edge, or out of sight. */
+  .app--desk:has(.app__timeline) .app__side {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 10;
+    width: min(380px, 85vw);
+    box-sizing: border-box;
+    padding: 12px;
+    overflow-y: auto;
+    background: var(--page);
+    border-right: 1px solid var(--rule);
+    box-shadow: 4px 0 16px rgb(0 0 0 / 0.3);
+    transition: transform 0.2s ease;
+  }
+
+  .app--desk[data-chat='closed']:has(.app__timeline) .app__side {
+    transform: translateX(-100%);
+    visibility: hidden;
+  }
+
+  .app--desk[data-chat='open']:has(.app__timeline) .app__chat-close {
+    display: inline-flex;
+    align-self: flex-end;
+  }
+
+  /* The timeline beside the chord's frame. */
+  .app--desk .app__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 8px;
+    --timeline-max-height: calc(100dvh - 170px);
+  }
+
+  .app--desk .app__stage > .timeline-overview {
+    container-type: inline-size;
+  }
+
+  /* The right column is the stage the frame and the notes see, so they
+     take their narrow arrangement. */
+  .app--desk .app__below {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    container: stage / inline-size;
+    max-height: calc(100dvh - 110px);
+    overflow-y: auto;
+  }
+
+  .app--desk .app__below > * {
+    flex: none;
+  }
+
+  /* The chord's name and text first, the degree map under it: what is
+     read while it plays comes into view without scrolling. */
+  .app--desk .app__below .explanation__chord {
+    order: -1;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) and (prefers-reduced-motion: reduce) {
+  .app--desk .app__side {
+    transition: none;
+  }
+}

@@ -26,6 +26,8 @@ import { usePinMemory } from './usePinMemory';
 import { useChooseToHear } from './useChooseToHear';
 import { HearOnOpenToggle } from './HearOnOpenToggle';
 import { useCandidateKeys } from './useCandidateKeys';
+import { CONVERSATION_ID, ChatClose, ChatToggle } from './ChatDrawer';
+import { useChatDrawer } from './useChatDrawer';
 
 type AppProps = {
   /** Injected in tests; defaults to a real Web Audio engine. */
@@ -53,9 +55,11 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   const patterns = usePatterns(backend !== 'down');
   const player = usePlayer(createEngine);
   const projects = useProjects(projectStore);
+  const drawer = useChatDrawer();
 
   const show = (tl: Timeline) => {
     player.stop();
+    drawer.fold();
     setTimeline(tl);
     setSelectedHarmony(null);
   };
@@ -139,6 +143,7 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
           onChange={(id) => void changeStyle(id)}
         />
         <DownloadMidiButton timeline={timeline} />
+        <ChatToggle drawer={drawer} />
       </div>
       <Stage
         timeline={timeline}
@@ -152,12 +157,13 @@ export function App({ createEngine = createWebAudioEngine, projectStore }: AppPr
   );
 
   return (
-    <main className="app app--desk">
+    <main className="app app--desk" data-chat={drawer.open ? 'open' : 'closed'}>
       {/* The conversation in a left column beside the stage on wide screens;
           stacked below 1024 px (BL-184, #279). The title heads the column,
           so the stage starts at the top of the page (#436). */}
       <div className="app__columns">
-        <div className="app__side">
+        <div className="app__side" id={CONVERSATION_ID}>
+          <ChatClose drawer={drawer} />
           <AppHeader pwa={pwa} backendDown={backend === 'down'} />
           {conversation}
         </div>
