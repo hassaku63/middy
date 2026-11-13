@@ -5,7 +5,7 @@
 ## 共通
 
 - 言語: コード・識別子・コードコメントは英語。ドキュメント・UI 文言・コミットの本文は日本語可。コミットの件名は英語（Conventional Commits）。
-- 命名はドメイン用語（`docs/glossary.md`）に揃える。`Chord` を `Harmony` と呼び替えない。
+- 命名はドメイン用語（`docs/glossary.md`）に揃える。`Chord` を `Harmony` と呼び替えない。画面の部品は、同じ文書の「画面の部品」の呼び名を目安にする（揺らぎは認める。#493）。
 - コメントは「何を」ではなく「なぜ」。公開 API には doc コメント必須（Go は revive が強制）。
 - マジックナンバーは名前付き定数に（`DefaultPPQ`, `MaxPitch`）。
 - エラーは 1 か所で 1 回だけ扱う。扱うとは、記録する、利用者への答え（API の problem detail、画面の文言）に変える、別の振る舞いに切り替える、のどれか。呼び出し側へ返すなら記録せず、何をしていたかを足して返す。記録は、失敗を吸収する場所か最後の境界でだけ行う。境界は、Go では `httpapi` のハンドラ・ミドルウェアと `cmd/server/main.go`、フロントでは hook、nginx では自分が答える `error_page`。出典: [Uber Go Style Guide「Handle Errors Once」](https://github.com/uber-go/guide/blob/master/style.md#handle-errors-once)、[Google Go Style Guide「Logging errors」](https://google.github.io/styleguide/go/best-practices.html#logging-errors)、[Dave Cheney「Only handle errors once」](https://dave.cheney.net/2016/04/27/dont-just-check-errors-handle-them-gracefully)（#228）。
