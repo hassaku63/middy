@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type SubmitEvent } from 'react';
+import { useRef, useState, type ReactNode, type SubmitEvent } from 'react';
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
 import { ExampleList } from './ExampleList';
@@ -39,6 +39,7 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [text, setText] = useState('');
   const heard = useReplyNotice(ideas);
+  const field = useRef<HTMLInputElement>(null);
 
   // Only the latest exchange stays open; earlier ones fold away so refining
   // never pushes playback out of sight (BL-068).
@@ -76,6 +77,8 @@ export function ChatPanel({
     if (ideas.busy) return; // Enter in the read-only field while waiting
     const t = text;
     setText('');
+    // The button goes disabled while waiting; the focus waits in the field (#500).
+    field.current?.focus();
     void ideas.send(t);
   };
 
@@ -125,6 +128,7 @@ export function ChatPanel({
       <div className="chat__composer">
         <form className="chat__form" onSubmit={submit} aria-label="イメージの入力">
           <input
+            ref={field}
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}

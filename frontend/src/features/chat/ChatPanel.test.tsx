@@ -197,6 +197,14 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('status')).toHaveTextContent('例が 2 件届きました');
   });
 
+  it('puts the focus in the field when sent by the button (#500)', async () => {
+    const user = userEvent.setup();
+    render(<ChatPanel ideas={ideasWith({})} onOpenCandidate={vi.fn()} />);
+    await user.type(screen.getByLabelText('イメージ'), '雨');
+    await user.click(screen.getByRole('button', { name: '送る' }));
+    expect(screen.getByLabelText('イメージ')).toHaveFocus();
+  });
+
   it('says nothing for a conversation already on the screen (#500)', () => {
     const ideas = ideasWith({
       turns: [{ role: 'assistant', content: 'x', mood: [], candidates: [candidate] }],
