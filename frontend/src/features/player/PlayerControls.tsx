@@ -66,6 +66,11 @@ export function PlayerControls({ timeline, player }: Props) {
       <span className="visually-hidden" role="status">
         {notice}
       </span>
+      {player.error && (
+        <span role="alert" className="player__error">
+          {player.error}
+        </span>
+      )}
     </div>
   );
 }

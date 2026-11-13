@@ -53,3 +53,15 @@
 .player__icon {
   font-size: 0.8em;
 }
+
+/* The audio device refused (#500): said next to play, as the key select's error. */
+.player__error {
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+@media (prefers-color-scheme: light) {
+  .player__error {
+    color: #b91c1c; /* 6.5:1 on white (WCAG 1.4.3) */
+  }
+}

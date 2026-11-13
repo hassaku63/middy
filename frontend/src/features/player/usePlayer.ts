@@ -41,6 +41,8 @@ export type UsePlayer = {
   state: PlayerState;
   positionTick: number;
   notice: PlayerNotice | null;
+  /** Why the last play made no sound (the audio device refused), or null (#500). */
+  error: string | null;
   /** Plays from the playhead: where it paused or was moved to, else the beginning. */
   play(timeline: Timeline): Promise<void>;
   /**
@@ -56,6 +58,8 @@ export type UsePlayer = {
    */
   seek: (tick: number) => void;
 };
+
+const CANNOT_PLAY = '音を鳴らせませんでした。もう一度「再生」を押してください。';
 
 /**
  * React binding for TimelinePlayer. The engine is created on the first
@@ -73,6 +77,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   // first play, after a seek may already have set it.
   const cue = useRef(0);
   const [notice, setNotice] = useState<PlayerNotice | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const tell = useCallback((kind: PlayerNotice['kind'], tick: number) => {
     setNotice((prev) => ({ kind, tick, n: (prev?.n ?? 0) + 1 }));
   }, []);
@@ -110,7 +115,16 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   const play = useCallback(
     async (timeline: Timeline) => {
       const request = ++requests.current;
-      const player = await ensurePlayer();
+      setError(null);
+      let player: TimelinePlayer | null;
+      try {
+        player = await ensurePlayer();
+      } catch {
+        // No AudioContext, or the browser would not start it: say so, and
+        // the next play asks again (the engine is kept or made anew).
+        if (request === requests.current) setError(CANNOT_PLAY);
+        return;
+      }
       if (!player || request !== requests.current) return; // stopped or replaced meanwhile
       const from = cue.current; // load() reports the stop of what played before
       why.current = 'quiet'; // another example takes over: nothing ended
@@ -168,5 +182,5 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
     [],
   );
 
-  return { state, positionTick, notice, play, pause, stop, seek };
+  return { state, positionTick, notice, error, play, pause, stop, seek };
 }
