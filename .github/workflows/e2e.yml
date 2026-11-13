@@ -14,8 +14,17 @@ permissions:
 
 jobs:
   e2e:
+    name: e2e (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # WebKit as well as Chromium (#501): iOS PWAs unlock audio and run
+    # service workers differently. WebKit reports without failing the run
+    # until its first runs show what it needs.
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    continue-on-error: ${{ matrix.browser == 'webkit' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -61,11 +70,12 @@ jobs:
       - working-directory: frontend
         run: npm ci
       - working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps "${{ matrix.browser }}"
       - working-directory: frontend
         run: npx playwright test
         env:
           E2E_BASE_URL: http://localhost:8080
+          E2E_BROWSER: ${{ matrix.browser }}
       - name: Stack logs
         if: always()
         run: |
@@ -74,6 +84,6 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: frontend/playwright-report
           retention-days: 7
