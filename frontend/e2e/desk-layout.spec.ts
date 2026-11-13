@@ -75,11 +75,15 @@ test('the chord frame keeps its size, and the keys pin and unpin (BL-185)', asyn
 
   // Playing through chords of different length and text, the frame stays put.
   const heights = new Set<number>();
+  const chord = frame.getByRole('heading').first();
   await page.getByRole('button', { name: '再生' }).click();
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 3; i++) {
     heights.add(Math.round((await frame.boundingBox())?.height ?? 0));
-    await page.waitForTimeout(400);
+    const now = await chord.textContent();
+    // The next chord, rather than a fixed wait (docs/dev/testing.md).
+    await expect.poll(() => chord.textContent(), { timeout: 10_000 }).not.toBe(now);
   }
+  heights.add(Math.round((await frame.boundingBox())?.height ?? 0));
   await page.getByRole('button', { name: '停止', exact: true }).click();
   expect(heights.size).toBe(1);
   // 141 characters of the widest kind fit at 1280 px without scrolling.

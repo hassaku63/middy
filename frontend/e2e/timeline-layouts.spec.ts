@@ -158,7 +158,10 @@ test.describe('scrolling by hand while playing', () => {
     await expect(back).toBeVisible();
     const left = await box.evaluate((el) => el.scrollLeft);
     expect(left).toBeGreaterThan(600);
-    await page.waitForTimeout(500);
+    // A beat later, rather than a fixed wait (docs/dev/testing.md), the box stays.
+    const position = page.getByLabel(/^再生位置/);
+    const at = await position.textContent();
+    await expect(position).not.toHaveText(at ?? '');
     expect(await box.evaluate((el) => el.scrollLeft)).toBe(left);
     await back.click();
     await expect(back).toHaveCount(0);
