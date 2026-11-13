@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { HarmonyEvent } from '@/shared/api/client';
 import { harmonySymbol } from '@/shared/lib/notation';
 import { CHORD_LANE_HEIGHT, type Layout } from './layout';
@@ -40,8 +41,12 @@ function pushTicks(h: HarmonyEvent, ppq: number): number {
   return 0;
 }
 
-/** One clickable block per harmony event, with roman numeral and chord symbol. */
-export function ChordLane({
+/**
+ * One clickable block per harmony event, with roman numeral and chord
+ * symbol. Drawn again when the sounding chord changes, not on every move of
+ * the playhead (#500).
+ */
+export const ChordLane = memo(function ChordLane({
   harmony,
   layout,
   activeIndex,
@@ -116,4 +121,4 @@ export function ChordLane({
       })}
     </g>
   );
-}
+});

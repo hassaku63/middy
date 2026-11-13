@@ -16,6 +16,7 @@ import {
 import { useBoxSize } from './useBoxSize';
 import { GRIP_HALF, useHeadGrip } from './useHeadGrip';
 import { useSeekByClick, type Scrub } from './useSeekByClick';
+import { useSounding } from './useSounding';
 import './TimelineView.css';
 
 export type TimelineViewProps = {
@@ -93,6 +94,41 @@ export function TimelineView({
   const seek = useSeekByClick(ref, layout, onSeek, onSelectHarmony !== undefined, onScrub);
   const grip = useHeadGrip(ref, layout, positionTick, onSeek, onScrub);
   const sounding = playing ? positionTick : -1; // no chord or note sounds at -1
+  const notesOn = useSounding(notes, sounding);
+  const drumsOn = useSounding(drumNotes, sounding);
+  // What does not move with the playhead is made once per layout (#500).
+  const still = useMemo(
+    () => ({
+      bars: Array.from({ length: layout.bars + 1 }, (_, i) => (
+        <line
+          key={`bar-${i}`}
+          className="timeline__bar"
+          x1={layout.x(i * layout.perBar)}
+          x2={layout.x(i * layout.perBar)}
+          y1={0}
+          y2={layout.height}
+        />
+      )),
+      ruler: !stretch && <TimelineRuler layout={layout} />,
+      rollGrid: (
+        <TimelineGrid
+          layout={layout}
+          top={layout.rollTop}
+          bottom={layout.rollTop + layout.rows * ROW_HEIGHT}
+          beats={!stretch}
+        />
+      ),
+      drumGrid: (
+        <TimelineGrid
+          layout={layout}
+          top={layout.drumTop}
+          bottom={layout.height}
+          beats={!stretch}
+        />
+      ),
+    }),
+    [layout, stretch],
+  );
 
   return (
     <svg
@@ -112,17 +148,8 @@ export function TimelineView({
       preserveAspectRatio={stretch ? 'none' : undefined}
       {...seek.handlers}
     >
-      {Array.from({ length: layout.bars + 1 }, (_, i) => (
-        <line
-          key={`bar-${i}`}
-          className="timeline__bar"
-          x1={layout.x(i * layout.perBar)}
-          x2={layout.x(i * layout.perBar)}
-          y1={0}
-          y2={layout.height}
-        />
-      ))}
-      {!stretch && <TimelineRuler layout={layout} />}
+      {still.bars}
+      {still.ruler}
       <ChordLane
         harmony={timeline.harmony}
         layout={layout}
@@ -133,32 +160,8 @@ export function TimelineView({
         marks={marks}
         ppq={timeline.ppq}
       />
-      <PianoRoll
-        notes={notes}
-        layout={layout}
-        positionTick={sounding}
-        grid={
-          <TimelineGrid
-            layout={layout}
-            top={layout.rollTop}
-            bottom={layout.rollTop + layout.rows * ROW_HEIGHT}
-            beats={!stretch}
-          />
-        }
-      />
-      <DrumLane
-        notes={drumNotes}
-        layout={layout}
-        positionTick={sounding}
-        grid={
-          <TimelineGrid
-            layout={layout}
-            top={layout.drumTop}
-            bottom={layout.height}
-            beats={!stretch}
-          />
-        }
-      />
+      <PianoRoll notes={notes} layout={layout} on={notesOn} grid={still.rollGrid} />
+      <DrumLane notes={drumNotes} layout={layout} on={drumsOn} grid={still.drumGrid} />
       {highlight && (
         <rect
           className="timeline__highlight"

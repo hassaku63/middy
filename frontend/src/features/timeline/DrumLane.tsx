@@ -1,17 +1,21 @@
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import type { NoteEvent } from '@/shared/api/client';
 import { DRUM_ROW_HEIGHT, drumName, type Layout } from './layout';
 
 type Props = {
   notes: NoteEvent[];
   layout: Layout;
-  positionTick: number;
+  /** The indexes of the hits sounding now (useSounding). */
+  on: ReadonlySet<number>;
   /** Drawn over the rows and under the notes (TimelineGrid). */
   grid?: ReactNode;
 };
 
-/** One row per percussion sound; hits are short ticks so the groove reads at a glance. */
-export function DrumLane({ notes, layout, positionTick, grid }: Props) {
+/**
+ * One row per percussion sound; hits are short ticks so the groove reads at
+ * a glance. Drawn again only when a hit starts or stops (#500).
+ */
+export const DrumLane = memo(function DrumLane({ notes, layout, on, grid }: Props) {
   if (layout.drumNotes.length === 0) return null;
   const rows = new Map(layout.drumNotes.map((note, i) => [note, i])); // not indexOf per hit
   const rowY = (note: number) => layout.drumTop + (rows.get(note) ?? 0) * DRUM_ROW_HEIGHT;
@@ -33,7 +37,7 @@ export function DrumLane({ notes, layout, positionTick, grid }: Props) {
       ))}
       {grid}
       {notes.map((n, i) => {
-        const sounding = positionTick >= n.start && positionTick < n.start + n.duration;
+        const sounding = on.has(i);
         return (
           <rect
             key={`drum-${i}`}
@@ -48,4 +52,4 @@ export function DrumLane({ notes, layout, positionTick, grid }: Props) {
       })}
     </g>
   );
-}
+});
