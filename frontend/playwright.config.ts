@@ -11,6 +11,10 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:8080';
 const executablePath = process.env.E2E_CHROMIUM_PATH;
+// E2E_BROWSER=webkit runs the scenarios in Safari's engine (the weekly
+// e2e workflow, #501): iOS PWAs unlock audio and run service workers
+// differently from Chromium.
+const webkit = process.env.E2E_BROWSER === 'webkit';
 
 export default defineConfig({
   testDir: './e2e',
@@ -26,7 +30,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'retain-on-failure',
-    ...devices['Desktop Chrome'],
-    ...(executablePath ? { launchOptions: { executablePath } } : {}),
+    ...(webkit ? devices['Desktop Safari'] : devices['Desktop Chrome']),
+    ...(executablePath && !webkit ? { launchOptions: { executablePath } } : {}),
   },
 });
