@@ -58,7 +58,7 @@ type Config struct {
 
 // Client calls the Messages API.
 type Client struct {
-	api    sdk.Client
+	api     sdk.Client
 	model   string
 	effort  sdk.OutputConfigEffort
 	logger  *slog.Logger
