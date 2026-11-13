@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PwaStatus } from './status';
-import { wirePwa } from './wire';
+import { CHECK_EVERY_MS, wirePwa } from './wire';
 
 describe('wirePwa', () => {
   it('feeds service worker callbacks and window events into the store', async () => {
@@ -34,5 +34,28 @@ describe('wirePwa', () => {
     expect(status.getSnapshot().installable).toBe(true);
     target.dispatchEvent(new Event('appinstalled'));
     expect(status.getSnapshot().installable).toBe(false);
+  });
+
+  it('asks for a new version every hour while online (#500)', () => {
+    const status = new PwaStatus();
+    const update = vi.fn().mockResolvedValue(undefined);
+    let checks: { check: () => void; ms: number }[] = [];
+    const registerSW = vi.fn(
+      (opts: { onRegisteredSW?: (u: string, r: ServiceWorkerRegistration) => void }) => {
+        opts.onRegisteredSW?.('/sw.js', { update } as unknown as ServiceWorkerRegistration);
+        return vi.fn().mockResolvedValue(undefined);
+      },
+    );
+    const target = new EventTarget();
+    wirePwa(status, registerSW, target, (check, ms) => {
+      checks = [...checks, { check, ms }];
+    });
+    expect(checks.map((c) => c.ms)).toEqual([CHECK_EVERY_MS]);
+
+    checks[0]?.check();
+    expect(update).toHaveBeenCalledTimes(1);
+    target.dispatchEvent(new Event('offline'));
+    checks[0]?.check();
+    expect(update).toHaveBeenCalledTimes(1); // not while offline
   });
 });
