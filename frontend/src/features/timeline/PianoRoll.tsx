@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import type { NoteEvent } from '@/shared/api/client';
 import { pitchName } from '@/shared/lib/notation';
 import { ROW_HEIGHT, type Layout } from './layout';
@@ -6,7 +6,8 @@ import { ROW_HEIGHT, type Layout } from './layout';
 type Props = {
   notes: NoteEvent[];
   layout: Layout;
-  positionTick: number;
+  /** The indexes of the notes sounding now (useSounding). */
+  on: ReadonlySet<number>;
   /** Drawn over the rows and under the notes (TimelineGrid). */
   grid?: ReactNode;
 };
@@ -16,9 +17,11 @@ const BLACK_KEYS = new Set([1, 3, 6, 8, 10]);
 /**
  * Pitch rows (with C labels) and one rectangle per note; sounding notes are
  * marked. A picture only: assistive technology gets the chords (ChordLane)
- * and the explanation instead of dozens of note names (BL-162).
+ * and the explanation instead of dozens of note names (BL-162). Drawn
+ * again only when a note starts or stops, not on every move of the
+ * playhead (#500).
  */
-export function PianoRoll({ notes, layout, positionTick, grid }: Props) {
+export const PianoRoll = memo(function PianoRoll({ notes, layout, on, grid }: Props) {
   return (
     <g aria-hidden="true">
       {Array.from({ length: layout.rows }, (_, i) => {
@@ -42,7 +45,7 @@ export function PianoRoll({ notes, layout, positionTick, grid }: Props) {
       })}
       {grid}
       {notes.map((n, i) => {
-        const sounding = positionTick >= n.start && positionTick < n.start + n.duration;
+        const sounding = on.has(i);
         return (
           <rect
             key={`note-${i}`}
@@ -59,4 +62,4 @@ export function PianoRoll({ notes, layout, positionTick, grid }: Props) {
       })}
     </g>
   );
-}
+});
