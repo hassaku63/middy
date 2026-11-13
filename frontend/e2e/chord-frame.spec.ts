@@ -11,6 +11,7 @@ import { openExample } from './helpers';
 for (const viewport of [
   { width: 1024, height: 768 },
   { width: 390, height: 844 },
+  { width: 375, height: 667 },
   { width: 1280, height: 800 },
   { width: 820, height: 1180 },
 ]) {

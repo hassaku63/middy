@@ -267,6 +267,21 @@ main {
   }
 }
 
+/* Stacked (under 1024 px), a phone's height is short: the result's parts
+   sit closer, so the sounding chord's header and the start of its text
+   stay in view under the timeline while it plays, down to a small phone
+   (375×667; #511, ADR-0074). */
+@media (max-width: 1023px) {
+  .app__timeline,
+  .app__stage {
+    gap: 8px;
+  }
+
+  .app__example-head {
+    margin-bottom: 4px;
+  }
+}
+
 /* The conversation's drawer controls show only on a short, wide screen
    (below). */
 .app__chat-toggle,
