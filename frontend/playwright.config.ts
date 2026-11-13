@@ -18,7 +18,11 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
+  // In CI, a JSON report too: scripts/e2e-flaky.sh lists what passed only
+  // on the retry (#501).
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }], ['json', { outputFile: 'test-results/results.json' }]]
+    : [['list']],
   use: {
     baseURL,
     trace: 'retain-on-failure',

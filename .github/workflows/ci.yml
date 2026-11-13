@@ -296,10 +296,24 @@ jobs:
       - name: E2E at every size and the main flows
         env:
           E2E_BASE_URL: http://localhost:4173
-        run: make layout
+        # A failure is tried once more (retries: 1), and that try is traced.
+        run: make layout E2E_FLAGS="--trace on-first-retry"
+      # A green run may hide a test that failed first (#501).
+      - name: Flaky tests (passed on retry)
+        if: ${{ !cancelled() }}
+        run: bash scripts/e2e-flaky.sh frontend/test-results/results.json
       - name: Server logs
         if: failure()
         run: tail -n 50 server.log preview.log
+      - name: Report and traces of the failures
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: layout-playwright
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
 
   pr-size:
     name: pr size budget
