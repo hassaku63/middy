@@ -265,20 +265,21 @@ jobs:
           TAG=ci docker compose logs
           TAG=ci docker compose down
 
-  # The layout at every size of the matrix, checked by machine (#359): no
-  # sideways scroll, axe, the same operations at every width, the pinned
-  # chord kept across a resize. Only these deterministic checks; the rest of
-  # the E2E stays weekly (e2e.yml), and screens for review stay out of CI.
+  # The E2E on every pull request (#501): the layout at every size of the
+  # matrix (#359: no sideways scroll, axe, the same operations at every
+  # width, the pinned chord kept across a resize) and the main flows
+  # (describe, hear, see, refine, keep, seek). What needs the production
+  # stack stays weekly (e2e.yml), and screens for review stay out of CI.
   # It runs the Go server (fake LLM) and `vite preview`, which proxies /api
   # as the dev server does, so it needs no images and no registry (ADR-0028).
   layout:
-    name: layout (E2E at every size)
+    name: layout (E2E)
     needs: changes
     # The screens are drawn from the real API's answers (the fake LLM), so a
     # change to the backend can break the layout too (#501).
     if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -302,11 +303,14 @@ jobs:
           npm run build
           nohup npx vite preview --port 4173 --strictPort > ../preview.log 2>&1 &
           npx playwright install --with-deps chromium
-      - name: Layout checks at every size
+      # Every E2E but those that need the production stack (@stack: nginx's
+      # headers, the service worker's caching), which stay weekly (e2e.yml),
+      # and the screens for review, which skip themselves (#501).
+      - name: E2E at every size and the main flows
         working-directory: frontend
         env:
           E2E_BASE_URL: http://localhost:4173
-        run: npx playwright test e2e/sizes.spec.ts --trace off
+        run: npx playwright test --grep-invert @stack --trace off
       - name: Server logs
         if: failure()
         run: tail -n 50 server.log preview.log
