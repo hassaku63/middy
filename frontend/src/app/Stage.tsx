@@ -68,6 +68,7 @@ export function Stage({
       selectedHarmony={selectedHarmony}
       onClearSelection={clear}
       onPlayFrom={playFrom}
+      playing={player.state === 'playing'}
     />
   );
   const notes = (

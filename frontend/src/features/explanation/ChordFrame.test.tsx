@@ -42,6 +42,19 @@ describe('ChordFrame (BL-185)', () => {
     expect(screen.getByText('V7（G7）はドミナント（D）。')).toBeInTheDocument();
   });
 
+  it('says nothing of the chord while the music plays (ADR-0076)', () => {
+    render(
+      <ChordFrame
+        timeline={timeline}
+        positionTick={0}
+        selectedHarmony={null}
+        onClearSelection={vi.fn()}
+        playing
+      />,
+    );
+    expect(screen.getByText('V7 G7 ドミナント')).toHaveAttribute('aria-live', 'off');
+  });
+
   it('shows the pinned chord, and lets it follow again', async () => {
     const onClear = vi.fn();
     render(
