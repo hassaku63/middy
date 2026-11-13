@@ -6,10 +6,11 @@ import { openExample } from './helpers';
  * origin only, no inline script or style). The app's main paths run
  * without a single violation: describe, open, play, pin, regroove, save
  * the MIDI, on both layouts. Runs against nginx (make up, or any server
- * that sends the header); without the header it only proves the paths.
+ * that sends the header); without the header it only proves the paths,
+ * so the pull requests' run leaves it out (@stack, #501).
  */
 for (const path of ['/']) {
-  test(`the main paths raise no CSP violation (${path})`, async ({ page }) => {
+  test(`the main paths raise no CSP violation (${path})`, { tag: '@stack' }, async ({ page }) => {
     const violations: string[] = [];
     page.on('console', (m) => {
       if (/Content Security Policy|Content-Security-Policy/i.test(m.text()))

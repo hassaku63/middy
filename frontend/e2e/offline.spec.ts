@@ -4,9 +4,10 @@ import { openExample } from './helpers';
 /**
  * The offline promise of the PWA (BL-025): once the service worker has
  * cached the shell, a saved project opens and plays with no network, and
- * the banner says what still works.
+ * the banner says what still works. Needs the production stack's service
+ * worker and caching, so the pull requests' run leaves it out (@stack, #501).
  */
-test('a saved project opens offline', async ({ page, context }) => {
+test('a saved project opens offline', { tag: '@stack' }, async ({ page, context }) => {
   await page.goto('/');
   // Wait until the service worker controls the page, so reloads come from cache.
   await expect
