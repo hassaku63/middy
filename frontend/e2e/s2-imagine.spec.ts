@@ -324,3 +324,19 @@ test('the explanation copies as text: the card, the chords, the whole and the rh
   // The words "copied" go away again.
   await expect(explanation.getByText('コピーしました')).toBeHidden({ timeout: 5000 });
 });
+
+test('sending by Enter keeps the focus in the field and says how many examples came (#500)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const field = page.getByLabel('イメージ', { exact: true });
+  await field.fill('雨の日曜の午後');
+  await field.press('Enter');
+  await expect(page.getByRole('article', { name: '窓辺の雨' })).toBeVisible();
+  await expect(field).toBeFocused();
+  const said = page.getByRole('region', { name: 'イメージから' }).getByRole('status');
+  await expect(said).toHaveText(/^例が \d+ 件届きました$/);
+  // Space in the field types, not plays (#315).
+  await field.press('Space');
+  await expect(field).toHaveValue(' ');
+});

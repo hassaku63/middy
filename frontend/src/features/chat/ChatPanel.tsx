@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type SubmitEvent } from 'react';
+import { useRef, useState, type ReactNode, type SubmitEvent } from 'react';
 import type { IdeaCandidate, PatternsResponse } from '@/shared/api/client';
 import { CandidateCard } from './CandidateCard';
 import { ExampleList } from './ExampleList';
@@ -38,6 +38,8 @@ export function ChatPanel({
   options,
 }: ChatPanelProps) {
   const [text, setText] = useState('');
+  const heard = useReplyNotice(ideas);
+  const field = useRef<HTMLInputElement>(null);
 
   // Only the latest exchange stays open; earlier ones fold away so refining
   // never pushes playback out of sight (BL-068).
@@ -72,8 +74,11 @@ export function ChatPanel({
 
   const submit = (e: SubmitEvent) => {
     e.preventDefault();
+    if (ideas.busy) return; // Enter in the read-only field while waiting
     const t = text;
     setText('');
+    // The button goes disabled while waiting; the focus waits in the field (#500).
+    field.current?.focus();
     void ideas.send(t);
   };
 
@@ -99,7 +104,7 @@ export function ChatPanel({
         <ol className="chat__log" aria-label="会話">
           {latest.map((turn, i) => renderTurn(turn, earlier.length + i))}
           {ideas.busy && (
-            <li className="chat__turn chat__turn--assistant" aria-live="polite">
+            <li className="chat__turn chat__turn--assistant">
               <p>考え中…</p>
             </li>
           )}
@@ -123,13 +128,15 @@ export function ChatPanel({
       <div className="chat__composer">
         <form className="chat__form" onSubmit={submit} aria-label="イメージの入力">
           <input
+            ref={field}
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="どんな曲にしたい？（例: 雨の日曜の午後）"
             aria-label="イメージ"
             maxLength={1000}
-            disabled={ideas.busy}
+            readOnly={ideas.busy}
+            aria-busy={ideas.busy}
           />
           <button type="submit" disabled={ideas.busy || text.trim() === ''}>
             送る
@@ -142,11 +149,39 @@ export function ChatPanel({
         </form>
         {options && <div className="chat__options">{options}</div>}
       </div>
+      <span className="visually-hidden" role="status">
+        {heard}
+      </span>
     </section>
   );
 }
 
 type AssistantTurn = Extract<ChatTurn, { role: 'assistant' }>;
+
+/**
+ * What a screen reader hears of a send (#500): 「考え中」 when it goes out
+ * and the number of examples when the reply comes. A failure is the alert's
+ * to say. Nothing is said for a conversation already on the screen.
+ */
+function useReplyNotice(ideas: Ideas): string {
+  const [wasBusy, setWasBusy] = useState(ideas.busy);
+  const [said, setSaid] = useState('');
+  if (wasBusy !== ideas.busy) {
+    setWasBusy(ideas.busy);
+    const last = ideas.turns.at(-1);
+    const n = last?.role === 'assistant' ? last.candidates.length : null;
+    setSaid(
+      ideas.busy
+        ? '考え中'
+        : n === null
+          ? ''
+          : n > 0
+            ? `例が ${n} 件届きました`
+            : '例は届きませんでした',
+    );
+  }
+  return said;
+}
 
 /** The reply's summary, what it could not express (ADR-0061), and its mood tags. */
 function ReplyHead({ turn }: { turn: AssistantTurn }) {
