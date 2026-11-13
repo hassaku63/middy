@@ -44,7 +44,9 @@ type Config struct {
 	Model string
 	// Effort steers thinking depth; "low" is plenty for intent extraction.
 	Effort string
-	// Timeout bounds one request including the SDK's retries.
+	// Timeout bounds one Complete call, the SDK's retries and their
+	// backoff included (a context deadline; the SDK's own request timeout
+	// is per attempt).
 	Timeout time.Duration
 	// BaseURL overrides the API endpoint (tests point it at httptest).
 	BaseURL string
@@ -56,10 +58,11 @@ type Config struct {
 
 // Client calls the Messages API.
 type Client struct {
-	api    sdk.Client
-	model  string
-	effort sdk.OutputConfigEffort
-	logger *slog.Logger
+	api     sdk.Client
+	model   string
+	effort  sdk.OutputConfigEffort
+	logger  *slog.Logger
+	timeout time.Duration
 }
 
 var _ llm.Client = (*Client)(nil)
@@ -93,17 +96,27 @@ func New(cfg Config) (*Client, error) {
 	if logger == nil {
 		logger = slog.New(slog.DiscardHandler)
 	}
-	return &Client{api: sdk.NewClient(opts...), model: cfg.Model, effort: effort, logger: logger}, nil
+	return &Client{
+		api:     sdk.NewClient(opts...),
+		model:   cfg.Model,
+		effort:  effort,
+		logger:  logger,
+		timeout: cfg.Timeout,
+	}, nil
 }
 
-// Complete sends one request. When req.OutputSchema is set the model is
-// constrained to JSON matching it (structured output) and Response.Text is
-// that JSON document.
+// Complete sends one request, retries included, within the client's
+// timeout (#499: the SDK's request timeout bounds each attempt only, so
+// without this one call could outlast the server's write timeout). When
+// req.OutputSchema is set the model is constrained to JSON matching it
+// (structured output) and Response.Text is that JSON document.
 func (c *Client) Complete(ctx context.Context, req llm.Request) (llm.Response, error) {
 	params, err := c.params(req)
 	if err != nil {
 		return llm.Response{}, err
 	}
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
 	msg, err := c.api.Messages.New(ctx, params)
 	if err != nil {
 		return llm.Response{}, classify(err)

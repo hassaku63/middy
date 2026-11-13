@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/hassaku63/middy/backend/internal/llm"
 )
@@ -158,6 +160,35 @@ func TestCompleteAPIErrorsKeepTheStatus(t *testing.T) {
 	_, err := newClient(t, srv.URL).Complete(context.Background(), llm.Request{Messages: []llm.Message{{Role: llm.RoleUser, Content: "x"}}})
 	if err == nil || !strings.Contains(err.Error(), "status 429") {
 		t.Fatalf("want a 429 in the error, got %v", err)
+	}
+}
+
+func TestCompleteTimeoutCoversTheRetries(t *testing.T) {
+	// The API keeps failing with a retryable status: the SDK backs off and
+	// tries again (about half a second and more between attempts), so two
+	// retries alone take over a second. The client's timeout must end the
+	// whole call, not each attempt (#499).
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"type":"error","error":{"type":"api_error","message":"down"}}`))
+	}))
+	t.Cleanup(srv.Close)
+	two := 2
+	c, err := New(Config{APIKey: "test-key", BaseURL: srv.URL, MaxRetries: &two, Timeout: 300 * time.Millisecond})
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	_, err = c.Complete(context.Background(), llm.Request{Messages: []llm.Message{{Role: llm.RoleUser, Content: "x"}}})
+	elapsed := time.Since(start)
+	if err == nil {
+		t.Fatal("a failing API must fail the call")
+	}
+	if elapsed > 900*time.Millisecond {
+		t.Fatalf("the call took %v (%d attempts); the 300ms timeout must cover the retries", elapsed, calls.Load())
 	}
 }
 
