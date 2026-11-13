@@ -11,4 +11,6 @@ export const SIZES = [
   { name: 'half', width: 960, height: 1080 },
   { name: 'fhd', width: 1920, height: 1080 },
   { name: 'qhd', width: 2560, height: 1440 },
+  // A phone held sideways: short and wide (#498).
+  { name: 'phone-landscape', width: 844, height: 390 },
 ] as const;

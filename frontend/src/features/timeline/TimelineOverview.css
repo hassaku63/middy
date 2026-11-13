@@ -26,7 +26,7 @@
    text stays at 12 px. */
 .timeline-overview__scroll {
   --timeline-height: min(
-    45vh,
+    var(--timeline-max-height, 45vh),
     calc(max(100cqw, var(--timeline-natural-width)) / var(--timeline-aspect))
   );
   display: flex;
@@ -38,7 +38,7 @@
 
 .timeline-overview__scroll.is-long {
   --timeline-height: min(
-    45vh,
+    var(--timeline-max-height, 45vh),
     calc(max(100cqw, var(--timeline-four-bars-width)) * var(--timeline-four-bars))
   );
 }

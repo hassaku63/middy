@@ -18,12 +18,19 @@ async function violations(page: Page) {
   return results.violations.map((v) => `${v.id}: ${v.help} (${String(v.nodes.length)})`);
 }
 
-/** The names of the operations on the result, in order of the page. */
+/**
+ * The names of the operations on the result, in order of the page. 「会話」
+ * only moves the conversation's drawer on a short, wide screen (#498): a
+ * matter of layout, not an operation on the example.
+ */
 async function operations(page: Page) {
   const result = page.getByRole('region', { name: '結果' });
   const buttons = await result.getByRole('button').allInnerTexts();
   const fields = await result.getByRole('combobox').count();
-  return { buttons: buttons.map((b) => b.replace(/[▶■]/g, '').trim()), fields };
+  return {
+    buttons: buttons.map((b) => b.replace(/[▶■⏸]/g, '').trim()).filter((b) => b !== '会話'),
+    fields,
+  };
 }
 
 for (const size of SIZES) {
