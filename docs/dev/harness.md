@@ -87,6 +87,8 @@
 
 ジョブはこれらをキャッシュから取り、ないときだけ取得元へ行く。すべてのジョブに `timeout-minutes` がある。
 
+ワークフローが使うアクション（`uses:`）は、タグではなくコミットの SHA で固定し、行末に `# v7.0.1` の形で版を書く（GitHub の [Security hardening for GitHub Actions](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions) の「Using third-party actions」。タグは付け替えられるため。#502）。更新は Dependabot（`github-actions`）が SHA と版の注記を一緒に上げる。手で足すときも、版のタグが指すコミットの SHA を書く。
+
 PR と `main` への push では、変更に関係するジョブだけが走る（`backend`、`frontend`、`image`。`shell`・`docs` は毎回、`pr size` は PR だけ）。PR は base ブランチと、push は push の前の `main` の先頭と比べる（ADR-0032）。どのパスがどのジョブを走らせるかは `scripts/ci-changes.sh` だけが持つ。ジョブが新しいパスを読むようになったら、そこに足す。PR では新しい push が古い実行を取り消し、`main` の実行は取り消さない。必須チェックは `required (make check)` の 1 つだけ（ADR-0028）。`changes`・`backend`・`frontend`・`shell`・`docs` の結果をまとめ、スキップは通し、失敗と取り消しは落とす。`image`・`pr size`・`eval`・CodeQL は必須ではない。
 
 CodeQL は `.github/workflows/codeql.yml` で動く（ADR-0031）。`docs/**` と `**/*.md` だけの変更では走らず、週に 1 回は全体を解析する。
