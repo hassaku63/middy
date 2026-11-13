@@ -186,3 +186,40 @@ describe('what a screen reader hears from the player (#500)', () => {
     act(() => result.current.pause());
   });
 });
+
+describe('a play that makes no sound (#500)', () => {
+  it('says so when the audio device cannot be made, and plays on the next try', async () => {
+    const play = vi.fn();
+    const working: AudioEngine = {
+      synth: { play, allOff: vi.fn() },
+      clock: { now: () => 0 },
+      resume: () => Promise.resolve(),
+    };
+    const create = vi
+      .fn<() => AudioEngine>()
+      .mockImplementationOnce(() => {
+        throw new Error('no AudioContext');
+      })
+      .mockReturnValue(working);
+    const { result } = renderHook(() => usePlayer(create));
+    await act(() => result.current.play(timeline));
+    expect(result.current.error).toMatch(/音を鳴らせませんでした/);
+    expect(result.current.state).toBe('stopped');
+
+    await act(() => result.current.play(timeline));
+    expect(result.current.error).toBeNull();
+    expect(result.current.state).toBe('playing');
+    expect(play).toHaveBeenCalled();
+  });
+
+  it('says so when the browser will not start the audio', async () => {
+    const engine: AudioEngine = {
+      synth: { play: vi.fn(), allOff: vi.fn() },
+      clock: { now: () => 0 },
+      resume: () => Promise.reject(new Error('not allowed')),
+    };
+    const { result } = renderHook(() => usePlayer(() => engine));
+    await act(() => result.current.play(timeline));
+    expect(result.current.error).toMatch(/音を鳴らせませんでした/);
+  });
+});

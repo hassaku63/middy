@@ -53,6 +53,19 @@ describe('PlayerControls + usePlayer', () => {
     vi.useRealTimers();
   });
 
+  it('shows why a play made no sound (#500)', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const refusing = (): AudioEngine => ({
+      synth,
+      clock: { now: () => 0 },
+      resume: () => Promise.reject(new Error('not allowed')),
+    });
+    render(<Harness engine={refusing} tl={timeline} />);
+    await user.click(screen.getByRole('button', { name: '再生' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('音を鳴らせませんでした');
+    expect(screen.getByRole('button', { name: '再生' })).toBeEnabled();
+  });
+
   it('is disabled without a timeline', () => {
     render(<Harness engine={engine} tl={null} />);
     expect(screen.getByRole('button', { name: '再生' })).toBeDisabled();
