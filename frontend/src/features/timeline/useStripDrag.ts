@@ -11,8 +11,11 @@ type Look = (x: number, from?: 'centre' | 'left') => number;
  * there. The playhead never moves. x is in drawing units.
  */
 export function useStripDrag(look: Look, view: Slice, width: number) {
-  /** Where the drag started: the pointer's x and the box's left edge. */
-  const held = useRef<{ x: number; left: number } | null>(null);
+  /** The pointer dragging, where it started and the box's left edge then. Others are ignored (#500). */
+  const held = useRef<{ id: number; x: number; left: number } | null>(null);
+  const end = (e: PointerEvent<HTMLDivElement>) => {
+    if (held.current?.id === e.pointerId) held.current = null;
+  };
 
   const at = (e: PointerEvent) => {
     const strip = e.target instanceof Element ? e.target.closest('svg') : null;
@@ -24,23 +27,20 @@ export function useStripDrag(look: Look, view: Slice, width: number) {
   return {
     onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
       const p = at(e);
-      if (!p || e.button !== 0) return;
+      if (!p || e.button !== 0 || held.current) return;
       const onFrame = p.x >= view.x && p.x <= view.x + view.width;
       const left = onFrame ? view.x : look(p.x);
-      held.current = { x: p.x, left };
+      held.current = { id: e.pointerId, x: p.x, left };
       p.strip.setPointerCapture(e.pointerId);
     },
     onPointerMove: (e: PointerEvent<HTMLDivElement>) => {
-      const start = held.current;
+      const start = held.current?.id === e.pointerId ? held.current : null;
       const p = start && at(e);
       if (!start || !p) return;
       look(start.left + (p.x - start.x), 'left');
     },
-    onPointerUp: () => {
-      held.current = null;
-    },
-    onPointerCancel: () => {
-      held.current = null;
-    },
+    onPointerUp: end,
+    onPointerCancel: end,
+    onLostPointerCapture: end,
   };
 }

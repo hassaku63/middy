@@ -19,8 +19,11 @@ export function useHeadGrip(
   onSeek: ((tick: number) => void) | undefined,
   scrub: Scrub | undefined,
 ) {
-  /** Where the finger and the playhead were when it took hold; the beat last sought. */
-  const held = useRef<{ x: number; tick: number; last: number } | null>(null);
+  /**
+   * The finger holding the playhead, where it and the playhead were when it
+   * took hold, and the beat last sought. Other fingers are ignored (#500).
+   */
+  const held = useRef<{ id: number; x: number; tick: number; last: number } | null>(null);
   /** A tap on the playhead leaves it where it is: its click is not a seek. */
   const tapped = useRef(false);
   // While a finger holds the playhead, its moves are this drag's, not a pan
@@ -37,24 +40,36 @@ export function useHeadGrip(
       svg.removeEventListener('touchmove', hold);
     };
   }, [ref, onSeek]);
+  // Taken away while held (the drawing replaced), the drag still ends (#500).
+  const ending = useRef(scrub);
+  useEffect(() => {
+    ending.current = scrub;
+  });
+  useEffect(
+    () => () => {
+      if (held.current) ending.current?.('end', 'head');
+      held.current = null;
+    },
+    [],
+  );
   if (!onSeek) return null;
-  const end = () => {
-    if (!held.current) return;
+  const end = (e: PointerEvent<SVGRectElement>) => {
+    if (held.current?.id !== e.pointerId) return;
     held.current = null;
     scrub?.('end', 'head');
   };
   return {
     onPointerDown: (e: PointerEvent<SVGRectElement>) => {
-      if (e.pointerType !== 'touch') return;
+      if (e.pointerType !== 'touch' || held.current) return;
       tapped.current = true;
-      held.current = { x: e.clientX, tick: positionTick, last: positionTick };
+      held.current = { id: e.pointerId, x: e.clientX, tick: positionTick, last: positionTick };
       scrub?.('start', 'head');
       e.currentTarget.setPointerCapture(e.pointerId);
     },
     onPointerMove: (e: PointerEvent<SVGRectElement>) => {
       const h = held.current;
       const box = ref.current?.getBoundingClientRect();
-      if (!h || !box?.width) return;
+      if (h?.id !== e.pointerId || !box?.width) return;
       const perPixel = (layout.perBar / layout.barWidth) * (layout.width / box.width);
       const raw = h.tick - (e.clientX - h.x) * perPixel;
       const lastBeat = layout.bars * layout.perBar - layout.perBeat;
@@ -68,6 +83,7 @@ export function useHeadGrip(
     },
     onPointerUp: end,
     onPointerCancel: end,
+    onLostPointerCapture: end,
     onClick: (e: MouseEvent<SVGRectElement>) => {
       if (!tapped.current) return;
       tapped.current = false;
