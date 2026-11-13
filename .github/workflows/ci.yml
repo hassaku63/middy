@@ -274,7 +274,9 @@ jobs:
   layout:
     name: layout (E2E at every size)
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    # The screens are drawn from the real API's answers (the fake LLM), so a
+    # change to the backend can break the layout too (#501).
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
