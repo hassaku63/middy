@@ -114,7 +114,7 @@ describe('usePlayer from a point (BL-327)', () => {
     const { e, play } = engine();
     const { result } = renderHook(() => usePlayer(() => e));
     act(() => result.current.seek(960));
-    expect(result.current.positionTick).toBe(960);
+    expect(result.current.position.get()).toBe(960);
     await act(() => result.current.play(fourBeats));
     expect(play.mock.calls.map(([n]) => n.pitch)).toEqual([64]);
     act(() => result.current.stop());
@@ -128,9 +128,9 @@ describe('usePlayer from a point (BL-327)', () => {
     expect(result.current.state).toBe('playing');
     act(() => result.current.pause());
     expect(result.current.state).toBe('stopped');
-    expect(result.current.positionTick).toBe(1440);
+    expect(result.current.position.get()).toBe(1440);
     await act(() => result.current.play(fourBeats));
-    expect(result.current.positionTick).toBe(1440);
+    expect(result.current.position.get()).toBe(1440);
     act(() => result.current.pause());
   });
 
@@ -141,12 +141,12 @@ describe('usePlayer from a point (BL-327)', () => {
     await act(() => result.current.play(fourBeats));
     act(() => result.current.stop());
     expect(result.current.state).toBe('stopped');
-    expect(result.current.positionTick).toBe(0);
+    expect(result.current.position.get()).toBe(0);
     act(() => result.current.seek(960));
     act(() => result.current.stop());
-    expect(result.current.positionTick).toBe(0);
+    expect(result.current.position.get()).toBe(0);
     await act(() => result.current.play(fourBeats));
-    expect(result.current.positionTick).toBe(0);
+    expect(result.current.position.get()).toBe(0);
     act(() => result.current.stop());
   });
 });

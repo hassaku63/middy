@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Timeline } from '@/shared/api/client';
+import { positionStore, type PlayerPosition } from './position';
 import { TimelinePlayer, type Clock, type PlayerState, type Synth } from './TimelinePlayer';
 import { WebAudioSynth } from './WebAudioSynth';
 
@@ -39,7 +40,8 @@ export type PlayerNotice = {
 
 export type UsePlayer = {
   state: PlayerState;
-  positionTick: number;
+  /** Where it is; read it with usePosition, in what shows it (#500). */
+  position: PlayerPosition;
   notice: PlayerNotice | null;
   /** Why the last play made no sound (the audio device refused), or null (#500). */
   error: string | null;
@@ -69,7 +71,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
   const engineRef = useRef<AudioEngine | null>(null);
   const playerRef = useRef<TimelinePlayer | null>(null);
   const [state, setState] = useState<PlayerState>('stopped');
-  const [positionTick, setPositionTick] = useState(0);
+  const [position] = useState(positionStore);
   // Counts play requests; stop() and unmounting count too, so a play()
   // still waiting for the audio device does not start once it is outdated.
   const requests = useRef(0);
@@ -97,7 +99,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
         clock: engine.clock,
       });
       player.subscribe((tick, s) => {
-        setPositionTick(tick);
+        position.set(tick);
         setState(s);
         if (s === 'stopped') cue.current = tick; // back to the beginning at the end
         if (s === 'stopped' && wasPlaying.current) {
@@ -110,7 +112,7 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
       playerRef.current = player;
     }
     return playerRef.current;
-  }, [createEngine, tell]);
+  }, [createEngine, tell, position]);
 
   const play = useCallback(
     async (timeline: Timeline) => {
@@ -151,8 +153,8 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
       tell('stop', 0); // already silent: the player reports no stop
     }
     cue.current = 0;
-    setPositionTick(0);
-  }, [tell]);
+    position.set(0);
+  }, [tell, position]);
 
   const seek = useCallback(
     (tick: number) => {
@@ -163,10 +165,10 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
         return;
       }
       cue.current = Math.max(0, Math.round(tick));
-      setPositionTick(cue.current);
+      position.set(cue.current);
       tell('seek', cue.current);
     },
-    [tell],
+    [tell, position],
   );
 
   // Unmounting stops the sound and releases the AudioContext: browsers
@@ -182,5 +184,5 @@ export function usePlayer(createEngine: () => AudioEngine = createWebAudioEngine
     [],
   );
 
-  return { state, positionTick, notice, error, play, pause, stop, seek };
+  return { state, position, notice, error, play, pause, stop, seek };
 }

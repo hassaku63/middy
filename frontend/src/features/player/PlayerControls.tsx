@@ -1,6 +1,7 @@
 import type { Timeline } from '@/shared/api/client';
 import { formatPosition, spokenPosition } from '@/shared/lib/timing';
 import type { UsePlayer } from './usePlayer';
+import { usePosition } from './position';
 import { usePlayerNotice } from './usePlayerNotice';
 import './PlayerControls.css';
 
@@ -16,12 +17,9 @@ type Props = {
  */
 export function PlayerControls({ timeline, player }: Props) {
   const playing = player.state === 'playing';
-  const position = timeline
-    ? formatPosition(player.positionTick, timeline.ppq, timeline.timeSignature)
-    : '-';
-  const spoken = timeline
-    ? spokenPosition(player.positionTick, timeline.ppq, timeline.timeSignature)
-    : '-';
+  const tick = usePosition(player.position);
+  const position = timeline ? formatPosition(tick, timeline.ppq, timeline.timeSignature) : '-';
+  const spoken = timeline ? spokenPosition(tick, timeline.ppq, timeline.timeSignature) : '-';
   const notice = usePlayerNotice(player.notice, timeline, playing);
 
   return (
@@ -50,7 +48,7 @@ export function PlayerControls({ timeline, player }: Props) {
         type="button"
         className="player__stop"
         onClick={player.stop}
-        disabled={!timeline || (!playing && player.positionTick === 0)}
+        disabled={!timeline || (!playing && tick === 0)}
       >
         <span className="player__icon" aria-hidden="true">
           ■

@@ -4,7 +4,21 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AudioEngine } from '@/features/player/usePlayer';
 import type { Timeline } from '@/shared/api/client';
 import { MemoryProjectStore } from '@/shared/lib/storage/projects';
+import type * as ChatPanelModule from '@/features/chat/ChatPanel';
 import { App } from './App';
+
+/** Counts the conversation's renders: it is drawn again only when App is (#500). */
+const chatRenders = vi.hoisted(() => ({ n: 0 }));
+vi.mock('@/features/chat/ChatPanel', async (importOriginal) => {
+  const real = await importOriginal<typeof ChatPanelModule>();
+  return {
+    ...real,
+    ChatPanel: (props: Parameters<typeof real.ChatPanel>[0]) => {
+      chatRenders.n += 1;
+      return real.ChatPanel(props);
+    },
+  };
+});
 
 const analysed: Timeline = {
   ppq: 480,
@@ -314,6 +328,32 @@ describe('App docs/product/experience.md', () => {
 });
 
 /** The heading of the one-chord explanation inside the result. */
+describe('playing (#500)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('draws again only what shows the position, not the whole screen', async () => {
+    stubBackend();
+    let now = 0;
+    const engine = (): AudioEngine => ({ ...fakeEngine(), clock: { now: () => now } });
+    const user = userEvent.setup();
+    render(<App createEngine={engine} />);
+    await sendImage(user);
+
+    const controls = screen.getByRole('group', { name: '再生' });
+    // Choosing an example plays it (BL-217).
+    await within(controls).findByRole('button', { name: '一時停止' });
+    const position = within(controls).getByLabelText(/^再生位置/);
+    await waitFor(() => expect(position).toHaveTextContent('1.1'));
+    const before = chatRenders.n;
+    now = 1; // 1.5 beats at 90 BPM
+    await waitFor(() => expect(position).toHaveTextContent('1.2'));
+    now = 2;
+    await waitFor(() => expect(position).toHaveTextContent('1.4'));
+    // The chord under the playhead moved on, the conversation stayed as drawn.
+    expect(chatRenders.n).toBe(before);
+  });
+});
+
 function chordHeading(result: HTMLElement) {
   return within(within(result).getByRole('region', { name: 'コードの解説' })).getByRole('heading');
 }

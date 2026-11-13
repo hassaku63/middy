@@ -80,6 +80,7 @@
 | [0074](0074-sounding-chord-first.md) | 結果の幅が 760 px 未満では、解説の枠の中で、今のコードの見出しと解説文を度数の地図より先に置く。再生中にそれが画面に入ることを約束にする | Accepted |
 | [0075](0075-fold-what-is-read-once.md) | 解説のパネルの「この例」と「リズム」は、要点を添えた 1 行に個別にたたむ。「全体と流れ」は開いたまま先頭に | Accepted |
 | [0076](0076-say-nothing-over-the-music.md) | 再生を聴く妨げになる読み上げはしない。プレイヤーは、一時停止・停止・鳴り終わり・止まっているときの移動だけを言葉で 1 回読み上げる | Accepted |
+| [0077](0077-player-position-as-a-subscription.md) | 再生位置は購読する値にし、位置を描く部品（`PlayerControls`、`Stage`）だけが読む。再生中に `App` 全体を描き直さない | Accepted |
 
 ## いつ ADR を書くか
 
