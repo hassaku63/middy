@@ -243,3 +243,29 @@ test('the desk input rises into a short conversation and sticks at the foot of a
   await openExample(page, 'もう少し静かに', '朝の光');
   await expect(input).toBeInViewport();
 });
+
+/**
+ * #500 (APG listbox): the chord lane is one tab stop. Tab comes to the
+ * first chord, ← → move the pin and the focus with it, and the next Tab
+ * leaves the lane at once, however many chords there are.
+ */
+test('the chord lane is one tab stop, and the arrows take the focus along', async ({ page }) => {
+  await page.goto('/');
+  const { result } = await openExample(page, '雨の日曜の午後', '窓辺の雨');
+  if ((await page.getByRole('button', { name: '一時停止' }).count()) > 0) {
+    await page.getByRole('button', { name: '停止', exact: true }).click();
+  }
+  const lane = result.getByRole('listbox', { name: 'コード' });
+  const options = lane.getByRole('option');
+  await expect(lane.locator('[role=option][tabindex="0"]')).toHaveCount(1);
+
+  await options.first().focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(options.nth(1)).toBeFocused();
+  await expect(options.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Tab');
+  await expect(lane.locator(':focus')).toHaveCount(0);
+  // Back with Shift+Tab: the lane's stop is the pinned chord.
+  await page.keyboard.press('Shift+Tab');
+  await expect(options.nth(1)).toBeFocused();
+});
