@@ -1,0 +1,11 @@
+{
+  "name": "定番の曲の進行を手がかりにする人",
+  "turns": [
+    {
+      "say": "「枯葉」（Autumn Leaves）みたいな、ジャズの定番の進行で",
+      "expect": { "has": ["V7"], "hasAny": ["iiø7", "viiø7"] }
+    },
+    { "say": "短調の曲にして、最後は主和音で終わらせて", "expect": { "modes": ["minor"], "has": ["iiø7"] } },
+    { "say": "テンポを落として、しっとりしたバラードに", "expect": { "tempo": "down" } }
+  ]
+}
