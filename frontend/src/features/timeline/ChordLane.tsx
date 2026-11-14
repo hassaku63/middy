@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import type { HarmonyEvent } from '@/shared/api/client';
 import { harmonySymbol } from '@/shared/lib/notation';
 import { CHORD_LANE_HEIGHT, type Layout } from './layout';
+import { useFocusFollows } from './useFocusFollows';
 
 type Props = {
   harmony: HarmonyEvent[];
@@ -44,7 +45,10 @@ function pushTicks(h: HarmonyEvent, ppq: number): number {
 /**
  * One clickable block per harmony event, with roman numeral and chord
  * symbol. Drawn again when the sounding chord changes, not on every move of
- * the playhead (#500).
+ * the playhead (#500). One tab stop for the whole lane, as the APG's
+ * listbox (#500): the pinned chord, else the sounding one, else the first.
+ * Inside, ← → (useChordKeys) and Home / End move the pin, and the focus
+ * goes with it.
  */
 export const ChordLane = memo(function ChordLane({
   harmony,
@@ -56,8 +60,17 @@ export const ChordLane = memo(function ChordLane({
   marks = false,
   ppq,
 }: Props) {
+  const lane = useRef<SVGGElement>(null);
+  useFocusFollows(lane, selectedIndex);
+  const stop = selectedIndex ?? (activeIndex >= 0 ? activeIndex : 0);
+  const tabbable = onSelect !== undefined && focusable;
   return (
-    <g aria-label="コード" role="listbox" transform={`translate(0 ${String(layout.chordTop)})`}>
+    <g
+      ref={lane}
+      aria-label="コード"
+      role="listbox"
+      transform={`translate(0 ${String(layout.chordTop)})`}
+    >
       {harmony.map((h, i) => {
         const active = i === activeIndex;
         const selected = i === selectedIndex;
@@ -74,12 +87,19 @@ export const ChordLane = memo(function ChordLane({
             aria-selected={selected}
             className={`timeline__chord${active ? ' is-active' : ''}${selected ? ' is-selected' : ''}`}
             onClick={() => onSelect?.(i)}
-            tabIndex={onSelect && focusable ? 0 : undefined}
+            tabIndex={tabbable ? (i === stop ? 0 : -1) : undefined}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault(); // Space would also scroll the page
-                onSelect?.(i);
-              }
+              const to =
+                e.key === 'Enter' || e.key === ' '
+                  ? i
+                  : e.key === 'Home'
+                    ? 0
+                    : e.key === 'End'
+                      ? harmony.length - 1
+                      : null;
+              if (to === null) return;
+              e.preventDefault(); // Space would also scroll the page
+              onSelect?.(to);
             }}
           >
             <rect x={x} y={2} width={width} height={CHORD_LANE_HEIGHT - 4} rx={4} />

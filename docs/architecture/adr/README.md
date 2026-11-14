@@ -81,6 +81,7 @@
 | [0075](0075-fold-what-is-read-once.md) | 解説のパネルの「この例」と「リズム」は、要点を添えた 1 行に個別にたたむ。「全体と流れ」は開いたまま先頭に | Accepted |
 | [0076](0076-say-nothing-over-the-music.md) | 再生を聴く妨げになる読み上げはしない。プレイヤーは、一時停止・停止・鳴り終わり・止まっているときの移動だけを言葉で 1 回読み上げる | Accepted |
 | [0077](0077-player-position-as-a-subscription.md) | 再生位置は購読する値にし、位置を描く部品（`PlayerControls`、`Stage`）だけが読む。再生中に `App` 全体を描き直さない | Accepted |
+| [0078](0078-chord-lane-one-tab-stop.md) | コードの列は Tab の止まり先を 1 つにし、中は ← →・Home／End で和音を固定して、フォーカスもついていく | Accepted |
 
 ## いつ ADR を書くか
 
